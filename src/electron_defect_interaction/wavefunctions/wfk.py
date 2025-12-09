@@ -14,7 +14,8 @@ def compute_psi_nk(
     G_red,       
     k_red,  
     Omega,
-    check_normalize=False     
+    check_normalize=False,
+    ngfft = None,     
 ):
     """
     Computes the wavefunction psi_{nk}(r) on a uniform grid in real space consistent with the number of G vectors, from
@@ -45,9 +46,12 @@ def compute_psi_nk(
     
     nband, nkpt, _ = C_nkg.shape
 
-    # Build the FFT grid from the G vectors using Abinit's  convention (double grid)
-    ngfft = fft_grid_from_G_red(G_red, nG)
-    Nx, Ny, Nz = ngfft; N = np.prod(ngfft)
+    if ngfft is None:
+        # Build the FFT grid from the G vectors using Abinit's  convention (double grid)
+        ngfft = fft_grid_from_G_red(G_red, nG)
+        Nx, Ny, Nz = ngfft; N = np.prod(ngfft)
+    else:
+        Nx, Ny, Nz = ngfft; N = np.prod(ngfft)
 
     # Build FFT grid
     x = np.arange(Nx)/Nx; y = np.arange(Ny)/Ny; z = np.arange(Nz)/Nz

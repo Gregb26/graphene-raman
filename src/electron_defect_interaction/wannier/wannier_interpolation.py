@@ -94,7 +94,7 @@ def Mwr_to_Mwk(Mwr, R, k):
             Object in real space in Wannier gauge to transforms to reciprocal space in Wannier gauge. nr is the number of R vectors in real sapce and nw is the number of Wannier functions.
         R: (nr, 3) array of ints
             Real space lattice vectors in reduced coordinates for which Mwr is defined.
-        k: (nw, 3) array of floats
+        k: (nk, 3) array of floats
             k vectors in reduced coordinates for which to transform Mwr.
     Returns:
         Mwk: (nw, nk, nw, nk) array of complex

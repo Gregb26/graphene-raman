@@ -37,7 +37,7 @@ def main():
 
     # Non-local part: compute only on rank 0
     if rank == 0:
-        M_NL = compute_M_NL(wfk_uc, wfk_d, psp8) - compute_M_NL(wfk_uc, wfk_p, psp8)
+        M_NL = compute_M_NL(wfk_uc, wfk_p, wfk_d, psp8)
         M = ML_G + M_NL
         np.save("M_test.npy", M)
 

@@ -4,6 +4,8 @@ local_G.py
     Quite a bit slow due to the number of FFTs to do ...
 """
 
+import time
+
 from electron_defect_interaction.io.abinit_io import *
 from electron_defect_interaction.utils.fft_utils import map_G_to_fft_grid
 
@@ -174,6 +176,8 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
     Each rank computes a subset of pairs and rank 0 assembles the full M.
     """
 
+    t0 = time.time()
+
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
@@ -190,8 +194,6 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
     # Build all (ikp, ik) pairs in a deterministic order
     pairs = [(ikp, ik) for ikp in range(nk) for ik in range(nk)]
     npairs = len(pairs)
-    report_every = 5  # report every N completed local blocks (tune: 1..20)
-
 
     # Partition pairs across ranks (contiguous chunks)
     counts = [npairs // size + (1 if r < (npairs % size) else 0) for r in range(size)]
@@ -223,6 +225,9 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
             block_size=block_size
         )
 
+    if rank == 0:
+        print("rank0: finished local compute", time.time()-t0, flush=True)
+  
     # Gather all blocks to rank 0 (Gatherv on flattened complex128)
     sendbuf = local_blocks.reshape(-1)
     sendcount = sendbuf.size
@@ -237,15 +242,19 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
         rdispls = None
         recvbuf = None
 
+    t = time.time()
     comm.Gatherv(
         sendbuf,
         [recvbuf, recvcounts, rdispls, MPI.DOUBLE_COMPLEX],
         root=0
     )
+    if rank == 0:
+        print("rank0: Gatherv done", time.time()-t, flush=True)
 
     if rank != 0:
         return None
 
+    t = time.time()
     # Assemble full M on rank 0
     M = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
 
@@ -261,5 +270,6 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
         pairs_r = pairs[displs[r] : displs[r] + counts[r]]
         for j, (ikp, ik) in enumerate(pairs_r):
             M[:, ikp, :, ik] = blocks_r[j]
-
+    if rank == 0:
+        print("rank0: assembly done", time.time()-t, flush=True)
     return M

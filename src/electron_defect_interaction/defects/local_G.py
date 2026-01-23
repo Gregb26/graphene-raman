@@ -239,7 +239,7 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
 
     comm.Gatherv(
         sendbuf,
-        [recvbuf, recvcounts, rdispls, MPI.COMPLEX_DOUBLE],
+        [recvbuf, recvcounts, rdispls, MPI.DOUBLE_COMPLEX],
         root=0
     )
 

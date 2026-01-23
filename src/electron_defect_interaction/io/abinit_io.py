@@ -339,3 +339,24 @@ def get_ecut(path):
 
     return ecut
 
+def read_eig_nc(filepath):
+    """
+    Reads and extracts the eigenvalues written in a Abinit *EIG.nc output file.
+    Inputs:
+        filepath: str, path to EIG.nc file containing eigenvalues
+    Returns:
+        dft_eig: (nspol, nkpt, nband) array of floats: eigenvalues in eV computed by Abinit DFT code. nspol in number of spin polarizations, nkpt is number of kpoints, band is number of DFT bands
+        kpt: (nkpt, 3) array of floats, kpoint path in reduced coordinates
+        fermie: float, Fermie energy in eV
+    """
+    with Dataset(filepath, mode='r') as nc:
+        dft_eig = np.array(nc.variables["Eigenvalues"][:]) # (nspol, nkpt, nband), eigenvalues in Ha on kpoint path
+        kpt = np.array(nc.variables["Kptns"][:]) # (nkpt, 3), kpoint path in reduced coordinates on which the band structure was computed
+        fermie = np.array(nc.variables["fermie"][:]) # float, Fermi energy in Ha
+
+        Ha_to_eV = 27.211386245988
+        # convert to eV and shift by Fermi energy
+        dft_eig = Ha_to_eV * (dft_eig - fermie)
+        fermie *= Ha_to_eV
+
+        return dft_eig, kpt, fermie

@@ -1,6 +1,5 @@
 import os
 
-# Set threads BEFORE importing numpy / scipy to avoid oversubscription.
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
@@ -21,8 +20,8 @@ def main():
     rank = comm.Get_rank()
 
     wfk_uc = "wfk_uc.nc"
-    wfk_p  = "wfk_p.nc"   # pristine supercell WFK (or whatever your prep expects)
-    wfk_d  = "wfk_d.nc"   # defect supercell WFK
+    wfk_p  = "wfk_p.nc"   
+    wfk_d  = "wfk_d.nc"   
     pot_p  = "pot_p.nc"
     pot_d  = "pot_d.nc"
     psp8   = "C.psp8"
@@ -34,16 +33,13 @@ def main():
     )
     ML_G = compute_ML_G_mpi(prep, block_size=128, show_tqdm=(rank == 0))
 
-    # Non-local part: compute ONLY on rank 0
+    # Non-local part: compute only on rank 0
     if rank == 0:
-        # Replace with the correct difference for your use-case.
-        # Example: defect - pristine
         M_NL = compute_M_NL(wfk_uc, wfk_d, psp8) - compute_M_NL(wfk_uc, wfk_p, psp8)
 
         M = ML_G + M_NL
         np.save("M_test.npy", M)
 
-    # Ensure clean exit for non-root ranks
     comm.Barrier()
 
 

@@ -105,21 +105,22 @@ def compute_angular_part(K_hat, lmax):
 
     return Y_kglm
 
-def compute_M_NL(uc_wfk_path, sc_wfk_path, psp8_path):
+def compute_M_NL(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path):
     """
     Computes the non local part of the electron-defect interaction matrix.
     
     Inputs:
         uc_wfk_path: str
             Path to the ABINIT WFK.nc output file for the wavefunctions of the unit cell.
-        sc_wfk_path:
-            Path to the ABINIT WFK.nc output file for the wavefunctions of the supercell.
-        sc_psps_path:
-            Path to the ABINIT PSPS.nc output file for the pseudopotentials of the supercell
-
+        sc_p_wfk_path: str
+            w
+        sc_d_wfk_path: str
+            w
+        psp8_path: str:
+            w
     Returns:
         M_NL: (nband, nkpt, nband, nkpt) array of complex:
-            Electron-defect interaction matrix
+            Non-local part of the electron-defect interaction matrix
     """
     from scipy.interpolate import CubicSpline
 
@@ -134,12 +135,16 @@ def compute_M_NL(uc_wfk_path, sc_wfk_path, psp8_path):
     B_uc, _ = get_B_volume(uc_wfk_path) # primitive reciprocal lattice vectors of the unit cell B[:,i] = b_i
     ecut = get_ecut(uc_wfk_path) # planewave energy cutoff used in the calculation
 
-    assert ecut == get_ecut(sc_wfk_path), 'Must use the same ecut in both unit cell and supercell calculations!'
+    assert ecut == get_ecut(sc_p_wfk_path), 'Must use the same ecut in both unit cell and supercell calculations!'
 
     # Get necessary super cell quantities
-    x_red = get_x_red(sc_wfk_path) # atomic positions in reduced coords of the supercell (natom, 3)
-    A_sc, Omega_sc = get_A_volume(sc_wfk_path) # primitive lattice vectors and cell volume of the supercell
-    tau_s = red_to_cart(x_red, A_sc) # atomoic positions of atoms in the supercell in cartesian coords 
+    A_sc, Omega_sc = get_A_volume(sc_p_wfk_path) # primitive lattice vectors and cell volume of the supercell
+
+    x_red_p = get_x_red(sc_p_wfk_path) # atomic positions in reduced coords of the supercell (natom, 3)
+    tau_s_p = red_to_cart(x_red_p, A_sc) # atomoic positions of atoms in the supercell in cartesian coords 
+
+    x_red_d = get_x_red(sc_d_wfk_path) # atomic positions in reduced coords of the supercell (natom, 3)
+    tau_s_d = red_to_cart(x_red_d, A_sc) # atomoic positions of atoms in the supercell in cartesian coords 
 
     # Compute boolean mask that selects only the active recripocal lattice vector G for each k-point and mask invalid C's (pad with zeros)
     keep = mask_invalid_G(nG)
@@ -159,16 +164,21 @@ def compute_M_NL(uc_wfk_path, sc_wfk_path, psp8_path):
     F_likg = Fq_li(K_norm) # (lmax+1, imax+1, nkpt, nG_max)
 
     # Compute phases
-    phase_ksg = compute_phase(K, tau_s) # (nkpt, natom, nG_max)
-
+    phase_ksg_p = compute_phase(K, tau_s_p) # (nkpt, natom, nG_max)
+    phase_ksg_d = compute_phase(K, tau_s_d)
     # Compute angular part
     Y_kglm = compute_angular_part(K_hat, lmax) # (nkpt, nG_max, lmax+1, 2lmax+1)
 
     # Compute overlaps by summing over all G vectors
-    B_nkslim = (4*np.pi / np.sqrt(Omega_sc)) * np.einsum("nkg, likg, kglm, ksg -> nkslim ", np.conj(C_nkg), F_likg, Y_kglm, phase_ksg, optimize=True) # (nkpt, nG_max, ntypat, natom, nkb)
-    B_jpslim_conj = np.conj(B_nkslim)
+    pref = (4*np.pi / np.sqrt(Omega_sc))
+    B_p = pref * np.einsum("nkg,likg,kglm,ksg->nkslim",
+                        np.conj(C_nkg), F_likg, Y_kglm, phase_ksg_p, optimize=True)
+    B_d = pref * np.einsum("nkg,likg,kglm,ksg->nkslim",
+                        np.conj(C_nkg), F_likg, Y_kglm, phase_ksg_d, optimize=True)
 
-    # Compute matrix elements by summing over l, i, s (atoms) and m
-    M_NL = np.einsum("li, nkslim, jpslim -> nkjp ", ekb_li, B_nkslim, B_jpslim_conj)
+    M_p = np.einsum("li,nkslim,jpslim->nkjp", ekb_li, B_p, np.conj(B_p), optimize=True)
+    M_d = np.einsum("li,nkslim,jpslim->nkjp", ekb_li, B_d, np.conj(B_d), optimize=True)
+
+    M_NL = M_d - M_p
 
     return M_NL 

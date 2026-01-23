@@ -4,8 +4,6 @@ local_G.py
     Quite a bit slow due to the number of FFTs to do ...
 """
 
-import time
-
 from electron_defect_interaction.io.abinit_io import *
 from electron_defect_interaction.utils.fft_utils import map_G_to_fft_grid
 
@@ -176,8 +174,6 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
     Each rank computes a subset of pairs and rank 0 assembles the full M.
     """
 
-    t0 = time.time()
-
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
@@ -224,9 +220,6 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
             Gp=Gp, G=G, Ckp=Ckp, Ck0=Ck0,
             block_size=block_size
         )
-
-    if rank == 0:
-        print("finished local compute", time.time()-t0, flush=True)
   
     # Gather all blocks to rank 0 (Gatherv on flattened complex128)
     sendbuf = local_blocks.reshape(-1)
@@ -242,7 +235,6 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
         rdispls = None
         recvbuf = None
 
-    t = time.time()
     comm.Gatherv(
         sendbuf,
         [recvbuf, recvcounts, rdispls, MPI.DOUBLE_COMPLEX],

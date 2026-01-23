@@ -178,7 +178,7 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    Ved_G   = prep["Ved_G"].copy()
+    Ved_G   = prep["Ved_G"]
     ngfft   = prep["ngfft"]
     Ndiag   = prep["Ndiag"]
     k_red   = prep["k_red"]

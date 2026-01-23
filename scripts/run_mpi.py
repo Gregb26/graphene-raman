@@ -27,10 +27,14 @@ def main():
     psp8   = "C.psp8"
 
     # Local part: all ranks participate, only rank 0 gets the full ML_G
-    prep = prep_reciprocal_inputs(
+    prep = None
+    if rank == 0:
+        prep = prep_reciprocal_inputs(
         wfk_uc, wfk_d, pot_p, pot_d,
         subtract_mean=False, pristine=False
     )
+    prep = comm.bcast(prep, root=0)
+
     ML_G = compute_ML_G_mpi(prep, block_size=128, show_tqdm=(rank == 0))
 
     # Non-local part: compute only on rank 0

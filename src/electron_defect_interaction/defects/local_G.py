@@ -226,7 +226,7 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
         )
 
     if rank == 0:
-        print("rank0: finished local compute", time.time()-t0, flush=True)
+        print("finished local compute", time.time()-t0, flush=True)
   
     # Gather all blocks to rank 0 (Gatherv on flattened complex128)
     sendbuf = local_blocks.reshape(-1)
@@ -248,13 +248,10 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
         [recvbuf, recvcounts, rdispls, MPI.DOUBLE_COMPLEX],
         root=0
     )
-    if rank == 0:
-        print("rank0: Gatherv done", time.time()-t, flush=True)
 
     if rank != 0:
         return None
 
-    t = time.time()
     # Assemble full M on rank 0
     M = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
 
@@ -270,6 +267,5 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
         pairs_r = pairs[displs[r] : displs[r] + counts[r]]
         for j, (ikp, ik) in enumerate(pairs_r):
             M[:, ikp, :, ik] = blocks_r[j]
-    if rank == 0:
-        print("rank0: assembly done", time.time()-t, flush=True)
+  
     return M

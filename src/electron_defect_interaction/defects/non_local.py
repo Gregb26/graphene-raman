@@ -150,7 +150,7 @@ def compute_M_NL(uc_wfk_path, sc_wfk_path, psp8_path):
 
     # Transform the radial from factor to q space
     qmax = 2*np.sqrt(2*ecut) # choose a qmax two times the recommended for safety ...
-    q = np.linspace(0, qmax, 10000)
+    q = np.linspace(0, qmax, 2000)
     fq_li = fq_from_fr(rgrid, fr_li, q)
 
     # Interpolate radial form factors to be able to evaluate them at K=|k+G| vectors

@@ -64,4 +64,37 @@ def monkhorst_pack_grid(ngkpt, signed=True):
 
     return k_grid
 
+def build_k_path(high_sym_points, nk):
+    """
+    Builds a path in kspace joining the points specified in high_sym_points
+    Inputs:
+        high_sym_points: list of np (label, k) arrays, list of high symmetry points in kspace. The path joins this points.
+        nk: int, number of kpoints to use between the high symmetry points
+    Ouputs:
+        kpath: (np*nk, 3), path in kspace
+    """
+
+    labels = [lab for lab, _ in high_sym_points]
+    points = [pts for _, pts in high_sym_points]
+
+    nk=100
+    ks = []
+    idx = []
+    count=0
+    t = np.linspace(0, 1, nk)
+    for i in range(len(points)-1):
+        seg = (1 -t)[:, None]*points[i] + t[:, None]*points[i+1]
+        if i > 0:
+            seg=seg[1:] # avoid duplicate at junction
+            count-= 1
+        ks.append(seg)
+        idx.append(count)
+        count+=len(seg)
+        
+    k = np.vstack(ks)
+    idx.append(len(k)-1)
+
+    return k, labels, idx
+
+
 

@@ -83,9 +83,13 @@ def prep_reciprocal_inputs(
         "nk": nk,
     }
 
+########################################
+# COMMENSURATE GRIDS: NO INTERPOLATION #
+########################################
+
 # NO MPI
 
-def compute_ML_G_blocked(prep, block_size=512):
+def compute_ML_G(prep, block_size=512):
 
     # get inputs from prep function
     Ved_G   = prep["Ved_G"]
@@ -110,10 +114,8 @@ def compute_ML_G_blocked(prep, block_size=512):
                 G = G_sc[ik]        # (nG_k, 3)
                 Ck_ = Ck[ik]        # (nband, nG_k)
 
-                # k'-k in supercell coordinates
-                delta_k_sc = np.rint(
-                    (k_red[ikp] - k_red[ik]) * Ndiag
-                ).astype(int)
+                # k'-k in supercell coordinates, round to integer and do direct indexing
+                delta_k_sc = np.rint((k_red[ikp] - k_red[ik]) * Ndiag).astype(int)
 
                 # compute M per block
                 M_block = np.zeros((nb, nb), dtype=np.complex128)
@@ -261,3 +263,187 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
             M[:, ikp, :, ik] = blocks_r[j]
   
     return M
+
+##########################################################################
+# NON COMMENSURATE GRIDS: INTERPOLATION OF FOURIER TRANSFORMED POTENTIAL #
+##########################################################################
+
+from electron_defect_interaction.utils.interpolation import trilinear_periodic
+
+# NO MPI
+
+def compute_ML_G_interp(prep, block_size=512):
+
+    # get inputs from prep function
+    Ved_G   = prep["Ved_G"]
+    ngfft   = prep["ngfft"]
+    Ndiag   = prep["Ndiag"]
+    k_red   = prep["k_red"]
+    G_sc    = prep["G_sc_int"]
+    Ck      = prep["Ck"]
+    nb      = prep["nb"]
+    nk      = prep["nk"]
+
+    Nx, Ny, Nz = ngfft
+
+    M = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
+    with tqdm(total=nk * nk, desc="(k',k) blocks") as pbar:
+        for ikp in range(nk):
+            Gp = G_sc[ikp]          # (nG_kp, 3)
+            Ckp = Ck[ikp]           # (nband, nG_kp)
+            nG_kp = Gp.shape[0]   
+
+            for ik in range(nk):
+                G = G_sc[ik]        # (nG_k, 3)
+                Ck_ = Ck[ik]        # (nband, nG_k)
+
+                # k'-k in supercell coordinates, keep fractional coords and interpolate potential 
+                delta_k_sc = (k_red[ikp] - k_red[ik]) * Ndiag # float (3,)
+
+                # compute M per block
+                M_block = np.zeros((nb, nb), dtype=np.complex128)
+
+                # split the sum over G' into managable blocks of size block_size
+                for start in range(0, nG_kp, block_size):
+                    stop = min(start + block_size, nG_kp)
+
+                    # G' block
+                    Gp_blk = Gp[start:stop]                    # (B,3)
+                    Ckp_blk = Ckp[:, start:stop]               # (nband,B)
+
+                    # compute q = k' - k + G' - G 
+                    qx = delta_k_sc[0] + Gp_blk[:, None, 0] - G[None, :, 0]
+                    qy = delta_k_sc[1] + Gp_blk[:, None, 1] - G[None, :, 1]
+                    qz = delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2]
+
+                    # get V(q) for this block
+                    V_block = trilinear_periodic(Ved_G, qx, qy, qz) # (B, nG_k)
+
+                    # contract: M += C_kp_block.conj() @ (V_block @ Ck0.T)
+                    tmp = V_block @ Ck_.T
+                    M_block += Ckp_blk.conj() @ tmp
+
+                M[:, ikp, :, ik] = M_block
+                pbar.update(1)
+
+    return M
+
+# MPI
+
+def compute_block_M_interp(Ved_G, ngfft, delta_k_sc, Gp, G, Ckp, Ck0, block_size):
+    Nx, Ny, Nz = ngfft
+    nband = Ckp.shape[0]
+    nG_kp = Gp.shape[0]
+
+    M_block = np.zeros((nband, nband), dtype=np.complex128)
+
+    for start in range(0, nG_kp, block_size):
+        stop = min(start + block_size, nG_kp)
+
+        Gp_blk  = Gp[start:stop]              # (B,3)
+        Ckp_blk = Ckp[:, start:stop]          # (nband,B)
+
+        qx = delta_k_sc[0] + Gp_blk[:, None, 0] - G[None, :, 0]
+        qy = delta_k_sc[1] + Gp_blk[:, None, 1] - G[None, :, 1] 
+        qz = delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2]
+
+        Vblk = trilinear_periodic(Ved_G, qx, qy, qz)            # (B, nG_k)
+        tmp  = Vblk @ Ck0.T                   # (B, nband)
+        M_block += Ckp_blk.conj() @ tmp       # (nband, nband)
+
+    return M_block
+
+def compute_ML_G_interp_mpi(prep, block_size=128, show_tqdm=True):
+    """
+    MPI over (k',k) blocks.
+    Each rank computes a subset of pairs and rank 0 assembles the full M.
+    """
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+    Ved_G   = prep["Ved_G"]
+    ngfft   = prep["ngfft"]
+    Ndiag   = prep["Ndiag"]
+    k_red   = prep["k_red"]
+    G_sc    = prep["G_sc_int"]
+    Ck      = prep["Ck"]
+    nb   = prep["nb"]
+    nk    = prep["nk"]
+
+    # Build all (ikp, ik) pairs in a deterministic order
+    pairs = [(ikp, ik) for ikp in range(nk) for ik in range(nk)]
+    npairs = len(pairs)
+
+    # Partition pairs across ranks (contiguous chunks)
+    counts = [npairs // size + (1 if r < (npairs % size) else 0) for r in range(size)]
+    displs = [sum(counts[:r]) for r in range(size)]
+    local_pairs = pairs[displs[rank] : displs[rank] + counts[rank]]
+    nlocal = len(local_pairs)
+
+    # Local storage: blocks in the same order as local_pairs
+    local_blocks = np.zeros((nlocal, nb, nb), dtype=np.complex128)
+
+    it = range(nlocal)
+    if show_tqdm and rank == 0:
+        # only rank 0 shows progress for entire job
+        it = tqdm(it, desc="(k',k) blocks (rank0 view)", total=nlocal, dynamic_ncols=True, mininterval=0.5)
+
+    for i in it:
+        ikp, ik = local_pairs[i]
+
+        Gp  = G_sc[ikp]
+        G   = G_sc[ik]
+        Ckp = Ck[ikp]
+        Ck0 = Ck[ik]
+
+        delta_k_sc = (k_red[ikp] - k_red[ik]) * Ndiag
+
+        local_blocks[i] = compute_block_M_interp(
+            Ved_G=Ved_G, ngfft=ngfft, delta_k_sc=delta_k_sc,
+            Gp=Gp, G=G, Ckp=Ckp, Ck0=Ck0,
+            block_size=block_size
+        )
+  
+    # Gather all blocks to rank 0 (Gatherv on flattened complex128)
+    sendbuf = local_blocks.reshape(-1)
+    sendcount = sendbuf.size
+
+    recvcounts = comm.gather(sendcount, root=0)
+
+    if rank == 0:
+        rdispls = np.zeros(size, dtype=np.int64)
+        rdispls[1:] = np.cumsum(recvcounts[:-1], dtype=np.int64)
+        recvbuf = np.empty(sum(recvcounts), dtype=np.complex128)
+    else:
+        rdispls = None
+        recvbuf = None
+
+    comm.Gatherv(
+        sendbuf,
+        [recvbuf, recvcounts, rdispls, MPI.DOUBLE_COMPLEX],
+        root=0
+    )
+
+    if rank != 0:
+        return None
+
+    # Assemble full M on rank 0
+    M = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
+
+    # Reconstruct the global ordering of blocks from counts/displs
+    # recvbuf contains blocks for rank 0 chunk, then rank 1 chunk, etc.
+    offset = 0
+    for r in range(size):
+        nblocks_r = counts[r]
+        nvals_r = nblocks_r * nb * nb
+        blocks_r = recvbuf[offset : offset + nvals_r].reshape(nblocks_r, nb, nb)
+        offset += nvals_r
+
+        pairs_r = pairs[displs[r] : displs[r] + counts[r]]
+        for j, (ikp, ik) in enumerate(pairs_r):
+            M[:, ikp, :, ik] = blocks_r[j]
+  
+    return M
+

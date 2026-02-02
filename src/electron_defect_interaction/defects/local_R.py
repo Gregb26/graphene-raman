@@ -11,7 +11,7 @@ from electron_defect_interaction.wavefunctions.wfk import compute_psi_nk
 from electron_defect_interaction.wavefunctions.fold_wfk_to_sc import compute_psi_nk_fold_sc
 from tqdm import tqdm
 
-def compute_ML_R_sc(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path, subtract_mean=True, pristine=False):
+def compute_ML_R(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path, subtract_mean=True, pristine=False):
     """
     Computes the local part of the electron-defect interaction matrix in real space.
 

@@ -61,20 +61,31 @@ from scipy.ndimage import map_coordinates
 
 def cubic_spline_periodic(F, qx, qy, qz):
     """
-    Periodic cubine spline interpolation of a 3D array. 
-    Inputs:
-     F:           (Nx, Ny, Nz) array of complex, 3D array
-     qx, qy, qz:  points at which to evaluate F.
-     Returns: interpolated complex value.
+    Periodic cubic spline interpolation of a 3D array.
+
+    qx, qy, qz can be arrays of any matching shape.
+    Returns array of same shape with interpolated values.
     """
     Nx, Ny, Nz = F.shape
+
+    # wrap to periodic domain
     qx = np.mod(qx, Nx)
     qy = np.mod(qy, Ny)
     qz = np.mod(qz, Nz)
 
-    coords = np.vstack([qx, qy, qz])
+    orig_shape = qx.shape
+    M = qx.size
 
-    return map_coordinates(F, coords, order=3, mode='wrap')
+    coords = np.vstack([
+        qx.ravel(),
+        qy.ravel(),
+        qz.ravel()
+    ])
+
+    vals = map_coordinates(F, coords, order=3, mode='wrap')
+
+    return vals.reshape(orig_shape)
+
 
 
 

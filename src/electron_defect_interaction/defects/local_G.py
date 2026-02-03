@@ -343,9 +343,10 @@ def compute_block_M_interp(Ved_G, ngfft, delta_k_sc, Gp, G, Ckp, Ck0, block_size
         Gp_blk  = Gp[start:stop]              # (B,3)
         Ckp_blk = Ckp[:, start:stop]          # (nband,B)
 
-        qx = delta_k_sc[0] + Gp_blk[:, None, 0] - G[None, :, 0]
-        qy = delta_k_sc[1] + Gp_blk[:, None, 1] - G[None, :, 1] 
-        qz = delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2]
+        # compute q and convert to grid index
+        qx = delta_k_sc[0] + Gp_blk[:, None, 0] - G[None, :, 0] * Nx
+        qy = delta_k_sc[1] + Gp_blk[:, None, 1] - G[None, :, 1] * Ny
+        qz = delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2] * Nz
 
         Vblk = cubic_spline_periodic(Ved_G, qx, qy, qz)            # (B, nG_k)
         tmp  = Vblk @ Ck0.T                   # (B, nband)

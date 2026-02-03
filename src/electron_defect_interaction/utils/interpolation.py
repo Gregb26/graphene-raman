@@ -57,5 +57,25 @@ def trilinear_periodic(F,x,y,z,dx=1.0,dy=1.0,dz=1.0):
         c111 * t     * s     * r
     )
 
+from scipy.ndimage import map_coordinates
+
+def cubic_spline_periodic(F, qx, qy, qz):
+    """
+    Periodic cubine spline interpolation of a 3D array. 
+    Inputs:
+     F:           (Nx, Ny, Nz) array of complex, 3D array
+     qx, qy, qz:  points at which to evaluate F.
+     Returns: interpolated complex value.
+    """
+    Nx, Ny, Nz = F.shape
+    qx = np.mod(qx, Nx)
+    qy = np.mod(qy, Ny)
+    qz = np.mod(qz, Nz)
+
+    coords = np.vstack([qx, qy, qz])
+
+    return map_coordinates(F, coords, order=3, mode='wrap')
+
+
 
  

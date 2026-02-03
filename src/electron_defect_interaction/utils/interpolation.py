@@ -28,7 +28,7 @@ def trilinear_periodic(F,x,y,z,dx=1.0,dy=1.0,dz=1.0):
     # grid point to the left of query point
     i0 = np.floor(u).astype(np.int64); j0 = np.floor(v).astype(np.int64); k0 = np.floor(w).astype(np.int64)
     # grid point to the right of query point
-    i1 = (i0 + 1) % Nx; j1 = (j0 + 1) % Ny; k1 = (k0 + 1) % Ny;  
+    i1 = (i0 + 1) % Nx; j1 = (j0 + 1) % Ny; k1 = (k0 + 1) % Nz;  
 
     # trinlinear interpolation
     t = u - i0; s = v - j0; r = w - k0

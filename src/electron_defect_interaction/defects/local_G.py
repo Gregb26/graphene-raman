@@ -268,7 +268,7 @@ def compute_ML_G_mpi(prep, block_size=128, show_tqdm=True):
 # NON COMMENSURATE GRIDS: INTERPOLATION OF FOURIER TRANSFORMED POTENTIAL #
 ##########################################################################
 
-from electron_defect_interaction.utils.interpolation import trilinear_periodic
+from electron_defect_interaction.utils.interpolation import trilinear_periodic, cubic_spline_periodic
 
 # NO MPI
 
@@ -317,7 +317,7 @@ def compute_ML_G_interp(prep, block_size=512):
                     qz = delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2]
 
                     # get V(q) for this block
-                    V_block = trilinear_periodic(Ved_G, qx, qy, qz) # (B, nG_k)
+                    V_block = cubic_spline_periodic(Ved_G, qx, qy, qz) # (B, nG_k)
 
                     # contract: M += C_kp_block.conj() @ (V_block @ Ck0.T)
                     tmp = V_block @ Ck_.T
@@ -347,7 +347,7 @@ def compute_block_M_interp(Ved_G, ngfft, delta_k_sc, Gp, G, Ckp, Ck0, block_size
         qy = delta_k_sc[1] + Gp_blk[:, None, 1] - G[None, :, 1] 
         qz = delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2]
 
-        Vblk = trilinear_periodic(Ved_G, qx, qy, qz)            # (B, nG_k)
+        Vblk = cubic_spline_periodic(Ved_G, qx, qy, qz)            # (B, nG_k)
         tmp  = Vblk @ Ck0.T                   # (B, nband)
         M_block += Ckp_blk.conj() @ tmp       # (nband, nband)
 

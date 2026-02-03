@@ -16,6 +16,8 @@ from electron_defect_interaction.utils.planewaves import mask_invalid_G
 from electron_defect_interaction.io.pseudo_io import read_psp8, fq_from_fr
 
 
+# NO MPI
+
 def build_K_vectors(k_red, G_red, keep, B_uc):
     """
     Compute the K=k+G vectors, their norm and their unit vectors.
@@ -182,3 +184,31 @@ def compute_M_NL(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path):
     M_NL = M_d - M_p
 
     return M_NL 
+
+# MPI
+
+from mpi4py import MPI
+
+def split_counts(n, size):
+    """
+    For n total objects and size MPI ranks, distribute the objects across the ranks. counts[r] is how many objects rank r should process
+    and displs[r] is the starting index of rank r inside the global array
+    """
+    counts = np.array([n // size + (1 if r < (n % size) else 0) for r in range(size)], dtype=np.int64)
+    displs = np.zeros(size, dtype=np.int64)
+    displs[1:] = np.cumsum(counts[:-1])
+
+    return counts, displs
+
+def local_slice(n, comm):
+    """
+    Slice for current MPI rank
+    """
+    size = comm.Get_size()
+    rank = comm.Get_rank()
+    counts, displs = split_counts(n, size)
+    start = displs[rank]
+    stop = start + counts[rank]
+
+    return slice(start, stop), counts, displs
+

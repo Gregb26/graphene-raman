@@ -82,7 +82,7 @@ def cubic_spline_periodic(F, qx, qy, qz):
         qz.ravel()
     ])
 
-    vals = map_coordinates(F, coords, order=3, mode='wrap')
+    vals = map_coordinates(F, coords, order=3, mode='grid-wrap')
 
     return vals.reshape(orig_shape)
 

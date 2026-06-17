@@ -131,10 +131,12 @@ def map_G_to_fft_grid(ngfft):
 
     Nx, Ny, Nz = ngfft
 
-    # Mapping is given by np.fft.fftfreq
-    map_x = (np.fft.fftfreq(Nx)*Nx).astype(int)
-    map_y = (np.fft.fftfreq(Ny)*Ny).astype(int)
-    map_z = (np.fft.fftfreq(Nz)*Nz).astype(int)
+    # Mapping is given by np.fft.fftfreq. Round before casting: fftfreq(N)*N can return values
+    # like -6.9999999 that truncate to -6 with .astype(int), silently dropping grid indices
+    # (e.g. N=192 loses 20 of its 192 keys). np.rint avoids this.
+    map_x = np.rint(np.fft.fftfreq(Nx)*Nx).astype(int)
+    map_y = np.rint(np.fft.fftfreq(Ny)*Ny).astype(int)
+    map_z = np.rint(np.fft.fftfreq(Nz)*Nz).astype(int)
 
     # Build mapping dictionaries: map_dict_i[G_i] = j_i
     map_dict_x = {G_x:j_x for j_x,G_x in enumerate(map_x)}

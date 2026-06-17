@@ -49,7 +49,7 @@ def read_psp8(path):
 
         f.readline() # zatom, zion, pspd
 
-        lmax, _ ,mmax = map(int, f.readline().split()[2:5]) # maximum orbital angular momentum quantum number and number of grid points
+        lmax, lloc , mmax = map(int, f.readline().split()[2:5]) # maximum orbital angular momentum quantum number, index for local part and number of grid points
 
         f.readline() # rchrg, fchrg, qchrg
         
@@ -78,11 +78,91 @@ def read_psp8(path):
         rgrid = fr[:, 1]
 
         # Next is the local part of the pseudopotential
-        f.readline()
+        lloc_ = f.readline()
+        V_l = np.zeros((mmax, 3))
+        V_L = np.zeros(mmax)
+        for ri in range(mmax):
+            V_l[ri, :] = np.array([ffloat(line) for line in f.readline().split()])
+        
+        V_L = V_l[:, 2]
 
-        # TODO    
+    return ekb_li, fr_li, rgrid, lmax, imax, V_L
 
-    return ekb_li, fr_li, rgrid
+def read_upf(path, to_hartree=True):
+    """
+    Read a UPF (v2) norm-conserving pseudopotential and extract the non-local Kleinman-Bylander data
+    in the SAME layout as read_psp8, so it can feed fq_from_fr / compute_M_NL unchanged.
+
+    UPF stores:
+        - PP_MESH/PP_R   : radial grid r (size = mesh_size)
+        - PP_BETA.i      : the radial KB projectors, tabulated as r*beta_i(r) (matches read_psp8's f convention)
+        - PP_DIJ         : the D_ij matrix; for ONCV norm-conserving it is diagonal, D_ii = KB energy of projector i
+        - PP_LOCAL       : the local potential
+    Each PP_BETA.i carries its angular_momentum l; projectors are grouped by l into channels i.
+
+    Units: UPF energies (PP_DIJ, PP_LOCAL) are in Rydberg; read_psp8 / the code expect Hartree, so we
+    convert by 1/2 when to_hartree=True (default). The projectors r*beta(r) are dimensionful but the same
+    convention as .psp8 (verified by overlaying the Hankel form factors of C.psp8 and C.upf).
+
+    Returns (mirrors read_psp8):
+        ekb_li: (lmax+1, imax) array of floats   -- KB energies (Hartree)
+        fr_li:  (lmax+1, imax, mmax) array       -- r*beta radial projectors on the real-space grid
+        rgrid:  (mmax,) array                    -- radial grid
+        lmax:   int
+        imax:   int
+        V_L:    (mmax,) array                    -- local potential (Hartree)
+    """
+    import xml.etree.ElementTree as ET
+
+    root = ET.parse(path).getroot()
+
+    def arr(tag_path):
+        el = root.find(tag_path)
+        return np.array(el.text.split(), dtype=np.float64)
+
+    rgrid = arr(".//PP_MESH/PP_R")
+    mmax = rgrid.size
+    V_L = arr(".//PP_LOCAL")
+
+    nl = root.find(".//PP_NONLOCAL")
+
+    # Collect beta projectors with their angular momentum, in file order
+    betas = []  # list of (l, values)
+    for el in nl:
+        if el.tag.startswith("PP_BETA"):
+            l = int(el.get("angular_momentum"))
+            vals = np.array(el.text.split(), dtype=np.float64)
+            if vals.size < mmax:  # pad to full grid if stored shorter
+                vals = np.concatenate([vals, np.zeros(mmax - vals.size)])
+            betas.append((l, vals[:mmax]))
+
+    # D_ij matrix (flat -> square), diagonal entries are the per-projector KB energies
+    nproj = len(betas)
+    Dij = arr(".//PP_DIJ").reshape(nproj, nproj)
+    D = np.diag(Dij)
+
+    lmax = max(l for l, _ in betas)
+    # number of channels per l
+    nproj_l = np.zeros(lmax + 1, dtype=int)
+    for l, _ in betas:
+        nproj_l[l] += 1
+    imax = int(nproj_l.max())
+
+    ekb_li = np.zeros((lmax + 1, imax))
+    fr_li = np.zeros((lmax + 1, imax, mmax))
+
+    ch = np.zeros(lmax + 1, dtype=int)  # current channel index per l
+    for i, (l, vals) in enumerate(betas):
+        c = ch[l]
+        fr_li[l, c, :] = vals
+        ekb_li[l, c] = D[i]
+        ch[l] += 1
+
+    if to_hartree:
+        ekb_li = 0.5 * ekb_li
+        V_L = 0.5 * V_L
+
+    return ekb_li, fr_li, rgrid, lmax, imax, V_L
 
 def fq_from_fr(r, fr_li, q):
     """

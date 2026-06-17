@@ -17,22 +17,30 @@ def prep_reciprocal_inputs(
     sc_d_pot_path,
     subtract_mean=True,
     pristine=False,
+    bands=None,
+    io=None,
 ):
+    if io is None:
+        from electron_defect_interaction.io import abinit_io as io
 
     # get unit cell quantities
-    C_nkg, nG = get_C_nk(uc_wfk_path)   # PW coefficients (ng,nk,nG_max) and number of active PWs per k (nk,)
-    G_red = get_G_red(uc_wfk_path)      # reciprocal lattice vectors of unit cell in reduced coords (nk, nG_max, 3)
-    k_red = get_k_red(uc_wfk_path)      # kpoints of unit cell in reduced coords (nk, 3)
-    A_uc, _ = get_A_volume(uc_wfk_path) # primitive lattice vectors of unit cell A[:,i] = (a_i) (3,3)
+    C_nkg, nG = io.get_C_nk(uc_wfk_path)   # PW coefficients (ng,nk,nG_max) and number of active PWs per k (nk,)
+    G_red = io.get_G_red(uc_wfk_path)      # reciprocal lattice vectors of unit cell in reduced coords (nk, nG_max, 3)
+    k_red = io.get_k_red(uc_wfk_path)      # kpoints of unit cell in reduced coords (nk, 3)
+    A_uc, _ = io.get_A_volume(uc_wfk_path) # primitive lattice vectors of unit cell A[:,i] = (a_i) (3,3)
+
+    # Optionally restrict to a subset of bands
+    if bands is not None:
+        C_nkg = C_nkg[list(bands), ...]
 
     nb, nk, _ = C_nkg.shape
 
     # supercell geometry
-    A_sc, Omega_sc = get_A_volume(sc_wfk_path)    # primtive lattice vectors of supercell (3,3) and supercell volume float
+    A_sc, Omega_sc = io.get_A_volume(sc_wfk_path)    # primtive lattice vectors of supercell (3,3) and supercell volume float
 
     # Local potential of pristine and defective supercell
-    Vp, _ = get_pot(sc_p_pot_path, subtract_mean); Vp = Vp.transpose(2, 1, 0) # (Nx, Ny, Nz)
-    Vd, _ = get_pot(sc_d_pot_path, subtract_mean); Vd = Vd.transpose(2, 1, 0) # (Nx, Ny, Nz)
+    Vp, _ = io.get_pot(sc_p_pot_path, subtract_mean); Vp = Vp.transpose(2, 1, 0) # (Nx, Ny, Nz)
+    Vd, _ = io.get_pot(sc_d_pot_path, subtract_mean); Vd = Vd.transpose(2, 1, 0) # (Nx, Ny, Nz)
     ngfft = Vp.shape  # FFT grid size
 
     if pristine:
@@ -128,10 +136,10 @@ def compute_ML_G(prep, block_size=512):
                     Gp_blk = Gp[start:stop]                    # (B,3)
                     Ckp_blk = Ckp[:, start:stop]               # (nband,B)
 
-                    # compute q = k' - k + G' - G 
-                    qx = delta_k_sc[0] + Gp_blk[:, None, 0] - G[None, :, 0]
-                    qy = delta_k_sc[1] + Gp_blk[:, None, 1] - G[None, :, 1]
-                    qz = delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2]
+                    # compute q = k' - k + G' - G, wrapped into the FFT grid (periodic)
+                    qx = (delta_k_sc[0] + Gp_blk[:, None, 0] - G[None, :, 0]) % Nx
+                    qy = (delta_k_sc[1] + Gp_blk[:, None, 1] - G[None, :, 1]) % Ny
+                    qz = (delta_k_sc[2] + Gp_blk[:, None, 2] - G[None, :, 2]) % Nz
 
                     # get V(q) for this block
                     V_block = Ved_G[qx, qy, qz]                   # (B, nG_k)

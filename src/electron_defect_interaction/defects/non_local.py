@@ -107,7 +107,7 @@ def compute_angular_part(K_hat, lmax):
 
     return Y_kglm
 
-def compute_M_NL(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path, io=None, pseudo_reader=None):
+def compute_M_NL(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path, io=None, pseudo_reader=None, bands=None):
     """
     Computes the non local part of the electron-defect interaction matrix.
 
@@ -141,6 +141,8 @@ def compute_M_NL(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path, io=None, 
 
     # Get necessary unit cells quantities
     C_nkg, nG = io.get_C_nk(uc_wfk_path) # planewave coefficients (nband, nkpt, nG_max) and number of active G per k (nkpt)
+    if bands is not None:
+        C_nkg = C_nkg[list(bands), ...]  # restrict to the requested bands (the M sub-block is independent)
     G_red = io.get_G_red(uc_wfk_path) # reciprocal lattice vectors in reduced coords of the unit cell (nkpt, nG_max, 3)
     k_red = io.get_k_red(uc_wfk_path) # kpoints in reduced coords of the unit cell (nkpt, 3)
     B_uc, _ = io.get_B_volume(uc_wfk_path) # primitive reciprocal lattice vectors of the unit cell B[:,i] = b_i
@@ -223,3 +225,79 @@ def local_slice(n, comm):
 
     return slice(start, stop), counts, displs
 
+
+
+def compute_M_NL_mpi(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path,
+                     io=None, pseudo_reader=None, bands=None):
+    """
+    MPI version of compute_M_NL. The separable factor B_nk(atom,l,i,m_l) is built on every rank
+    (it is small, especially with `bands` restricted), and the O(nk^2) contraction that forms
+    M_mn(k',k) = (4pi)^2/Omega_uc sum E_li B_mk'* B_nk is distributed over the bra k-index k'.
+    Each rank fills its k' slices of M and the ranks Allreduce the full result.
+
+    Returns M[bra_band, k', ket_band, k] (Hartree) on every rank.
+    """
+    from scipy.interpolate import CubicSpline
+
+    if io is None:
+        from electron_defect_interaction.io import abinit_io as io
+    if pseudo_reader is None:
+        pseudo_reader = read_psp8
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank(); size = comm.Get_size()
+
+    ekb_li, fr_li, rgrid, lmax, imax, _ = pseudo_reader(psp8_path)
+
+    C_nkg, nG = io.get_C_nk(uc_wfk_path)
+    if bands is not None:
+        C_nkg = C_nkg[list(bands), ...]
+    G_red = io.get_G_red(uc_wfk_path)
+    k_red = io.get_k_red(uc_wfk_path)
+    B_uc, _ = io.get_B_volume(uc_wfk_path)
+    _, Omega_uc = io.get_A_volume(uc_wfk_path)
+    ecut = io.get_ecut(uc_wfk_path)
+
+    A_sc, _ = io.get_A_volume(sc_p_wfk_path)
+    tau_p = red_to_cart(io.get_x_red(sc_p_wfk_path), A_sc)
+    tau_d = red_to_cart(io.get_x_red(sc_d_wfk_path), A_sc)
+
+    nb, nk, _ = C_nkg.shape
+    keep = mask_invalid_G(nG)
+    C = np.where(keep, C_nkg, 0.0)
+
+    K, K_norm, K_hat = build_K_vectors(k_red, G_red, keep, B_uc)
+    q = np.linspace(0, 2 * np.sqrt(2 * ecut), 2000)
+    Fq = CubicSpline(q, fq_from_fr(rgrid, fr_li, q), axis=-1, extrapolate=False)
+    F_likg = Fq(K_norm)                       # (l, i, nk, nG)
+    Y_kglm = compute_angular_part(K_hat, lmax)  # (nk, nG, l, m)
+    pref = 4 * np.pi / np.sqrt(Omega_uc)
+
+    def build_B(tau):
+        # B[n,k,s,l,i,m] built one k at a time to avoid the (nk,natom,nG) phase array
+        natom = tau.shape[0]
+        B = np.zeros((nb, nk, natom, lmax + 1, imax, 2 * lmax + 1), dtype=np.complex128)
+        for ik in range(nk):
+            phase = np.exp(-1j * (K[ik] @ tau.T)).T   # (natom, nG)
+            B[:, ik] = pref * np.einsum("ng,lig,glm,sg->nslim",
+                                        np.conj(C[:, ik]), F_likg[:, :, ik], Y_kglm[ik], phase,
+                                        optimize=True)
+        return B
+
+    B_p = build_B(tau_p)
+    B_d = build_B(tau_d)
+
+    # Distribute the bra k-index (k') over ranks
+    counts = [nk // size + (1 if r < (nk % size) else 0) for r in range(size)]
+    displs = [sum(counts[:r]) for r in range(size)]
+    my_kp = range(displs[rank], displs[rank] + counts[rank])
+
+    M_local = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
+    for ikp in my_kp:
+        Mp = np.einsum("li,nslia,jpslia->njp", ekb_li, B_p[:, ikp], np.conj(B_p), optimize=True)
+        Md = np.einsum("li,nslia,jpslia->njp", ekb_li, B_d[:, ikp], np.conj(B_d), optimize=True)
+        M_local[:, ikp, :, :] = Md - Mp
+
+    M = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
+    comm.Allreduce(M_local, M, op=MPI.SUM)
+    return M

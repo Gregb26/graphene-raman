@@ -41,7 +41,7 @@ from mpi4py import MPI
 
 from electron_defect_interaction.defects.local_G import prep_reciprocal_inputs, compute_ML_G_mpi
 from electron_defect_interaction.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
-from electron_defect_interaction.defects.non_local import compute_M_NL
+from electron_defect_interaction.defects.non_local import compute_M_NL_mpi
 
 
 def parse_args():
@@ -95,16 +95,16 @@ def main():
         # reciprocal over (k', k) blocks; assembled M^L on rank 0 only
         M_L = compute_ML_G_mpi(prep, block_size=args.block_size, show_tqdm=(rank == 0))
 
-    # --- Non-local part: rank 0 only (cheap) ---
+    # --- Non-local part: distributed over k' across ranks (returns on every rank) ---
     if rank == 0:
-        print("[rank0] computing M^NL ...", flush=True)
-        M_NL = compute_M_NL(
-            args.uc, args.sc_p, args.sc_d, args.upf,
-            io=io, pseudo_reader=pseudo_reader,
-        )
-        if bands is not None:
-            M_NL = M_NL[bands][:, :, bands]
+        print("[rank0] computing M^NL (MPI) ...", flush=True)
+    M_NL = compute_M_NL_mpi(
+        args.uc, args.sc_p, args.sc_d, args.upf,
+        io=io, pseudo_reader=pseudo_reader, bands=bands,
+    )
 
+    # --- Assemble and save on rank 0 ---
+    if rank == 0:
         M = M_L + M_NL
         np.save(args.out, M)
 

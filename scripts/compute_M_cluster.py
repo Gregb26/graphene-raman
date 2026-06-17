@@ -40,6 +40,7 @@ import numpy as np
 from mpi4py import MPI
 
 from electron_defect_interaction.defects.local_G import prep_reciprocal_inputs, compute_ML_G_mpi
+from electron_defect_interaction.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
 from electron_defect_interaction.defects.non_local import compute_M_NL
 
 
@@ -54,7 +55,11 @@ def parse_args():
     p.add_argument("--out", default="M_ed.npy", help="output .npy file for M (default: M_ed.npy)")
     p.add_argument("--backend", choices=["qe", "abinit"], default="qe")
     p.add_argument("--bands", default="all", help="comma-separated band indices, or 'all' (default)")
-    p.add_argument("--block-size", type=int, default=512, help="G' block size for M^L (default: 512)")
+    p.add_argument("--method", choices=["real", "reciprocal"], default="real",
+                   help="M^L method: 'real' (grid-distributed real space, fast for moderate supercells) "
+                        "or 'reciprocal' (better asymptotic scaling for very large supercells)")
+    p.add_argument("--block-size", type=int, default=512,
+                   help="reciprocal: G' block size; real: grid block size per rank")
     return p.parse_args()
 
 
@@ -76,15 +81,19 @@ def main():
     # --- Local part: rank 0 reads files and builds inputs, then broadcasts ---
     prep = None
     if rank == 0:
-        print(f"[rank0] backend={args.backend}, bands={args.bands}, nranks={comm.Get_size()}", flush=True)
-        prep = prep_reciprocal_inputs(
-            args.uc, args.sc_p, args.pot_p, args.pot_d,
-            subtract_mean=False, bands=bands, io=io,
-        )
+        print(f"[rank0] backend={args.backend}, method={args.method}, bands={args.bands}, "
+              f"nranks={comm.Get_size()}", flush=True)
+        prep_fn = prep_realspace_inputs if args.method == "real" else prep_reciprocal_inputs
+        prep = prep_fn(args.uc, args.sc_p, args.pot_p, args.pot_d,
+                       subtract_mean=False, bands=bands, io=io)
     prep = comm.bcast(prep, root=0)
 
-    # All ranks cooperate over (k', k) blocks; only rank 0 receives the assembled M^L
-    M_L = compute_ML_G_mpi(prep, block_size=args.block_size, show_tqdm=(rank == 0))
+    if args.method == "real":
+        # grid-distributed real space; Allreduce -> M^L on every rank
+        M_L = compute_ML_R_mpi(prep, grid_block=args.block_size if args.block_size > 1000 else 200_000)
+    else:
+        # reciprocal over (k', k) blocks; assembled M^L on rank 0 only
+        M_L = compute_ML_G_mpi(prep, block_size=args.block_size, show_tqdm=(rank == 0))
 
     # --- Non-local part: rank 0 only (cheap) ---
     if rank == 0:

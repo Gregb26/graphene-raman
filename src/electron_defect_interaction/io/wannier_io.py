@@ -84,50 +84,84 @@ def check_hermicity_HR(HR, R):
     
     return True
 
-def read_w90_HR(w90_path):
+def read_w90_hr(w90_path):
+    """
+    Read a Wannier90 `seedname_hr.dat` file (the tight-binding Hamiltonian H(R) in the Wannier basis).
 
+    Format: header line, nw, nrpts, the Wigner-Seitz degeneracy list (nrpts ints, 15 per line), then
+    nrpts blocks of nw*nw lines "Rx Ry Rz m n Re Im".
+
+    Returns
+    -------
+        HR: (nrpts, nw, nw) array of complex   -- H(R) in the Wannier basis
+        R:  (nrpts, 3) array of ints           -- R vectors (reduced coords)
+        ndegen: (nrpts,) array of ints         -- Wigner-Seitz degeneracies; H(k)=sum_R e^{ik.R} H(R)/ndegen(R)
+    """
+    from pathlib import Path
+    with Path(w90_path).open() as f:
+        f.readline()                       # header (date)
+        nw = int(f.readline())
+        nrpts = int(f.readline())
+
+        ndeg = []
+        while len(ndeg) < nrpts:           # degeneracy list, 15 per line
+            ndeg += [int(x) for x in f.readline().split()]
+        ndegen = np.array(ndeg[:nrpts], dtype=int)
+
+        HR = np.zeros((nrpts, nw, nw), dtype=complex)
+        R = np.zeros((nrpts, 3), dtype=int)
+        for ir in range(nrpts):
+            for _ in range(nw * nw):
+                t = f.readline().split()
+                rx, ry, rz, m, n = (int(x) for x in t[:5])
+                HR[ir, m - 1, n - 1] = float(t[5]) + 1j * float(t[6])
+            R[ir] = (rx, ry, rz)
+
+    check_hermicity_HR(HR, R)
+    return HR, R, ndegen
+
+def read_w90_HR(w90_path):
+    """
+    Read a Wannier90 `seedname_tb.dat` file and extract the tight-binding Hamiltonian H(R).
+
+    Format: header (date), three lattice-vector lines (Angstrom), nw, nrpts, the Wigner-Seitz
+    degeneracy list (nrpts ints, 15 per line), then nrpts blocks -- each a blank line, the R
+    vector "Rx Ry Rz", and nw*nw lines "m n Re Im". (A second set of blocks holding the position
+    operator <0m|r|Rn> follows in the file but is not read here.)
+
+    Returns
+    -------
+        HR: (nrpts, nw, nw) array of complex   -- H(R) in the Wannier basis
+        R:  (nrpts, 3) array of ints           -- R vectors (reduced coords)
+        ndegen: (nrpts,) array of ints         -- Wigner-Seitz degeneracies; H(k)=sum_R e^{ik.R} H(R)/ndegen(R)
+    """
     from pathlib import Path
     with Path(w90_path).open() as f:
 
-        date = f.readline()
+        f.readline()                       # header (date)
 
-        # Lattice vectors in angstrom
+        # Lattice vectors in angstrom (read but unused here)
         a1 = np.fromstring(f.readline(), sep=' ')
         a2 = np.fromstring(f.readline(), sep=' ')
         a3 = np.fromstring(f.readline(), sep=' ')
-
         A = np.column_stack((a1, a2, a3)) # A[:,i] = a_i
 
-        nw = int(f.readline()) # number of wannier functions
+        nw = int(f.readline())             # number of wannier functions
+        nrpts = int(f.readline())          # number of inequivalent R points used by Wannier90
 
-        nrpts = int(f.readline()) # number of inequivalent R points used by Wannier90 
+        ndeg = []                          # Wigner-Seitz degeneracy list, 15 per line
+        while len(ndeg) < nrpts:
+            ndeg += [int(x) for x in f.readline().split()]
+        ndegen = np.array(ndeg[:nrpts], dtype=int)
 
-        # skip the R point degeneracy list
-        count = 0
-        while count < nrpts:
-            line = f.readline().split()
-            count += len(line)
-
-        HR = []
-        R = []
-        for _ in range(nrpts):
-
-            f.readline() # blank space
-
-            r = np.array([int(n) for n in f.readline().split()]) # R vectors
-            hr = np.zeros((nw, nw), dtype=complex) # allocate matrix
-
-            for _ in range(nw*nw):
+        HR = np.zeros((nrpts, nw, nw), dtype=complex)
+        R = np.zeros((nrpts, 3), dtype=int)
+        for ir in range(nrpts):
+            f.readline()                   # blank line
+            R[ir] = [int(n) for n in f.readline().split()]
+            for _ in range(nw * nw):
                 m_str, n_str, Re_str, Im_str = f.readline().split()
-                m = int(m_str) - 1 # convert to 0 based
-                n = int(n_str) - 1
-                hr[m,n] = float(Re_str) + 1j*float(Im_str)
-            
-            R.append(r)
-            HR.append(hr)
+                HR[ir, int(m_str) - 1, int(n_str) - 1] = float(Re_str) + 1j * float(Im_str)
 
-        HR = np.array(HR)
-        R = np.array(R) 
-
-        if check_hermicity_HR(HR,R):
-            return HR, R
+    check_hermicity_HR(HR, R)
+    return HR, R, ndegen

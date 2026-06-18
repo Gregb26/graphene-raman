@@ -1,0 +1,29 @@
+# Police et taille — adaptées pour une figure de mémoire
+font.family        : serif
+font.serif         : Computer Modern Roman
+text.usetex        : True
+font.size          : 11
+axes.labelsize     : 12
+legend.fontsize    : 10
+xtick.labelsize    : 10
+ytick.labelsize    : 10
+figure.dpi         : 300   # pour l'affichage notebook
+savefig.dpi        : 300   # pour la sauvegarde dans le mémoire
+
+# Taille de figure — adaptée pour une colonne LaTeX (~3.5 po)
+figure.figsize     : 6.5, 4.0
+
+# Lignes
+lines.linewidth    : 1.5
+
+# Axes
+axes.linewidth     : 0.8
+
+# Ticks
+xtick.direction    : in
+ytick.direction    : in
+xtick.minor.visible : True
+ytick.minor.visible : True
+
+# Grille
+axes.grid          : False

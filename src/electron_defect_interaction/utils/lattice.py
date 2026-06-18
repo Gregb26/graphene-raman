@@ -98,7 +98,7 @@ def build_k_path(high_sym_points, nk):
 
 import numpy as np
 
-def generate_mp_grid(nk1, nk2, nk3):
+def generate_mp_grid(nk1, nk2, nk3, fold=True):
     """
     Generates a uniform, Gamma-centered, Monkhorst-Pack kpoint grid from the number of kpoints
     in each direction nki.
@@ -110,15 +110,19 @@ def generate_mp_grid(nk1, nk2, nk3):
                 k1 = i / nk1
                 k2 = j / nk2
                 k3 = k / nk3 if nk3 > 1 else 0.0 # handles 2d case
+                if fold:
+                    k1 -= round(k1)
+                    k2 -= round(k2)
+                    k3 -= round(k3)
                 kpoints.append([k1, k2, k3])
 
     return np.array(kpoints)
 
-def write_kpoints(nk1, nk2, nk3, print_weights=True):
+def write_kpoints(nk1, nk2, nk3, print_weights=True, fold=True):
     """
     Write the kpoint list in a format suitable for Quantum-ESPRESSO input.
     """
-    kpts = generate_mp_grid(nk1, nk2, nk3)
+    kpts = generate_mp_grid(nk1, nk2, nk3, fold)
     w = 1.0 / (nk1 * nk2 * nk3) # kpoint weight, constant because uniform sampling
 
     print("K_POINTS crystal")

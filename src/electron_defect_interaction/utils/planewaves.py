@@ -4,7 +4,6 @@ pw_utils.py
 """
 
 import numpy as np
-from netCDF4 import Dataset
 
 def make_Cdicts_for_k(C_nk, G_red_uc, npw, ik, band_indices):
     """

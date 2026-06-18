@@ -15,6 +15,10 @@ jobs/
 notebooks/
 results/
 
+# Computed data (never commit matrices / DFT outputs)
+*.npy
+*.save/
+
 # Build outputs
 build/
 dist/

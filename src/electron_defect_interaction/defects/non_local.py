@@ -11,9 +11,8 @@ TODO:
 import numpy as np
 
 from electron_defect_interaction.utils.lattice import red_to_cart
-from electron_defect_interaction.io.abinit_io import *
 from electron_defect_interaction.utils.planewaves import mask_invalid_G
-from electron_defect_interaction.io.pseudo_io import read_psp8, fq_from_fr
+from electron_defect_interaction.io.pseudo_io import read_psp8, read_upf, fq_from_fr
 
 
 # NO MPI
@@ -121,10 +120,10 @@ def compute_M_NL(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path, io=None, 
         psp8_path: str
             Path to the pseudopotential (ABINIT .psp8 / QE .upf).
         io: module, optional
-            I/O backend (defaults to abinit_io; pass io.qe_io for Quantum ESPRESSO).
+            I/O backend (defaults to qe_io for Quantum ESPRESSO; pass abinit_io for ABINIT).
         pseudo_reader: callable, optional
             Pseudopotential reader returning (ekb_li, fr_li, rgrid, lmax, imax, V_L).
-            Defaults to read_psp8; pass read_upf for QE.
+            Defaults to read_upf (QE); pass read_psp8 for ABINIT.
     Returns:
         M_NL: (nband, nkpt, nband, nkpt) array of complex:
             Non-local part of the electron-defect interaction matrix
@@ -132,9 +131,9 @@ def compute_M_NL(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path, io=None, 
     from scipy.interpolate import CubicSpline
 
     if io is None:
-        from electron_defect_interaction.io import abinit_io as io
+        from electron_defect_interaction.io import qe_io as io
     if pseudo_reader is None:
-        pseudo_reader = read_psp8
+        pseudo_reader = read_upf
 
     # Get non local part of the pseudopotentials (ekb energies, r*beta projectors, radial grid, ...)
     ekb_li, fr_li, rgrid, lmax, imax, _ = pseudo_reader(psp8_path)
@@ -240,9 +239,9 @@ def compute_M_NL_mpi(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, psp8_path,
     from scipy.interpolate import CubicSpline
 
     if io is None:
-        from electron_defect_interaction.io import abinit_io as io
+        from electron_defect_interaction.io import qe_io as io
     if pseudo_reader is None:
-        pseudo_reader = read_psp8
+        pseudo_reader = read_upf
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank(); size = comm.Get_size()

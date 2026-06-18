@@ -1,6 +1,6 @@
 """
 test_ks_reconstruction.py
-    Standalone, no-ABINIT-needed validation of the QE I/O + matrix-element machinery.
+    Standalone validation of the QE I/O + matrix-element machinery (no external reference needed).
 
     The unit-cell Kohn-Sham wavefunctions diagonalise the unit-cell KS Hamiltonian, so
 

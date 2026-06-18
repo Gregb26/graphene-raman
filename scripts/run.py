@@ -4,8 +4,7 @@ run.py
     outputs and save it to disk.
 
     Inputs are QE `prefix.save/` directories plus pp.x local-potential dumps (plot_num=1 filplot) and the
-    UPF pseudopotential. For ABINIT inputs instead, drop `io=qe_io`/`pseudo_reader=read_upf` (the defaults
-    fall back to the ABINIT backend) and pass the corresponding .nc / .psp8 paths.
+    UPF pseudopotential.
 
     Note on memory: compute_ML_R builds the unit-cell wavefunctions folded onto the full supercell real-space
     grid, which is large for big supercells. Restrict `BANDS` accordingly, or use the MPI reciprocal-space

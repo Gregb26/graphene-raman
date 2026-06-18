@@ -1,7 +1,7 @@
 """
 wfk.py
     Python module that rebuilds the wavefunction from the planewave coefficients on a uniform grid in real space.
-    Automatically chooses the correct FFT grid given the maximum number of planewaves, following Abinit's convention.
+    Automatically chooses the correct FFT grid given the maximum number of planewaves, following the signed double-grid convention.
 """
 
 import numpy as np
@@ -39,7 +39,7 @@ def compute_psi_nk(
     Returns:
         psi_nk: (nband, nkpt, Nx, Ny, Nz) array of complex
             Wavefunctions for all bands and all kpoints in a uniform grid in real space with N=NxNyNz points. The grid shape
-            is determined according to Abinit's double grid convention. It matches ngfft as computed by Abinit.
+            is determined according to the double-grid convention (or the grid passed via ngfft).
         ngfft: tuple of ints:
             FFT grid shape
     """
@@ -47,7 +47,7 @@ def compute_psi_nk(
     nband, nkpt, _ = C_nkg.shape
 
     if ngfft is None:
-        # Build the FFT grid from the G vectors using Abinit's  convention (double grid)
+        # Build the FFT grid from the G vectors using the double-grid convention
         ngfft = fft_grid_from_G_red(G_red, nG)
         Nx, Ny, Nz = ngfft; N = np.prod(ngfft)
     else:

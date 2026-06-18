@@ -18,19 +18,18 @@ def compute_ML_R(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path, subtrac
 
     Inputs:
         uc_wfk_path: str
-            Path to the unit-cell wavefunctions. For ABINIT a WFK.nc file; for QE the prefix.save dir.
+            Path to the unit-cell wavefunctions (the prefix.save dir).
         sc_wfk_path:
             Path to the pristine supercell wavefunctions (only its geometry/volume is used here).
         sc_p_pot_path: str
-            Path to the local potential of the pristine supercell (ABINIT POT.nc / QE pp.x plot_file).
+            Path to the local potential of the pristine supercell (pp.x plot_num=1 filplot).
         sc_d_pot_path: str
             Path to the local potential of the defective supercell.
         bands: list of ints, optional
             Band indices to compute. If None, all bands are used (warning: the folded real-space grid
             for the supercell can be very large, so restrict the bands for big supercells).
         io: module, optional
-            I/O backend exposing get_C_nk/get_G_red/get_k_red/get_A_volume/get_pot. Defaults to qe_io
-            (Quantum ESPRESSO); pass electron_defect_interaction.io.abinit_io for ABINIT inputs.
+            I/O backend exposing get_C_nk/get_G_red/get_k_red/get_A_volume/get_pot. Defaults to qe_io.
     """
     if io is None:
         from electron_defect_interaction.io import qe_io as io

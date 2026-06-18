@@ -7,9 +7,6 @@ run_mpi.py
     computed on rank 0. Run with e.g.:
 
         mpirun -n 64 python scripts/run_mpi.py
-
-    For ABINIT inputs, drop the io=qe_io / pseudo_reader=read_upf arguments (defaults use the ABINIT
-    backend) and pass the corresponding .nc / .psp8 paths.
 """
 
 import os

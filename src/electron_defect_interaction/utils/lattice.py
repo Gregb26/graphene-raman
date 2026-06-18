@@ -33,13 +33,13 @@ def red_to_cart(x_red, X):
 
 def monkhorst_pack_grid(ngkpt, signed=True):
     """
-    Generates a uniform (no symmetry reduction) Monkhorst-Pack kpoint grid in reduced coordinates from the tuple ngkpt. Returns the same grid
-    as Abinit if signed=True
+    Generates a uniform (no symmetry reduction) Monkhorst-Pack kpoint grid in reduced coordinates from the tuple ngkpt.
+    With signed=True the grid is folded into [-0.5, 0.5).
     Inputs:
         ngkpt: tuple (N1, N2, N3) of ints
             Number of kpoints in each direction
         signed: Bool:
-            If True, fold [0,1) -> [-0.5, 0.5). Signed convention Abinit uses. Default is True.
+            If True, fold [0,1) -> [-0.5, 0.5) (signed convention). Default is True.
     Returns:
         k_grid: (nk, 3) array of floats
             kpoint grid in reduced coordinates

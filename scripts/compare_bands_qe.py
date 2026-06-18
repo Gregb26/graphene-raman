@@ -1,8 +1,7 @@
 """
 compare_bands_qe.py
     Compare Quantum ESPRESSO DFT bands (bands.x 'bands.dat') with the Wannier90-interpolated bands along
-    the same k-path. This is the QE analogue of scripts/compare_bands.py (which is ABINIT/EIG.nc only and,
-    importantly, ignores the Wigner-Seitz degeneracies). Here we use read_w90_HR WITH ndegen and Hwr_to_Hwk.
+    the same k-path, using read_w90_HR WITH the Wigner-Seitz degeneracies (ndegen) and Hwr_to_Hwk.
 
     bands.dat (bands.x raw format): header line '&plot nbnd=.., nks=.. /', then for each k-point a line
     with the cartesian k (units 2*pi/alat) followed by nbnd eigenvalues in eV. We convert k to reduced

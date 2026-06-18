@@ -1,6 +1,7 @@
 """
 qe_io.py
-    Helper functions that extract the same quantities as abinit_io.py, but from Quantum ESPRESSO (pw.x) outputs.
+    Helper functions that extract the quantities needed by the matrix-element code from Quantum
+    ESPRESSO (pw.x) outputs.
 
     A QE calculation writes everything we need inside the `prefix.save/` directory:
         - data-file-schema.xml : geometry, reciprocal lattice, ecut, k-points, atoms, eigenvalues, FFT grid
@@ -8,14 +9,12 @@ qe_io.py
 
     Conventions (verified against a graphene unit-cell run, QE 7.5):
         - The XML is written in *Hartree atomic units* (Units="Hartree atomic units"):
-          energies in Ha, lengths in Bohr, ecutwfc in Ha. This matches ABINIT exactly.
-        - Plane-wave coefficients are normalized so that sum_G |C_nk(G)|^2 = 1, like ABINIT.
+          energies in Ha, lengths in Bohr, ecutwfc in Ha.
+        - Plane-wave coefficients are normalized so that sum_G |C_nk(G)|^2 = 1.
         - Miller indices are signed integer reduced coordinates of G, usable directly with
-          utils.fft_utils.map_G_to_fft_grid (same signed-integer FFT convention as ABINIT).
+          utils.fft_utils.map_G_to_fft_grid (signed-integer FFT convention).
 
-    Each function mirrors the signature/return of its abinit_io.py counterpart so that the
-    downstream matrix-element code only needs to swap the import. All functions take the path
-    to the `prefix.save/` directory (the analogue of ABINIT's single WFK.nc path).
+    All functions take the path to the `prefix.save/` directory.
 """
 
 import os
@@ -65,7 +64,7 @@ def _wfc_files(save_dir):
 
 def get_A_volume(save_dir):
     """
-    Extract the primitive direct lattice vectors and the cell volume (mirror of abinit_io.get_A_volume).
+    Extract the primitive direct lattice vectors and the cell volume.
 
     Returns
     -------
@@ -87,7 +86,7 @@ def get_A_volume(save_dir):
 
 def get_B_volume(save_dir):
     """
-    Extract the primitive reciprocal lattice vectors and reciprocal cell volume (mirror of abinit_io.get_B_volume).
+    Extract the primitive reciprocal lattice vectors and reciprocal cell volume.
 
     Returns
     -------
@@ -111,10 +110,10 @@ def get_B_volume(save_dir):
 
 def get_ecut(save_dir):
     """
-    Plane-wave energy cutoff used in the calculation, in Hartree (mirror of abinit_io.get_ecut).
+    Plane-wave energy cutoff used in the calculation, in Hartree.
 
     Note: the QE XML stores ecutwfc in Hartree (Units="Hartree atomic units"), so the value is
-    directly comparable to ABINIT's ecut_eff -- no Ry->Ha conversion is needed.
+    directly usable -- no Ry->Ha conversion is needed.
     """
     root = _root(save_dir)
     ecut = float(root.find(".//output/basis_set/ecutwfc").text)
@@ -122,9 +121,9 @@ def get_ecut(save_dir):
 
 def get_ngfft(save_dir, smooth=False):
     """
-    FFT grid used by QE, read directly from the XML (no ABINIT-style auto grid needed).
+    FFT grid used by QE, read directly from the XML.
 
-    Unlike ABINIT, QE writes the exact FFT mesh, so downstream wavefunction reconstruction and
+    QE writes the exact FFT mesh, so downstream wavefunction reconstruction and
     local-potential handling should use this grid rather than fft_utils.fft_grid_from_G_red.
 
     Inputs
@@ -143,10 +142,10 @@ def get_ngfft(save_dir, smooth=False):
 
 def get_x_red(save_dir):
     """
-    Reduced (fractional) coordinates of the atoms (mirror of abinit_io.get_x_red).
+    Reduced (fractional) coordinates of the atoms.
 
     QE stores Cartesian positions (Bohr) in the XML; we convert to reduced coordinates so that
-    red_to_cart(x_red, A) recovers the Cartesian positions, exactly as for the ABINIT reader.
+    red_to_cart(x_red, A) recovers the Cartesian positions.
 
     Returns
     -------
@@ -165,8 +164,7 @@ def get_x_red(save_dir):
 
 def get_typat(save_dir):
     """
-    Integer atom-type index for each atom, 1-based to follow ABINIT's typat convention
-    (mirror of abinit_io.get_typat).
+    Integer atom-type index for each atom, 1-based.
 
     Returns
     -------
@@ -189,7 +187,7 @@ def get_typat(save_dir):
 
 def get_k_red(save_dir):
     """
-    k-points in reduced (fractional) coordinates (mirror of abinit_io.get_k_red).
+    k-points in reduced (fractional) coordinates.
 
     QE stores k-points in Cartesian coordinates in units of 2*pi/alat. We convert to reduced
     coordinates k_red such that k_cart = B @ k_red (B columns are b_i), i.e. k_red = inv(B) @ k_cart.
@@ -215,7 +213,7 @@ def get_k_red(save_dir):
 
 def get_eigenvalues(save_dir, shift_Fermi=False):
     """
-    Kohn-Sham eigenvalues in Hartree (mirror of abinit_io.get_eigenvalues).
+    Kohn-Sham eigenvalues in Hartree.
 
     Returns
     -------
@@ -242,11 +240,11 @@ def get_eigenvalues(save_dir, shift_Fermi=False):
 
 def _read_all_wfc(save_dir):
     """
-    Read all wfc<ik>.hdf5 files and assemble padded arrays mirroring ABINIT's layout.
+    Read all wfc<ik>.hdf5 files and assemble padded arrays.
 
     QE stores one file per k-point, each with its own number of plane waves (igwx) and no padding.
     We pad to nG_max = max_k igwx so the returned arrays match the (.., nkpt, nG_max, ..) shapes the
-    downstream code expects, together with the per-k active count nG (analogue of ABINIT npw).
+    downstream code expects, together with the per-k active count nG (number of plane waves per k).
 
     Returns
     -------
@@ -294,11 +292,10 @@ def _read_all_wfc(save_dir):
 def get_pot(filepath, subtract_mean=True, to_hartree=True):
     """
     Load the local Kohn-Sham potential V(r) from a Quantum ESPRESSO `pp.x` plot_file (filplot),
-    e.g. produced with plot_num=1 (V_bare + V_Hartree + V_xc). Mirror of abinit_io.get_pot.
+    e.g. produced with plot_num=1 (V_bare + V_Hartree + V_xc).
 
-    Unlike ABINIT (which stores `vtrial` in the WFK/POT netCDF in Hartree), QE's pp.x writes its
-    plot data in *Rydberg*. We convert to Hartree by default so the resulting M^L matches the
-    Hartree convention of the ABINIT pipeline.
+    QE's pp.x writes its plot data in *Rydberg*. We convert to Hartree by default so the
+    resulting M^L is in the Hartree atomic units used throughout the pipeline.
 
     The returned array is laid out so that the existing caller pattern
         V = get_pot(...)[0].transpose(2, 1, 0)
@@ -309,7 +306,7 @@ def get_pot(filepath, subtract_mean=True, to_hartree=True):
         filepath: str
             Path to the pp.x plot_file (filplot), iflag=3 / 3D dump.
         subtract_mean: bool
-            If True remove the constant (G=0) offset before returning (recommended), as in abinit_io.
+            If True remove the constant (G=0) offset before returning (recommended).
         to_hartree: bool
             If True (default) convert from Rydberg to Hartree (factor 1/2).
 
@@ -356,7 +353,7 @@ def get_pot(filepath, subtract_mean=True, to_hartree=True):
 
 def get_C_nk(save_dir):
     """
-    Plane-wave coefficients C_nk(G) (mirror of abinit_io.get_C_nk).
+    Plane-wave coefficients C_nk(G).
 
     Returns
     -------
@@ -368,7 +365,7 @@ def get_C_nk(save_dir):
 
 def get_G_red(save_dir):
     """
-    Reciprocal lattice vectors G in reduced (signed integer) coordinates (mirror of abinit_io.get_G_red).
+    Reciprocal lattice vectors G in reduced (signed integer) coordinates.
 
     Returns
     -------

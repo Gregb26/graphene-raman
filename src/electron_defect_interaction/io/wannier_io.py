@@ -17,7 +17,7 @@ def read_w90_mat(w90_path):
             Unitary U transformation matrix to go from Bloch basis to Wannier basis. If U is not a disentanglement matrix: nwann=nband. If 
             U is a disentanglement matrix: nwann < nband.
         k_red: (nkpt, 3) array of floats
-            kpoints in reduced coordinates. Should (must) match the ones given by Abinit
+            kpoints in reduced coordinates. Should (must) match the DFT k-points (e.g. qe_io.get_k_red).
     """
 
     from pathlib import Path

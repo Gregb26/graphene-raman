@@ -6,11 +6,11 @@ local_R.py
 
 import numpy as np
 
-from electron_defect_interaction.io.abinit_io import *
-from electron_defect_interaction.wavefunctions.wfk import compute_psi_nk
 from electron_defect_interaction.wavefunctions.fold_wfk_to_sc import compute_psi_nk_fold_sc
 from electron_defect_interaction.utils.fft_utils import map_G_to_fft_grid
 from tqdm import tqdm
+
+# NO MPI 
 
 def compute_ML_R(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path, subtract_mean=True, pristine=False, bands=None, io=None):
     """
@@ -29,11 +29,11 @@ def compute_ML_R(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path, subtrac
             Band indices to compute. If None, all bands are used (warning: the folded real-space grid
             for the supercell can be very large, so restrict the bands for big supercells).
         io: module, optional
-            I/O backend exposing get_C_nk/get_G_red/get_k_red/get_A_volume/get_pot. Defaults to abinit_io;
-            pass electron_defect_interaction.io.qe_io for Quantum ESPRESSO inputs.
+            I/O backend exposing get_C_nk/get_G_red/get_k_red/get_A_volume/get_pot. Defaults to qe_io
+            (Quantum ESPRESSO); pass electron_defect_interaction.io.abinit_io for ABINIT inputs.
     """
     if io is None:
-        from electron_defect_interaction.io import abinit_io as io
+        from electron_defect_interaction.io import qe_io as io
 
     # Get necessary unit cells quantities
     C_nkg, nG = io.get_C_nk(uc_wfk_path) # planewave coeffs (nband, nkpt, nG_max) and number of active G per k (nkpt, )
@@ -92,66 +92,6 @@ def compute_ML_R(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path, subtrac
     # Index convention [bra_band, k', ket_band, k], matching compute_ML_G and compute_M_NL.
     return M_L.reshape(nband, nkpt, nband, nkpt)
 
-def compute_ML_R_uc(wfk_uc_path, pot_uc_path, subtract_mean=False):
-    """
-    Computes the local part of the electron-defect interaction matrix in real space.
-
-    Inputs:
-        uc_wfk_path: str
-            Path to the ABINIT WFK.nc output file for the wavefunctions of the unit cell
-        sc_wfk_path:
-            Path to the ABINIT WFK.nc output file for the wavefunctions of the pristine super cell
-        sc_p_pot_path: str
-            Path to the ABINIT POT.nc output file for the local potential of the pristine super cell
-        sc_d_pot_path: str
-            Path to the ABINIT POT.nc output file for the local potential of the defective super cell
-        bands: list of ints:
-            Band indices at which to compute the matrix elements
-    """
-
-    # Get necessary unit cells quantities
-    C_nkg, nG = get_C_nk(wfk_uc_path) # planewave coeffs (nband, nkpt, nG_max) and number of active G per k (nkpt, )
-    G_red = get_G_red(wfk_uc_path) # reciprocal lattice vectors in reduced coords of unit cell (nkpt, nG_max, 3)
-    k_red = get_k_red(wfk_uc_path) # kpoints in reduced coords of unit cell (nkpt, 3)
-    _, Omega = get_A_volume(wfk_uc_path) # primitive lattice vectors of the unit cell A[:, i]=a_i
-    nband, nkpt, _ = C_nkg.shape
-
-    V,_ = get_pot(pot_uc_path, subtract_mean); V = V.transpose(2,1,0) # potential
-    ngfft = V.shape # FFT grid shape
-    print("Potential FFT grid: ", ngfft)
-    # Compute unict wavefunctions unfolded onto supercell from unit cell planewave coefficients
-    print('Computing wavefunctions')
-    psi, ngfft_wfk = compute_psi_nk(C_nkg, nG, G_red, k_red, Omega, check_normalize=True, ngfft=ngfft)
-    print("Wfk FFT grid: ", ngfft_wfk)
-    # V = np.ones(ngfft)
-    print(V)
-    nr = np.prod(ngfft) # number of grid points
-    
-    psi_r = psi.reshape(nband, nkpt, nr) # (nband, nkpt, nr)
-    Vr = V.reshape(nr) # (nr,)
-    Bk = nband * nkpt
-    dV = Omega / np.prod(ngfft)
-    Psi = np.ascontiguousarray(psi_r.reshape(Bk, nr)) # (Bk, R)
- 
-    def accumulate_M(Psi, Ved_r, dV, chunk=100_000):
-        # Psi: (BK, R) complex128; Ved_r: (R,) real/complex
-        BK, R = Psi.shape
-        M = np.zeros((BK, BK), dtype=np.complex128)
-
-        with tqdm(total=R, unit="r", desc="Accumulating M") as pbar:
-            for start in range(0, R, chunk):
-                sl = slice(start, min(start + chunk, R))
-                PsiB = Psi[:, sl]                              # (BK, r)
-                M += dV * ((PsiB.conj() * Ved_r[sl]) @ PsiB.T) # (BK, BK)
-                pbar.update(sl.stop - sl.start)
-        return M
-    with np.errstate(all='ignore'):
-        M_L = accumulate_M(Psi, Vr, dV)
-    print('Done!')
-
-    # Index convention [bra_band, k', ket_band, k], matching compute_ML_G and compute_M_NL.
-    return M_L.reshape(nband, nkpt, nband, nkpt)
-
 # MPI (grid-distributed real-space)
 
 from mpi4py import MPI
@@ -166,7 +106,7 @@ def prep_realspace_inputs(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path
     slab, so this dict stays small (no full real-space psi is ever materialised).
     """
     if io is None:
-        from electron_defect_interaction.io import abinit_io as io
+        from electron_defect_interaction.io import qe_io as io
 
     C_nkg, nG = io.get_C_nk(uc_wfk_path)
     G_red = io.get_G_red(uc_wfk_path)

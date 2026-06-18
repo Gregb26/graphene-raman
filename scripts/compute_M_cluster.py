@@ -23,8 +23,6 @@ compute_M_cluster.py
             --sc-d graphene/sc_d.save  --pot-d graphene/sc_d.save/Vks_d \
             --upf  graphene/uc.save/C.upf \
             --out  M_ed.npy
-
-    For ABINIT inputs use --backend abinit and pass .nc / .psp8 paths instead.
 """
 
 import os
@@ -45,15 +43,14 @@ from electron_defect_interaction.defects.non_local import compute_M_NL_mpi
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Compute M = M^L + M^NL (MPI) from QE/ABINIT outputs.")
-    p.add_argument("--uc", required=True, help="unit-cell wavefunctions (.save dir for QE, WFK.nc for ABINIT)")
-    p.add_argument("--sc-p", required=True, help="pristine supercell")
-    p.add_argument("--sc-d", required=True, help="defective supercell")
-    p.add_argument("--pot-p", required=True, help="pristine supercell local potential")
+    p = argparse.ArgumentParser(description="Compute M = M^L + M^NL (MPI) from Quantum ESPRESSO outputs.")
+    p.add_argument("--uc", required=True, help="unit-cell prefix.save dir (wavefunctions on the full k-grid)")
+    p.add_argument("--sc-p", required=True, help="pristine supercell prefix.save dir")
+    p.add_argument("--sc-d", required=True, help="defective supercell prefix.save dir")
+    p.add_argument("--pot-p", required=True, help="pristine supercell local potential (pp.x plot_num=1 filplot)")
     p.add_argument("--pot-d", required=True, help="defective supercell local potential")
-    p.add_argument("--upf", required=True, help="pseudopotential (.upf for QE, .psp8 for ABINIT)")
+    p.add_argument("--upf", required=True, help="UPF pseudopotential")
     p.add_argument("--out", default="M_ed.npy", help="output .npy file for M (default: M_ed.npy)")
-    p.add_argument("--backend", choices=["qe", "abinit"], default="qe")
     p.add_argument("--bands", default="all", help="comma-separated band indices, or 'all' (default)")
     p.add_argument("--method", choices=["real", "reciprocal"], default="real",
                    help="M^L method: 'real' (grid-distributed real space, fast for moderate supercells) "
@@ -68,20 +65,16 @@ def main():
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
 
-    # Backend selection
-    if args.backend == "qe":
-        from electron_defect_interaction.io import qe_io as io
-        from electron_defect_interaction.io.pseudo_io import read_upf as pseudo_reader
-    else:
-        from electron_defect_interaction.io import abinit_io as io
-        from electron_defect_interaction.io.pseudo_io import read_psp8 as pseudo_reader
+    # I/O backend: Quantum ESPRESSO
+    from electron_defect_interaction.io import qe_io as io
+    from electron_defect_interaction.io.pseudo_io import read_upf as pseudo_reader
 
     bands = None if args.bands == "all" else [int(b) for b in args.bands.split(",")]
 
     # --- Local part: rank 0 reads files and builds inputs, then broadcasts ---
     prep = None
     if rank == 0:
-        print(f"[rank0] backend={args.backend}, method={args.method}, bands={args.bands}, "
+        print(f"[rank0] method={args.method}, bands={args.bands}, "
               f"nranks={comm.Get_size()}", flush=True)
         prep_fn = prep_realspace_inputs if args.method == "real" else prep_reciprocal_inputs
         prep = prep_fn(args.uc, args.sc_p, args.pot_p, args.pot_d,

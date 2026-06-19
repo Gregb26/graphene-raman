@@ -73,10 +73,11 @@ def Mwk_to_Mwr(Mwk, k_red, MP_grid):
 
     # Build the grid in real space based on the kpoint grid
     N1, N2, N3 = MP_grid
-    r1 = np.arange(N1); r2 = np.arange(N2); r3 = np.arange(N3)
-    rr1, rr2, rr3 = np.meshgrid(r1, r2, r3)
-    R = np.stack((rr1, rr2, rr3), axis=-1) # (N1, N2, N3, 3)
-    R = R.reshape(N1*N2*N3, 3) # (nr, 3)
+    def centered(N):
+        return np.arange(N) - (N//2)
+    r1, r2, r3 = centered(N1), centered(N2), centered(N3)
+    rr1, rr2, rr3 = np.meshgrid(r1, r2, r3, indexing='ij')
+    R = np.stack((rr1, rr2, rr3), axis=-1).reshape(-1, 3)
 
     # Compute phase
     phase_kp = np.exp(2j*np.pi * (k_red @ R.T)) # (nk, nr)

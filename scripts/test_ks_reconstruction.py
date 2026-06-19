@@ -32,8 +32,58 @@ from electron_defect_interaction.defects.local_R import compute_ML_R
 from electron_defect_interaction.wavefunctions.wfk import compute_psi_nk
 
 
-def reconstruct_ks_hamiltonian(uc_save, pot_file, upf_file):
-    """Return H_mn(k) (nk, nb, nb) and the QE eigenvalues eps (nb, nk), all in Hartree."""
+def sc_pot_on_uc_grid(uc_save, sc_save, pot_sc_file):
+    """
+    Restrict a *pristine* supercell local KS potential onto the unit-cell FFT grid, with no
+    averaging/folding -- it is fed directly.
+
+    A defect-free N1xN2xN3 supercell is a periodic tiling of the unit cell, so its local KS
+    potential V_p is already periodic with the unit-cell period. The supercell FFT grid here has the
+    same spacing as the unit-cell grid (QE 5x5 graphene: 150 = 5*30 in-plane, 192 = 1*192 out of
+    plane), so the unit-cell grid points coincide with the first N1xN2xN3 block of the supercell
+    grid. We therefore take that block of V_p directly -- no fold, no average. Because V_p is
+    unit-cell-periodic, <psi_mk^uc | V_p | psi_nk^uc> is diagonal and equals <psi|V_uc|psi> up to a
+    constant offset.
+
+    Returns
+    -------
+        V_uc: (nr1, nr2, nr3) array, [ix,iy,iz], Hartree -- V_p restricted to the unit-cell grid.
+        spread: float -- max|V_p(image) - V_p(image 0)| over the N1xN2xN3 unit-cell images, the
+                deviation from perfect unit-cell periodicity (a diagnostic that the premise holds and
+                that the two QE runs are mutually consistent; NOT used in the reconstruction).
+    """
+    A_uc, _ = qe_io.get_A_volume(uc_save)
+    A_sc, _ = qe_io.get_A_volume(sc_save)
+    N = np.rint(np.linalg.inv(A_uc) @ A_sc).astype(int)  # supercell multiplicity
+    if not np.allclose(N, np.diag(np.diag(N))):
+        raise ValueError(f"supercell is not a diagonal repeat of the unit cell:\n{N}")
+    N1, N2, N3 = np.diag(N)
+
+    n1, n2, n3 = qe_io.get_ngfft(uc_save)
+    ng_sc = qe_io.get_ngfft(sc_save)
+    for a, (nsc, nuc, Na) in enumerate(zip(ng_sc, (n1, n2, n3), (N1, N2, N3))):
+        if nsc != Na * nuc:
+            raise ValueError(f"axis {a}: sc grid {nsc} != {Na} x uc grid {nuc} "
+                             f"(grids share spacing only if commensurate)")
+
+    V_sc, _ = qe_io.get_pot(pot_sc_file, subtract_mean=False)
+    V_sc = V_sc.transpose(2, 1, 0)              # [ix,iy,iz] on the supercell grid
+    V_uc = V_sc[:n1, :n2, :n3]                  # image 0 == unit-cell potential (fed directly)
+
+    blocks = V_sc.reshape(N1, n1, N2, n2, N3, n3)
+    spread = np.max(np.abs(blocks - blocks[0, :, 0, :, 0, :][None, :, None, :, None, :]))
+
+    return V_uc, spread
+
+
+def reconstruct_ks_hamiltonian(uc_save, pot_file, upf_file, V_override=None):
+    """
+    Return H_mn(k) (nk, nb, nb) and the QE eigenvalues eps (nb, nk), all in Hartree.
+
+    If V_override is given (a unit-cell-grid potential [ix,iy,iz] in Hartree, e.g. the pristine
+    supercell potential restricted by sc_pot_on_uc_grid), it is used for the local term instead of
+    reading pot_file.
+    """
     C_nkg, nG = qe_io.get_C_nk(uc_save)
     G_red = qe_io.get_G_red(uc_save)
     k_red = qe_io.get_k_red(uc_save)
@@ -69,8 +119,11 @@ def reconstruct_ks_hamiltonian(uc_save, pot_file, upf_file):
     NL = np.einsum("li,pkslia,qkslia->kpq", ekb_li, Bp, np.conj(Bp), optimize=True)
 
     # Local: L_mn(k) = <psi_mk|V_loc|psi_nk>  (keep the full mean, no subtraction)
-    V, _ = qe_io.get_pot(pot_file, subtract_mean=False)
-    V = V.transpose(2, 1, 0)
+    if V_override is None:
+        V, _ = qe_io.get_pot(pot_file, subtract_mean=False)
+        V = V.transpose(2, 1, 0)
+    else:
+        V = V_override
     psi, _ = compute_psi_nk(C_nkg, nG, G_red, k_red, Om, ngfft=ngfft)
     Nr = np.prod(ngfft); dV = Om / Nr
     Vr = V.reshape(Nr)
@@ -125,7 +178,25 @@ def main():
     print(f"\n=== Test B: null defect (defect = pristine) ===")
     print(f"  max|M^L|={mL:.2e}  max|M^NL|={mNL:.2e}   -> {'PASS' if okB else 'FAIL'}")
 
-    ok = okA and okB
+    # Test C: feed the PRISTINE SUPERCELL potential V_p (unchanged, not folded) into the unit-cell
+    # reconstruction. V_p is periodic with the unit-cell period, so <psi^uc|V_p|psi^uc> is diagonal
+    # and T + L + NL must still recover the unit-cell eigenvalues -- validating get_pot on the
+    # supercell and the consistency of the pristine-supercell and unit-cell QE runs.
+    V_uc, spread = sc_pot_on_uc_grid(uc_save, sc_p_save, pot_p)
+    Hc, epsc = reconstruct_ks_hamiltonian(uc_save, pot_file, upf_file, V_override=V_uc)
+    eyec = np.einsum("ki,ij->kij", np.einsum("kii->ki", Hc), np.eye(nb))
+    offdiag_maxC = np.max(np.abs(Hc - eyec))
+    diagC = np.real(np.einsum("kii->ki", Hc)).T
+    shiftC = np.mean(diagC - epsc)
+    diag_devC = np.max(np.abs(diagC - epsc - shiftC))
+    okC = offdiag_maxC < tol and diag_devC < tol
+    print(f"\n=== Test C: pristine supercell V_p -> unit-cell eigenvalues ===")
+    print(f"  V_p unit-cell periodicity spread: {spread:.2e} Ha")
+    print(f"  off-diagonal max      : {offdiag_maxC:.2e} Ha")
+    print(f"  diag(H)-eps offset    : {shiftC:.2e} Ha")
+    print(f"  max|diag(H)-eps-shift|: {diag_devC:.2e} Ha   -> {'PASS' if okC else 'FAIL'}")
+
+    ok = okA and okB and okC
     print("\nRESULT:", "PASS" if ok else "FAIL", f"(tol={tol:.0e} Ha)")
     return 0 if ok else 1
 

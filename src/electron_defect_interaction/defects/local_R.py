@@ -198,6 +198,14 @@ def compute_ML_R_mpi(prep, grid_block=200_000):
         Vb = Ved_flat[start:stop]
         M_local += dV * (Psi.conj() * Vb[None, :]) @ Psi.T
 
+    # Reduce in sub-buffer chunks: OpenMPI's large-message Allreduce on DOUBLE_COMPLEX
+    # corrupts the heap (latent "double free") once (nb*nk)^2 crosses ~1.3M elements
+    # (i.e. nk >= 81). Chunking each Allreduce well under that threshold avoids it.
     M = np.zeros((Bk, Bk), dtype=np.complex128)
-    comm.Allreduce(M_local, M, op=MPI.SUM)
+    flat_local = M_local.reshape(-1)
+    flat = M.reshape(-1)
+    chunk = 1_000_000
+    for s in range(0, flat.size, chunk):
+        e = min(s + chunk, flat.size)
+        comm.Allreduce(flat_local[s:e].copy(), flat[s:e], op=MPI.SUM)
     return M.reshape(nb, nk, nb, nk)

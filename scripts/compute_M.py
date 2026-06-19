@@ -55,6 +55,7 @@ os.environ.setdefault("FLEXIBLAS_NUM_THREADS", "1")
 os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
 import argparse
+import time
 import numpy as np
 
 
@@ -159,7 +160,16 @@ def stage_combine(args):
 
 def main():
     args = parse_args()
+    t0 = time.perf_counter()
     {"ml": stage_ml, "nl": stage_nl, "combine": stage_combine}[args.stage](args)
+    dt = time.perf_counter() - t0
+    # One timing line per stage; under MPI only rank 0 reports.
+    rank = 0
+    if args.stage == "ml":
+        from mpi4py import MPI
+        rank = MPI.COMM_WORLD.Get_rank()
+    if rank == 0:
+        print(f"[timing] stage={args.stage} elapsed={dt:.1f}s", flush=True)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ qe_io.py
 """
 
 import os
+import re
 import glob
 import xml.etree.ElementTree as ET
 
@@ -210,6 +211,43 @@ def get_k_red(save_dir):
         k_red.append(Binv @ k_cart)
 
     return np.asarray(k_red, dtype=np.float64)
+
+def get_qe_bands(bands_dat_path):
+    """
+    Read a bands.x `bands.dat` file (raw format).
+
+    Format: a header line '&plot nbnd=.., nks=.. /', then for each k-point a line with the Cartesian
+    k (units 2*pi/alat) followed by nbnd eigenvalues in eV.
+
+    Returns
+    -------
+        kcart: (nks, 3) array of floats -- Cartesian k in units of 2*pi/alat
+        eig:   (nks, nbnd) array of floats -- eigenvalues in eV
+    """
+    with open(bands_dat_path) as f:
+        header = f.readline()
+        nbnd = int(re.search(r"nbnd=\s*(\d+)", header).group(1))
+        nks = int(re.search(r"nks=\s*(\d+)", header).group(1))
+        data = np.array(f.read().split(), dtype=float).reshape(nks, 3 + nbnd)
+    return data[:, :3], data[:, 3:]
+
+def kcart_to_kred(kcart, save_dir):
+    """
+    Convert QE Cartesian k (units 2*pi/alat, e.g. from get_qe_bands) to reduced coordinates, mirroring
+    get_k_red (k_cart = B @ k_red, with alat = |a1|).
+
+    Inputs
+    ------
+        kcart: (..., 3) array of floats -- Cartesian k in units of 2*pi/alat
+        save_dir: str -- a prefix.save dir (for the reciprocal lattice and alat)
+
+    Returns
+    -------
+        k_red: (..., 3) array of floats
+    """
+    B, _ = get_B_volume(save_dir)
+    alat = float(_root(save_dir).find(".//output/atomic_structure").get("alat"))
+    return (np.asarray(kcart) * (2 * np.pi / alat)) @ np.linalg.inv(B).T
 
 def get_eigenvalues(save_dir, shift_Fermi=False):
     """

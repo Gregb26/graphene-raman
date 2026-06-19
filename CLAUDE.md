@@ -42,16 +42,19 @@ pip install -e .
 .venv/bin/python <script>
 
 # Validation tests are standalone scripts: they print PASS/FAIL and exit 0/1 (no pytest).
+# Hard-coded data paths live in scripts/_paths.py (override the data root with EDI_DATA).
 .venv/bin/python scripts/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline
 .venv/bin/python scripts/test_wannier.py               # Wannier interpolation pipeline
+.venv/bin/python scripts/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
 .venv/bin/python scripts/validate_wannier_bands.py     # Wannier vs DFT bands (coarse grid) + figures
 .venv/bin/python scripts/compare_bands_qe.py           # Wannier vs DFT along a k-path (needs bands.dat)
+.venv/bin/python scripts/compare_bands_w90_qe.py       # Wannier90 .dat vs QE bands.dat (argparse)
 
-# Serial / MPI drivers
+# Serial driver (local)
 .venv/bin/python scripts/run.py                        # serial M^L(real) + M^NL
-mpirun -n N .venv/bin/python scripts/run_mpi.py        # MPI (reciprocal M^L); use the MPICH mpirun
 
-# Cluster driver (SLURM): --method real|reciprocal, --bands "all"|csv
+# MPI / cluster driver (SLURM or local mpirun): --method real|reciprocal, --bands "all"|csv.
+# Use the MPICH mpirun/srun (mpi4py is MPICH-built). Works locally too: mpirun -n N python ...
 srun -n 256 .venv/bin/python scripts/compute_M_cluster.py \
     --uc UC.save --sc-p SCp.save --sc-d SCd.save \
     --pot-p SCp.save/Vks_p --pot-d SCd.save/Vks_d --upf UC.save/C.upf --out M_ed.npy

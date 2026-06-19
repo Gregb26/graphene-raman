@@ -11,92 +11,28 @@ compare_bands_qe.py
     Unlike the coarse-grid check in validate_wannier_bands.py, this compares the interpolation BETWEEN the
     coarse k-points (along a continuous path), which is the actual test of Wannier interpolation quality.
 """
-import re
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import xml.etree.ElementTree as ET
 
+import _paths
+from _bands import SYM_POINTS, path_corners, label_corner, nearest_index
 from electron_defect_interaction.io import qe_io
 from electron_defect_interaction.io.wannier_io import read_w90_HR
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
 
 HA_TO_EV = 27.211386245988
 
-DATA = "data/graphene/unit_cell/qe/defect_5x5.save"
+DATA = _paths.uc("11x11")            # unit cell that ships bands.dat + Wannier files locally
 BANDS_DAT = f"{DATA}/bands.dat"
 TB_PATH = f"{DATA}/wannier_tb.dat"
-
-# hexagonal high-symmetry points (reduced coords) + symmetry images, to label the path corners
-SYM_POINTS = {
-    r"$\Gamma$": [(0, 0, 0)],
-    "K": [(2/3, 1/3, 0), (1/3, 2/3, 0), (-1/3, 1/3, 0), (1/3, -1/3, 0), (-1/3, -2/3, 0), (2/3, -1/3, 0)],
-    "M": [(1/2, 0, 0), (0, 1/2, 0), (1/2, 1/2, 0), (-1/2, 1/2, 0), (1/2, -1/2, 0), (0, -1/2, 0)],
-}
-
-
-def read_qe_bands(path):
-    """Return kcart (nks,3) in 2*pi/alat units and eig (nks,nbnd) in eV from a bands.x bands.dat file."""
-    with open(path) as f:
-        header = f.readline()
-        nbnd = int(re.search(r"nbnd=\s*(\d+)", header).group(1))
-        nks = int(re.search(r"nks=\s*(\d+)", header).group(1))
-        data = np.array(f.read().split(), dtype=float).reshape(nks, 3 + nbnd)
-    return data[:, :3], data[:, 3:]
-
-
-def cart_to_red(kcart, save_dir):
-    """QE cartesian k (2*pi/alat) -> reduced coords; mirrors qe_io.get_k_red (k_cart = B @ k_red)."""
-    B, _ = qe_io.get_B_volume(save_dir)
-    alat = float(ET.parse(f"{save_dir}/data-file-schema.xml").getroot()
-                 .find(".//output/atomic_structure").get("alat"))
-    return (kcart * (2 * np.pi / alat)) @ np.linalg.inv(B).T
-
-
-def fermi_eV(save_dir):
-    root = ET.parse(f"{save_dir}/data-file-schema.xml").getroot()
-    return float(root.find(".//output/band_structure/fermi_energy").text) * HA_TO_EV
-
-
-def path_corners(kcart):
-    """Indices of the path endpoints and direction-change vertices (high-symmetry corners)."""
-    seg = np.diff(kcart, axis=0)
-    n = np.linalg.norm(seg, axis=1, keepdims=True)
-    t = seg / np.where(n > 0, n, 1.0)
-    corners = [0]
-    for i in range(1, len(t)):
-        if np.dot(t[i], t[i - 1]) < 0.999:        # tangent direction changes -> a corner
-            corners.append(i)
-    corners.append(len(kcart) - 1)
-    return corners
-
-
-def label_corner(kred, tol=2e-2):
-    for name, imgs in SYM_POINTS.items():
-        for s in imgs:
-            d = kred - np.array(s)
-            if np.linalg.norm(d - np.round(d)) < tol:   # match modulo a reciprocal lattice vector
-                return name
-    return ""
-
-
-def nearest_index(kred, targets):
-    """Index of the path point closest (modulo a reciprocal lattice vector) to any of `targets`."""
-    best_i, best_d = 0, np.inf
-    for i, kr in enumerate(kred):
-        for s in targets:
-            d = kr - np.array(s)
-            dd = np.linalg.norm(d - np.round(d))
-            if dd < best_d:
-                best_d, best_i = dd, i
-    return best_i
 
 
 def main():
     # --- read DFT bands and interpolate Wannier bands on the same path ---
-    kcart, dft = read_qe_bands(BANDS_DAT)                 # (nks,3), (nks,nbnd) eV (absolute)
-    kred = cart_to_red(kcart, DATA)
+    kcart, dft = qe_io.get_qe_bands(BANDS_DAT)            # (nks,3), (nks,nbnd) eV (absolute)
+    kred = qe_io.kcart_to_kred(kcart, DATA)
 
     Hwr, Rw, ndegen = read_w90_HR(TB_PATH)
     wann = Hwr_to_Hwk(Hwr, Rw, kred, ndegen=ndegen)[1]    # (nks, nw) eV (absolute)

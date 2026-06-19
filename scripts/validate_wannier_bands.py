@@ -26,6 +26,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+import _paths
 from electron_defect_interaction.io import qe_io
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
@@ -33,7 +34,7 @@ from electron_defect_interaction.wannier.wannier_interpolation import _match_kpo
 
 HA_TO_EV = 27.211386245988
 
-DATA = "data/graphene/unit_cell/qe/defect_5x5.save"
+DATA = _paths.uc("11x11")            # unit cell that ships the Wannier files locally
 U_PATH = f"{DATA}/wannier_u.mat"
 UDIS_PATH = f"{DATA}/wannier_u_dis.mat"
 TB_PATH = f"{DATA}/wannier_tb.dat"

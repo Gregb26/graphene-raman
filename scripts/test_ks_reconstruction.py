@@ -149,11 +149,13 @@ def null_test(uc_save, sc_p_save, pot_p, upf_file):
 
 
 def main():
-    uc_save = "data/graphene/unit_cell/qe/defect_unit_cell_5x5.save"
-    sc_p_save = "data/graphene/supercell/qe/defect_5x5_p.save"
-    pot_file = f"{uc_save}/Vks_uc_5x5"
-    pot_p = f"{sc_p_save}/Vks_5x5_p"
-    upf_file = f"{uc_save}/C.upf"
+    import _paths
+    grid = "5x5"
+    uc_save = _paths.uc(grid)
+    sc_p_save = _paths.sc_p(grid)
+    pot_file = _paths.uc_pot(grid)
+    pot_p = _paths.pot_p(grid)
+    upf_file = _paths.upf(grid)
 
     tol = 1e-5
 

@@ -13,6 +13,7 @@ run.py
 
 import numpy as np
 
+import _paths
 from electron_defect_interaction.io import qe_io
 from electron_defect_interaction.io.pseudo_io import read_upf
 from electron_defect_interaction.defects.local_R import compute_ML_R
@@ -20,13 +21,14 @@ from electron_defect_interaction.defects.non_local import compute_M_NL
 
 
 def main():
-    # --- Paths (QE) ---
-    uc_save   = "data/graphene/unit_cell/qe/defect_5x5.save"        # unit-cell wavefunctions
-    sc_p_save = "data/graphene/supercell/qe/defect_5x5_p.save"      # pristine supercell
-    sc_d_save = "data/graphene/supercell/qe/defect_5x5_d.save"      # defective supercell
-    pot_p     = f"{sc_p_save}/Vks_5x5_p"                            # pristine local potential (pp.x plot_num=1)
-    pot_d     = f"{sc_d_save}/Vks_5x5_d"                            # defective local potential
-    upf       = f"{uc_save}/C.upf"                                  # pseudopotential
+    # --- Paths (QE), see scripts/_paths.py ---
+    grid = "5x5"
+    uc_save   = _paths.uc(grid)        # unit-cell wavefunctions
+    sc_p_save = _paths.sc_p(grid)      # pristine supercell
+    sc_d_save = _paths.sc_d(grid)      # defective supercell
+    pot_p     = _paths.pot_p(grid)     # pristine local potential (pp.x plot_num=1)
+    pot_d     = _paths.pot_d(grid)     # defective local potential
+    upf       = _paths.upf(grid)       # pseudopotential
 
     # Band subset to compute (keep small for the real-space local part; None = all bands)
     BANDS = [2, 3, 4, 5]
@@ -39,13 +41,12 @@ def main():
         io=qe_io,
     )
 
-    # --- Non-local part M^NL (all bands, then restrict to the same subset) ---
+    # --- Non-local part M^NL (same band subset) ---
     print("Computing non-local part M^NL ...")
-    M_NL_full = compute_M_NL(
+    M_NL = compute_M_NL(
         uc_save, sc_p_save, sc_d_save, upf,
-        io=qe_io, pseudo_reader=read_upf,
+        io=qe_io, pseudo_reader=read_upf, bands=BANDS,
     )
-    M_NL = M_NL_full[BANDS][:, :, BANDS]   # (nbands_sel, nk, nbands_sel, nk)
 
     # --- Total matrix ---
     M = M_L + M_NL

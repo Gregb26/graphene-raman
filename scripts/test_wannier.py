@@ -24,13 +24,15 @@ test_wannier.py
 
 import numpy as np
 
+import _paths
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR, read_w90_hr
 from electron_defect_interaction.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, Mwr_to_Mwk, wannier_interpolate,
 )
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
 
-DATA = "data/graphene/unit_cell/qe/defect_5x5.save"
+# 11x11 is the unit cell that ships the Wannier files locally (5x5 has none); see scripts/_paths.py
+DATA = _paths.uc("11x11")
 U_PATH = f"{DATA}/wannier_u.mat"
 UDIS_PATH = f"{DATA}/wannier_u_dis.mat"
 TB_PATH = f"{DATA}/wannier_tb.dat"
@@ -100,17 +102,21 @@ def test_parsers():
     ok &= okH
     print(f"  H(R) tb.dat (nrpts={nrpts}): ndegen>0 & origin & lengths={okH or 'see'};  max|H(k)-H(k)^d|={herm:.1e}  -> {'PASS' if okH else 'FAIL'}")
 
-    # --- hr.dat agrees with tb.dat ---
-    HR2, R2, nd2 = read_w90_hr(HR_PATH)
-    idx = {tuple(r): i for i, r in enumerate(R2)}
-    dH, dN = 0.0, 0
-    for i, r in enumerate(Rw):
-        j = idx[tuple(r)]
-        dH = max(dH, np.max(np.abs(Hwr[i] - HR2[j])))
-        dN = max(dN, abs(int(ndegen[i]) - int(nd2[j])))
-    okHR = dH < 1e-5 and dN == 0                        # hr.dat is written with ~6 decimals
-    ok &= okHR
-    print(f"  hr.dat vs tb.dat  : max|dH(R)|={dH:.1e}  max|d ndegen|={dN}  -> {'PASS' if okHR else 'FAIL'}")
+    # --- hr.dat agrees with tb.dat (skipped if wannier_hr.dat is absent) ---
+    import os
+    if os.path.exists(HR_PATH):
+        HR2, R2, nd2 = read_w90_hr(HR_PATH)
+        idx = {tuple(r): i for i, r in enumerate(R2)}
+        dH, dN = 0.0, 0
+        for i, r in enumerate(Rw):
+            j = idx[tuple(r)]
+            dH = max(dH, np.max(np.abs(Hwr[i] - HR2[j])))
+            dN = max(dN, abs(int(ndegen[i]) - int(nd2[j])))
+        okHR = dH < 1e-5 and dN == 0                    # hr.dat is written with ~6 decimals
+        ok &= okHR
+        print(f"  hr.dat vs tb.dat  : max|dH(R)|={dH:.1e}  max|d ndegen|={dN}  -> {'PASS' if okHR else 'FAIL'}")
+    else:
+        print(f"  hr.dat vs tb.dat  : {HR_PATH} not found -> SKIP")
 
     return ok, U, Ud, k_U
 
@@ -217,7 +223,17 @@ def test_real_matrix(matrix_path="M_ed.npy"):
 
 
 def main():
-    ok1, U, Ud, k_coarse = test_parsers()
+    ok1, U, Ud, k_U = test_parsers()
+
+    # Use the PRECISE QE k-grid for the Fourier round-trips: the .mat k-points carry only ~6-7
+    # decimals, which inflates the (exact) FT identity to ~1e-6. Align U/U_dis to that order, exactly
+    # as wannier_interpolate does internally.
+    from electron_defect_interaction.io import qe_io
+    from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order
+    k_coarse = qe_io.get_k_red(DATA)
+    perm = _match_kpoint_order(k_U, k_coarse)
+    U, Ud = U[perm], Ud[perm]
+
     ok2 = test_roundtrip(k_coarse)
     ok3 = test_pipeline(k_coarse, U, Ud)
     ok4 = test_fine_grid(k_coarse, Ud)

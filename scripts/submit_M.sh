@@ -34,7 +34,11 @@ SCP=data/graphene/supercell/qe/defect_${N}_p.save
 SCD=data/graphene/supercell/qe/defect_${N}_d.save
 PY="$PROJ/.venv/bin/python"
 
-echo "[$(date)] size=$N  stage 1: M^L (MPI, $SLURM_NTASKS ranks)"
+ML="results/M/M_L_${N}.npy"
+NL="results/M/M_NL_${N}.npy"
+MED="results/M/M_ed_${N}.npy"
+
+echo "[$(date)] size=$N  stage 1/3: M^L (MPI, $SLURM_NTASKS ranks)"
 # Pin all threading layers to 1: parallelism is over MPI ranks; oversubscribing BLAS
 # corrupts the heap ("double free") in M^NL for nk >= 81.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 FLEXIBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
@@ -42,14 +46,16 @@ srun --cpu-bind=cores "$PY" -u scripts/compute_M.py --stage ml \
     --uc "$UC" --sc-p "$SCP" \
     --pot-p "$SCP/Vks_${N}_p" --pot-d "$SCD/Vks_${N}_d" \
     --bands all --block-size 50000 \
-    --ml-out "results/M/M_L_${N}.npy"
+    --out "$ML"
 
-echo "[$(date)] size=$N  stage 2: M^NL serial + combine (fresh process)"
+echo "[$(date)] size=$N  stage 2/3: M^NL (serial, fresh process)"
 export OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS_NUM_THREADS=8 MKL_NUM_THREADS=8 NUMEXPR_NUM_THREADS=8
 "$PY" -u scripts/compute_M.py --stage nl \
     --uc "$UC" --sc-p "$SCP" --sc-d "$SCD" --upf "$UC/C.upf" \
     --bands all \
-    --ml "results/M/M_L_${N}.npy" \
-    --out "results/M/M_ed_${N}.npy"
+    --out "$NL"
+
+echo "[$(date)] size=$N  stage 3/3: combine M = M^L + M^NL"
+"$PY" -u scripts/compute_M.py --stage combine --ml "$ML" --nl "$NL" --out "$MED"
 
 echo "[$(date)] done size=$N"

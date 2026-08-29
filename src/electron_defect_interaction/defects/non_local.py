@@ -286,17 +286,29 @@ def compute_M_NL_mpi(uc_wfk_path, sc_p_wfk_path, sc_d_wfk_path, pseudo_path,
     B_p = build_B(tau_p)
     B_d = build_B(tau_d)
 
-    # Distribute the bra k-index (k') over ranks
+    # Distribute the bra k-index (k') over ranks; each rank fills a contiguous k' slice.
     counts = [nk // size + (1 if r < (nk % size) else 0) for r in range(size)]
     displs = [sum(counts[:r]) for r in range(size)]
-    my_kp = range(displs[rank], displs[rank] + counts[rank])
+    kp = slice(displs[rank], displs[rank] + counts[rank])
 
+    # Use the SAME einsum signature as the serial compute_M_NL (proven not to corrupt the
+    # heap), just with the bra k-index restricted to this rank's slice. The previous per-k'
+    # loop used a different signature ("li,nslia,jpslia->njp") that triggered the heap
+    # corruption at nk >= 81.
     M_local = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
-    for ikp in my_kp:
-        Mp = np.einsum("li,nslia,jpslia->njp", ekb_li, B_p[:, ikp], np.conj(B_p), optimize=True)
-        Md = np.einsum("li,nslia,jpslia->njp", ekb_li, B_d[:, ikp], np.conj(B_d), optimize=True)
-        M_local[:, ikp, :, :] = Md - Mp
+    if counts[rank] > 0:
+        Mp = np.einsum("li,nkslim,jpslim->nkjp", ekb_li, B_p[:, kp], np.conj(B_p), optimize=True)
+        Md = np.einsum("li,nkslim,jpslim->nkjp", ekb_li, B_d[:, kp], np.conj(B_d), optimize=True)
+        M_local[:, kp, :, :] = Md - Mp
 
+    # Chunked Allreduce: a single large-message Allreduce on DOUBLE_COMPLEX corrupts the
+    # heap in this OpenMPI build once the buffer crosses ~1.3M elements (nk >= 81). Reduce
+    # in sub-buffer chunks well under that threshold. Same fix as compute_ML_R_mpi.
     M = np.zeros((nb, nk, nb, nk), dtype=np.complex128)
-    comm.Allreduce(M_local, M, op=MPI.SUM)
+    flat_local = M_local.reshape(-1)
+    flat = M.reshape(-1)
+    chunk = 1_000_000
+    for s in range(0, flat.size, chunk):
+        e = min(s + chunk, flat.size)
+        comm.Allreduce(flat_local[s:e].copy(), flat[s:e], op=MPI.SUM)
     return M

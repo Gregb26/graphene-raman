@@ -2,7 +2,7 @@
 """
 compute_M.py
     Single driver for the electron-defect scattering matrix M = M^L + M^NL from Quantum
-    ESPRESSO (or ABINIT) outputs. Works for ANY supercell size. Three orthogonal stages let
+    ESPRESSO outputs. Works for ANY supercell size. Three orthogonal stages let
     you compute the local part alone, the non-local part alone, or assemble the full matrix:
 
         stage 'ml'       (MPI, run under srun): local part M^L (real-space, grid-distributed
@@ -40,8 +40,6 @@ compute_M.py
         python scripts/compute_M.py --stage combine \
             --ml results/M/M_L_9x9.npy --nl results/M/M_NL_9x9.npy \
             --out results/M/M_ed_9x9.npy
-
-    For ABINIT inputs pass --backend abinit and .nc / .psp8 paths instead.
 """
 
 import os
@@ -60,21 +58,20 @@ import numpy as np
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Compute M = M^L + M^NL from QE/ABINIT outputs.")
+    p = argparse.ArgumentParser(description="Compute M = M^L + M^NL from Quantum ESPRESSO outputs.")
     p.add_argument("--stage", choices=["ml", "nl", "combine"], required=True,
                    help="'ml': MPI local part M^L (run under srun); "
                         "'nl': serial non-local part M^NL (fresh process); "
                         "'combine': M = M^L + M^NL from precomputed parts")
-    p.add_argument("--uc", help="unit-cell wavefunctions (.save for QE, WFK.nc for ABINIT)")
+    p.add_argument("--uc", help="unit-cell wavefunctions (prefix.save dir)")
     p.add_argument("--sc-p", help="pristine supercell")
     p.add_argument("--sc-d", help="defective supercell (stage nl)")
     p.add_argument("--pot-p", help="pristine supercell local potential (stage ml)")
     p.add_argument("--pot-d", help="defective supercell local potential (stage ml)")
-    p.add_argument("--upf", help="pseudopotential, .upf for QE / .psp8 for ABINIT (stage nl)")
+    p.add_argument("--upf", help="UPF pseudopotential (stage nl)")
     p.add_argument("--ml", help="precomputed M^L .npy (stage combine)")
     p.add_argument("--nl", help="precomputed M^NL .npy (stage combine)")
     p.add_argument("--out", required=True, help="output .npy for this stage's result")
-    p.add_argument("--backend", choices=["qe", "abinit"], default="qe")
     p.add_argument("--bands", default="all", help="comma-separated band indices, or 'all' (default)")
     p.add_argument("--block-size", type=int, default=50_000, help="real-space grid block per rank (stage ml)")
     return p.parse_args()
@@ -86,13 +83,9 @@ def require(args, names, stage):
         raise SystemExit(f"--stage {stage} requires {', '.join(missing)}")
 
 
-def get_io(backend):
-    if backend == "qe":
-        from electron_defect_interaction.io import qe_io as io
-        from electron_defect_interaction.io.pseudo_io import read_upf as pseudo_reader
-    else:
-        from electron_defect_interaction.io import abinit_io as io
-        from electron_defect_interaction.io.pseudo_io import read_psp8 as pseudo_reader
+def get_io():
+    from electron_defect_interaction.io import qe_io as io
+    from electron_defect_interaction.io.pseudo_io import read_upf as pseudo_reader
     return io, pseudo_reader
 
 
@@ -111,12 +104,12 @@ def stage_ml(args):
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-    io, _ = get_io(args.backend)
+    io, _ = get_io()
     bands = None if args.bands == "all" else [int(b) for b in args.bands.split(",")]
 
     prep = None
     if rank == 0:
-        print(f"[rank0] stage=ml backend={args.backend} bands={args.bands} nranks={comm.Get_size()}", flush=True)
+        print(f"[rank0] stage=ml bands={args.bands} nranks={comm.Get_size()}", flush=True)
         prep = prep_realspace_inputs(args.uc, args.sc_p, args.pot_p, args.pot_d,
                                      subtract_mean=False, bands=bands, io=io)
     prep = comm.bcast(prep, root=0)
@@ -135,7 +128,7 @@ def stage_nl(args):
 
     from electron_defect_interaction.defects.non_local import compute_M_NL
 
-    io, pseudo_reader = get_io(args.backend)
+    io, pseudo_reader = get_io()
     bands = None if args.bands == "all" else [int(b) for b in args.bands.split(",")]
 
     M_NL = compute_M_NL(args.uc, args.sc_p, args.sc_d, args.upf,

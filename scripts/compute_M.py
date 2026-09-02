@@ -56,6 +56,8 @@ import argparse
 import time
 import numpy as np
 
+from electron_defect_interaction.io import matrix_io
+
 
 def parse_args():
     p = argparse.ArgumentParser(description="Compute M = M^L + M^NL from Quantum ESPRESSO outputs.")
@@ -117,8 +119,9 @@ def stage_ml(args):
     M_L = compute_ML_R_mpi(prep, grid_block=args.block_size)
 
     if rank == 0:
-        np.save(args.out, M_L)
-        print(f"[rank0] saved M^L {args.out}  shape={M_L.shape}", flush=True)
+        # raw part (unit-cell-normalized Bloch states); the 1/N_cells factor is applied at combine.
+        matrix_io.save_M(args.out, M_L, matrix_io.UNIT_CELL, part="M_L")
+        print(f"[rank0] saved M^L {args.out}  shape={M_L.shape} (bloch_norm=unit_cell)", flush=True)
     comm.Barrier()
 
 
@@ -133,22 +136,27 @@ def stage_nl(args):
 
     M_NL = compute_M_NL(args.uc, args.sc_p, args.sc_d, args.upf,
                         io=io, pseudo_reader=pseudo_reader, bands=bands)
-    np.save(args.out, M_NL)
-    print(f"saved M^NL {args.out}  shape={M_NL.shape}", flush=True)
+    # raw part (unit-cell-normalized Bloch states); the 1/N_cells factor is applied at combine.
+    matrix_io.save_M(args.out, M_NL, matrix_io.UNIT_CELL, part="M_NL")
+    print(f"saved M^NL {args.out}  shape={M_NL.shape} (bloch_norm=unit_cell)", flush=True)
 
 
 def stage_combine(args):
     """Assemble the full matrix M = M^L + M^NL from two precomputed parts."""
     require(args, ["ml", "nl"], "combine")
 
-    M_L = np.load(args.ml)
-    M_NL = np.load(args.nl)
+    # require raw (unit_cell) parts so the 1/N_cells factor is applied exactly once here.
+    M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL)
+    M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL)
     if M_L.shape != M_NL.shape:
         raise SystemExit(f"shape mismatch: M^L {M_L.shape} vs M^NL {M_NL.shape}")
 
-    M = M_L + M_NL
-    np.save(args.out, M)
-    print(f"saved M {args.out}  shape={M.shape}  max|M-M^dag|={hermiticity(M):.2e}", flush=True)
+    # Bloch states normalized over the supercell -> divide by N_cells = number of unit cells = nk.
+    N_cells = M_L.shape[1]
+    M = (M_L + M_NL) / N_cells
+    matrix_io.save_M(args.out, M, matrix_io.SUPERCELL, N_cells=int(N_cells))
+    print(f"saved M {args.out}  shape={M.shape}  N_cells={N_cells}  bloch_norm=supercell  "
+          f"max|M-M^dag|={hermiticity(M):.2e}", flush=True)
 
 
 def main():

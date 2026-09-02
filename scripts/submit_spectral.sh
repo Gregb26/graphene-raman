@@ -12,4 +12,4 @@ PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
 cd "$PROJ" || exit 1
 module restore qe; module load scipy-stack
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK FLEXIBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
-"$PROJ/.venv/bin/python" -u scripts/compute_spectral.py --size "${1:-5x5}" --eta 0.02 --plot
+"$PROJ/.venv/bin/python" -u scripts/compute_spectral.py --size "${1:-5x5}" --plot

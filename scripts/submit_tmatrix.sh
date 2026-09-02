@@ -13,4 +13,4 @@ cd "$PROJ" || exit 1
 module restore qe; module load scipy-stack
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK FLEXIBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
 SIZE=${1:-5x5}
-"$PROJ/.venv/bin/python" -u scripts/compute_tmatrix.py --size "$SIZE" --ne 400 --eta 0.02 --plot
+"$PROJ/.venv/bin/python" -u scripts/compute_tmatrix.py --size "$SIZE" --plot

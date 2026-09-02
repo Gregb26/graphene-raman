@@ -272,6 +272,69 @@ def get_eigenvalues(save_dir, shift_Fermi=False):
 
     return eigs
 
+def get_k_eigenvalues(save_dir, shift_Fermi=False):
+    """
+    k-points and Kohn-Sham eigenvalues read from the SAME <ks_energies> iteration, so column j
+    of eps corresponds to k_red[j] by construction (no reliance on two functions iterating the XML
+    in the same order). Use this whenever eps must be paired with a k-grid (e.g. a scattering matrix
+    M[n,k]) instead of calling get_k_red / get_eigenvalues separately.
+
+    Returns
+    -------
+        k_red: (nkpt, 3) float
+        eps:   (nband, nkpt) float (Hartree; shifted by the Fermi level if shift_Fermi)
+    """
+    root = _root(save_dir)
+    B, _ = get_B_volume(save_dir)
+    Binv = np.linalg.inv(B)
+    alat = float(root.find(".//output/atomic_structure").get("alat"))
+    scale = 2 * np.pi / alat
+    bs = root.find(".//output/band_structure")
+    fermi = float(bs.find("fermi_energy").text)
+
+    k_red, eigs = [], []
+    for ks in bs.findall("ks_energies"):
+        k_red.append(Binv @ (_floats(ks.find("k_point").text) * scale))
+        eigs.append(_floats(ks.find("eigenvalues").text))
+
+    k_red = np.asarray(k_red, dtype=np.float64)          # (nkpt, 3)
+    eigs = np.asarray(eigs, dtype=np.float64).T          # (nband, nkpt)
+    if shift_Fermi:
+        eigs = eigs - fermi
+    return k_red, eigs
+
+
+def k_key(k, decimals=7):
+    """BZ-folded, rounded hashable key for a reduced-coordinate k-point (folded to [0, 1))."""
+    kf = np.mod(np.round(np.asarray(k, dtype=np.float64), decimals), 1.0)
+    kf = np.where(np.isclose(kf, 1.0, atol=10.0 ** (-decimals)), 0.0, kf)
+    return tuple(np.round(kf, decimals))
+
+
+def aligned_eigenvalues(save_dir, nk_expected=None, shift_Fermi=False):
+    """
+    Kohn-Sham eigenvalues (nband, nkpt) aligned to get_k_red order, i.e. column j corresponds to
+    get_k_red(save_dir)[j] -- the same k-order a scattering matrix M[n,k] is built on. Enforces the
+    pairing structurally at every call rather than trusting XML iteration order:
+        * unique BZ-folded k keys (a valid grid, no folding collisions),
+        * get_k_red and get_k_eigenvalues agree key-by-key (guards against a future regression where
+          the two readers diverge),
+        * if nk_expected (e.g. M.shape[1]) is given, the k-count matches M's grid.
+    Raises ValueError with an actionable message otherwise (e.g. an 11x11 nscf contaminated by a
+    band path has more k-points than its M).
+    """
+    k, eps = get_k_eigenvalues(save_dir, shift_Fermi=shift_Fermi)
+    keys = [k_key(x) for x in k]
+    if len(set(keys)) != len(keys):
+        raise ValueError(f"{save_dir}: duplicate BZ-folded k keys (not a clean MP grid)")
+    if [k_key(x) for x in get_k_red(save_dir)] != keys:
+        raise ValueError(f"{save_dir}: get_k_red and get_k_eigenvalues k-order disagree")
+    if nk_expected is not None and eps.shape[1] != nk_expected:
+        raise ValueError(
+            f"{save_dir}: unit-cell save has {eps.shape[1]} k-points but M has {nk_expected}. "
+            "Regenerate the unit-cell nscf on M's k-grid (a clean NxN grid, no band path).")
+    return eps
+
 # -----------------------------------------------------------------------------
 # Plane-wave coefficients and G-vectors (wfc<ik>.hdf5)
 # -----------------------------------------------------------------------------

@@ -59,13 +59,16 @@ def finalize(N):
         Edft = read_eig(eig)                               # (nk, nb) eV
         errs = np.array([np.min(np.abs(Edft[ik] - Ew[ik, n]))
                          for ik in range(len(kU)) for n in range(Ew.shape[1])])
-        # pi region: wannier bands within +-2.5 eV of the median crossing (raw, no judgement)
-        mid = np.median(Ew)
-        near = np.array([np.min(np.abs(Edft[ik] - Ew[ik, n]))
-                         for ik in range(len(kU)) for n in range(Ew.shape[1])
-                         if abs(Ew[ik, n] - mid) < 2.5])
-        print(f"[{N}] band error interp-vs-DFT: global max={errs.max()*1e3:.2f} meV median={np.median(errs)*1e3:.2f} meV; "
-              f"pi-region(|E-med|<2.5eV) max={near.max()*1e3:.2f} meV" if near.size else f"[{N}] band error global max={errs.max()*1e3:.2f} meV")
+        # pi region: within +-2 eV of the Dirac point (DFT bands 3,4 at the k nearest K=(2/3,1/3));
+        # split below (frozen, occupied pi) / above (pi*, disentangled) -- raw numbers, no judgement
+        kf = np.mod(kU, 1.0)
+        iK = int(np.argmin(np.linalg.norm(kf - np.array([2 / 3, 1 / 3, 0]), axis=1)))
+        Ed = 0.5 * (Edft[iK, 3] + Edft[iK, 4])
+        pairs = [(np.min(np.abs(Edft[ik] - Ew[ik, n])), Ew[ik, n]) for ik in range(len(kU))
+                 for n in range(Ew.shape[1]) if abs(Ew[ik, n] - Ed) < 2.0]
+        below = np.array([e for e, E in pairs if E < Ed]); above = np.array([e for e, E in pairs if E >= Ed])
+        print(f"[{N}] E_Dirac~{Ed:.3f} eV; band error |E-Ed|<2eV: below-Dirac max={below.max()*1e3 if below.size else 0:.1f} meV, "
+              f"above-Dirac(pi*) max={above.max()*1e3 if above.size else 0:.1f} meV; global max={errs.max()*1e3:.1f} meV")
     else:
         print(f"[{N}] no wannier.eig -- skipping band comparison.")
 

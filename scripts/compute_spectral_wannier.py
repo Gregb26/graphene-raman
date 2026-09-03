@@ -67,23 +67,31 @@ def main():
     rcuts = [float(x) for x in args.rcut.split(",")]
     k_int = lt.mp_grid(args.nk_int, args.nk_int, 1)
 
-    print(f"\n{'Rcut':>5} {'grid':>6} {'eta(eV)':>9} {'median G*Ncells(meV)':>22} {'resonance(eV)':>14}")
+    # Dirac point from the Wannier bands (min pi/pi* gap on a fine grid); energies from _tb.dat are eV
+    _, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=ndegen)
+    gap = E_ref[:, 4] - E_ref[:, 3]
+    iD = int(np.argmin(gap)); E_dirac = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4]))
+    win = (E_dirac - 3.0, E_dirac + 3.0)
+    print(f"[dirac] E_Dirac = {E_dirac:.4f} eV (Wannier, min gap {gap[iD]*1e3:.1f} meV); window {win}", flush=True)
+
+    print(f"\n{'Rcut':>5} {'grid':>6} {'eta(eV)':>9} {'median G*Ncells(meV)':>22} {'resonance E-ED(eV)':>19}")
     results = {}
     for rc in rcuts:
         Rloc = R_mwr[np.linalg.norm(R_mwr, axis=1) <= rc + 1e-9]
         V_loc, _ = lt.extract_V_loc(Mwr, R_mwr, Rloc)                # guardrail b
         for N in grids:
             k_out = lt.mp_grid(N, N, 1)
+            _, E_out, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=ndegen)
             for eta in etas:
-                gamma = lt.scattering_rate(Hwr, Rw, ndegen, V_loc, Rloc, k_out, eta, k_int=k_int)
-                med = float(np.median(np.abs(gamma))) * 1e3         # per-defect, meV
-                # resonance: energy of max on-shell rate near Dirac (|E-EF|<1.5 eV) on the dense grid
-                _, E_out, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=ndegen)
-                E = (E_out.T).ravel() * HA2EV if E_out.max() < 5 else E_out.T.ravel()  # eV if needed
-                mask = np.abs(E) <= 1.5
-                e_res = float(E[mask][np.argmax(np.abs(gamma).ravel()[mask])]) if mask.any() else np.nan
+                gamma = lt.scattering_rate_fast(Hwr, Rw, ndegen, V_loc, Rloc, k_out, eta,
+                                                k_int=k_int, e_window=win, ne_per_eta=8)
+                med = float(np.nanmedian(np.abs(gamma))) * 1e3
+                # resonance: energy (rel. Dirac) of max on-shell rate within +-1.5 eV of Dirac
+                E = E_out.T                                           # (nw, nk) eV
+                m = np.isfinite(gamma) & (np.abs(E - E_dirac) <= 1.5)
+                e_res = float(E[m][np.argmax(np.abs(gamma)[m])] - E_dirac) if m.any() else np.nan
                 results[(rc, N, eta)] = (med, e_res)
-                print(f"{rc:>5.0f} {N:>6} {eta:>9.3f} {med:>22.2f} {e_res:>14.3f}", flush=True)
+                print(f"{rc:>5.0f} {N:>6} {eta:>9.3f} {med:>22.2f} {e_res:>19.3f}", flush=True)
 
     # joint plateau: region stable both as eta decreases AND grid refines (<=5%)
     print("\n[Level 1] joint plateau = a (Rcut, grid, eta) box where median G*Ncells varies <= 5% "

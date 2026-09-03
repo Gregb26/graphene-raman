@@ -1,0 +1,20 @@
+{
+  "run_id": "763deca66965711d",
+  "files": {
+    "tb": {
+      "path": "/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects/wannier/7x7/wannier_tb.dat",
+      "sha256": "763deca66965711d2cdfc3c3d848ec896f9edae504b0d07b53d2bf89363c81ab",
+      "mtime": 1788437796.0
+    },
+    "u": {
+      "path": "/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects/wannier/7x7/wannier_u.mat",
+      "sha256": "3063cf4bf275524b99e287a13c5cb9ced2524f03efabe820a168e19831b26897",
+      "mtime": 1788437796.0
+    },
+    "u_dis": {
+      "path": "/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects/wannier/7x7/wannier_u_dis.mat",
+      "sha256": "b20f6c9419aad03a6b447f0c39ddf126835262906aa811f1c3a3d962a0b0a42f",
+      "mtime": 1788437796.0
+    }
+  }
+}

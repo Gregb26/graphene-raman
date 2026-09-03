@@ -159,3 +159,46 @@ def scattering_rate_from_wannier(M_coarse, k_coarse, U, U_dis, Hwr, Rw, ndegen,
     mwr_locality(Mwr, R_mwr, R0=R0)                             # guardrail a (hard)
     V_loc, _ = extract_V_loc(Mwr, R_mwr, R_local)              # guardrail b
     return scattering_rate(Hwr, Rw, ndegen, V_loc, R_local, k_out, eta, k_int=k_int)
+
+
+def scattering_rate_fast(Hwr, Rw, ndegen, V_loc, R_local, k_out, eta, k_int=None,
+                         e_window=None, ne_per_eta=4, positivity_atol=1e-8):
+    """
+    Same physics as scattering_rate (per-defect on-shell Gamma[n,k], exact local t-matrix) but
+    g0(eps) is built ONCE on an energy grid with spacing <= eta/ne_per_eta and each on-shell state
+    uses the nearest grid point (g0 is smooth on the scale of eta). Optionally restricts output
+    states to e_window=(lo,hi) (absolute energies) -- e.g. a few eV around the Dirac point -- so
+    dense output grids stay affordable. States outside the window get NaN.
+    Cost ~ (#grid energies) x Nk_int instead of (#states) x Nk_int.
+    """
+    if k_int is None:
+        k_int = mp_grid(300, 300, 1)
+    R_local = np.asarray(R_local, int)
+    nL, nw = len(R_local), Hwr.shape[1]
+    assert V_loc.shape == (nL * nw, nL * nw)
+    Hwk_int, _, _ = Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=ndegen)
+    _, E_out, U_out = Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=ndegen)
+    ph_out = _phase(k_out, R_local)
+    phi = np.einsum("kL,kwn->knLw", ph_out, U_out, optimize=True).reshape(len(k_out), nw, nL * nw)
+
+    sel = np.ones_like(E_out, dtype=bool)
+    if e_window is not None:
+        sel = (E_out >= e_window[0]) & (E_out <= e_window[1])
+    gamma = np.full((nw, len(k_out)), np.nan)
+    if not sel.any():
+        return gamma
+    E_sel = E_out[sel]
+    de = eta / ne_per_eta
+    egrid = np.arange(E_sel.min() - eta, E_sel.max() + eta + de, de)
+    t_cache = [local_t(V_loc, local_green(Hwk_int, k_int, R_local, e, eta)) for e in egrid]
+    for ik in range(len(k_out)):
+        for n in range(nw):
+            if not sel[ik, n]:
+                continue
+            j = int(np.argmin(np.abs(egrid - E_out[ik, n])))
+            v = phi[ik, n]
+            gamma[n, ik] = -2.0 * (v.conj() @ t_cache[j] @ v).imag
+    g = gamma[np.isfinite(gamma)]
+    if positivity_atol is not None and g.size and g.min() < -positivity_atol:
+        raise AssertionError(f"positivity: min Gamma = {g.min():.2e} < 0 (sign/gauge bug)")
+    return gamma

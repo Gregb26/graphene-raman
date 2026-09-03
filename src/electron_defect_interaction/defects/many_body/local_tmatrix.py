@@ -76,6 +76,24 @@ def extract_V_loc(Mwr, R_mwr, R_local, herm_atol=1e-10):
     return V, res
 
 
+def recenter_mwr(Mwr, R_mwr, MP_grid):
+    """
+    Put the defect at the origin (R0 = 0 convention, guardrail a). The defect site is the R with
+    the largest on-site block ||Mwr(R,R)||; the R labels are shifted by -R_d and folded back onto
+    the periodic MP-dual grid (Mwr came from a double FT on the N1xN2xN3 k-grid, so R is periodic).
+    Only the LABELS move (the data is untouched), and since <nk|t|nk> is translation-invariant this
+    leaves Gamma unchanged -- it just makes R_local/phases consistent with R0 = 0 everywhere.
+    Returns (R_new, R_d).
+    """
+    R_mwr = np.asarray(R_mwr, int)
+    w = np.array([np.linalg.norm(Mwr[:, i, :, i]) for i in range(len(R_mwr))])
+    i_d = int(np.argmax(w))
+    R_d = R_mwr[i_d].copy()
+    Nv = np.asarray(MP_grid, int)
+    R_new = ((R_mwr - R_d + Nv // 2) % Nv) - Nv // 2
+    return R_new, R_d
+
+
 def local_green(Hwk, k_int, R_local, eps, eta):
     """
     Local block g0[(L,w),(L',w')] of the lattice Green's function at energy eps.
@@ -155,7 +173,9 @@ def scattering_rate_from_wannier(M_coarse, k_coarse, U, U_dis, Hwr, Rw, ndegen,
         raise ValueError(f"gauge check: U has {U.shape[0]} k, coarse M has {len(k_coarse)} -- grid mismatch.")
 
     Mwk = Mbk_to_Mwk(M_coarse, U, U_dis)                        # (nw, nk, nw, nk)
-    Mwr, R_mwr = Mwk_to_Mwr(Mwk, k_coarse, _infer_mp_grid(k_coarse))
+    MP = _infer_mp_grid(k_coarse)
+    Mwr, R_mwr = Mwk_to_Mwr(Mwk, k_coarse, MP)
+    R_mwr, R_d = recenter_mwr(Mwr, R_mwr, MP)                  # defect -> origin (R0=0), once
     mwr_locality(Mwr, R_mwr, R0=R0)                             # guardrail a (hard)
     V_loc, _ = extract_V_loc(Mwr, R_mwr, R_local)              # guardrail b
     return scattering_rate(Hwr, Rw, ndegen, V_loc, R_local, k_out, eta, k_int=k_int)

@@ -45,7 +45,13 @@ def main():
     print(f"[gauge] provenance OK: {args.manifest}", flush=True)
 
     uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
-    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}_norm.npy")
+    # NORMALIZATION CONTRACT (validated by test_local_tmatrix_real.py to 1e-13):
+    #   * the LOCAL Wannier t-matrix needs the INTENSIVE real-space potential V_loc = <wR|V|w'R'>,
+    #     i.e. Mwr built from the unit-cell-normalized M_raw (bloch_norm='unit_cell');
+    #   * the DENSE Bloch T-matrix (single_defect.compute_T) needs M/N_cells ('supercell').
+    #   Feeding M_norm here silently suppresses V_loc by 1/N_cells (Born limit, Gamma ~ 0).
+    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}.npy",
+                                 require_bloch_norm=matrix_io.UNIT_CELL)
     k_coarse = qe_io.get_k_red(uc)
 
     U, k_U = read_w90_mat(paths["u"])
@@ -58,9 +64,12 @@ def main():
 
     # interpolate coarse M -> Wannier real space once; locality guardrail (hard)
     Mwk = Mbk_to_Mwk(M, U, U_dis)
-    Mwr, R_mwr = Mwk_to_Mwr(Mwk, k_coarse, _infer_mp_grid(k_coarse))
+    MP = _infer_mp_grid(k_coarse)
+    Mwr, R_mwr = Mwk_to_Mwr(Mwk, k_coarse, MP)
+    R_mwr, R_d = lt.recenter_mwr(Mwr, R_mwr, MP)                     # defect -> origin, applied ONCE
+    print(f"[recenter] defect site detected at R_d={R_d.tolist()} (supercell cell index); labels shifted so R0=0", flush=True)
     dist, wt = lt.mwr_locality(Mwr, R_mwr)                            # guardrail a (raises if off-center)
-    print("[locality] ||Mwr(R,R0)|| vs |R-R0|:", list(zip(np.round(dist, 2), np.round(wt, 3))), flush=True)
+    print("[locality] ||Mwr(R,R0)|| (eV) vs |R-R0|:", [(float(d), round(float(w)*HA2EV, 4)) for d, w in zip(dist[:12], wt[:12])], "...", flush=True)
 
     grids = [int(x) for x in args.grids.split(",")]
     etas = [float(x) for x in args.etas.split(",")]

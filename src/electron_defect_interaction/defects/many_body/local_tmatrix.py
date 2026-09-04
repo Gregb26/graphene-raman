@@ -110,6 +110,48 @@ def local_green(Hwk, k_int, R_local, eps, eta):
     return g0.reshape(nL * nw, nL * nw)
 
 
+def _diff_table(R_local):
+    """Distinct lattice differences D = R_L - R_M of a cluster and the (L,M) -> D index map."""
+    R = np.asarray(R_local, int)
+    nL = len(R)
+    D = (R[:, None, :] - R[None, :, :]).reshape(-1, 3)
+    Du, inv = np.unique(D, axis=0, return_inverse=True)
+    return Du, np.asarray(inv).reshape(nL, nL)
+
+
+def local_green_batch(Hwk, k_int, R_local, egrid, eta, k_chunk=8192, e_chunk=512):
+    """
+    Same quantity as local_green, for a whole energy grid at once: g0[e][(L,w),(L',w')].
+    Exact restructuring (no approximation): g0 depends on L-L' only (lattice translation
+    invariance), so it is accumulated on the distinct differences D and scattered to (L,L');
+    G0(k) is expanded in the eigenbasis of Hwk so that the k-sum for all energies is one
+    zgemm per (k-chunk, e-chunk). Cost ~ n_E x n_k x n_w x n_D x n_w^2 (BLAS) instead of
+    n_E x n_k x n_L^2 x n_w^2 (einsum, python loop over energies).
+    Returns (nE, nL*nw, nL*nw) complex, flattened as index = L*nw + w.
+    """
+    nki, nw, _ = Hwk.shape
+    R_local = np.asarray(R_local, int)
+    nL = len(R_local)
+    Du, inv = _diff_table(R_local)
+    nD = len(Du)
+    egrid = np.asarray(egrid, float)
+    nE = len(egrid)
+    eps, U = np.linalg.eigh(Hwk)                                   # (nki, nw), (nki, nw, nw)
+    gD = np.zeros((nE, nD * nw * nw), dtype=complex)
+    for s in range(0, nki, k_chunk):
+        k = k_int[s:s + k_chunk]; e = eps[s:s + k_chunk]; u = U[s:s + k_chunk]
+        ph = _phase(k, Du)                                         # (nk, nD) = ph[k,L] conj(ph[k,M])
+        # W[(k,n), (D,w,v)] = e^{2 pi i k.D} U[k,w,n] conj(U[k,v,n])   (spectral weight of G0(k) at eps_kn)
+        W = np.einsum("kD,kwn,kvn->knDwv", ph, u, u.conj(), optimize=True).reshape(-1, nD * nw * nw)
+        ek = e.reshape(-1)
+        for t in range(0, nE, e_chunk):
+            den = 1.0 / (egrid[t:t + e_chunk, None] + 1j * eta - ek[None, :])   # (ne, nk*nw)
+            gD[t:t + e_chunk] += den @ W
+    gD = gD.reshape(nE, nD, nw, nw) / nki
+    g0 = gD[:, inv]                                                # (nE, nL, nL, nw, nw)
+    return np.ascontiguousarray(g0.transpose(0, 1, 3, 2, 4)).reshape(nE, nL * nw, nL * nw)
+
+
 def local_t(V_loc, g0):
     """t = V_loc [1 - g0 V_loc]^{-1}."""
     n = V_loc.shape[0]
@@ -210,7 +252,9 @@ def scattering_rate_fast(Hwr, Rw, ndegen, V_loc, R_local, k_out, eta, k_int=None
     E_sel = E_out[sel]
     de = eta / ne_per_eta
     egrid = np.arange(E_sel.min() - eta, E_sel.max() + eta + de, de)
-    t_cache = [local_t(V_loc, local_green(Hwk_int, k_int, R_local, e, eta)) for e in egrid]
+    g0_all = local_green_batch(Hwk_int, k_int, R_local, egrid, eta)   # exact, batched (see local_green_batch)
+    t_cache = [local_t(V_loc, g0_all[j]) for j in range(len(egrid))]
+    del g0_all
     for ik in range(len(k_out)):
         for n in range(nw):
             if not sel[ik, n]:

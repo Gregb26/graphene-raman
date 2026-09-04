@@ -34,6 +34,8 @@ def parse_args():
     p.add_argument("--rcut", default="0,1,2", help="R-shell cutoffs (max |R| in reduced coords)")
     p.add_argument("--nk-int", type=int, default=300, help="internal k-grid density for g0")
     p.add_argument("--out", default=None)
+    p.add_argument("--dense", action="store_true",
+                   help="use the zero-padded dense M (M_dense_<size>.npy) and the dense primitive .save / dense wannierization")
     return p.parse_args()
 
 
@@ -44,14 +46,20 @@ def main():
     paths = wannier_provenance.load_wannier_checked(args.manifest)   # raises on any failure
     print(f"[gauge] provenance OK: {args.manifest}", flush=True)
 
-    uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
+    PF = {"5x5": (5, 25), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3, 27)}
+    if args.dense:
+        D = PF[args.size][1]
+        uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
+        mfile = f"results/M/M_dense_{args.size}.npy"
+    else:
+        uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
+        mfile = f"results/M/M_ed_{args.size}.npy"
     # NORMALIZATION CONTRACT (validated by test_local_tmatrix_real.py to 1e-13):
     #   * the LOCAL Wannier t-matrix needs the INTENSIVE real-space potential V_loc = <wR|V|w'R'>,
     #     i.e. Mwr built from the unit-cell-normalized M_raw (bloch_norm='unit_cell');
     #   * the DENSE Bloch T-matrix (single_defect.compute_T) needs M/N_cells ('supercell').
     #   Feeding M_norm here silently suppresses V_loc by 1/N_cells (Born limit, Gamma ~ 0).
-    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}.npy",
-                                 require_bloch_norm=matrix_io.UNIT_CELL)
+    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL)
     k_coarse = qe_io.get_k_red(uc)
 
     U, k_U = read_w90_mat(paths["u"])

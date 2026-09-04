@@ -16,13 +16,20 @@ from electron_defect_interaction.defects.many_body.single_defect import compute_
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 
 N = sys.argv[1] if len(sys.argv) > 1 else "5x5"
+dense = len(sys.argv) > 2 and sys.argv[2] == "--dense"
 eta = 0.10
-W = f"wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"
+PF = {"5x5": (5, 25), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3, 27)}
+if dense:
+    D = PF[N][1]; W = f"wannier/{D}x{D}"
+    uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
+    MFILE = f"results/M/M_dense_{N}.npy"
+else:
+    W = f"wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"; MFILE = f"results/M/M_ed_{N}.npy"
 k = qe_io.get_k_red(uc); Nc = len(k); MP = _infer_mp_grid(k)
 U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
 Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
 Hwr, Rw, nd = read_w90_HR(f"{W}/wannier_tb.dat")
-M_raw = matrix_io.load_M_checked(f"results/M/M_ed_{N}.npy", require_bloch_norm=matrix_io.UNIT_CELL)
+M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL)
 
 # Wannier-gauge M (intensive), real space, recentered; 5-band smooth-Bloch projection on the coarse grid
 Mwk = Mbk_to_Mwk(M_raw, U, Ud)

@@ -209,3 +209,124 @@ def compute_ML_R_mpi(prep, grid_block=200_000):
         e = min(s + chunk, flat.size)
         comm.Allreduce(flat_local[s:e].copy(), flat[s:e], op=MPI.SUM)
     return M.reshape(nb, nk, nb, nk)
+
+
+# ---------------------------------------------------------------------------------------------- #
+# Node-shared variant for LARGE k sets (dense primitive grids -> exact zero-padded dense M^L).     #
+# ---------------------------------------------------------------------------------------------- #
+def _node_shared(nodecomm, shape, dtype):
+    """One physical copy per node of an array of `shape`, exposed to every rank of `nodecomm`."""
+    itemsize = np.dtype(dtype).itemsize
+    n = int(np.prod(shape))
+    win = MPI.Win.Allocate_shared(n * itemsize if nodecomm.Get_rank() == 0 else 0, itemsize, comm=nodecomm)
+    buf, _ = win.Shared_query(0)
+    return np.ndarray(buffer=buf, dtype=dtype, shape=shape), win
+
+
+def compute_ML_R_mpi_shared(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path,
+                            subtract_mean=False, bands=None, io=None, grid_block=2000, verbose=True):
+    """
+    Same physics and conventions as compute_ML_R_mpi -- M[bra_band, k', ket_band, k] =
+    dV sum_r psi*_{n'k'}(r) Ved(r) psi_{nk}(r) over the SUPERCELL grid, psi built pointwise from the
+    unit-cell Bloch part u_nk and the phase e^{2 pi i k.r} -- but organised for LARGE k sets:
+
+      * u_nk (nb, nk, N_uc) is stored ONCE per node in MPI shared memory (tens of GB on dense grids)
+        instead of once per rank; the node-local root reads the inputs and fills it;
+      * the supercell grid is distributed over ALL ranks (contiguous slabs), each rank accumulating
+        its (Bk, Bk) partial with threaded BLAS on blocks of `grid_block` points;
+      * the partial sums are Reduce'd to rank 0 in sub-buffer chunks (OpenMPI large-message bug).
+
+    Because the Bloch phase is evaluated per grid point, k need NOT be commensurate with the
+    supercell. Fed with the wavefunctions of a DENSE primitive calculation and the N x N supercell
+    potential, this is EXACTLY the zero-padded dense M^L of local_G (Ved = 0 outside the supercell,
+    so the padded-cell integral reduces to the supercell one), in O(N_r Bk^2) BLAS flops instead of
+    the O(nk^2 nG^2) random gathers of compute_ML_G_dense_mpi. Returns M on rank 0, None elsewhere.
+    """
+    import time
+    if io is None:
+        from electron_defect_interaction.io import qe_io as io
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank(); size = comm.Get_size()
+    node = comm.Split_type(MPI.COMM_TYPE_SHARED)
+    nrank = node.Get_rank()
+
+    meta = None
+    prep = None
+    if nrank == 0:
+        prep = prep_realspace_inputs(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path,
+                                     subtract_mean=subtract_mean, bands=bands, io=io)
+        nb, nk, _ = prep["C_nkg"].shape
+        Nx, Ny, Nz = prep["ngfft"]; Ndiag = prep["Ndiag"]
+        meta = dict(nb=int(nb), nk=int(nk), ngfft=(int(Nx), int(Ny), int(Nz)),
+                    ngfft_uc=(int(Nx // Ndiag[0]), int(Ny // Ndiag[1]), int(Nz // Ndiag[2])),
+                    Omega_sc=float(prep["Omega_sc"]), k_red=np.asarray(prep["k_red"], dtype=float))
+    meta = node.bcast(meta, root=0)
+    nb, nk = meta["nb"], meta["nk"]
+    Nx, Ny, Nz = meta["ngfft"]; nxu, nyu, nzu = meta["ngfft_uc"]
+    Nuc = nxu * nyu * nzu; Ntot = Nx * Ny * Nz
+    Omega_sc = meta["Omega_sc"]; k_red = meta["k_red"]
+
+    u, win_u = _node_shared(node, (nb, nk, Nuc), np.complex128)
+    Ved_flat, win_v = _node_shared(node, (Ntot,), np.float64)
+    win_u.Sync(); win_v.Sync()
+    if nrank == 0:
+        t0 = time.time()
+        C_nkg, nG, G_red = prep["C_nkg"], prep["nG"], prep["G_red"]
+        mx, my, mz = map_G_to_fft_grid((nxu, nyu, nzu))
+        for ik in range(nk):
+            nGk = int(nG[ik]); Gk = G_red[ik, :nGk, :]
+            ix = np.fromiter((mx[int(g)] for g in Gk[:, 0]), dtype=np.int64, count=nGk)
+            iy = np.fromiter((my[int(g)] for g in Gk[:, 1]), dtype=np.int64, count=nGk)
+            iz = np.fromiter((mz[int(g)] for g in Gk[:, 2]), dtype=np.int64, count=nGk)
+            Cg = np.zeros((nb, nxu, nyu, nzu), dtype=np.complex128)
+            Cg[:, ix, iy, iz] = C_nkg[:, ik, :nGk]
+            u[:, ik, :] = (np.fft.ifftn(Cg, axes=(1, 2, 3)) * Nuc).reshape(nb, Nuc)
+        Ved_flat[:] = np.ascontiguousarray(prep["Ved"]).reshape(-1)
+        del prep, C_nkg, Cg
+        if verbose and rank == 0:
+            print(f"[ML_R shared] u_nk built: nb={nb} nk={nk} Nuc={Nuc} ({nb*nk*Nuc*16/1e9:.1f} GB/node) "
+                  f"grid={Nx}x{Ny}x{Nz} Bk={nb*nk} in {time.time()-t0:.0f}s", flush=True)
+    win_u.Sync(); win_v.Sync()
+    node.Barrier()
+    win_u.Sync(); win_v.Sync()
+
+    Bk = nb * nk
+    dV = Omega_sc / Ntot
+    inv_sqrtO = 1.0 / np.sqrt(Omega_sc)
+    twopi = 2.0 * np.pi
+
+    counts = [Ntot // size + (1 if r < (Ntot % size) else 0) for r in range(size)]
+    displs = [sum(counts[:r]) for r in range(size)]
+    g0, g1 = displs[rank], displs[rank] + counts[rank]
+
+    M_local = np.zeros((Bk, Bk), dtype=np.complex128)
+    nblocks = max(1, -(-(g1 - g0) // grid_block)); t0 = time.time(); ib = 0
+    for start in range(g0, g1, grid_block):
+        stop = min(start + grid_block, g1)
+        idx = np.arange(start, stop)
+        ix = idx // (Ny * Nz); iy = (idx // Nz) % Ny; iz = idx % Nz
+        pu = (ix % nxu) * (nyu * nzu) + (iy % nyu) * nzu + (iz % nzu)
+        fx = ix / nxu; fy = iy / nyu; fz = iz / nzu
+        arg = twopi * (k_red[:, 0:1] * fx[None, :] + k_red[:, 1:2] * fy[None, :] + k_red[:, 2:3] * fz[None, :])
+        phase = np.exp(1j * arg)                                     # (nk, nblock)
+        Psi = (u[:, :, pu] * phase[None, :, :]) * inv_sqrtO          # (nb, nk, nblock)
+        Psi = Psi.reshape(Bk, -1)
+        Vb = Ved_flat[start:stop]
+        M_local += dV * (Psi.conj() * Vb[None, :]) @ Psi.T
+        ib += 1
+        if verbose and rank == 0 and (ib % max(1, nblocks // 20) == 0 or ib == nblocks):
+            el = time.time() - t0
+            print(f"[ML_R shared] rank0 block {ib}/{nblocks}  elapsed {el/60:.1f} min  ETA {el/ib*(nblocks-ib)/60:.1f} min", flush=True)
+    del Psi
+
+    M = np.zeros((Bk, Bk), dtype=np.complex128) if rank == 0 else None
+    flat_local = M_local.reshape(-1)
+    flat = M.reshape(-1) if rank == 0 else None
+    chunk = 1_000_000
+    for s in range(0, Bk * Bk, chunk):
+        e = min(s + chunk, Bk * Bk)
+        comm.Reduce(flat_local[s:e], flat[s:e] if rank == 0 else None, op=MPI.SUM, root=0)
+    del M_local, flat_local
+    comm.Barrier()
+    win_u.Free(); win_v.Free(); node.Free()
+    return M.reshape(nb, nk, nb, nk) if rank == 0 else None

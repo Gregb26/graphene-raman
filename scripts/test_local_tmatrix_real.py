@@ -29,7 +29,7 @@ k = qe_io.get_k_red(uc); Nc = len(k); MP = _infer_mp_grid(k)
 U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
 Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
 Hwr, Rw, nd = read_w90_HR(f"{W}/wannier_tb.dat")
-M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL)
+M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL) * 27.211386245988   # Ha -> eV (Wannier H is in eV)
 
 # Wannier-gauge M (intensive), real space, recentered; 5-band smooth-Bloch projection on the coarse grid
 Mwk = Mbk_to_Mwk(M_raw, U, Ud)
@@ -54,7 +54,7 @@ Gl = lt.scattering_rate(Hwr, Rw, nd, V_loc, Rn, k, eta, k_int=k)
 
 rel = np.max(np.abs(Gl - Gd)) / max(1e-30, np.max(np.abs(Gd)))
 i0 = int(np.argmin(np.abs(Rn).sum(1))); on = Mwr[:, i0, :, i0]
-print(f"[{N}] R_d={Rd.tolist()}  on-site ||V_loc(0,0)||={np.linalg.norm(on):.4f} Ha  herm_res={res:.1e}")
+print(f"[{N}] R_d={Rd.tolist()}  on-site ||V_loc(0,0)||={np.linalg.norm(on):.4f} eV  herm_res={res:.1e}")
 print(f"[{N}] Gamma range dense*Nc: {Gd.min():.3e}..{Gd.max():.3e}  local: {Gl.min():.3e}..{Gl.max():.3e}")
 print(f"[{N}] REAL GOLDEN: max|local - dense*N_cells| rel = {rel:.3e}   (must be ~1e-10)")
 print(f"[{N}] positivity min Gamma(local) = {Gl.min():.3e}")

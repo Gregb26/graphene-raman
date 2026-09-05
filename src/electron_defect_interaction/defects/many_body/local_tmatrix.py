@@ -119,7 +119,7 @@ def _diff_table(R_local):
     return Du, np.asarray(inv).reshape(nL, nL)
 
 
-def local_green_batch(Hwk, k_int, R_local, egrid, eta, k_chunk=8192, e_chunk=512):
+def local_green_batch(Hwk, k_int, R_local, egrid, eta, k_chunk=8192, e_chunk=512, deriv=False):
     """
     Same quantity as local_green, for a whole energy grid at once: g0[e][(L,w),(L',w')].
     Exact restructuring (no approximation): g0 depends on L-L' only (lattice translation
@@ -127,6 +127,8 @@ def local_green_batch(Hwk, k_int, R_local, egrid, eta, k_chunk=8192, e_chunk=512
     G0(k) is expanded in the eigenbasis of Hwk so that the k-sum for all energies is one
     zgemm per (k-chunk, e-chunk). Cost ~ n_E x n_k x n_w x n_D x n_w^2 (BLAS) instead of
     n_E x n_k x n_L^2 x n_w^2 (einsum, python loop over energies).
+    deriv=True returns dg0/d(eps) instead (weights -1/(e+i eta-eps_kn)^2), needed for the DOS change
+    delta_rho = (1/pi) Im Tr[t(eps) dg0/d(eps)].
     Returns (nE, nL*nw, nL*nw) complex, flattened as index = L*nw + w.
     """
     nki, nw, _ = Hwk.shape
@@ -146,6 +148,8 @@ def local_green_batch(Hwk, k_int, R_local, egrid, eta, k_chunk=8192, e_chunk=512
         ek = e.reshape(-1)
         for t in range(0, nE, e_chunk):
             den = 1.0 / (egrid[t:t + e_chunk, None] + 1j * eta - ek[None, :])   # (ne, nk*nw)
+            if deriv:
+                den = -den * den
             gD[t:t + e_chunk] += den @ W
     gD = gD.reshape(nE, nD, nw, nw) / nki
     g0 = gD[:, inv]                                                # (nE, nL, nL, nw, nw)

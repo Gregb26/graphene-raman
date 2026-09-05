@@ -1,0 +1,17 @@
+{
+  "_comment": "Frozen production parameters (2026-09-05), declared after the Level 1-2 convergence on the nbnd=20 dense chain. Every production script must load this file via electron_defect_interaction.config.load_production(); CLI flags may only widen a sweep, never silently change a frozen value.",
+  "R_cut": 3,
+  "grid": 240,
+  "eta_eV": 0.02,
+  "N_min": 7,
+  "reference_size": "9x9",
+  "production_sizes": ["7x7", "8x8", "9x9"],
+  "nk_int": 300,
+  "e_window_eV": 3.0,
+  "ne_per_eta": 8,
+  "nbnd_dense": 20,
+  "dense": {"5x5": {"p": 5, "D": 25}, "7x7": {"p": 4, "D": 28}, "8x8": {"p": 4, "D": 32}, "9x9": {"p": 3, "D": 27}},
+  "wannier": {"num_wann": 5, "projections": "C1:sp2;pz  C2:pz", "dis_win_eV": [-25.0, 15.0], "dis_froz_max_eV": -1.74},
+  "units": {"M_files": "Hartree", "wannier_tb": "eV", "rule": "M is multiplied by HA2EV once, at load time, before any t-matrix algebra; Gamma is reported in eV (x1e3 = meV)"},
+  "defect_concentration_for_dos": 0.01
+}

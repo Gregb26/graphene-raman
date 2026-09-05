@@ -17,6 +17,7 @@ import argparse
 import numpy as np
 
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
+from electron_defect_interaction.config import load_production, dense_paths
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order)
@@ -29,10 +30,10 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--size", required=True)
     p.add_argument("--manifest", required=True, help="wannier provenance manifest (hard gauge gate)")
-    p.add_argument("--grids", default="60,120,240", help="output k-grid densities N (NxN)")
-    p.add_argument("--etas", default="0.05,0.02,0.01", help="broadenings (eV)")
-    p.add_argument("--rcut", default="0,1,2", help="R-shell cutoffs (max |R| in reduced coords)")
-    p.add_argument("--nk-int", type=int, default=300, help="internal k-grid density for g0")
+    p.add_argument("--grids", default=None, help="output k-grid densities N (NxN); default = frozen config value")
+    p.add_argument("--etas", default=None, help="broadenings (eV); default = frozen config value")
+    p.add_argument("--rcut", default=None, help="R-shell cutoffs (max |R| in reduced coords); default = frozen config value")
+    p.add_argument("--nk-int", type=int, default=None, help="internal k-grid density for g0; default = frozen config value")
     p.add_argument("--out", default=None)
     p.add_argument("--dense", action="store_true",
                    help="use the zero-padded dense M (M_dense_<size>.npy) and the dense primitive .save / dense wannierization")
@@ -41,16 +42,18 @@ def parse_args():
 
 def main():
     args = parse_args()
+    cfg = load_production()
+    if args.grids is None: args.grids = str(cfg["grid"])
+    if args.etas is None: args.etas = str(cfg["eta_eV"])
+    if args.rcut is None: args.rcut = str(cfg["R_cut"])
+    if args.nk_int is None: args.nk_int = int(cfg["nk_int"])
 
     # --- HARD gauge gate: refuse to run unless tb/u/u_dis are the same, unmodified wannier run ---
     paths = wannier_provenance.load_wannier_checked(args.manifest)   # raises on any failure
     print(f"[gauge] provenance OK: {args.manifest}", flush=True)
 
-    PF = {"5x5": (5, 25), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3, 27)}
     if args.dense:
-        D = PF[args.size][1]
-        uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
-        mfile = f"results/M/M_dense_{args.size}.npy"
+        dp = dense_paths(cfg, args.size); uc = dp["uc"]; mfile = dp["mfile"]
     else:
         uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
         mfile = f"results/M/M_ed_{args.size}.npy"
@@ -59,7 +62,8 @@ def main():
     #     i.e. Mwr built from the unit-cell-normalized M_raw (bloch_norm='unit_cell');
     #   * the DENSE Bloch T-matrix (single_defect.compute_T) needs M/N_cells ('supercell').
     #   Feeding M_norm here silently suppresses V_loc by 1/N_cells (Born limit, Gamma ~ 0).
-    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL)
+    # UNITS: M files are in Hartree, the Wannier Hamiltonian (tb.dat) is in eV -> convert M ONCE here.
+    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL) * HA2EV
     k_coarse = qe_io.get_k_red(uc)
 
     U, k_U = read_w90_mat(paths["u"])
@@ -77,7 +81,7 @@ def main():
     R_mwr, R_d = lt.recenter_mwr(Mwr, R_mwr, MP)                     # defect -> origin, applied ONCE
     print(f"[recenter] defect site detected at R_d={R_d.tolist()} (supercell cell index); labels shifted so R0=0", flush=True)
     dist, wt = lt.mwr_locality(Mwr, R_mwr)                            # guardrail a (raises if off-center)
-    print("[locality] ||Mwr(R,R0)|| (eV) vs |R-R0|:", [(float(d), round(float(w)*HA2EV, 4)) for d, w in zip(dist[:12], wt[:12])], "...", flush=True)
+    print("[locality] ||Mwr(R,R0)|| (eV) vs |R-R0|:", [(float(d), round(float(w), 4)) for d, w in zip(dist[:12], wt[:12])], "...", flush=True)
 
     grids = [int(x) for x in args.grids.split(",")]
     etas = [float(x) for x in args.etas.split(",")]
@@ -88,7 +92,7 @@ def main():
     _, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=ndegen)
     gap = E_ref[:, 4] - E_ref[:, 3]
     iD = int(np.argmin(gap)); E_dirac = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4]))
-    win = (E_dirac - 3.0, E_dirac + 3.0)
+    win = (E_dirac - float(cfg["e_window_eV"]), E_dirac + float(cfg["e_window_eV"]))
     print(f"[dirac] E_Dirac = {E_dirac:.4f} eV (Wannier, min gap {gap[iD]*1e3:.1f} meV); window {win}", flush=True)
 
     print(f"\n{'Rcut':>5} {'grid':>6} {'eta(eV)':>9} {'median G*Ncells(meV)':>22} {'resonance E-ED(eV)':>19}")
@@ -101,7 +105,7 @@ def main():
             _, E_out, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=ndegen)
             for eta in etas:
                 gamma = lt.scattering_rate_fast(Hwr, Rw, ndegen, V_loc, Rloc, k_out, eta,
-                                                k_int=k_int, e_window=win, ne_per_eta=8)
+                                                k_int=k_int, e_window=win, ne_per_eta=int(cfg["ne_per_eta"]))
                 med = float(np.nanmedian(np.abs(gamma))) * 1e3
                 # resonance: energy (rel. Dirac) of max on-shell rate within +-1.5 eV of Dirac
                 E = E_out.T                                           # (nw, nk) eV

@@ -27,7 +27,7 @@ ML_diag_mean = float(np.mean([np.load(dp["mfile"].replace("M_dense_", "M_L_dense
 print(f"[align] mean diag of M^L (G~=0 component) = {ML_diag_mean*1e3:.2f} meV (unit-cell norm)", flush=True)
 k_coarse = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k_coarse)
 U, kU = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(kU, k_coarse)]
-Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_mp := _match_kpoint_order(kUd, k_coarse)]
+Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k_coarse)]
 Hwr, Rw, nd = read_w90_HR(paths["tb"])
 
 def vloc_from(Mb):
@@ -95,7 +95,8 @@ def peak(x, y, lo=None):
 res = {"E_D": E_D, "peak_ratio": peak(eg, ratio) - E_D, "peak_drho": peak(egrid, drho) - E_D, "peak_rho_dis": peak(eg, rho_dis) - E_D,
        "peak_GT": peak(eg, GT_e) - E_D, "peak_GB": peak(eg, GB_e) - E_D,
        "Tbar_zero_crossings": [float(egrid[i] - E_D) for i in zc], "peak_absTbar": float(egrid[int(np.argmax(np.abs(tr)))] - E_D),
-       "peak_ImTbar": float(egrid[int(np.argmax(-tr.imag))] - E_D)}
+       "peak_ImTbar": float(egrid[int(np.argmax(-tr.imag))] - E_D), "min_absReTbar": float(egrid[int(np.argmin(np.abs(tr.real)))] - E_D),
+       "ReTbar_at_ED": float(np.interp(E_D, egrid, tr.real)), "ImTbar_at_ED": float(np.interp(E_D, egrid, tr.imag))}
 print("\n=== RESONANCE (eV rel. E_D; >0 above Dirac) ===")
 for k, v in res.items(): print(f"  {k:22s} {v}")
 m = np.abs(eg - E_D) <= ew
@@ -106,6 +107,6 @@ print(f"=== alignment: Gamma_T with vs without G~=0 shift ({ML_diag_mean*1e3:.1f
 out = a.out or f"results/M/resonance_{S}.npz"
 np.savez(out, size=S, E_D=E_D, eta=eta, R_cut=rc, grid=N, nk_int=nk_int, conc=conc, egrid=egrid, eg=eg,
          Gamma_T=GT_e, Gamma_Born=GB_e, Gamma_T_noshift=GS_e, rho0=rho0, rho0_240=rho0_240, ratio=ratio, drho=drho, rho_dis=rho_dis,
-         Tbar=Tbar, Tbar_tr=tr, E_out=E_out, G_T=G_T, G_B=G_B, G_S=G_S, ML_diag_mean=ML_diag_mean, **{k: v for k, v in res.items() if k != "Tbar_zero_crossings"},
+         Tbar=Tbar, Tbar_tr=tr, E_out=E_out, G_T=G_T, G_B=G_B, G_S=G_S, ML_diag_mean=ML_diag_mean, **{k: v for k, v in res.items() if k not in ("Tbar_zero_crossings", "E_D")},
          Tbar_zero_crossings=np.array(res["Tbar_zero_crossings"]))
 print(f"saved {out}")

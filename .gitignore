@@ -13,7 +13,6 @@ __pycache__/
 data/
 jobs/
 notebooks/
-results/
 
 # Computed data (never commit matrices / DFT outputs)
 *.npy
@@ -29,3 +28,13 @@ dist/
 # Virtual environment
 .venv
 
+
+# production data kept in the repo (small): Level-1/2 maps, resonance metrics, locality data, CSV summaries
+!results/
+results/*
+!results/M/
+results/M/*
+!results/M/specwd_*_prod.npz
+!results/M/resonance_*.npz
+!results/M/mwr_locality.npz
+!results/M/*.csv

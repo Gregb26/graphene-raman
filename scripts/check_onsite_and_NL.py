@@ -23,7 +23,7 @@ S, D = "9x9", 27
 uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
 k = qe_io.get_k_red(uc); kk, eps = qe_io.get_k_eigenvalues(uc, False); eps = np.asarray(eps)
 if eps.shape[0] != len(kk): eps = eps.T
-for Kp, lab in (((1/3, 1/3, 0), "K"), ((2/3, 2/3, 0), "K'")):
+for Kp, lab in (((2/3, 1/3, 0), "K"), ((1/3, 2/3, 0), "K'")):   # Dirac points of the 60-deg QE cell
     d = np.linalg.norm(np.mod(k - np.array(Kp) + 0.5, 1.0) - 0.5, axis=1); iK = int(np.argmin(d))
     print(f"[{lab}] k_red={k[iK]} (dist {d[iK]:.2e}); eps bands 3..5 (eV): {np.round(eps[iK, 2:6]*HA, 4)}")
     ML = np.load(f"results/M/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"results/M/M_NL_dense_{S}.npy", mmap_mode="r")

@@ -83,7 +83,7 @@ rho0 = np.array([lor(e - E_f).sum() / len(kf) for e in eg])                     
 drho_e = np.interp(eg, egrid, drho); rho_dis = rho0 + conc * drho_e
 ratio = GT_e / rho0
 # (c) Tbar at K for the pi pair
-iK = int(np.argmin(np.linalg.norm(np.mod(k_out - np.array([1/3, 1/3, 0]) + 0.5, 1) - 0.5, axis=1)))
+iK = int(np.argmin(np.linalg.norm(np.mod(k_out - np.array(cfg["K_red"]) + 0.5, 1) - 0.5, axis=1)))   # K from config (2/3,1/3)
 PK = phi[iK, 3:5]                                                                  # (2, dim)
 Tbar = np.array([PK.conj() @ t_T[j] @ PK.T for j in range(nE)])                    # (nE, 2, 2)
 tr = 0.5 * np.trace(Tbar, axis1=1, axis2=2)

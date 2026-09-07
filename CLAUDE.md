@@ -202,3 +202,22 @@ update them to the actual `.save` names (the unit cell is currently `defect_unit
 5. **Validate**: `test_ks_reconstruction.py` (sanity on the unit cell / null defect). For bands,
    `validate_wannier_bands.py` and, if a `bands.x` `bands.dat` is available, `compare_bands_qe.py`.
 6. **Interpolate** M onto a fine grid with `wannier.wannier_interpolation.wannier_interpolate`.
+
+## Figures du mémoire (conventions obligatoires)
+
+- Style : `figures/memoire.mplstyle`, chargé par `plt.style.use("figures/memoire.mplstyle")` dans
+  `scripts/make_figures.py` et dans tout script de figure. Palette catégorielle fixe (ordre du
+  cycler : bleu, orange, vert, jaune…), jamais recyclée ; une séquence = une seule teinte.
+- Tout le texte des figures est en FRANÇAIS (titres d'axes, légendes, annotations, titres de
+  panneaux). `text.usetex` est actif : symboles en LaTeX, unités entre parenthèses. Exemples :
+  « Énergie $\varepsilon - E_D$ (eV) », « Taux d'amortissement $\Gamma$ (meV) »,
+  « Rayon de coupure $R_\text{cut}$ (mailles) », « Densité d'états (états/eV/cellule) »,
+  « Grille $k$ », « Matrice $T$ », « approximation de Born ». Pas de mélange anglais/français
+  dans une même figure. Les panneaux sont étiquetés (a), (b), …
+- Taille : `figure.figsize` du style (6.5 × 3.6 po) pour une figure pleine largeur ; deux panneaux
+  côte à côte = largeur 6.5 po, hauteur ajustée. Sauvegarde en PDF (vectoriel, pour LaTeX) et PNG
+  (prévisualisation) dans `figures/`.
+- Données : lues uniquement dans `results/M/*.npz` (ou les `.save`), jamais dans les logs ;
+  les scripts de figures sont versionnés, les npz/CSV de production aussi (pas les logs).
+- Unités : M est stocké en Hartree et converti en eV UNE fois via
+  `matrix_io.load_M_checked(..., units=matrix_io.EV)` ; Γ en meV, énergies relatives à $E_D$.

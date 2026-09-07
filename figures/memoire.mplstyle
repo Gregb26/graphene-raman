@@ -1,0 +1,26 @@
+# Style commun des figures du mémoire (chargé par plt.style.use("figures/memoire.mplstyle"))
+text.usetex        : True
+text.latex.preamble: \usepackage{amsmath}\usepackage{amssymb}\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage[french]{babel}\usepackage{siunitx}
+font.family        : serif
+font.size          : 9
+axes.titlesize     : 9
+axes.labelsize     : 9
+legend.fontsize    : 8
+xtick.labelsize    : 8
+ytick.labelsize    : 8
+axes.spines.top    : False
+axes.spines.right  : False
+axes.grid          : True
+grid.color         : e6e6e3
+grid.linewidth     : 0.6
+axes.edgecolor     : 8a8984
+xtick.color        : 52514e
+ytick.color        : 52514e
+lines.linewidth    : 1.6
+lines.markersize   : 5
+legend.frameon     : False
+figure.figsize     : 6.5, 3.6
+figure.dpi         : 150
+savefig.dpi        : 300
+savefig.bbox       : tight
+axes.prop_cycle    : cycler('color', ['2a78d6', 'eb6834', '1baf7a', 'eda100', 'e87ba4', '008300', '4a3aa7', 'e34948'])

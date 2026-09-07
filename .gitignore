@@ -37,4 +37,5 @@ results/M/*
 !results/M/specwd_*_prod.npz
 !results/M/resonance_*.npz
 !results/M/mwr_locality.npz
+!results/M/M_analysis.npz
 !results/M/*.csv

@@ -165,3 +165,54 @@ if os.path.exists(a.analysis):
     axs[0].set_title("Convention cellule unitaire : intensif", loc="left", fontsize=8); axs[1].set_title(r"Convention super-cellule $\times N_\mathrm{cells}$ : extensif", loc="left", fontsize=8)
     for i, ax in enumerate(axs): ax.set_xlabel(r"Taille de la super-cellule $N$"); ax.set_xticks(Ns); ax.legend(fontsize=7); panel(ax, "ab"[i])
     fig.tight_layout(); save(fig, "fig_M_scaling")
+
+# ---- fig_ks_reconstruction : reconstruction KS avec V_p (super-cellule parfaite), moyenne sur bandes et k
+ks = "results/M/ks_reconstruction.npz"
+if os.path.exists(ks):
+    K = np.load(ks); Ns = []; mc = []; md = []; xc = []; xd = []
+    for S in sizes:
+        N = int(S[0])
+        if f"{S}_coarse_mean_meV" in K or f"{S}_dense_mean_meV" in K: Ns.append(N)
+        mc.append(float(K[f"{S}_coarse_mean_meV"]) if f"{S}_coarse_mean_meV" in K else np.nan); xc.append(float(K[f"{S}_coarse_max_meV"]) if f"{S}_coarse_max_meV" in K else np.nan)
+        md.append(float(K[f"{S}_dense_mean_meV"]) if f"{S}_dense_mean_meV" in K else np.nan); xd.append(float(K[f"{S}_dense_max_meV"]) if f"{S}_dense_max_meV" in K else np.nan)
+    Nall = [int(S[0]) for S in sizes]
+    fig, ax = plt.subplots()
+    ax.plot(Nall, mc, "o-", color=C_REF, label=r"grille $N\times N$ : moyenne")
+    ax.plot(Nall, xc, "o--", color=C_REF, mfc="none", label=r"grille $N\times N$ : max")
+    ax.plot(Nall, md, "s-", color=C_T, label="dense : moyenne")
+    ax.plot(Nall, xd, "s--", color=C_T, mfc="none", label="dense : max")
+    ax.set_yscale("log"); ax.set_xticks(Nall); ax.set_xlabel(r"Taille de la super-cellule $N$"); ax.set_ylabel(r"$|\varepsilon_\mathrm{calc} - \varepsilon_\mathrm{QE}|$ (meV)")
+    ax.set_title(r"Reconstruction KS avec $V_p$ (décalage constant retiré), bandes et $k$ confondus", loc="left", fontsize=10); ax.legend(ncol=2)
+    save(fig, "fig_ks_reconstruction")
+
+# ---- vérification de V_ed^L : carte 2D dans le plan, profils avec/sans soustraction de la moyenne, profil radial
+vf = "results/M/ved_analysis.npz"
+if os.path.exists(vf):
+    from matplotlib.colors import SymLogNorm
+    V = np.load(vf); LIN = 1e-2
+    # fig_Ved_map : 5x5 et 9x9, z = z_C, SymLogNorm(linthresh = 1e-2 eV)
+    fig, axs = plt.subplots(1, 2, figsize=(6.5, 3.4), layout="constrained")
+    vmax = max(np.abs(V["5x5_map"]).max(), np.abs(V["9x9_map"]).max()); norm = SymLogNorm(linthresh=LIN, vmin=-vmax, vmax=vmax, base=10)
+    for ax, S, let in ((axs[0], "5x5", "a"), (axs[1], "9x9", "b")):
+        pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap="RdBu_r", shading="nearest", rasterized=True)
+        ax.set_aspect("equal"); ax.set_xlabel(r"$x$ (Å)"); ax.set_title(rf"{lab(S)}, plan $z = z_\mathrm{{C}}$", loc="left", fontsize=10); panel(ax, let)
+    axs[0].set_ylabel(r"$y$ (Å)"); cb = fig.colorbar(pc, ax=axs, shrink=0.9); cb.set_label(r"$V_\mathrm{ed}^L$ (eV), échelle symlog")
+    save(fig, "fig_Ved_map")
+    # fig_Ved_profile_mean : le long de a1, avec et sans soustraction de la moyenne 3D, un panneau par N
+    fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=True); axs = axs.ravel()
+    for i, S in enumerate(sizes):
+        ax = axs[i]; ax.plot(V[f"{S}_x"], V[f"{S}_line_raw"], color=COL[S], label="sans soustraction")
+        ax.plot(V[f"{S}_x"], V[f"{S}_line_sub"], color=C_REF, ls="--", label=rf"moyenne 3D soustraite ({float(V[f'{S}_mean3d'])*1e3:+.0f} meV)")
+        ax.axhline(0, color=MUTED, lw=0.8); ax.set_yscale("symlog", linthresh=LIN, linscale=0.4); ax.set_title(lab(S), loc="left"); ax.legend(fontsize=8); panel(ax, "abcd"[i])
+    for ax in axs[2:]: ax.set_xlabel(r"Distance / demi-boîte (le long de $\mathbf a_1$)")
+    for ax in axs[::2]: ax.set_ylabel(r"$V_\mathrm{ed}^L$ (eV)")
+    fig.tight_layout(); save(fig, "fig_Ved_profile_mean")
+    # fig_Ved_radial : moyenne azimutale dans le plan, quatre N, lignes à 1,42 Å et R_cut = 3 mailles
+    fig, ax = plt.subplots()
+    for S in sizes: ax.plot(V[f"{S}_rc"], V[f"{S}_rad"], color=COL[S], label=lab(S))
+    a_lat = float(V["9x9_a"]); ax.axvline(1.42, color=MUTED, lw=0.8, ls=":"); ax.axvline(3 * a_lat, color=MUTED, lw=0.8, ls="--")
+    ax.text(1.42, 0.97, "1$^\\mathrm{er}$ voisin", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)
+    ax.text(3 * a_lat, 0.97, r"$R_\mathrm{cut} = 3$ mailles", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)
+    ax.axhline(0, color=MUTED, lw=0.8); ax.set_yscale("symlog", linthresh=LIN, linscale=0.4)
+    ax.set_xlabel(r"Distance au site $r$ (Å)"); ax.set_ylabel(r"$\langle V_\mathrm{ed}^L\rangle_\varphi$ (eV), plan $z = z_\mathrm{C}$, sans soustraction"); ax.legend(title="Super-cellule", ncol=2)
+    save(fig, "fig_Ved_radial")

@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+"""
+analyze_Ved.py -- checks of V_ed^L = V_d - V_p (local defect potential), existing pp.x data only:
+  1. 2D map in the graphene plane (z = z_C exactly, grid plane), 5x5 and 9x9
+  2. profile along a1 WITH and WITHOUT the G=0 (3D mean) subtraction; 3D mean and in-plane mean
+  3. azimuthal average in the plane vs distance to the vacancy, four N
+Boundary values (max |V| on the half-box planes along a1/a2, all z and in-plane only), raw and mean-subtracted.
+Output: results/M/ved_analysis.npz
+"""
+import numpy as np
+from scipy.ndimage import map_coordinates
+from electron_defect_interaction.io import qe_io
+from electron_defect_interaction.config import HA2EV
+BOHR = 0.529177210903; DATA = "data/graphene"; out = {}
+for S in ("5x5", "7x7", "8x8", "9x9"):
+    scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
+    A, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
+    dmin = np.array([np.min(np.linalg.norm(np.mod(xd - p + 0.5, 1) - 0.5, axis=1)) for p in xp]); s_vac = xp[int(np.argmax(dmin))]
+    Vp, _ = qe_io.get_pot(f"{scp}/Vks_{S}_p", subtract_mean=False, to_hartree=True); Vd, _ = qe_io.get_pot(f"{scd}/Vks_{S}_d", subtract_mean=False, to_hartree=True)
+    dV = (Vd - Vp).transpose(2, 1, 0) * HA2EV; nr = np.array(dV.shape); del Vp, Vd
+    mean3d = float(dV.mean()); iz = int(np.round(s_vac[2] * nr[2])) % nr[2]; plane = dV[:, :, iz]; mean_plane = float(plane.mean())
+    zC = s_vac[2] * A[2, 2] * BOHR; zgrid = iz / nr[2] * A[2, 2] * BOHR
+    # in-plane Cartesian coordinates (A) relative to the vacancy, minimum image
+    i = np.arange(nr[0]); j = np.arange(nr[1]); s1 = (i / nr[0] - s_vac[0] + 0.5) % 1 - 0.5; s2 = (j / nr[1] - s_vac[1] + 0.5) % 1 - 0.5
+    S1, S2 = np.meshgrid(s1, s2, indexing="ij"); X = (S1 * A[0, 0] + S2 * A[0, 1]) * BOHR; Y = (S1 * A[1, 0] + S2 * A[1, 1]) * BOHR
+    R = np.sqrt(X ** 2 + Y ** 2)
+    # 1. map (roll so that the vacancy is centred)
+    i0 = int(np.round(s_vac[0] * nr[0])); j0 = int(np.round(s_vac[1] * nr[1])); sh = (nr[0] // 2 - i0, nr[1] // 2 - j0)
+    # continuous coordinates of the rolled (vacancy-centred) grid: no wrap-around cells in the mesh
+    ic = (np.arange(nr[0]) - nr[0] // 2) / nr[0]; jc = (np.arange(nr[1]) - nr[1] // 2) / nr[1]; IC, JC = np.meshgrid(ic, jc, indexing="ij")
+    out[f"{S}_map"] = np.roll(plane, sh, axis=(0, 1)); out[f"{S}_map_X"] = (IC * A[0, 0] + JC * A[0, 1]) * BOHR; out[f"{S}_map_Y"] = (IC * A[1, 0] + JC * A[1, 1]) * BOHR
+    # 2. profile along a1 (in-plane, z = z_C plane), raw; subtracted = raw - mean3d (what get_pot(subtract_mean=True) does)
+    t = np.linspace(0, 0.5, 401); s = s_vac[None, :] + t[:, None] * np.array([1.0, 0, 0])[None, :]
+    line = map_coordinates(dV, (s * nr[None, :]).T, order=1, mode="wrap"); a1_len = np.linalg.norm(A[:, 0]) * BOHR
+    # 3. azimuthal average in the plane
+    rmax = 0.5 * a1_len; edges = np.arange(0, rmax + 0.05, 0.05); m = R.ravel() < rmax
+    cnt, _ = np.histogram(R.ravel()[m], edges); sm, _ = np.histogram(R.ravel()[m], edges, weights=plane.ravel()[m])
+    rad = np.where(cnt > 0, sm / np.maximum(cnt, 1), np.nan); rc = 0.5 * (edges[1:] + edges[:-1])
+    # boundary planes (half box along a1 and a2), all z and in-plane only
+    i1 = int(np.round((s_vac[0] + 0.5) * nr[0])) % nr[0]; i2 = int(np.round((s_vac[1] + 0.5) * nr[1])) % nr[1]
+    b_all = max(np.abs(dV[i1]).max(), np.abs(dV[:, i2]).max()); b_pl = max(np.abs(plane[i1]).max(), np.abs(plane[:, i2]).max())
+    b_all_s = max(np.abs(dV[i1] - mean3d).max(), np.abs(dV[:, i2] - mean3d).max()); b_pl_s = max(np.abs(plane[i1] - mean3d).max(), np.abs(plane[:, i2] - mean3d).max())
+    site = float(map_coordinates(dV, (s_vac * nr)[:, None], order=1, mode="wrap")[0])
+    print(f"[{S}] z_C = {zC:.3f} A (grid plane {zgrid:.3f} A, iz={iz}); <V_ed>_3D = {mean3d*1e3:+.2f} meV, <V_ed>_plane = {mean_plane*1e3:+.2f} meV; site {site:+.2f} eV; "
+          f"a1 end (x=1): raw {line[-1]*1e3:+.1f} meV, subtracted {(line[-1]-mean3d)*1e3:+.1f} meV; boundary max|V| (all z): raw {b_all*1e3:.1f} / sub {b_all_s*1e3:.1f} meV; "
+          f"(plane): raw {b_pl*1e3:.1f} / sub {b_pl_s*1e3:.1f} meV; plane min {plane.min():+.3f} eV at r={R.ravel()[np.argmin(plane.ravel())]:.2f} A; "
+          f"radial: r=1.42 A -> {np.interp(1.42, rc, np.nan_to_num(rad))*1e3:+.1f} meV, r=3a={3*a1_len/int(S[0]):.2f} A -> {np.interp(3*a1_len/int(S[0]), rc, np.nan_to_num(rad))*1e3:+.1f} meV, r=half box -> {np.nanmean(rad[-3:])*1e3:+.1f} meV", flush=True)
+    out.update(**{f"{S}_x": t / 0.5, f"{S}_line_raw": line, f"{S}_line_sub": line - mean3d, f"{S}_mean3d": mean3d, f"{S}_mean_plane": mean_plane, f"{S}_site": site,
+                  f"{S}_rc": rc, f"{S}_rad": rad, f"{S}_a": a1_len / int(S[0]), f"{S}_halfbox": rmax, f"{S}_b_all": b_all, f"{S}_b_all_sub": b_all_s, f"{S}_b_pl": b_pl, f"{S}_b_pl_sub": b_pl_s, f"{S}_zC": zC, f"{S}_zgrid": zgrid})
+    del dV
+np.savez("results/M/ved_analysis.npz", **out); print("saved results/M/ved_analysis.npz")

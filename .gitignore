@@ -38,4 +38,6 @@ results/M/*
 !results/M/resonance_*.npz
 !results/M/mwr_locality.npz
 !results/M/M_analysis.npz
+!results/M/ks_reconstruction.npz
+!results/M/ved_analysis.npz
 !results/M/*.csv

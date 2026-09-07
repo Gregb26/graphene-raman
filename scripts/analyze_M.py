@@ -55,7 +55,29 @@ corners = corners[np.argsort(np.arctan2(corners[:, 1], corners[:, 0]))]
 print(f"[map] {REF} dense {int(np.sqrt(nk))}x{int(np.sqrt(nk))}: K index {iK} k={kd[iK]}, pair at K = bands {pairK} (pz weight {np.round(wK,3)}), "
       f"A_cell = {A_cell:.3f} A^2; Vt_pi max {Vpi.max():.2f} eV A^2 (at K: {Vpi[iK]:.2f}), Vt_pi* max {Vps.max():.2f} (at K: {Vps[iK]:.2f}); min pz-weight of selected pair {wmin.min():.2f}", flush=True)
 out.update(map_kx=kfold[:, 0], map_ky=kfold[:, 1], map_Vpi=Vpi, map_Vpistar=Vps, map_K=kfold[iK], map_corners=corners, map_A_cell=A_cell, map_B=B, map_eps_pair=eps[np.arange(nk), ipi], map_eps_pairstar=eps[np.arange(nk), ips])
-del MK
+# --- L / NL decomposition on the BZ at k=K (pi row), gauge-invariant: component of M^X along the total M
+MLK = np.array(mmap_M(dp["mfile"].replace("M_dense_", "M_L_dense_"))[:, :, :, iK]) * HA2EV; MNK = np.array(mmap_M(dp["mfile"].replace("M_dense_", "M_NL_dense_"))[:, :, :, iK]) * HA2EV
+Lpar = np.zeros(nk); Npar = np.zeros(nk); Labs = np.zeros(nk); Nabs = np.zeros(nk)
+for ik in range(nk):
+    v = np.array([MK[ipi[ik], ik, n] for n in pairK]); vL = np.array([MLK[ipi[ik], ik, n] for n in pairK]); vN = np.array([MNK[ipi[ik], ik, n] for n in pairK])
+    nv = np.linalg.norm(v); Lpar[ik] = A_cell * (np.vdot(v, vL).real / nv); Npar[ik] = A_cell * (np.vdot(v, vN).real / nv)
+    Labs[ik] = A_cell * np.linalg.norm(vL); Nabs[ik] = A_cell * np.linalg.norm(vN)
+print(f"[map L/NL] pi row at k=K: <|M^NL|>/<|M^L|> over the BZ = {Nabs.mean()/Labs.mean():.2f}; components along M: <M^NL_par> = {Npar.mean():.2f}, <M^L_par> = {Lpar.mean():.2f} eV A^2 "
+      f"(ratio {Npar.mean()/Lpar.mean():.2f}); min over k' of |M^NL|/|M^L| = {(Nabs/Labs).min():.2f}, max = {(Nabs/Labs).max():.2f}; M^L_par < 0 at {int((Lpar<0).sum())} of {nk} k'", flush=True)
+# --- full pi-subspace double average over (k',k)
+ML = mmap_M(dp["mfile"].replace("M_dense_", "M_L_dense_")); MN = mmap_M(dp["mfile"].replace("M_dense_", "M_NL_dense_"))
+pi_idx = np.stack([ipi, ips], 1)                                                                      # (nk, 2) pi/pi* band index per k
+fL = np.zeros((nk, nk)); fN = np.zeros((nk, nk))
+for ik in range(nk):
+    rowL = np.array(ML[:, :, :, ik]) * HA2EV; rowN = np.array(MN[:, :, :, ik]) * HA2EV                 # (nb, nk', nb)
+    for jk in range(nk):
+        bl = rowL[pi_idx[jk]][:, pi_idx[ik]]; bn = rowN[pi_idx[jk]][:, pi_idx[ik]]
+        fL[jk, ik] = np.linalg.norm(bl); fN[jk, ik] = np.linalg.norm(bn)
+print(f"[BZ avg] pi subspace (2x2 blocks pi/pi*, all (k',k)): <|M^NL|_F>/<|M^L|_F> = {fN.mean()/fL.mean():.2f}; <|M^NL|_F> = {fN.mean():.4f} eV, <|M^L|_F> = {fL.mean():.4f} eV; "
+      f"diagonal k'=k only: {np.diag(fN).mean()/np.diag(fL).mean():.2f}; ratio min {(fN/fL).min():.2f} max {(fN/fL).max():.2f}", flush=True)
+out.update(map_Lpar=Lpar, map_Npar=Npar, map_Labs=Labs, map_Nabs=Nabs, bz_ratio_row=Nabs.mean()/Labs.mean(), bz_ratio_par=Npar.mean()/Lpar.mean(),
+           bz_ratio_full=fN.mean()/fL.mean(), bz_ratio_diag=np.diag(fN).mean()/np.diag(fL).mean(), bz_fL_mean=fL.mean(), bz_fN_mean=fN.mean())
+del MK, MLK, MNK, ML, MN
 
 # ---------------- 2. V_ed^L along a lattice-vector line, four N
 for S in SIZES:
@@ -123,13 +145,15 @@ for S in SIZES:
             tests.append((f"padding : noyau dense à p=1 vs noyau N×N, {S}", r"max|M^L_dense - M^L| / max|M^L|", f"{rel:.1e}", "1e-10", "OK" if rel < 1e-10 else "ÉCHEC", "analyze_M.py"))
         # Wannier closure Bloch -> Wannier -> Bloch (5-band subspace) and Fourier round trip
         Hwr, Rw, nd = read_w90_HR(f"{dp['wdir']}/wannier_tb.dat"); MP = _infer_mp_grid(kd)
-        Mwk = Mbk_to_Mwk(np.array(Md) * HA2EV, U9, Ud9); Mwr, R = Mwk_to_Mwr(Mwk, kd, MP); Mwk2 = Mwr_to_Mwk(Mwr, R, kd)
+        kd_mp = np.round(kd * np.asarray(MP)) / np.asarray(MP)                                      # k reconstruits des indices MP (le XML de QE arrondit à ~1e-7)
+        print(f"[closure] k(XML) vs k(MP): max |dk| = {np.abs(kd - kd_mp).max():.2e}", flush=True)
+        Mwk = Mbk_to_Mwk(np.array(Md) * HA2EV, U9, Ud9); Mwr, R = Mwk_to_Mwr(Mwk, kd_mp, MP); Mwk2 = Mwr_to_Mwk(Mwr, R, kd_mp)
         rt = float(np.abs(Mwk2 - Mwk).max() / np.abs(Mwk).max()); Mbk5 = Mwk_to_Mbk(Mwk, Hwr, Rw, kd, ndegen=nd); worst = 0.0
         for i in ks[:12]:
             for j in ks[:12]:
                 sa = np.linalg.svd(Mwk[:, i, :, j], compute_uv=False); sb = np.linalg.svd(Mbk5[:, i, :, j], compute_uv=False); worst = max(worst, np.abs(sa - sb).max() / max(sa[0], 1e-30))
         print(f"[closure] {S}: Fourier round trip Mwk->Mwr->Mwk rel {rt:.2e}; Bloch->Wannier->Bloch (smooth gauge) SV mismatch {worst:.2e}", flush=True)
-        tests.append((f"fermeture Fourier Wannier (k → R → k), {S}", "max|Mwk' - Mwk| / max|Mwk| (limité par les k arrondis à 1e-7 dans le XML de QE)", f"{rt:.1e}", "1e-5", "OK" if rt < 1e-5 else "ÉCHEC", "analyze_M.py"))
+        tests.append((f"fermeture Fourier Wannier (k → R → k), {S}", "max|Mwk' - Mwk| / max|Mwk| (k reconstruits des indices MP)", f"{rt:.1e}", "1e-12", "OK" if rt < 1e-12 else "ÉCHEC", "analyze_M.py"))
         tests.append((f"fermeture Bloch → Wannier → Bloch (5 bandes), {S}", "max écart relatif des valeurs singulières (Mwk vs Mbk lisse)", f"{worst:.1e}", "1e-12", "OK" if worst < 1e-12 else "ÉCHEC", "analyze_M.py"))
         del Mwk, Mwr, Mwk2, Mbk5
     del M16, Mc16

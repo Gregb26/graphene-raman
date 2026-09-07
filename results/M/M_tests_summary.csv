@@ -7,7 +7,7 @@ hermiticité M dense 9x9,max|M - M^\dagger| / max|M|,4.06e-14,1e-12,OK,analyze_M
 "padding : k coïncidents, bandes 1–15, 9x9",max écart relatif des valeurs singulières (dense vs N×N),1.2e-03,2e-3 (tolérance nscf),OK,analyze_M.py
 "non-régression nbnd 16 → 20, 9x9","max écart relatif des valeurs singulières, bandes 1–15",1.2e-07,1e-5,OK,analyze_M.py
 "padding : noyau dense à p=1 vs noyau N×N, 9x9",max|M^L_dense - M^L| / max|M^L|,1.3e-15,1e-10,OK,analyze_M.py
-"fermeture Fourier Wannier (k → R → k), 9x9",max|Mwk' - Mwk| / max|Mwk| (limité par les k arrondis à 1e-7 dans le XML de QE),8.1e-07,1e-5,OK,analyze_M.py
+"fermeture Fourier Wannier (k → R → k), 9x9",max|Mwk' - Mwk| / max|Mwk| (k reconstruits des indices MP),2.4e-14,1e-12,OK,analyze_M.py
 "fermeture Bloch → Wannier → Bloch (5 bandes), 9x9",max écart relatif des valeurs singulières (Mwk vs Mbk lisse),1.3e-15,1e-12,OK,analyze_M.py
 convention intensive (cellule unitaire),"(max−min)/moyenne de max|M| sur N = 5,7,8,9 (bandes 1–16)",1.1e-02,5e-2,OK,analyze_M.py
 "test d'or (local vs compute_T), 5×5 dense",max|\Gamma_{loc} - \Gamma_{dense} N_c| / max,2.3e-14,1e-10,OK,golden_dense_20294198

@@ -13,10 +13,11 @@ pairs = [(ic, idx_d[key(k)]) for ic, k in enumerate(kc) if key(k) in idx_d]
 ec = np.asarray(ec); ed = np.asarray(ed)
 if ec.shape[0] != len(kc): ec = ec.T
 if ed.shape[0] != len(kd): ed = ed.T
+nbc = min(ec.shape[1], ed.shape[1]); ec = ec[:, :nbc]; ed = ed[:, :nbc]   # coarse nscf may have fewer bands (16) than the dense one (20)
 de = np.array([ec[ic] - ed[id_] for ic, id_ in pairs]) * 27.211386
 print(f"coincident k: {len(pairs)}; eps shapes {ec.shape} {ed.shape}; raw sample: {ec[0][:3]}")
 print("max |eps_coarse - eps_dense| per band (raw units x 27.2114):", np.round(np.max(np.abs(de), axis=0), 5))
-gap16 = np.array([ed[id_][16] - ed[id_][15] for _, id_ in pairs]) if ed.shape[1] > 16 else None
+gap16 = None
 print("min gap band16-band17 (dense, raw units):", None if gap16 is None else gap16.min())
 Mc = np.load(sys.argv[2]); Md = np.load(sys.argv[3])
 for nb_sub in (4, 8, 12, 15, 16):

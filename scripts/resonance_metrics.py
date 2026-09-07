@@ -21,7 +21,7 @@ cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(c
 paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
 rc, N, eta, nk_int, ew, npe, conc = cfg["R_cut"], cfg["grid"], cfg["eta_eV"], cfg["nk_int"], cfg["e_window_eV"], cfg["ne_per_eta"], cfg["defect_concentration_for_dos"]
 
-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL) * HA2EV          # Ha -> eV, once
+M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)   # eV, single conversion point
 ML_diag_mean = float(np.mean([np.load(dp["mfile"].replace("M_dense_", "M_L_dense_"), mmap_mode="r")[n, k, n, k].real
                               for n in range(M.shape[0]) for k in range(0, M.shape[1], 7)])) * HA2EV
 print(f"[align] mean diag of M^L (G~=0 component) = {ML_diag_mean*1e3:.2f} meV (unit-cell norm)", flush=True)

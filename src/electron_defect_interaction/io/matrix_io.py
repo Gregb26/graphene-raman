@@ -19,16 +19,22 @@ import numpy as np
 
 SUPERCELL = "supercell"
 UNIT_CELL = "unit_cell"
+HARTREE = "hartree"          # the only unit M files are ever stored in (kernels: V_ed in Ha, psi dimensionless)
+EV = "eV"
+HA2EV = 27.211386245988
 
 
 def _manifest_path(npy_path):
     return os.path.splitext(npy_path)[0] + ".json"
 
 
-def save_M(npy_path, M, bloch_norm, **extra):
-    """Save M to npy_path and a sidecar <stem>.json recording bloch_norm (+ any extra metadata)."""
+def save_M(npy_path, M, bloch_norm, units=HARTREE, **extra):
+    """Save M to npy_path and a sidecar <stem>.json recording bloch_norm and units (+ any extra metadata).
+    M must be in Hartree (the kernels' unit); saving in any other unit is refused."""
+    if units != HARTREE:
+        raise ValueError(f"save_M: M files are stored in Hartree only (got units='{units}')")
     np.save(npy_path, M)
-    meta = {"bloch_norm": bloch_norm, "shape": list(np.shape(M)), **extra}
+    meta = {"bloch_norm": bloch_norm, "units": units, "shape": list(np.shape(M)), **extra}
     with open(_manifest_path(npy_path), "w") as f:
         json.dump(meta, f, indent=2)
 
@@ -41,11 +47,17 @@ def read_manifest(npy_path):
         return json.load(f)
 
 
-def load_M_checked(npy_path, require_bloch_norm=SUPERCELL):
+def load_M_checked(npy_path, require_bloch_norm=SUPERCELL, units=None):
     """
-    Load M, refusing (ValueError) unless its manifest declares require_bloch_norm. Prevents both
-    running on an un-normalized M and double-applying the 1/N_cells factor.
+    Load M, refusing (ValueError) unless its manifest declares require_bloch_norm AND units='hartree'.
+    `units` (mandatory) is the unit the CALLER wants back:
+        units='hartree' -> raw array (M construction / checks);
+        units='eV'      -> M * HA2EV, the ONLY place this conversion may happen (t-matrix consumers:
+                           the Wannier Hamiltonian and all energies are eV).
+    Prevents un-normalized/double-normalized M and Ha-vs-eV mixing (the 2026-09-05 bug).
     """
+    if units not in (HARTREE, EV):
+        raise ValueError(f"load_M_checked: units must be '{HARTREE}' or '{EV}' (explicit), got {units!r}")
     meta = read_manifest(npy_path)
     if meta is None:
         raise ValueError(
@@ -56,4 +68,11 @@ def load_M_checked(npy_path, require_bloch_norm=SUPERCELL):
         raise ValueError(
             f"{npy_path}: bloch_norm='{got}' but '{require_bloch_norm}' required. Refusing to run "
             f"(this M is likely un-normalized, or already normalized and about to be double-counted).")
-    return np.load(npy_path)
+    stored = meta.get("units")
+    if stored != HARTREE:
+        raise ValueError(
+            f"{npy_path}: manifest units={stored!r}, expected '{HARTREE}'. Refusing to run: unknown unit "
+            f"would silently mix Hartree and eV in the t-matrix. Tag the sidecar (units='hartree') only if "
+            f"the file was produced by the Ha kernels.")
+    M = np.load(npy_path)
+    return M * HA2EV if units == EV else M

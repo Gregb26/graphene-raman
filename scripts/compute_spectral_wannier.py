@@ -63,7 +63,7 @@ def main():
     #   * the DENSE Bloch T-matrix (single_defect.compute_T) needs M/N_cells ('supercell').
     #   Feeding M_norm here silently suppresses V_loc by 1/N_cells (Born limit, Gamma ~ 0).
     # UNITS: M files are in Hartree, the Wannier Hamiltonian (tb.dat) is in eV -> convert M ONCE here.
-    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL) * HA2EV
+    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
     k_coarse = qe_io.get_k_red(uc)
 
     U, k_U = read_w90_mat(paths["u"])

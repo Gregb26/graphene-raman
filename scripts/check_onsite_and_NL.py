@@ -37,7 +37,7 @@ for Kp, lab in (((1/3, 1/3, 0), "K"), ((2/3, 2/3, 0), "K'")):
 print("\n=== Q1: on-site V_loc (dense) pz-pz in eV")
 for S, D in PF.items():
     uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"; W = f"wannier/{D}x{D}"
-    M = matrix_io.load_M_checked(f"results/M/M_dense_{S}.npy", require_bloch_norm=matrix_io.UNIT_CELL)
+    M = matrix_io.load_M_checked(f"results/M/M_dense_{S}.npy", require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
     k = qe_io.get_k_red(uc); MP = _infer_mp_grid(k)
     U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
     Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]

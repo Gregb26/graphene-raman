@@ -39,7 +39,7 @@ def main():
     args = parse_args()
     uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
     # require the supercell-normalized M (matrix_io refuses an un-normalized/untagged one).
-    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}_norm.npy") * HA2EV   # (nb, nk, nb, nk); Ha -> eV to match eigs
+    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
     # Structural k-pairing: eps aligned to M's k-grid; asserts the k-count/order match (see qe_io).
     eigs = qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True) * HA2EV
     nb, nk = eigs.shape

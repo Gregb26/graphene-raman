@@ -88,10 +88,11 @@ if os.path.exists(a.locality):
         ax.set_ylim(2e-5, 40)
     axs[0].set_ylabel(r"$\|M_{wR}(R,R_0)\|$ (eV)"); save(fig, "fig_locality")
 
-# --- 5. spectral: Born vs T, |T|^2 proxy, DOS change, Tbar(K)
+# --- 5. spectral: Born vs T, |T|^2 proxy, DOS change, Tbar(K), det/eigenvalue criterion, Gamma at c=0.1%
 if os.path.exists(a.resonance):
     R = np.load(a.resonance); ED = float(R["E_D"]); x = R["eg"] - ED; xg = R["egrid"] - ED; S = str(R["size"]); c = float(R["conc"])
-    fig, axs = plt.subplots(2, 2, figsize=(6.8, 5.0)); (a1, a2), (a3, a4) = axs
+    crit = a.resonance.replace("resonance_", "resonance_criteria_"); C = np.load(crit) if os.path.exists(crit) else None
+    fig, axs = plt.subplots(3, 2, figsize=(6.8, 7.4)); (a1, a2), (a3, a4), (a5, a6) = axs
     a1.plot(x, R["Gamma_T"] * 1e3, color=C_T, label="T-matrix (exact)"); a1.plot(x, R["Gamma_Born"] * 1e3, color=C_BORN, label="Born (2nd order)")
     a1.set_ylabel(r"$\Gamma\,N_\mathrm{cells}$ (meV)"); a1.set_title(f"{S}: on-shell rate, $\\eta$ = {float(R['eta'])} eV", loc="left"); a1.legend()
     a2.plot(x, R["ratio"] / np.nanmax(R["ratio"]), color=C_T); a2.set_ylabel(r"$\Gamma/\rho_0$ (norm., $\propto|T|^2$)"); a2.set_title(r"(a) $\Gamma(\varepsilon)/\rho_0(\varepsilon)$", loc="left")
@@ -99,5 +100,12 @@ if os.path.exists(a.resonance):
     a3.set_ylabel("DOS (states / eV / cell / spin)"); a3.set_title(r"(b) $\delta\rho = \rho_\mathrm{dis}-\rho_0$", loc="left"); a3.legend()
     tr = R["Tbar_tr"]; a4.plot(xg, tr.real, color=C_T, label=r"Re $\bar T_{\pi\pi}(K,K;\varepsilon)$"); a4.plot(xg, tr.imag, color=C_BORN, label="Im"); a4.axhline(0, color="#8a8984", lw=0.8)
     a4.set_ylabel(r"$\bar T$ (eV, per defect)"); a4.set_title(r"(c) $\bar T$ at $K$, $\pi$ pair (trace/2)", loc="left"); a4.legend()
+    if C is not None:
+        xc = C["eg"] - float(C["E_D"])
+        a5.semilogy(xc, np.exp(C["logdet_rel"]), color=C_T, label=r"$|\det[1-Vg_0]|$ / max"); a5.semilogy(xc, C["minlam"], color=C_BORN, label=r"$\min_i|\lambda_i(1-Vg_0)|$")
+        a5.set_ylabel("dimensionless"); a5.set_title(r"(d) resonance criterion", loc="left"); a5.legend(fontsize=7)
+        cc = float(C["c_compare"]); a6.plot(C["x_c"], C["Gamma_c"] * 1e3, color=C_T)
+        a6.set_ylabel(rf"$\Gamma$ (meV) at $c$ = {cc*100:.1f}%"); a6.set_xlim(-1, 1)
+        a6.set_title("(e) vacancy, $c$ = %.1f%% (vs Kaasbjerg Fig. 17: subst. N,\norder of magnitude only)" % (cc * 100), loc="left", fontsize=7.5)
     for ax in axs.ravel(): ax.set_xlabel(r"$\varepsilon - E_D$ (eV)"); ax.axvline(0, color="#8a8984", lw=0.8, ls=":")
     fig.tight_layout(); save(fig, "fig_spectral")

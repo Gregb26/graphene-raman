@@ -81,8 +81,8 @@ def stage_nl(a):
 
 def stage_combine(a):
     P = paths(a.size)
-    M_L = matrix_io.load_M_checked(a.ml, require_bloch_norm=matrix_io.UNIT_CELL)
-    M_NL = matrix_io.load_M_checked(a.nl, require_bloch_norm=matrix_io.UNIT_CELL)
+    M_L = matrix_io.load_M_checked(a.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
+    M_NL = matrix_io.load_M_checked(a.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
     assert M_L.shape == M_NL.shape, (M_L.shape, M_NL.shape)
     M = M_L + M_NL; N_kd = M.shape[1]
     matrix_io.save_M(a.out, M, matrix_io.UNIT_CELL, p=P["p"], D=P["D"], N_kd=int(N_kd))

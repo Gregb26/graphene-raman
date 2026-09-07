@@ -29,7 +29,7 @@ k = qe_io.get_k_red(uc); Nc = len(k); MP = _infer_mp_grid(k)
 U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
 Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
 Hwr, Rw, nd = read_w90_HR(f"{W}/wannier_tb.dat")
-M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL) * 27.211386245988   # Ha -> eV (Wannier H is in eV)
+M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)   # eV (Wannier H is in eV)
 
 # Wannier-gauge M (intensive), real space, recentered; 5-band smooth-Bloch projection on the coarse grid
 Mwk = Mbk_to_Mwk(M_raw, U, Ud)

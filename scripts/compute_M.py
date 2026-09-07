@@ -146,8 +146,8 @@ def stage_combine(args):
     require(args, ["ml", "nl"], "combine")
 
     # require raw (unit_cell) parts so the 1/N_cells factor is applied exactly once here.
-    M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL)
-    M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL)
+    M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
+    M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
     if M_L.shape != M_NL.shape:
         raise SystemExit(f"shape mismatch: M^L {M_L.shape} vs M^NL {M_NL.shape}")
 

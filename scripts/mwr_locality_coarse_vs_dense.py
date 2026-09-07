@@ -8,7 +8,7 @@ from electron_defect_interaction.config import load_production, dense_paths, HA2
 import os
 cfg = load_production(); out = {}
 def run(uc, mfile, wdir, tag):
-    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL) * HA2EV
+    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
     k = qe_io.get_k_red(uc); MP = _infer_mp_grid(k)
     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
     Ud, kUd = read_w90_mat(f"{wdir}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]

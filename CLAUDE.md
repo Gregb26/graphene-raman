@@ -229,3 +229,13 @@ uniquement si N est un multiple de 3 : seuls 6×6, 9×9, 12×12 incluent les ét
 5×5, 7×7, 8×8 (et 10×10, 11×11) partagent un artefact d'échantillonnage : ΔE_F = E_F(d) − E_F(p) de
 0.2 à 0.9 eV à la création de la lacune, absent pour N = 3m (|ΔE_F| < 3 meV). Les deux familles se
 comparent séparément ; la famille de convergence honnête est N = 6, 9, 12. Voir results/M/sampling_table.csv.
+
+## Sous-réseau de la lacune (A pour 5/7/8/9, B pour 6/12) — équivalence par symétrie
+
+Les super-cellules 6×6 et 12×12 existantes ont la lacune sur le sous-réseau B (coordonnées de maille
+(2/3, 2/3)) ; 5×5, 7×7, 8×8, 9×9 sur A ((1/3, 1/3)). Pour une lacune isolée non relaxée, A et B sont
+reliés par l'inversion (ou le miroir) du réseau en nid d'abeille : mêmes Γ, mêmes M à une permutation
+près des fonctions de Wannier pz(A) ↔ pz(B) et à une rotation près de la ZB. Aucun run « A » n'est
+refait ; les scripts rapportent l'on-site pz–pz du sous-réseau de la lacune, et chaque manifest de M
+porte `vacancy_sublattice` (scripts/tag_vacancy_sublattice.py). Tous les runs de super-cellule (5–12)
+utilisent `assume_isolated='2D'` (vérifié dans les scf.out : « running with the 2D cutoff »).

@@ -96,6 +96,18 @@ def compute_ML_R(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path, subtrac
 from mpi4py import MPI
 
 
+def fourier_resample(V, new_shape):
+    """Exact Fourier interpolation of a periodic real grid function onto a finer grid (zero padding in G)."""
+    Vg = np.fft.fftshift(np.fft.fftn(V))
+    old = np.asarray(V.shape); new = np.asarray(new_shape)
+    if np.any(new < old):
+        raise ValueError(f"fourier_resample: new grid {new_shape} must be >= old {V.shape} (no truncation)")
+    out = np.zeros(tuple(new), dtype=complex)
+    lo = (new - old) // 2
+    out[lo[0]:lo[0] + old[0], lo[1]:lo[1] + old[1], lo[2]:lo[2] + old[2]] = Vg
+    return np.fft.ifftn(np.fft.ifftshift(out)).real * (np.prod(new) / np.prod(old))
+
+
 def prep_realspace_inputs(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path,
                           subtract_mean=False, pristine=False, bands=None, io=None):
     """
@@ -119,6 +131,17 @@ def prep_realspace_inputs(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_path
     ngfft = Vp.shape
 
     Ndiag = np.rint(np.diag(A_sc @ np.linalg.pinv(A_uc))).astype(int)
+
+    # The MPI kernels sample u_nk on the unit-cell grid ngfft // Ndiag and use ix % nxu: this REQUIRES the
+    # supercell FFT grid to be Ndiag x (unit-cell grid). QE may pick an FFT-friendly size that is not
+    # (graphene 7x7: 216 != 7 x 30). In that case V_ed is Fourier-resampled (zero padding in G space, exact for
+    # a band-limited potential) onto the next commensurate grid; dV = Omega_sc / prod(ngfft) follows.
+    ng = np.asarray(ngfft, int)
+    if np.any(ng % Ndiag):
+        ng_new = ((ng + Ndiag - 1) // Ndiag) * Ndiag
+        Ved = fourier_resample(Ved, tuple(int(x) for x in ng_new)); ngfft = Ved.shape
+        print(f"[prep_realspace_inputs] supercell FFT grid {tuple(int(x) for x in ng)} not a multiple of Ndiag={tuple(int(x) for x in Ndiag)}: "
+              f"V_ed Fourier-resampled onto {ngfft}", flush=True)
 
     if bands is not None:
         C_nkg = C_nkg[list(bands), ...]
@@ -165,6 +188,8 @@ def compute_ML_R_mpi(prep, grid_block=200_000):
     nb, nk, _ = C_nkg.shape
     Nx, Ny, Nz = ngfft
     nxu, nyu, nzu = Nx // Ndiag[0], Ny // Ndiag[1], Nz // Ndiag[2]
+    if (Nx % Ndiag[0]) or (Ny % Ndiag[1]) or (Nz % Ndiag[2]):
+        raise ValueError(f"compute_ML_R_mpi: supercell grid {ngfft} not commensurate with Ndiag={tuple(Ndiag)}; use prep_realspace_inputs (resamples)")
 
     u = _build_u_uc(C_nkg, nG, G_red, (nxu, nyu, nzu))   # (nb, nk, Nuc)
     Bk = nb * nk
@@ -259,10 +284,12 @@ def compute_ML_R_mpi_shared(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_pa
         Nx, Ny, Nz = prep["ngfft"]; Ndiag = prep["Ndiag"]
         meta = dict(nb=int(nb), nk=int(nk), ngfft=(int(Nx), int(Ny), int(Nz)),
                     ngfft_uc=(int(Nx // Ndiag[0]), int(Ny // Ndiag[1]), int(Nz // Ndiag[2])),
-                    Omega_sc=float(prep["Omega_sc"]), k_red=np.asarray(prep["k_red"], dtype=float))
+                    Omega_sc=float(prep["Omega_sc"]), k_red=np.asarray(prep["k_red"], dtype=float), Ndiag=tuple(int(x) for x in Ndiag))
     meta = node.bcast(meta, root=0)
     nb, nk = meta["nb"], meta["nk"]
     Nx, Ny, Nz = meta["ngfft"]; nxu, nyu, nzu = meta["ngfft_uc"]
+    if (Nx % nxu) or (Ny % nyu) or (Nz % nzu) or (Nx // nxu, Ny // nyu, Nz // nzu) != tuple(int(x) for x in meta["Ndiag"]):
+        raise ValueError(f"compute_ML_R_mpi_shared: supercell grid {meta['ngfft']} not commensurate with Ndiag={meta['Ndiag']}")
     Nuc = nxu * nyu * nzu; Ntot = Nx * Ny * Nz
     Omega_sc = meta["Omega_sc"]; k_red = meta["k_red"]
 

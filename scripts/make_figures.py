@@ -216,3 +216,26 @@ if os.path.exists(vf):
     ax.axhline(0, color=MUTED, lw=0.8); ax.set_yscale("symlog", linthresh=LIN, linscale=0.4)
     ax.set_xlabel(r"Distance au site $r$ (Å)"); ax.set_ylabel(r"$\langle V_\mathrm{ed}^L\rangle_\varphi$ (eV), plan $z = z_\mathrm{C}$, sans soustraction"); ax.legend(title="Super-cellule", ncol=2)
     save(fig, "fig_Ved_radial")
+
+# ---- anomalie à 1,42 Å : zoom 8×8 vs 9×9 (±3 Å, même échelle, atomes superposés) et profil radial masqué (cœurs r < 0,5 Å exclus)
+if os.path.exists(vf) and "9x9_rad_masked" in np.load(vf):
+    from matplotlib.colors import SymLogNorm
+    V = np.load(vf); LIN = 1e-2; Z = 3.0
+    fig, axs = plt.subplots(1, 2, figsize=(6.5, 3.4), layout="constrained"); vmax = 0.0
+    for S in ("8x8", "9x9"):
+        Xm, Ym, Vm = V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"]; sel = (np.abs(Xm) <= Z) & (np.abs(Ym) <= Z); vmax = max(vmax, np.abs(Vm[sel]).max())
+    norm = SymLogNorm(linthresh=LIN, vmin=-vmax, vmax=vmax, base=10)
+    for ax, S, let in ((axs[0], "8x8", "a"), (axs[1], "9x9", "b")):
+        pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap="RdBu_r", shading="nearest", rasterized=True)
+        at = V[f"{S}_atoms_xy"]; ax.plot(at[:, 0], at[:, 1], "o", mfc="none", mec=INK, mew=0.7, ms=5); ax.plot(0, 0, "x", color=INK, ms=6)
+        ax.set_xlim(-Z, Z); ax.set_ylim(-Z, Z); ax.set_aspect("equal"); ax.set_xlabel(r"$x$ (Å)"); ax.set_title(rf"{lab(S)}, plan $z = z_\mathrm{{C}}$", loc="left", fontsize=10); panel(ax, let)
+    axs[0].set_ylabel(r"$y$ (Å)"); cb = fig.colorbar(pc, ax=axs, shrink=0.9); cb.set_label(r"$V_\mathrm{ed}^L$ (eV), échelle symlog")
+    save(fig, "fig_Ved_zoom")
+    fig, ax = plt.subplots()
+    for S in sizes: ax.plot(V[f"{S}_rc_masked"], V[f"{S}_rad_masked"], color=COL[S], label=lab(S))
+    a_lat = float(V["9x9_a"]); ax.axvline(1.42, color=MUTED, lw=0.8, ls=":"); ax.axvline(3 * a_lat, color=MUTED, lw=0.8, ls="--")
+    ax.text(1.42, 0.97, "1$^\\mathrm{er}$ voisin", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)
+    ax.text(3 * a_lat, 0.97, r"$R_\mathrm{cut} = 3$ mailles", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)
+    ax.axhline(0, color=MUTED, lw=0.8); ax.set_yscale("symlog", linthresh=LIN, linscale=0.4)
+    ax.set_xlabel(r"Distance au site $r$ (Å)"); ax.set_ylabel(r"$\langle V_\mathrm{ed}^L\rangle_\varphi$ (eV), cœurs atomiques exclus ($r_\mathrm{at} < 0{,}5$ Å)"); ax.legend(title="Super-cellule", ncol=2)
+    save(fig, "fig_Ved_radial_masked")

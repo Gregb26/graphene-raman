@@ -221,3 +221,11 @@ update them to the actual `.save` names (the unit cell is currently `defect_unit
   les scripts de figures sont versionnés, les npz/CSV de production aussi (pas les logs).
 - Unités : M est stocké en Hartree et converti en eV UNE fois via
   `matrix_io.load_M_checked(..., units=matrix_io.EV)` ; Γ en meV, énergies relatives à $E_D$.
+
+## Échantillonnage Γ des super-cellules : N mod 3 (fait physique à retenir)
+
+Les super-cellules N×N sont calculées avec le seul point Γ. Le point K de la maille se replie sur Γ
+uniquement si N est un multiple de 3 : seuls 6×6, 9×9, 12×12 incluent les états de Dirac dans le SCF.
+5×5, 7×7, 8×8 (et 10×10, 11×11) partagent un artefact d'échantillonnage : ΔE_F = E_F(d) − E_F(p) de
+0.2 à 0.9 eV à la création de la lacune, absent pour N = 3m (|ΔE_F| < 3 meV). Les deux familles se
+comparent séparément ; la famille de convergence honnête est N = 6, 9, 12. Voir results/M/sampling_table.csv.

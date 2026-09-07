@@ -3,7 +3,7 @@ and the singular-value mismatch of the M^L blocks restricted to the lowest nb_su
 16-band truncation edge)."""
 import sys, numpy as np
 from electron_defect_interaction.io import qe_io
-size = sys.argv[1]; N = int(size.split("x")[0]); D = {"5x5": 25, "7x7": 28, "8x8": 32, "9x9": 27}[size]
+size = sys.argv[1]; N = int(size.split("x")[0]); D = {"5x5": 25, "6x6": 24, "7x7": 28, "8x8": 32, "9x9": 27, "12x12": 24}[size]
 uc_c = f"data/graphene/unit_cell/qe/defect_{size}.save"
 uc_d = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
 kc, ec = qe_io.get_k_eigenvalues(uc_c, False); kd, ed = qe_io.get_k_eigenvalues(uc_d, False)

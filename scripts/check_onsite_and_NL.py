@@ -6,7 +6,7 @@ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 HA = 27.211386245988
-PF = {"5x5": 25, "7x7": 28, "8x8": 32, "9x9": 27}
+PF = {"5x5": 25, "6x6": 24, "7x7": 28, "8x8": 32, "9x9": 27, "12x12": 24}
 PZ = (3, 4)   # projections: 3 sp2 on atom A (idx 0..2), pz on A (3), pz on B (4)
 
 print("=== Q2/magnitudes: max|M_L|, max|M_NL|, max|M| (Ha) and mean diag of M_L (mean-potential shift)")

@@ -30,6 +30,14 @@
     "9x9": {
       "p": 3,
       "D": 27
+    },
+    "6x6": {
+      "p": 4,
+      "D": 24
+    },
+    "12x12": {
+      "p": 2,
+      "D": 24
     }
   },
   "wannier": {
@@ -52,5 +60,17 @@
     0.3333333333333333,
     0.0
   ],
-  "K_note": "Dirac point in reduced coordinates for the QE cell (a1,a2 at 60 deg): (2/3,1/3); (1/3,1/3) is NOT K (|k| = 0.98 A^-1, pi gap 9.5 eV)"
+  "K_note": "Dirac point in reduced coordinates for the QE cell (a1,a2 at 60 deg): (2/3,1/3); (1/3,1/3) is NOT K (|k| = 0.98 A^-1, pi gap 9.5 eV)",
+  "families": {
+    "3m": [
+      "6x6",
+      "9x9",
+      "12x12"
+    ],
+    "non3m": [
+      "5x5",
+      "7x7",
+      "8x8"
+    ]
+  }
 }

@@ -5,7 +5,7 @@ Frobenius norms. Usage: python scripts/check_M_dense_vs_coarse.py 5x5"""
 import sys, json, numpy as np
 from electron_defect_interaction.io import qe_io
 size = sys.argv[1]; N = int(size.split("x")[0])
-D = {"5x5": 25, "7x7": 28, "8x8": 32, "9x9": 27}[size]
+D = {"5x5": 25, "6x6": 24, "7x7": 28, "8x8": 32, "9x9": 27, "12x12": 24}[size]
 uc_c = f"data/graphene/unit_cell/qe/defect_{size}.save"
 uc_d = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
 kc = qe_io.get_k_red(uc_c); kd = qe_io.get_k_red(uc_d)

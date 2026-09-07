@@ -12,7 +12,10 @@ from scipy.ndimage import map_coordinates
 from electron_defect_interaction.io import qe_io
 from electron_defect_interaction.config import HA2EV
 BOHR = 0.529177210903; DATA = "data/graphene"; out = {}
-for S in ("5x5", "7x7", "8x8", "9x9"):
+import sys
+SIZES = sys.argv[1].split(",") if len(sys.argv) > 1 else ["5x5", "7x7", "8x8", "9x9"]
+if len(sys.argv) > 2 and sys.argv[2] == "--merge": out.update(dict(np.load("results/M/ved_analysis.npz")))
+for S in SIZES:
     scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
     A, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
     dmin = np.array([np.min(np.linalg.norm(np.mod(xd - p + 0.5, 1) - 0.5, axis=1)) for p in xp]); s_vac = xp[int(np.argmax(dmin))]
@@ -44,17 +47,17 @@ for S in ("5x5", "7x7", "8x8", "9x9"):
     print(f"[{S}] z_C = {zC:.3f} A (grid plane {zgrid:.3f} A, iz={iz}); <V_ed>_3D = {mean3d*1e3:+.2f} meV, <V_ed>_plane = {mean_plane*1e3:+.2f} meV; site {site:+.2f} eV; "
           f"a1 end (x=1): raw {line[-1]*1e3:+.1f} meV, subtracted {(line[-1]-mean3d)*1e3:+.1f} meV; boundary max|V| (all z): raw {b_all*1e3:.1f} / sub {b_all_s*1e3:.1f} meV; "
           f"(plane): raw {b_pl*1e3:.1f} / sub {b_pl_s*1e3:.1f} meV; plane min {plane.min():+.3f} eV at r={R.ravel()[np.argmin(plane.ravel())]:.2f} A; "
-          f"radial: r=1.42 A -> {np.interp(1.42, rc, np.nan_to_num(rad))*1e3:+.1f} meV, r=3a={3*a1_len/int(S[0]):.2f} A -> {np.interp(3*a1_len/int(S[0]), rc, np.nan_to_num(rad))*1e3:+.1f} meV, r=half box -> {np.nanmean(rad[-3:])*1e3:+.1f} meV", flush=True)
+          f"radial: r=1.42 A -> {np.interp(1.42, rc, np.nan_to_num(rad))*1e3:+.1f} meV, r=3a={3*a1_len/int(S.split('x')[0]):.2f} A -> {np.interp(3*a1_len/int(S.split('x')[0]), rc, np.nan_to_num(rad))*1e3:+.1f} meV, r=half box -> {np.nanmean(rad[-3:])*1e3:+.1f} meV", flush=True)
     out.update(**{f"{S}_x": t / 0.5, f"{S}_line_raw": line, f"{S}_line_sub": line - mean3d, f"{S}_mean3d": mean3d, f"{S}_mean_plane": mean_plane, f"{S}_site": site,
-                  f"{S}_rc": rc, f"{S}_rad": rad, f"{S}_a": a1_len / int(S[0]), f"{S}_halfbox": rmax, f"{S}_b_all": b_all, f"{S}_b_all_sub": b_all_s, f"{S}_b_pl": b_pl, f"{S}_b_pl_sub": b_pl_s, f"{S}_zC": zC, f"{S}_zgrid": zgrid})
+                  f"{S}_rc": rc, f"{S}_rad": rad, f"{S}_a": a1_len / int(S.split('x')[0]), f"{S}_halfbox": rmax, f"{S}_b_all": b_all, f"{S}_b_all_sub": b_all_s, f"{S}_b_pl": b_pl, f"{S}_b_pl_sub": b_pl_s, f"{S}_zC": zC, f"{S}_zgrid": zgrid})
     del dV
 np.savez("results/M/ved_analysis.npz", **out); print("saved results/M/ved_analysis.npz")
 
 # ---------------- anomaly at r = 1.42 A: sublattice, grid alignment, neighbour displacements, core-masked radial profile
 print("\n=== anomaly checks ===", flush=True)
 out2 = dict(np.load("results/M/ved_analysis.npz"))
-for S in ("5x5", "7x7", "8x8", "9x9"):
-    N = int(S[0]); scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
+for S in SIZES:
+    N = int(S.split('x')[0]); scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
     A, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
     dmin = np.array([np.min(np.linalg.norm(np.mod(xd - p + 0.5, 1) - 0.5, axis=1)) for p in xp]); iv = int(np.argmax(dmin)); s_vac = xp[iv]
     s_uc = np.mod(N * s_vac, 1.0); sub = "A" if np.allclose(s_uc[:2], 1/3, atol=1e-3) else ("B" if np.allclose(s_uc[:2], 2/3, atol=1e-3) else "?")

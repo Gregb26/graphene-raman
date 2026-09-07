@@ -18,7 +18,7 @@ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 N = sys.argv[1] if len(sys.argv) > 1 else "5x5"
 dense = len(sys.argv) > 2 and sys.argv[2] == "--dense"
 eta = 0.10
-PF = {"5x5": (5, 25), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3, 27)}
+PF = {"5x5": (5, 25), "6x6": (4, 24), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3, 27), "12x12": (2, 24)}
 if dense:
     D = PF[N][1]; W = f"wannier/{D}x{D}"
     uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"

@@ -20,7 +20,7 @@ import argparse
 import numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io
 
-PFAC = {"5x5": 5, "7x7": 4, "8x8": 4, "9x9": 3}
+PFAC = {"5x5": 5, "6x6": 4, "7x7": 4, "8x8": 4, "9x9": 3, "12x12": 2}
 SCRATCH = "/home/gregb26/links/scratch/qe_tmp"
 
 

@@ -19,11 +19,13 @@ def run(uc, mfile, wdir, tag):
     dcart = np.linalg.norm(Rn[:, :2] @ A, axis=1)
     order = np.argsort(dcart); wR = np.array([np.linalg.norm(Mwr[:, i, :, i0]) for i in range(len(Rn))])
     out[f"{tag}_dist"] = dcart[order]; out[f"{tag}_w"] = wR[order]; out[f"{tag}_onsite_pzA"] = on[3, 3].real; out[f"{tag}_onsite_pzB"] = on[4, 4].real
-    out[f"{tag}_onsite_norm"] = np.linalg.norm(on)
+    out[f"{tag}_onsite_norm"] = np.linalg.norm(on); out[f"{tag}_onsite_pzvac"] = max(on[3, 3].real, on[4, 4].real); out[f"{tag}_vac_sublattice"] = "A" if on[3, 3].real >= on[4, 4].real else "B"
     print(f"[{tag}] on-site pz(A)={on[3,3].real:.4f} pz(B)={on[4,4].real:.4f} ||on||={np.linalg.norm(on):.4f} eV; first shells:",
           [(round(float(d), 2), round(float(w), 4)) for d, w in zip(dcart[order][:8], wR[order][:8])], flush=True)
-for S in ("5x5", "7x7", "8x8", "9x9"):
-    dp = dense_paths(cfg, S); run(dp["uc"], dp["mfile"], dp["wdir"], f"{S}_dense")
+for S in ("5x5", "6x6", "7x7", "8x8", "9x9", "12x12"):
+    dp = dense_paths(cfg, S)
+    if not os.path.exists(dp["mfile"]) or not os.path.isdir(dp["wdir"]): print(f"[{S}] dense M or wannier missing; skipped"); continue
+    run(dp["uc"], dp["mfile"], dp["wdir"], f"{S}_dense")
     if os.path.isdir(f"wannier/{S}"):
         run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"results/M/M_ed_{S}.npy", f"wannier/{S}", f"{S}_coarse")
     else:

@@ -20,13 +20,16 @@ from electron_defect_interaction.config import load_production
 
 plt.style.use("figures/memoire.mplstyle")
 # palette catégorielle fixe (ordre du cycler) : taille -> teinte, jamais recyclée
-COL = {"5x5": "#2a78d6", "7x7": "#eb6834", "8x8": "#1baf7a", "9x9": "#eda100"}
+COL = {"5x5": "#2a78d6", "7x7": "#eb6834", "8x8": "#1baf7a", "9x9": "#eda100", "6x6": "#e87ba4", "12x12": "#4a3aa7"}
+FAM3 = set(cfg_fam) if (cfg_fam := None) else {"6x6", "9x9", "12x12"}   # famille N = 3m (K se replie sur Γ)
+def famlab(S): return lab(S) + (r" ($N=3m$)" if S in FAM3 else "")
+def mk(S): return "s" if S in FAM3 else "o"
 C_T, C_BORN, C_REF, C_DIS = "#2a78d6", "#eb6834", "#52514e", "#1baf7a"
 INK = "#0b0b0b"; MUTED = "#8a8984"
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
 LBL_G = r"Taux d'amortissement $\Gamma\,N_\mathrm{cells}$ (meV)"
 
-ap = argparse.ArgumentParser(); ap.add_argument("--tag", default="prod"); ap.add_argument("--sizes", default="5x5,7x7,8x8,9x9"); ap.add_argument("--outdir", default="figures")
+ap = argparse.ArgumentParser(); ap.add_argument("--tag", default="prod"); ap.add_argument("--sizes", default="5x5,6x6,7x7,8x8,9x9,12x12"); ap.add_argument("--outdir", default="figures")
 ap.add_argument("--resonance", default="results/M/resonance_9x9.npz"); ap.add_argument("--locality", default="results/M/mwr_locality.npz")
 ap.add_argument("--analysis", default="results/M/M_analysis.npz")
 a = ap.parse_args(); cfg = load_production(); sizes = a.sizes.split(","); os.makedirs(a.outdir, exist_ok=True)
@@ -79,23 +82,24 @@ if maps:
 
     # ---- fig_level2
     fig, ax = plt.subplots(); Ns = [int(S.split("x")[0]) for S in maps]; ys = [maps[S][(RC, GRID, ETA)][0] for S in maps]
-    for S, N, y in zip(maps, Ns, ys): ax.plot([N], [y], "o", color=COL[S], label=lab(S))
-    ax.plot(Ns, ys, "-", color=MUTED, lw=1, zorder=0); ax.axvspan(0, cfg["N_min"] - 0.5, color="#e6e6e3", alpha=0.5, lw=0)
+    for S, N, y in zip(maps, Ns, ys): ax.plot([N], [y], mk(S), color=COL[S], ms=7, label=famlab(S))
+    for fam, ls in ((FAM3, "-"), (set(maps) - FAM3, "--")):
+        pts = sorted([(N, y) for S, N, y in zip(maps, Ns, ys) if S in fam]); ax.plot([q[0] for q in pts], [q[1] for q in pts], ls, color=MUTED, lw=1, zorder=0); ax.axvspan(0, cfg["N_min"] - 0.5, color="#e6e6e3", alpha=0.5, lw=0)
     ax.set_xlabel(r"Taille de la super-cellule $N$ ($N\times N$)"); ax.set_ylabel(LBL_G); ax.set_xticks(Ns); ax.set_xlim(min(Ns) - 1, max(Ns) + 1)
-    ax.set_title(rf"$R_\mathrm{{cut}}$ = {RC}, grille {GRID}$^2$, $\eta$ = {ETA} eV ; zone grise : $N<N_\mathrm{{min}}$", loc="left", fontsize=8); ax.legend(ncol=2); save(fig, "fig_level2")
+    ax.set_title(rf"$R_\mathrm{{cut}}$ = {RC}, grille {GRID}$^2$, $\eta$ = {ETA} eV ; carrés : $N = 3m$, ronds : autres", loc="left", fontsize=9); ax.legend(ncol=2, fontsize=8); save(fig, "fig_level2")
 
 # ---- fig_locality : dense (quatre N) vs grille N×N aliasée (trois N), sur-site pz–pz en légende ; 2×2 panneaux
 if os.path.exists(a.locality):
     L = np.load(a.locality); have = [S for S in sizes if f"{S}_dense_w" in L]
-    fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharey=True, sharex=True); axs = axs.ravel()
+    nrow = (len(have) + 1) // 2; fig, axs = plt.subplots(nrow, 2, figsize=(6.5, 2.8 * nrow), sharey=True, sharex=True); axs = np.atleast_1d(axs).ravel()
     for i, (ax, S) in enumerate(zip(axs, have)):
         ax.semilogy(L[f"{S}_dense_dist"], L[f"{S}_dense_w"], "o", color=COL[S], ms=3.2, zorder=2,
-                    label=f"dense (zero-padding)\npz–pz = {float(L[f'{S}_dense_onsite_pzA']):.2f} eV")
+                    label=f"dense (zero-padding)\npz–pz (site) = {float(L[f'{S}_dense_onsite_pzvac'] if f'{S}_dense_onsite_pzvac' in L else L[f'{S}_dense_onsite_pzA']):.2f} eV")
         if f"{S}_coarse_w" in L:
             ax.semilogy(L[f"{S}_coarse_dist"], L[f"{S}_coarse_w"], "x", color=C_REF, ms=4, zorder=3,
-                        label=f"grille {lab(S)} (aliasée)\npz–pz = {float(L[f'{S}_coarse_onsite_pzA']):.2f} eV")
-        ax.set_title(lab(S), loc="left"); ax.legend(loc="upper right", fontsize=6.5, handletextpad=0.4, labelspacing=0.8); ax.set_ylim(2e-5, 60); panel(ax, "abcd"[i])
-    for ax in axs[2:]: ax.set_xlabel(r"Distance $|R-R_0|$ ($a$)")
+                        label=f"grille {lab(S)} (aliasée)\npz–pz (site) = {float(L[f'{S}_coarse_onsite_pzvac'] if f'{S}_coarse_onsite_pzvac' in L else L[f'{S}_coarse_onsite_pzA']):.2f} eV")
+        ax.set_title(famlab(S), loc="left"); ax.legend(loc="upper right", fontsize=6.5, handletextpad=0.4, labelspacing=0.8); ax.set_ylim(2e-5, 60); panel(ax, "abcdefgh"[i])
+    for ax in axs[len(axs) - 2:]: ax.set_xlabel(r"Distance $|R-R_0|$ ($a$)")
     for ax in axs[::2]: ax.set_ylabel(r"$\|M_{wR}(R,R_0)\|$ (eV)")
     fig.tight_layout(); save(fig, "fig_locality")
 
@@ -199,17 +203,19 @@ if os.path.exists(vf):
     axs[0].set_ylabel(r"$y$ (Å)"); cb = fig.colorbar(pc, ax=axs, shrink=0.9); cb.set_label(r"$V_\mathrm{ed}^L$ (eV), échelle symlog")
     save(fig, "fig_Ved_map")
     # fig_Ved_profile_mean : le long de a1, avec et sans soustraction de la moyenne 3D, un panneau par N
-    fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=True); axs = axs.ravel()
-    for i, S in enumerate(sizes):
+    have_v = [S for S in sizes if f"{S}_line_raw" in V]; nrow = (len(have_v) + 1) // 2
+    fig, axs = plt.subplots(nrow, 2, figsize=(6.5, 2.8 * nrow), sharex=True, sharey=True); axs = np.atleast_1d(axs).ravel()
+    for i, S in enumerate(have_v):
         ax = axs[i]; ax.plot(V[f"{S}_x"], V[f"{S}_line_raw"], color=COL[S], label="sans soustraction")
         ax.plot(V[f"{S}_x"], V[f"{S}_line_sub"], color=C_REF, ls="--", label=rf"moyenne 3D soustraite ({float(V[f'{S}_mean3d'])*1e3:+.0f} meV)")
-        ax.axhline(0, color=MUTED, lw=0.8); ax.set_yscale("symlog", linthresh=LIN, linscale=0.4); ax.set_title(lab(S), loc="left"); ax.legend(fontsize=8); panel(ax, "abcd"[i])
-    for ax in axs[2:]: ax.set_xlabel(r"Distance / demi-boîte (le long de $\mathbf a_1$)")
+        ax.axhline(0, color=MUTED, lw=0.8); ax.set_yscale("symlog", linthresh=LIN, linscale=0.4); ax.set_title(famlab(S), loc="left"); ax.legend(fontsize=8); panel(ax, "abcdefgh"[i])
+    for ax in axs[len(axs) - 2:]: ax.set_xlabel(r"Distance / demi-boîte (le long de $\mathbf a_1$)")
     for ax in axs[::2]: ax.set_ylabel(r"$V_\mathrm{ed}^L$ (eV)")
     fig.tight_layout(); save(fig, "fig_Ved_profile_mean")
     # fig_Ved_radial : moyenne azimutale dans le plan, quatre N, lignes à 1,42 Å et R_cut = 3 mailles
     fig, ax = plt.subplots()
-    for S in sizes: ax.plot(V[f"{S}_rc"], V[f"{S}_rad"], color=COL[S], label=lab(S))
+    for S in sizes:
+        if f"{S}_rad" in V: ax.plot(V[f"{S}_rc"], V[f"{S}_rad"], color=COL[S], label=famlab(S))
     a_lat = float(V["9x9_a"]); ax.axvline(1.42, color=MUTED, lw=0.8, ls=":"); ax.axvline(3 * a_lat, color=MUTED, lw=0.8, ls="--")
     ax.text(1.42, 0.97, "1$^\\mathrm{er}$ voisin", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)
     ax.text(3 * a_lat, 0.97, r"$R_\mathrm{cut} = 3$ mailles", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)
@@ -232,7 +238,8 @@ if os.path.exists(vf) and "9x9_rad_masked" in np.load(vf):
     axs[0].set_ylabel(r"$y$ (Å)"); cb = fig.colorbar(pc, ax=axs, shrink=0.9); cb.set_label(r"$V_\mathrm{ed}^L$ (eV), échelle symlog")
     save(fig, "fig_Ved_zoom")
     fig, ax = plt.subplots()
-    for S in sizes: ax.plot(V[f"{S}_rc_masked"], V[f"{S}_rad_masked"], color=COL[S], label=lab(S))
+    for S in sizes:
+        if f"{S}_rad_masked" in V: ax.plot(V[f"{S}_rc_masked"], V[f"{S}_rad_masked"], color=COL[S], label=famlab(S))
     a_lat = float(V["9x9_a"]); ax.axvline(1.42, color=MUTED, lw=0.8, ls=":"); ax.axvline(3 * a_lat, color=MUTED, lw=0.8, ls="--")
     ax.text(1.42, 0.97, "1$^\\mathrm{er}$ voisin", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)
     ax.text(3 * a_lat, 0.97, r"$R_\mathrm{cut} = 3$ mailles", transform=ax.get_xaxis_transform(), ha="left", va="top", fontsize=8, color=MUTED)

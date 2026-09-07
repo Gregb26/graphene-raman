@@ -16,7 +16,9 @@ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, Mwr_to_Mwk, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.config import load_production, dense_paths, HA2EV
 BOHR = 0.529177210903
-cfg = load_production(); SIZES = ["5x5", "7x7", "8x8", "9x9"]; REF = cfg["reference_size"]
+cfg = load_production(); import os as _os
+SIZES = [S for S in ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"] if _os.path.exists(f"results/M/M_dense_{S}.npy") and _os.path.exists(f"results/M/M_ed_{S}.npy")]; REF = cfg["reference_size"]
+print("[sizes]", SIZES)
 DATA = "data/graphene"; out = {}; tests = []
 
 def mmap_M(path):

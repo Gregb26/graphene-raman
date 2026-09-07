@@ -83,7 +83,7 @@ del MK, MLK, MNK, ML, MN
 
 # ---------------- 2. V_ed^L along a lattice-vector line, four N
 for S in SIZES:
-    n = int(S[0]); scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
+    n = int(S.split("x")[0]); scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
     A_sc, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
     dmin = np.array([np.min(np.linalg.norm(np.mod(xd - p + 0.5, 1) - 0.5, axis=1)) for p in xp]); s_vac = xp[int(np.argmax(dmin))]
     Vp, ng = qe_io.get_pot(f"{scp}/Vks_{S}_p", subtract_mean=False, to_hartree=True); Vd, _ = qe_io.get_pot(f"{scd}/Vks_{S}_d", subtract_mean=False, to_hartree=True)
@@ -113,7 +113,7 @@ for S in SIZES:
     M16 = np.array(Md[:16, :, :16, :]); mx_d = float(np.abs(M16).max()) * HA2EV
     Mc = mmap_M(f"results/M/M_ed_{S}.npy"); Mc16 = np.array(Mc[:16, :, :16, :]); mx_c = float(np.abs(Mc16).max()) * HA2EV
     herm = float(np.abs(M16 - M16.transpose(2, 3, 0, 1).conj()).max() / np.abs(M16).max())
-    ncell = int(S[0]) ** 2
+    ncell = int(S.split("x")[0]) ** 2
     print(f"[scale] {S}: max|M| bands 1-16: dense {mx_d:.4f} eV (x N_cells = {mx_d*ncell:.2f}), coarse {mx_c:.4f} eV (x N_cells = {mx_c*ncell:.2f}); hermiticity {herm:.2e}", flush=True)
     out.update(**{f"lnl_{S}_ReL": reL, f"lnl_{S}_ReNL": reN, f"lnl_{S}_dK": dK, f"lnl_{S}_pair": np.array(pr), f"scale_{S}_dense": mx_d, f"scale_{S}_coarse": mx_c, f"scale_{S}_ncells": ncell, f"herm_{S}": herm})
     tests.append((f"hermiticité M dense {S}", r"max|M - M^\dagger| / max|M|", f"{herm:.2e}", "1e-12", "OK" if herm < 1e-12 else "ÉCHEC", "analyze_M.py"))

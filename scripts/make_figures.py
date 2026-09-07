@@ -160,7 +160,7 @@ if os.path.exists(a.analysis):
     ax.set_ylim(-2, 200); save(fig, "fig_Ved_boundary")
     # fig_M_scaling : deux panneaux côte à côte
     fig, axs = plt.subplots(1, 2, figsize=(6.5, 3.2))
-    Ns = [int(S[0]) for S in sizes if f"scale_{S}_dense" in Z]; dd = [float(Z[f"scale_{S}_dense"]) for S in sizes if f"scale_{S}_dense" in Z]; cc_ = [float(Z[f"scale_{S}_coarse"]) for S in sizes if f"scale_{S}_dense" in Z]
+    Ns = [int(S.split("x")[0]) for S in sizes if f"scale_{S}_dense" in Z]; dd = [float(Z[f"scale_{S}_dense"]) for S in sizes if f"scale_{S}_dense" in Z]; cc_ = [float(Z[f"scale_{S}_coarse"]) for S in sizes if f"scale_{S}_dense" in Z]
     nc = np.array(Ns) ** 2
     axs[0].plot(Ns, dd, "o-", color=C_T, label="dense (zero-padding)"); axs[0].plot(Ns, cc_, "x--", color=C_REF, label=r"grille $N\times N$")
     axs[0].set_ylabel(r"$\max|M|$ (eV)"); axs[0].set_ylim(0, max(dd + cc_) * 1.25)
@@ -175,11 +175,11 @@ ks = "results/M/ks_reconstruction.npz"
 if os.path.exists(ks):
     K = np.load(ks); Ns = []; mc = []; md = []; xc = []; xd = []
     for S in sizes:
-        N = int(S[0])
+        N = int(S.split("x")[0])
         if f"{S}_coarse_mean_meV" in K or f"{S}_dense_mean_meV" in K: Ns.append(N)
         mc.append(float(K[f"{S}_coarse_mean_meV"]) if f"{S}_coarse_mean_meV" in K else np.nan); xc.append(float(K[f"{S}_coarse_max_meV"]) if f"{S}_coarse_max_meV" in K else np.nan)
         md.append(float(K[f"{S}_dense_mean_meV"]) if f"{S}_dense_mean_meV" in K else np.nan); xd.append(float(K[f"{S}_dense_max_meV"]) if f"{S}_dense_max_meV" in K else np.nan)
-    Nall = [int(S[0]) for S in sizes]
+    Nall = [int(S.split("x")[0]) for S in sizes]
     fig, ax = plt.subplots()
     ax.plot(Nall, mc, "o-", color=C_REF, label=r"grille $N\times N$ : moyenne")
     ax.plot(Nall, xc, "o--", color=C_REF, mfc="none", label=r"grille $N\times N$ : max")

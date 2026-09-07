@@ -18,7 +18,7 @@ print(f"coarse nk={len(kc)} dense nk={len(kd)}  coincident k: {len(pairs)} (expe
 worst = 0.0; worst_n = 0.0
 for ic, id_ in pairs:
     for jc, jd in pairs:
-        A = Mc[:, ic, :, jc]; B = Md[:, id_, :, jd]
+        nbc = min(Mc.shape[0], Md.shape[0]); A = Mc[:nbc, ic, :nbc, jc]; B = Md[:nbc, id_, :nbc, jd]   # coarse (16 bands) vs dense (20)
         sa = np.linalg.svd(A, compute_uv=False); sb = np.linalg.svd(B, compute_uv=False)
         worst = max(worst, np.max(np.abs(sa - sb)) / max(1e-30, sa[0]))
         worst_n = max(worst_n, abs(np.linalg.norm(A) - np.linalg.norm(B)) / max(1e-30, np.linalg.norm(A)))

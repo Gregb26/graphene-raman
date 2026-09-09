@@ -69,12 +69,13 @@ print(f"[map L/NL] pi row at k=K: <|M^NL|>/<|M^L|> over the BZ = {Nabs.mean()/La
 # --- full pi-subspace double average over (k',k)
 ML = mmap_M(dp["mfile"].replace("M_dense_", "M_L_dense_")); MN = mmap_M(dp["mfile"].replace("M_dense_", "M_NL_dense_"))
 pi_idx = np.stack([ipi, ips], 1)                                                                      # (nk, 2) pi/pi* band index per k
-fL = np.zeros((nk, nk)); fN = np.zeros((nk, nk))
+fL = np.zeros((nk, nk)); fN = np.zeros((nk, nk)); jj = np.arange(nk)[:, None, None]
 for ik in range(nk):
     rowL = np.array(ML[:, :, :, ik]) * HA2EV; rowN = np.array(MN[:, :, :, ik]) * HA2EV                 # (nb, nk', nb)
-    for jk in range(nk):
-        bl = rowL[pi_idx[jk]][:, pi_idx[ik]]; bn = rowN[pi_idx[jk]][:, pi_idx[ik]]
-        fL[jk, ik] = np.linalg.norm(bl); fN[jk, ik] = np.linalg.norm(bn)
+    # 2x2 block [pi/pi* at k'] x [pi/pi* at k] for every k' (2026-09-09: the previous rowL[pi_idx[jk]][:, pi_idx[ik]]
+    # indexed the k' axis with band indices -> (2, 2, nb) blocks; ratio 22.2 for 9x9 came from that; now 20.4)
+    bl = rowL[pi_idx[:, :, None], jj, pi_idx[ik][None, None, :]]; bn = rowN[pi_idx[:, :, None], jj, pi_idx[ik][None, None, :]]
+    fL[:, ik] = np.linalg.norm(bl.reshape(nk, 4), axis=1); fN[:, ik] = np.linalg.norm(bn.reshape(nk, 4), axis=1)
 print(f"[BZ avg] pi subspace (2x2 blocks pi/pi*, all (k',k)): <|M^NL|_F>/<|M^L|_F> = {fN.mean()/fL.mean():.2f}; <|M^NL|_F> = {fN.mean():.4f} eV, <|M^L|_F> = {fL.mean():.4f} eV; "
       f"diagonal k'=k only: {np.diag(fN).mean()/np.diag(fL).mean():.2f}; ratio min {(fN/fL).min():.2f} max {(fN/fL).max():.2f}", flush=True)
 out.update(map_Lpar=Lpar, map_Npar=Npar, map_Labs=Labs, map_Nabs=Nabs, bz_ratio_row=Nabs.mean()/Labs.mean(), bz_ratio_par=Npar.mean()/Lpar.mean(),

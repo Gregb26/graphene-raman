@@ -41,3 +41,7 @@ results/M/*
 !results/M/ks_reconstruction.npz
 !results/M/ved_analysis.npz
 !results/M/*.csv
+!results/epw/
+results/epw/*
+!results/epw/*.npz
+!results/epw/*.csv

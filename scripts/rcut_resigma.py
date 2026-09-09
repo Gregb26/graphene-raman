@@ -16,9 +16,9 @@ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 from electron_defect_interaction.config import load_production, dense_paths
 
 p = argparse.ArgumentParser(); p.add_argument("--size", required=True); p.add_argument("--rcut", required=True)
-p.add_argument("--grid", type=int, default=None); p.add_argument("--eta", type=float, default=None); p.add_argument("--out", required=True)
+p.add_argument("--grid", type=int, default=None); p.add_argument("--eta", type=float, default=None); p.add_argument("--out", required=True); p.add_argument("--npe", type=int, default=None, help="ne_per_eta override (default: frozen config)")
 a = p.parse_args(); cfg = load_production()
-N = a.grid or int(cfg["grid"]); eta = a.eta or float(cfg["eta_eV"]); nk_int = int(cfg["nk_int"]); ew = float(cfg["e_window_eV"]); npe = int(cfg["ne_per_eta"])
+N = a.grid or int(cfg["grid"]); eta = a.eta or float(cfg["eta_eV"]); nk_int = int(cfg["nk_int"]); ew = float(cfg["e_window_eV"]); npe = a.npe or int(cfg["ne_per_eta"])
 dp = dense_paths(cfg, a.size); paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
 M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
 k_coarse = qe_io.get_k_red(dp["uc"])
@@ -30,7 +30,7 @@ R_mwr, R_d = lt.recenter_mwr(Mwr, R_mwr, MP); lt.mwr_locality(Mwr, R_mwr); del M
 print(f"[recenter] R_d={R_d.tolist()}; MP={MP}", flush=True)
 _, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=ndegen); gap = E_ref[:, 4] - E_ref[:, 3]
 iD = int(np.argmin(gap)); E_D = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4])); win = (E_D - ew, E_D + ew)
-print(f"[dirac] E_D = {E_D:.4f} eV; window {win}; grid {N}, eta {eta}, nk_int {nk_int}", flush=True)
+print(f"[dirac] E_D = {E_D:.4f} eV; window {win}; grid {N}, eta {eta}, nk_int {nk_int}, ne_per_eta {npe} (de = {eta/npe*1e3:.3f} meV)", flush=True)
 
 k_int = lt.mp_grid(nk_int, nk_int, 1); k_out = lt.mp_grid(N, N, 1)
 Hwk_int, _, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=ndegen); _, E_out, U_out = lt.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=ndegen)
@@ -38,7 +38,7 @@ nw = Hwr.shape[1]; sel = (E_out >= win[0]) & (E_out <= win[1]); E_sel = E_out[se
 de = eta / npe; egrid = np.arange(E_sel.min() - eta, E_sel.max() + eta + de, de)
 jn = np.abs(egrid[None, None, :] - E_out[:, :, None]).argmin(-1)                        # nearest grid energy per (k, n)
 out = dict(size=a.size, E_D=E_D, eta=eta, grid=N, nk_int=nk_int, e_window=ew, units="eV", E_out=E_out.T, egrid=egrid,
-           note="Sigma[n,k] = <nk|t(eps_nk)|nk> per defect (intensive V_loc), Gamma = -2 Im Sigma; energies in eV, E_D = Wannier Dirac point")
+           ne_per_eta=npe, note="Sigma[n,k] = <nk|t(eps_nk)|nk> per defect (intensive V_loc), Gamma = -2 Im Sigma; energies in eV, E_D = Wannier Dirac point")
 print(f"\n{'Rcut':>5} {'nL':>4} {'dim':>5} {'med ReS(meV)':>13} {'med |ReS|(meV)':>15} {'med Gamma(meV)':>15} {'mean ReS':>10} {'mean Gamma':>11} {'|ReS|/Gamma med':>16} {'E_res-E_D':>10}")
 for rc in [float(x) for x in a.rcut.split(",")]:
     Rloc = R_mwr[np.linalg.norm(R_mwr, axis=1) <= rc + 1e-9]; V_loc, _ = lt.extract_V_loc(Mwr, R_mwr, Rloc); nL = len(Rloc)

@@ -51,7 +51,7 @@ if conv:
     b1.set_xlabel(LBL_E); b1.set_ylabel(r"$\Gamma^{ep}(\varepsilon)$ (meV)"); b1.set_title(r"Convergence, $T$ = 300 K", loc="left", fontsize=9); b1.legend(fontsize=7); b1.axvline(0, color=MUTED, lw=0.8, ls=":"); panel(b1, "a")
     for T, f in prod.items():
         x, G, R = load_sel(f); b2.plot(x, G, color={300: C_T, 10: C_10K}[T], lw=1.2, label=rf"$T$ = {T} K")
-    b2.set_xlabel(LBL_E); b2.set_title("Production (paramètres convergés)", loc="left", fontsize=9); b2.axvline(0, color=MUTED, lw=0.8, ls=":"); panel(b2, "b")
+    b2.set_xlabel(LBL_E); b2.set_title(r"Production, 240$^2$, $\sigma$ = 0,02 eV", loc="left", fontsize=9); b2.axvline(0, color=MUTED, lw=0.8, ls=":"); panel(b2, "b")
     if prod: b2.legend(fontsize=8)
     fig.tight_layout(); save(fig, "fig_epw_gamma")
 

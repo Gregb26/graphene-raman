@@ -16,8 +16,8 @@ HA2EV = 27.211386245988; CM2MEV = 1.0 / 8.06554
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--root", required=True); ap.add_argument("--tag", required=True)
-ap.add_argument("--bands", default="bands/graphene.qe.bands"); ap.add_argument("--epw-band", default="band_freq_interp/epw_band.dat")
-ap.add_argument("--epw-kpt", default="band_freq_interp/graphene_band.kpt"); ap.add_argument("--freq", default="phonons/graphene.freq"); ap.add_argument("--epw-freq", default="band_freq_interp/epw_freq.dat")
+ap.add_argument("--bands", default="bands/graphene.qe.bands"); ap.add_argument("--epw-band", default="band_freq_interp/band.eig")
+ap.add_argument("--epw-kpt", default="band_freq_interp/graphene_band.kpt"); ap.add_argument("--freq", default="phonons/graphene.freq"); ap.add_argument("--epw-freq", default="band_freq_interp/phband.freq")
 ap.add_argument("--decay-dir", default="epw1"); ap.add_argument("--decay-prefix", default="decay")
 ap.add_argument("--g-dirs", default="G:dfpt_g_G:epw_g_G,K:dfpt_g_K:epw_g_K"); ap.add_argument("--g-prefix", default="epw_g")
 ap.add_argument("--tol-deg", type=float, default=2e-3); ap.add_argument("--tol-match", type=float, default=0.03); ap.add_argument("--tol-w", type=float, default=0.3)
@@ -39,12 +39,27 @@ def read_bandsx(f, nb=None):
             vals.append(e); i = j
         else: i += 1
     ks = np.array(ks); s = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(ks, axis=0), axis=1))]); return s / s[-1], np.array(vals)
+def read_epw_plot(f, nkf):
+    """EPW band_plot output: either the QE '&plot nbnd=, nks=' format (band.eig / phband.freq: per k a coordinate line then
+    the values) or the 2-column (s, value) gnuplot format; returns (nkf, nb)."""
+    txt = open(f).read().split("\n")
+    if txt[0].strip().startswith("&plot"):
+        hdr = re.search(r"nbnd=\s*(\d+),\s*nks=\s*(\d+)", txt[0]); nb, nks = int(hdr.group(1)), int(hdr.group(2)); assert nks == nkf, (nks, nkf)
+        vals = []; i = 1
+        while i < len(txt) and len(vals) < nks:
+            if len(txt[i].split()) == 3:
+                e = []; j = i + 1
+                while len(e) < nb: e += [float(x) for x in txt[j].split()]; j += 1
+                vals.append(e); i = j
+            else: i += 1
+        return np.array(vals)
+    d = np.loadtxt(f); nb = len(d) // nkf; return d[:, 1].reshape(nb, nkf).T
 def path_coord_epw(kptfile):
     k = np.loadtxt(kptfile, skiprows=1)[:, :2]; kc = (B @ k.T).T; s = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(kc, axis=0), axis=1))]); return s / s[-1], len(k)
 
 # ---------------- bands
 if os.path.exists(P(a.bands)) and os.path.exists(P(a.epw_band)):
-    s_d, E_d = read_bandsx(P(a.bands)); s_e, nkf = path_coord_epw(P(a.epw_kpt)); d = np.loadtxt(P(a.epw_band)); nw = len(d) // nkf; E_e = d[:, 1].reshape(nw, nkf).T
+    s_d, E_d = read_bandsx(P(a.bands)); s_e, nkf = path_coord_epw(P(a.epw_kpt)); E_e = read_epw_plot(P(a.epw_band), nkf); nw = E_e.shape[1]
     gap = E_d[:, 4] - E_d[:, 3]; iD = int(np.argmin(gap)); ED_d = 0.5 * (E_d[iD, 3] + E_d[iD, 4])
     Epi = np.interp(s_d, s_e, E_e[:, 3]); Eps = np.interp(s_d, s_e, E_e[:, 4]); iDe = int(np.argmin(Eps - Epi)); ED_e = 0.5 * (Epi[iDe] + Eps[iDe]); shift = ED_e - ED_d
     print(f"[bands] E_D bands.x {ED_d:.4f} eV, EPW {ED_e:.4f} eV, reference offset {shift:+.4f} eV removed; DFT nk {len(s_d)}, EPW nkf {nkf}, nw {nw}")
@@ -63,7 +78,7 @@ if os.path.exists(P(a.freq)) and os.path.exists(P(a.epw_freq)):
         if len(p) in (3, 4) and i + 1 < len(txt) and len(txt[i + 1].split()) >= 6: qs.append([float(x) for x in p[:3]]); fr.append([float(x) for x in txt[i + 1].split()[:6]]); i += 2
         else: i += 1
     qs = np.array(qs); F_md = np.sort(np.array(fr), axis=1); s_md = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(qs, axis=0), axis=1))]); s_md /= s_md[-1]
-    s_e, nkf = path_coord_epw(P(a.epw_kpt)); d = np.loadtxt(P(a.epw_freq)); F_e = np.sort(d[:, 1].reshape(6, nkf).T, axis=1) / CM2MEV       # meV -> cm^-1
+    s_e, nkf = path_coord_epw(P(a.epw_kpt)); F_e = np.sort(read_epw_plot(P(a.epw_freq), nkf), axis=1) / CM2MEV       # meV -> cm^-1
     rows = []
     for m in range(6):
         Fe = np.interp(s_md, s_e, F_e[:, m]); e = np.abs(Fe - F_md[:, m]); rows.append((e.max(), np.sqrt((e ** 2).mean()))); print(f"[phonons] mode {m+1}: max|dw| {e.max():6.2f} cm^-1 ({e.max()*CM2MEV:5.2f} meV), rms {rows[-1][1]:5.2f} cm^-1; matdyn {F_md[:,m].min():.0f}..{F_md[:,m].max():.0f} cm^-1")

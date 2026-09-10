@@ -239,3 +239,11 @@ près des fonctions de Wannier pz(A) ↔ pz(B) et à une rotation près de la ZB
 refait ; les scripts rapportent l'on-site pz–pz du sous-réseau de la lacune, et chaque manifest de M
 porte `vacancy_sublattice` (scripts/tag_vacancy_sublattice.py). Tous les runs de super-cellule (5–12)
 utilisent `assume_isolated='2D'` (vérifié dans les scf.out : « running with the 2D cutoff »).
+
+## Chapitre 5 — couplage électron-phonon (EPW)
+
+Les calculs EPW vivent hors dépôt dans `graphene/qe/epw/` (voisin du dépôt) ; l'état courant des jobs est dans
+`graphene/qe/epw/NOTES_EPW.md` et les repères durables dans `graphene/qe/epw/CLAUDE.md` (grille 24k-24q,
+degauss 0.002 Ry, décisions arbitrées, conventions Γ^ep = 2 Im Σ, chemin q cartésien dans ph.x, piège OOM d'epw1).
+Scripts versionnés ici : `scripts/epw_pp_save.py`, `scripts/epw_validate.py`, `scripts/epw_extract_gkk.py`,
+`scripts/submit_epw_p1_post.sh` ; résultats dans `results/epw/` (npz de validation commis, logs non).

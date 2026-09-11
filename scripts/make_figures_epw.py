@@ -113,3 +113,28 @@ if os.path.exists(PH):
         for dx, val in ((-w / 2, v[0]), (w / 2, v[1])): c2.text(xi + dx, val, fr(val), ha="center", va="bottom", fontsize=7)
     c2.set_xticks(x); c2.set_xticklabels(list(vals)); c2.xaxis._etiquettes_fixes = True; c2.set_ylabel(r"$\gamma$ (meV, largeur totale)"); c2.legend(fontsize=7, loc="upper left"); c2.set_ylim(0, max(max(v) for v in vals.values()) * 1.35); panel(c2, "b")
     fig.tight_layout(); save(fig, "fig_epw_phonselfen")
+
+# ---------------- 5. fig_epw_decay : décroissance de H, D et g en représentation de Wannier (chaîne 24k-24q, epw1/decay.*)
+# Données : validation_24k24q.npz (decay_<q>_r en Å, decay_<q>_v en Ry tel qu'écrit par EPW), converties en eV (× RY2EV) sur l'axe y.
+RY2EV = 13.605693122994
+if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
+    a_A = 2.4659; ws_in = 24 * a_A / 2; ws_out = 24 * a_A / np.sqrt(3)          # demi-largeur (apothème) et rayon (sommet) de la cellule WS de la supercellule 24×24
+    spec = [("H", r"$|R_e|$ (\AA)", r"max$_{nm}\,|H_{nm}(R_e)|$ (eV)", r"$H$ : hamiltonien", "#2a78d6"),
+            ("dynmat", r"$|R_p|$ (\AA)", r"max$_{\kappa\kappa'}\,|D_{\kappa\kappa'}(R_p)|$ (eV)", r"$D$ : matrice dynamique", "#1baf7a"),
+            ("epmate", r"$|R_e|$ (\AA)", r"max$_{nm\nu}\,|g_{nm\nu}(R_e,\,R_p)|$ (eV)", r"$g$ : côté électron ($R_e$)", "#eb6834"),
+            ("epmatp", r"$|R_p|$ (\AA)", r"max$_{nm\nu}\,|g_{nm\nu}(R_e,\,R_p)|$ (eV)", r"$g$ : côté phonon ($R_p$)", "#eda100")]
+    fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=False); axs = axs.ravel()
+    stats = {}
+    for i, (key, xl, yl, title, col) in enumerate(spec):
+        r = V[f"decay_{key}_r"]; v = V[f"decay_{key}_v"] * RY2EV; ax = axs[i]
+        ax.semilogy(r, v, "o", color=col, ms=3.2, zorder=2)
+        ax.axvline(ws_in, color=MUTED, lw=0.8, ls=":"); ax.set_title(title, loc="left"); ax.set_ylabel(yl); ax.set_xlim(0, ws_out * 1.03); ax.grid(True, alpha=0.3); panel(ax, "abcd"[i])
+        if i >= 2: ax.set_xlabel(xl)
+        # chiffres pour le texte : maximum, plancher (médiane des R ≥ 0,9 R_max), distance où l'enveloppe (max glissant décroissant) passe sous 10 × plancher
+        v0 = v[np.isclose(r, r.min())].max(); floor = np.median(v[r >= 0.9 * r.max()]); order = np.argsort(r); env = np.maximum.accumulate(v[order][::-1])[::-1]
+        rc = r[order][np.argmax(env < 10 * floor)] if (env < 10 * floor).any() else np.nan
+        stats[key] = (v0, floor, rc, np.log10(v0 / floor))
+        print(f"[decay {key:7s}] max {v0:.3e} eV à R = {r.min():.2f} Å ; plancher {floor:.2e} eV (médiane R ≥ 0,9 R_max) ; chute de {np.log10(v0/floor):.1f} ordres ; enveloppe < 10 × plancher dès R = {rc:.1f} Å")
+    axs[1].text(ws_in - 0.6, axs[1].get_ylim()[1] * 0.6, r"apothème WS (29,6 \AA)", rotation=90, fontsize=7, color=MUTED, ha="right", va="top")
+    print(f"[decay] cellule de Wigner-Seitz 24×24 : apothème (demi-largeur) {ws_in:.2f} Å, rayon (sommet) {ws_out:.2f} Å = R_max des fichiers")
+    fig.tight_layout(); save(fig, "fig_epw_decay")

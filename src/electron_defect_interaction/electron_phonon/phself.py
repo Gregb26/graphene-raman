@@ -1,7 +1,10 @@
 """EPW phonselfen post-processing (read-only).
-EPW's gamma___ / 'Phonon linewidth (meV)' in linewidth.phself.<T>K is Im Pi_qnu, documented in selfen_phon.f90 as the
-phonon linewidth HALF width (HWHM); lambda___ = gamma / (pi N_F omega^2) follows Allen's convention with gamma = HWHM.
-We store gamma_hwhm = EPW value and gamma_fwhm = 2 * gamma_hwhm (chapter-3 delta -> Lorentzian uses the FWHM).
+EPW's gamma___ / 'Phonon linewidth (meV)' in linewidth.phself.<T>K is documented in selfen.f90 (selfen_phon_q) as Im Pi_qnu, a
+HALF width. P7 (scripts/epw_d2_extract.py, 2026-09-11) showed EMPIRICALLY that for graphene this number is 2.0 x the Dirac-cone Im Pi
+built from EPW's own g and v_F at Gamma (brute-force checked, sin^2/cos^2 vertex structure confirmed on the q-zoom), and that it
+coincides with the literature FWHM (10.8 cm^-1 at Gamma, 21.3 at K) while <D^2> matches Piscanec 2004 to 1-5 %. Convention adopted:
+  gamma_epw  = raw EPW value (kept),  gamma_fwhm = gamma_epw (numerically the FWHM),  gamma_hwhm = gamma_epw / 2.
+The origin of the factor inside EPW was not located in the source; the calibration is empirical (see NOTES_EPW.md 1d).
 read_phself(run_dir) -> dict(T (nT,), q (nq,3) crystal, s (nq,) path coordinate (0..1, Cartesian lengths), omega (nq,6) meV,
                             gamma_hwhm (nT,nq,6) meV, lam (nT,nq,6)), q coordinates parsed from epw.out.
 """
@@ -35,7 +38,8 @@ def read_phself(run_dir):
     lam = []
     for f in sorted(glob.glob(os.path.join(run_dir, "lambda.phself.*K")), key=lambda f: float(re.search(r"phself\.([\d.]+)K", f).group(1))):
         d = np.loadtxt(f, comments="#"); lam.append(d[:, 1:7] if d.ndim == 2 and d.shape[1] >= 7 else np.full((nq, 6), np.nan))
-    return dict(T=np.array(T), q=q, s=path_coordinate(q), omega=om, gamma_hwhm=np.array(gam), lam=np.array(lam) if lam else None,
+    gam = np.array(gam)
+    return dict(T=np.array(T), q=q, s=path_coordinate(q), omega=om, gamma_epw=gam, gamma_hwhm=gam / 2.0, gamma_fwhm=gam, lam=np.array(lam) if lam else None,
                 nkf=int(re.search(r"Using uniform k-mesh:\s*(\d+)", txt).group(1)), degaussw=float(re.search(r"Gaussian Broadening:\s*([\d.]+)", txt).group(1)),
                 E_F=float(re.search(r"read from the input file: Ef =\s*([-\d.]+)", txt).group(1)))
 
@@ -59,11 +63,11 @@ def merge_runs(runs):
     T = runs[0]["T"]
     for r in runs[1:]: assert np.allclose(r["T"], T) and r["nkf"] == runs[0]["nkf"] and r["degaussw"] == runs[0]["degaussw"], "incompatible runs"
     q = np.concatenate([r["q"] for r in runs]); s = np.concatenate([path_position(r["q"]) for r in runs])
-    om = np.concatenate([r["omega"] for r in runs]); gam = np.concatenate([r["gamma_hwhm"] for r in runs], axis=1)
+    om = np.concatenate([r["omega"] for r in runs]); gam = np.concatenate([r["gamma_epw"] for r in runs], axis=1)
     lam = np.concatenate([r["lam"] for r in runs], axis=1) if all(r["lam"] is not None for r in runs) else None
     keep = ~np.isnan(s); order = np.argsort(s[keep], kind="stable"); idx = np.where(keep)[0][order]
     idx = idx[np.concatenate([[True], np.diff(s[idx]) > 1e-9])]
-    return dict(T=T, q=q[idx], s=s[idx], omega=om[idx], gamma_hwhm=gam[:, idx], lam=lam[:, idx] if lam is not None else None, nkf=runs[0]["nkf"], degaussw=runs[0]["degaussw"], E_F=runs[0]["E_F"])
+    return dict(T=T, q=q[idx], s=s[idx], omega=om[idx], gamma_epw=gam[:, idx], gamma_hwhm=gam[:, idx] / 2.0, gamma_fwhm=gam[:, idx], lam=lam[:, idx] if lam is not None else None, nkf=runs[0]["nkf"], degaussw=runs[0]["degaussw"], E_F=runs[0]["E_F"])
 
 
 def special_points(q, tol=1e-4):

@@ -94,7 +94,7 @@ if a.control:
 PH = f"results/epw/phself_{a.phself_tag}.npz"
 if os.path.exists(PH):
     import electron_defect_interaction.electron_phonon.phself as _ph
-    P = np.load(PH, allow_pickle=True); T = P["T"]; s = P["s"]; om = P["omega"]; gam = P["gamma_hwhm"]; i300 = int(np.argmin(np.abs(T - 300))); i10 = int(np.argmin(np.abs(T - 10)))
+    P = np.load(PH, allow_pickle=True); T = P["T"]; s = P["s"]; om = P["omega"]; gam = P["gamma_fwhm"]; i300 = int(np.argmin(np.abs(T - 300))); i10 = int(np.argmin(np.abs(T - 10)))
     fig, (c1, c2) = plt.subplots(1, 2, figsize=(6.5, 3.4), gridspec_kw={"width_ratios": [2.2, 1]})
     BR_COL = ["#b5b4b0", "#8a8984", "#52514e", "#1baf7a", "#eda100", "#eb6834"]
     for m in range(6):
@@ -104,12 +104,12 @@ if os.path.exists(PH):
     sp = _ph.special_points(P["q"]); iG, iK = sp["G"][0], sp["K"][0]
     c1.annotate(r"E$_{2g}$", (s[iG], gam[i300, iG, 4]), xytext=(6, 4), textcoords="offset points", fontsize=8)
     c1.annotate(r"A$_1'$", (s[iK], gam[i300, iK, 2]), xytext=(6, -2), textcoords="offset points", fontsize=8)
-    c1.set_ylabel(r"$\gamma_{\mathbf{q}\nu}$ (meV, demi-largeur)"); c1.set_title(rf"$T$ = 300 K, {int(P['nkf'])}$^2$ $k$, $\sigma$ = {fr(float(P['degaussw']))} eV", loc="left", fontsize=9)
+    c1.set_ylabel(r"$\gamma_{\mathbf{q}\nu}$ (meV, largeur totale)"); c1.set_title(rf"$T$ = 300 K, {int(P['nkf'])}$^2$ $k$, $\sigma$ = {fr(float(P['degaussw']))} eV", loc="left", fontsize=9)
     c1.legend(fontsize=7, loc="upper right", title="branches (tri en fréquence)", title_fontsize=7, ncol=2); path_axis(c1); panel(c1, "a")
     vals = {r"E$_{2g}$ ($\Gamma$)": (gam[i10, iG, 4:6].mean(), gam[i300, iG, 4:6].mean()), r"A$_1'$ (K)": (gam[i10, iK, 2], gam[i300, iK, 2])}
     x = np.arange(len(vals)); w = 0.36
     c2.bar(x - w / 2, [v[0] for v in vals.values()], w, color=C_10K, label=r"$T$ = 10 K"); c2.bar(x + w / 2, [v[1] for v in vals.values()], w, color=C_T, label=r"$T$ = 300 K")
     for xi, v in zip(x, vals.values()):
         for dx, val in ((-w / 2, v[0]), (w / 2, v[1])): c2.text(xi + dx, val, fr(val), ha="center", va="bottom", fontsize=7)
-    c2.set_xticks(x); c2.set_xticklabels(list(vals)); c2.xaxis._etiquettes_fixes = True; c2.set_ylabel(r"$\gamma$ (meV, demi-largeur)"); c2.legend(fontsize=7, loc="upper left"); c2.set_ylim(0, max(max(v) for v in vals.values()) * 1.35); panel(c2, "b")
+    c2.set_xticks(x); c2.set_xticklabels(list(vals)); c2.xaxis._etiquettes_fixes = True; c2.set_ylabel(r"$\gamma$ (meV, largeur totale)"); c2.legend(fontsize=7, loc="upper left"); c2.set_ylim(0, max(max(v) for v in vals.values()) * 1.35); panel(c2, "b")
     fig.tight_layout(); save(fig, "fig_epw_phonselfen")

@@ -12,7 +12,20 @@ import argparse, os, glob, numpy as np
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 plt.style.use("figures/memoire.mplstyle")
-ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); a = ap.parse_args()
+from matplotlib.ticker import FuncFormatter, ScalarFormatter, LogFormatterSciNotation
+def fr(x, nd=2):
+    """nombre en typographie française (virgule décimale)."""
+    return f"{x:.{nd}f}".replace(".", ",")
+_fmt_lin = FuncFormatter(lambda v, pos: f"{v:g}".replace(".", ","))
+class _LogFr(LogFormatterSciNotation):
+    def __call__(self, v, pos=None): return super().__call__(v, pos).replace(".", ",")
+from matplotlib.ticker import FixedFormatter
+def virgule(ax):
+    """virgule décimale sur les ticks des deux axes (linéaires ou log) ; les axes à étiquettes fixes (Γ, K, M…) sont laissés tels quels."""
+    for axis in (ax.xaxis, ax.yaxis):
+        if isinstance(axis.get_major_formatter(), FixedFormatter) or getattr(axis, "_etiquettes_fixes", False): continue
+        axis.set_major_formatter(_LogFr(base=10) if axis.get_scale() == "log" else _fmt_lin)
+ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); ap.add_argument("--phself-tag", default="path_1200_dg0.02"); a = ap.parse_args()
 C_DFT, C_EPW, C_T, C_10K, MUTED = "#52514e", "#2a78d6", "#eb6834", "#1baf7a", "#8a8984"
 CONV_COL = {"120_dg0.01": "#eda100", "120_dg0.02": "#2a78d6", "120_dg0.05": "#e87ba4", "240_dg0.02": "#4a3aa7"}
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
@@ -21,10 +34,11 @@ L = np.array([2 / 3, 1 / 3, 1 / np.sqrt(3)]); TICKS = np.concatenate([[0], np.cu
 def panel(ax, letter):
     t = ax.get_title(loc="left"); ax.set_title(f"({letter}) {t}" if t else f"({letter})", loc="left", fontsize=ax.title.get_fontsize())
 def save(fig, name):
+    for ax in fig.axes: virgule(ax)
     for ext in ("pdf", "png"): fig.savefig(f"{a.outdir}/{name}.{ext}")
     w, h = fig.get_size_inches(); plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png ({w:.2f} × {h:.2f} po)")
 def path_axis(ax):
-    ax.set_xticks(TICKS); ax.set_xticklabels(TLAB); ax.set_xlim(0, 1)
+    ax.set_xticks(TICKS); ax.set_xticklabels(TLAB); ax.set_xlim(0, 1); ax.xaxis._etiquettes_fixes = True
     for t in TICKS[1:-1]: ax.axvline(t, color=MUTED, lw=0.6)
 
 # ---------------- 1. validation bandes + phonons
@@ -47,7 +61,7 @@ prod = {T: f"results/epw/selfen_{a.prod_tag}_T{T}.npz" for T in (300, 10)}; prod
 if conv:
     fig, (b1, b2) = plt.subplots(1, 2, figsize=(6.5, 3.4), sharey=True)
     for k, f in conv.items():
-        x, G, R = load_sel(f); b1.plot(x, G, color=CONV_COL[k], lw=1.2, label=rf"{int(R['n_mesh'])}$^2$, $\sigma$ = {float(R['degaussw']):.2f} eV")
+        x, G, R = load_sel(f); b1.plot(x, G, color=CONV_COL[k], lw=1.2, label=rf"{int(R['n_mesh'])}$^2$, $\sigma$ = {fr(float(R['degaussw']))} eV")
     b1.set_xlabel(LBL_E); b1.set_ylabel(r"$\Gamma^{ep}(\varepsilon)$ (meV)"); b1.set_title(r"Convergence, $T$ = 300 K", loc="left", fontsize=9); b1.legend(fontsize=7); b1.axvline(0, color=MUTED, lw=0.8, ls=":"); panel(b1, "a")
     for T, f in prod.items():
         x, G, R = load_sel(f); b2.plot(x, G, color={300: C_T, 10: C_10K}[T], lw=1.2, label=rf"$T$ = {T} K")
@@ -59,8 +73,8 @@ if conv:
 if 300 in prod and os.path.exists("results/M/resonance_9x9.npz"):
     x, G, R = load_sel(prod[300]); M = np.load("results/M/resonance_9x9.npz", allow_pickle=True); c = float(M["conc"]); xe = M["eg"] - float(M["E_D"])
     fig, ax = plt.subplots(figsize=(6.5, 3.6))
-    ax.semilogy(xe, c * M["Gamma_T"] * 1e3, color=C_EPW, label=rf"$\Gamma^{{ed}}$, lacune, $c$ = {c*100:.0f}\,\% (matrice $T$, 9$\times$9, $\eta$ = {float(M['eta'])} eV)")
-    ax.semilogy(x, G, color=C_T, label=rf"$\Gamma^{{ep}}$, $T$ = 300 K (EPW, {int(R['n_mesh'])}$^2$, $\sigma$ = {float(R['degaussw']):.2f} eV)")
+    ax.semilogy(xe, c * M["Gamma_T"] * 1e3, color=C_EPW, label=rf"$\Gamma^{{ed}}$, lacune, $c$ = {c*100:.0f}\,\% (matrice $T$, 9$\times$9, $\eta$ = {fr(float(M['eta']))} eV)")
+    ax.semilogy(x, G, color=C_T, label=rf"$\Gamma^{{ep}}$, $T$ = 300 K (EPW, {int(R['n_mesh'])}$^2$, $\sigma$ = {fr(float(R['degaussw']))} eV)")
     ax.set_xlabel(LBL_E); ax.set_ylabel(r"$\Gamma$ (meV)"); ax.axvline(0, color=MUTED, lw=0.8, ls=":"); ax.legend(fontsize=8); ax.set_xlim(-3, 3)
     fig.tight_layout(); save(fig, "fig_epw_vs_ed")
 
@@ -70,8 +84,32 @@ if a.control:
     for ax, kname, letter in ((axs[0], "G", "a"), (axs[1], "K", "b")):
         g = V[f"g_{kname}"]; keep = (g[:, 4] > 20) & ~np.isclose(g[:, 0], 0.634, atol=0.003)     # q = M exclu (double comptage des groupes de modes)
         d, e = g[keep, 4], g[keep, 5]; rel = np.abs(e - d) / d
-        ax.loglog(d, e, "o", ms=3, color=C_EPW, label=rf"{keep.sum()} sommes, $q \in \{{{', '.join(f'{v:.3f}' for v in np.unique(np.round(g[keep,0],3)))}\}}$")
+        ax.loglog(d, e, "o", ms=3, color=C_EPW, label=rf"{keep.sum()} sommes, $q \in \{{{', '.join(fr(v, 3) for v in np.unique(np.round(g[keep,0],3)))}\}}$")
         lim = [min(d.min(), e.min()) * 0.8, max(d.max(), e.max()) * 1.2]; ax.plot(lim, lim, color=MUTED, lw=0.8); ax.set_xlim(lim); ax.set_ylim(lim)
-        ax.set_xlabel(r"$G$ DFPT (meV)"); ax.set_ylabel(r"$G$ EPW (meV)"); klab = r"$\Gamma$" if kname == "G" else "K"; ax.set_title(rf"$k$ = {klab} : médiane {np.median(rel)*100:.1f}\,\%, max {rel.max()*100:.1f}\,\%", loc="left", fontsize=9); ax.legend(fontsize=6, loc="lower right"); panel(ax, letter)
+        ax.set_xlabel(r"$G$ DFPT (meV)"); ax.set_ylabel(r"$G$ EPW (meV)"); klab = r"$\Gamma$" if kname == "G" else "K"; ax.set_title(rf"$k$ = {klab} : médiane {fr(np.median(rel)*100, 1)}\,\%, max {fr(rel.max()*100, 1)}\,\%", loc="left", fontsize=9); ax.legend(fontsize=6, loc="lower right"); panel(ax, letter)
         print(f"[contrôle |g| k={kname}] {keep.sum()} sommes (G>20 meV, q=M exclu) : rel. médiane {np.median(rel):.2%}, max {rel.max():.2%}, |ΔG| max {np.abs(e-d).max():.2f} meV")
     fig.tight_layout(); save(fig, "fig_epw_g_control")
+
+# ---------------- 4. fig_epw_phonselfen : γ_qν le long de Γ–K–M–Γ (300 K) + valeurs clés aux deux T
+PH = f"results/epw/phself_{a.phself_tag}.npz"
+if os.path.exists(PH):
+    import electron_defect_interaction.electron_phonon.phself as _ph
+    P = np.load(PH, allow_pickle=True); T = P["T"]; s = P["s"]; om = P["omega"]; gam = P["gamma_hwhm"]; i300 = int(np.argmin(np.abs(T - 300))); i10 = int(np.argmin(np.abs(T - 10)))
+    fig, (c1, c2) = plt.subplots(1, 2, figsize=(6.5, 3.4), gridspec_kw={"width_ratios": [2.2, 1]})
+    BR_COL = ["#b5b4b0", "#8a8984", "#52514e", "#1baf7a", "#eda100", "#eb6834"]
+    for m in range(6):
+        g = gam[i300, :, m].copy()
+        if m < 3: g[om[:, m] < 5.0] = np.nan                 # branches acoustiques : divergence q→0 sous smearing, masquées près de Γ
+        c1.plot(s, g, color=BR_COL[m], lw=1.1, label=rf"$\nu$ = {m+1}")
+    sp = _ph.special_points(P["q"]); iG, iK = sp["G"][0], sp["K"][0]
+    c1.annotate(r"E$_{2g}$", (s[iG], gam[i300, iG, 4]), xytext=(6, 4), textcoords="offset points", fontsize=8)
+    c1.annotate(r"A$_1'$", (s[iK], gam[i300, iK, 2]), xytext=(6, -2), textcoords="offset points", fontsize=8)
+    c1.set_ylabel(r"$\gamma_{\mathbf{q}\nu}$ (meV, demi-largeur)"); c1.set_title(rf"$T$ = 300 K, {int(P['nkf'])}$^2$ $k$, $\sigma$ = {fr(float(P['degaussw']))} eV", loc="left", fontsize=9)
+    c1.legend(fontsize=7, loc="upper right", title="branches (tri en fréquence)", title_fontsize=7, ncol=2); path_axis(c1); panel(c1, "a")
+    vals = {r"E$_{2g}$ ($\Gamma$)": (gam[i10, iG, 4:6].mean(), gam[i300, iG, 4:6].mean()), r"A$_1'$ (K)": (gam[i10, iK, 2], gam[i300, iK, 2])}
+    x = np.arange(len(vals)); w = 0.36
+    c2.bar(x - w / 2, [v[0] for v in vals.values()], w, color=C_10K, label=r"$T$ = 10 K"); c2.bar(x + w / 2, [v[1] for v in vals.values()], w, color=C_T, label=r"$T$ = 300 K")
+    for xi, v in zip(x, vals.values()):
+        for dx, val in ((-w / 2, v[0]), (w / 2, v[1])): c2.text(xi + dx, val, fr(val), ha="center", va="bottom", fontsize=7)
+    c2.set_xticks(x); c2.set_xticklabels(list(vals)); c2.xaxis._etiquettes_fixes = True; c2.set_ylabel(r"$\gamma$ (meV, demi-largeur)"); c2.legend(fontsize=7, loc="upper left"); c2.set_ylim(0, max(max(v) for v in vals.values()) * 1.35); panel(c2, "b")
+    fig.tight_layout(); save(fig, "fig_epw_phonselfen")

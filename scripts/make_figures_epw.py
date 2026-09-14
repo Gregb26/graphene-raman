@@ -130,13 +130,12 @@ if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
     for i, (key, xl, yl, title, col) in enumerate(spec):
         r = V[f"decay_{key}_r"]; v = V[f"decay_{key}_v"] * RY2EV; ax = axs[i]
         ax.semilogy(r, v, "o", color=col, ms=3.2, zorder=2)
-        ax.axvline(ws_in, color=MUTED, lw=0.8, ls=":"); ax.set_title(title, loc="left"); ax.set_ylabel(yl); ax.set_xlim(0, ws_out * 1.03); ax.grid(True, alpha=0.3); panel(ax, "abcd"[i])
+        ax.set_title(title, loc="left"); ax.set_ylabel(yl); ax.set_xlim(0, ws_out * 1.03); ax.grid(True, alpha=0.3); panel(ax, "abcd"[i])
         if i >= 2: ax.set_xlabel(xl)
         # chiffres pour le texte : maximum, plancher (médiane des R ≥ 0,9 R_max), distance où l'enveloppe (max glissant décroissant) passe sous 10 × plancher
         v0 = v[np.isclose(r, r.min())].max(); floor = np.median(v[r >= 0.9 * r.max()]); order = np.argsort(r); env = np.maximum.accumulate(v[order][::-1])[::-1]
         rc = r[order][np.argmax(env < 10 * floor)] if (env < 10 * floor).any() else np.nan
         stats[key] = (v0, floor, rc, np.log10(v0 / floor))
         print(f"[decay {key:7s}] max {v0:.3e} eV à R = {r.min():.2f} Å ; plancher {floor:.2e} eV (médiane R ≥ 0,9 R_max) ; chute de {np.log10(v0/floor):.1f} ordres ; enveloppe < 10 × plancher dès R = {rc:.1f} Å")
-    axs[1].text(ws_in - 0.6, axs[1].get_ylim()[1] * 0.6, r"apothème WS (29,6 \AA)", rotation=90, fontsize=7, color=MUTED, ha="right", va="top")
     print(f"[decay] cellule de Wigner-Seitz 24×24 : apothème (demi-largeur) {ws_in:.2f} Å, rayon (sommet) {ws_out:.2f} Å = R_max des fichiers")
     fig.tight_layout(); save(fig, "fig_epw_decay")

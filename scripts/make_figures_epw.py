@@ -116,13 +116,15 @@ if os.path.exists(PH):
 
 # ---------------- 5. fig_epw_decay : décroissance de H, D et g en représentation de Wannier (chaîne 24k-24q, epw1/decay.*)
 # Données : validation_24k24q.npz (decay_<q>_r en Å, decay_<q>_v en Ry tel qu'écrit par EPW), converties en eV (× RY2EV) sur l'axe y.
+# Étiquettes en convention du mémoire (ch. 2) : atome α, direction μ ; en espace réel C = constantes de force (EPW « dynmat », masses identiques :
+# facteur global) et pas d'indice de branche ν (il n'apparaît qu'après recombinaison par les vecteurs propres) ; g_{mn}, m final, n initial.
 RY2EV = 13.605693122994
 if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
     a_A = 2.4659; ws_in = 24 * a_A / 2; ws_out = 24 * a_A / np.sqrt(3)          # demi-largeur (apothème) et rayon (sommet) de la cellule WS de la supercellule 24×24
     spec = [("H", r"$|R_e|$ (\AA)", r"max$_{nm}\,|H_{nm}(R_e)|$ (eV)", r"$H$ : hamiltonien", "#2a78d6"),
-            ("dynmat", r"$|R_p|$ (\AA)", r"max$_{\kappa\kappa'}\,|D_{\kappa\kappa'}(R_p)|$ (eV)", r"$D$ : matrice dynamique", "#1baf7a"),
-            ("epmate", r"$|R_e|$ (\AA)", r"max$_{nm\nu}\,|g_{nm\nu}(R_e,\,R_p)|$ (eV)", r"$g$ : côté électron ($R_e$)", "#eb6834"),
-            ("epmatp", r"$|R_p|$ (\AA)", r"max$_{nm\nu}\,|g_{nm\nu}(R_e,\,R_p)|$ (eV)", r"$g$ : côté phonon ($R_p$)", "#eda100")]
+            ("dynmat", r"$|R_p|$ (\AA)", r"max$_{\alpha\mu,\alpha'\mu'}\,|C_{\alpha\mu,\alpha'\mu'}(R_p)|$ (eV)", r"$C$ : constantes de force", "#1baf7a"),
+            ("epmate", r"$|R_e|$ (\AA)", r"max$_{mn,\alpha\mu}\,|g_{mn}^{\alpha\mu}(R_e,\,R_p)|$ (eV)", r"$g$ : côté électron ($R_e$)", "#eb6834"),
+            ("epmatp", r"$|R_p|$ (\AA)", r"max$_{mn,\alpha\mu}\,|g_{mn}^{\alpha\mu}(R_e,\,R_p)|$ (eV)", r"$g$ : côté phonon ($R_p$)", "#eda100")]
     fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=False); axs = axs.ravel()
     stats = {}
     for i, (key, xl, yl, title, col) in enumerate(spec):

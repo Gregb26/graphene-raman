@@ -126,8 +126,8 @@ cb = fig.colorbar(pc, ax=[axa, axb], shrink=1.0, pad=0.02, aspect=16); cb.ax.tic
 for S in SIZES:
     if f"{S}_rad_masked" in V: axc.plot(V[f"{S}_rc_masked"], V[f"{S}_rad_masked"], color=COL[S], label=famlab(S))
 axc.axhline(0, color=MUTED, lw=0.8); axc.set_yscale("symlog", linthresh=LIN, linscale=0.4)
-axc.set_xlabel(r"Distance au site $r$ (Å)"); axc.set_ylabel(r"$\langle V_\mathrm{ed}^L\rangle_\varphi$ (eV)"); axc.legend(title="Super-cellule", ncol=6, fontsize=7, title_fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), frameon=False)
-axc.set_title(r"Moyenne azimutale, plan $z = z_\mathrm{C}$, cœurs exclus ($r_\mathrm{at} < 0{,}5$ Å)", loc="left", fontsize=9); panel(axc, "c")
+axc.set_xlabel(r"Distance au site $r$ (Å)"); axc.set_ylabel(r"$\bar V_\mathrm{ed}^{L}$ (eV)"); axc.legend(title="Super-cellule", ncol=6, fontsize=7, title_fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), frameon=False)
+axc.set_title("Moyenne du potentiel local dans le plan du graphène", loc="left", fontsize=9); panel(axc, "c")
 save(fig, "fig_Ved")
 
 print("\nFichiers finaux (largeur × hauteur, po) :")

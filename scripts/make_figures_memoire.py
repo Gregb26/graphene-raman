@@ -3,7 +3,7 @@
 Figures finales du mémoire (retouches), style figures/memoire.mplstyle, français, données lues dans results/M/*.npz.
 Noms distincts des figures de travail (rien n'est écrasé) :
   fig_convergence        (a) Γ N_cells vs R_cut, six tailles ; (b) carte plateau (grille × η), référence     — 6.5 × 3.4 po
-  fig_locality_final     (a) 5×5, (b) 8×8 avec grille aliasée ; (c) 9×9, (d) 12×12 (N = 3m)                 — 6.5 × 5.6 po
+  fig_locality_final     (a) 5×5, (b) 8×8 avec grille aliasée ; (c) 9×9, (d) 12×12                 — 6.5 × 5.6 po
   fig_spectral_final     (a) Γ(ε) T vs Born (log) ; (b) δρ ; (c) T̄_ππ(K,K;ε) ; (d) critère det / λ_min       — 6.5 × 5.6 po
   fig_M_map_final        (a) M̃_π, (b) M̃_π*, (c) partie locale projetée, (d) partie non locale projetée      — 6.5 × 6.0 po
   fig_M_scaling_final    max|M| vs N, convention cellule unitaire (panneau unique)                           — 6.5 × 4.0 po
@@ -28,7 +28,7 @@ ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); 
 cfg = load_production(); RC, GRID, ETA = cfg["R_cut"], cfg["grid"], cfg["eta_eV"]; REF = cfg["reference_size"]
 SIZES = ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"]; DONE = []
 def lab(S): return S.replace("x", r"$\times$")
-def famlab(S): return lab(S) + (r" ($N=3m$)" if S in FAM3 else "")
+def famlab(S): return lab(S)                      # (mention N = 3m retirée des figures, 2026-09-15)
 def panel(ax, letter):
     t = ax.get_title(loc="left"); ax.set_title(f"({letter}) {t}" if t else f"({letter})", loc="left", fontsize=ax.title.get_fontsize())
 def save(fig, name):
@@ -44,7 +44,7 @@ maps = {S: m for S in SIZES if (m := load_map(S))}
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(6.5, 3.4), gridspec_kw=dict(width_ratios=[1.0, 1.15]))
 rcs = sorted({k[0] for m in maps.values() for k in m})
 for S, m in maps.items():
-    y = [m.get((rc, GRID, ETA), np.nan) for rc in rcs]; ax1.plot(rcs, y, "-s" if S in FAM3 else "-o", color=COL[S], ms=5, label=famlab(S))
+    y = [m.get((rc, GRID, ETA), np.nan) for rc in rcs]; ax1.plot(rcs, y, "-o", color=COL[S], ms=5, label=famlab(S))
 ax1.set_xlabel(r"Rayon de coupure $R_\mathrm{cut}$ (mailles)"); ax1.set_ylabel(LBL_G); ax1.set_xticks(rcs)
 ax1.set_title(rf"Grille $k$ {GRID}$\times${GRID}, $\eta$ = {ETA} eV", loc="left", fontsize=9); ax1.legend(title="Super-cellule", ncol=1, fontsize=7, title_fontsize=8, loc="upper right", borderaxespad=0.3); panel(ax1, "a")
 m = maps[REF]; grids = sorted({k[1] for k in m}); etas = sorted({k[2] for k in m}, reverse=True)

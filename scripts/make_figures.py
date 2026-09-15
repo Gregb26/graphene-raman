@@ -22,8 +22,8 @@ plt.style.use("figures/memoire.mplstyle")
 # palette catégorielle fixe (ordre du cycler) : taille -> teinte, jamais recyclée
 COL = {"5x5": "#2a78d6", "7x7": "#eb6834", "8x8": "#1baf7a", "9x9": "#eda100", "6x6": "#e87ba4", "12x12": "#4a3aa7"}
 FAM3 = set(cfg_fam) if (cfg_fam := None) else {"6x6", "9x9", "12x12"}   # famille N = 3m (K se replie sur Γ)
-def famlab(S): return lab(S) + (r" ($N=3m$)" if S in FAM3 else "")
-def mk(S): return "s" if S in FAM3 else "o"
+def famlab(S): return lab(S)                      # (mention N = 3m retirée des figures, 2026-09-15)
+def mk(S): return "o"
 C_T, C_BORN, C_REF, C_DIS = "#2a78d6", "#eb6834", "#52514e", "#1baf7a"
 INK = "#0b0b0b"; MUTED = "#8a8984"
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
@@ -83,10 +83,9 @@ if maps:
     # ---- fig_level2
     fig, ax = plt.subplots(); Ns = [int(S.split("x")[0]) for S in maps]; ys = [maps[S][(RC, GRID, ETA)][0] for S in maps]
     for S, N, y in zip(maps, Ns, ys): ax.plot([N], [y], mk(S), color=COL[S], ms=7, label=famlab(S))
-    for fam, ls in ((FAM3, "-"), (set(maps) - FAM3, "--")):
-        pts = sorted([(N, y) for S, N, y in zip(maps, Ns, ys) if S in fam]); ax.plot([q[0] for q in pts], [q[1] for q in pts], ls, color=MUTED, lw=1, zorder=0); ax.axvspan(0, cfg["N_min"] - 0.5, color="#e6e6e3", alpha=0.5, lw=0)
+    pts = sorted(zip(Ns, ys)); ax.plot([q[0] for q in pts], [q[1] for q in pts], "-", color=MUTED, lw=1, zorder=0); ax.axvspan(0, cfg["N_min"] - 0.5, color="#e6e6e3", alpha=0.5, lw=0)
     ax.set_xlabel(r"Taille de la super-cellule $N$ ($N\times N$)"); ax.set_ylabel(LBL_G); ax.set_xticks(Ns); ax.set_xlim(min(Ns) - 1, max(Ns) + 1)
-    ax.set_title(rf"$R_\mathrm{{cut}}$ = {RC}, grille {GRID}$^2$, $\eta$ = {ETA} eV ; carrés : $N = 3m$, ronds : autres", loc="left", fontsize=9); ax.legend(ncol=2, fontsize=8); save(fig, "fig_level2")
+    ax.set_title(rf"$R_\mathrm{{cut}}$ = {RC}, grille {GRID}$^2$, $\eta$ = {ETA} eV", loc="left", fontsize=9); ax.legend(ncol=2, fontsize=8); save(fig, "fig_level2")
 
 # ---- fig_locality : dense (quatre N) vs grille N×N aliasée (trois N), sur-site pz–pz en légende ; 2×2 panneaux
 if os.path.exists(a.locality):

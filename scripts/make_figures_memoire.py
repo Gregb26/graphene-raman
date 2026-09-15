@@ -109,8 +109,8 @@ save(fig, "fig_M_map_final")
 # ---------------- 5. fig_M_scaling_final : panneau unique
 Ns = [int(S.split("x")[0]) for S in SIZES if f"scale_{S}_dense" in Zm]; dd = [float(Zm[f"scale_{S}_dense"]) for S in SIZES if f"scale_{S}_dense" in Zm]; cc_ = [float(Zm[f"scale_{S}_coarse"]) for S in SIZES if f"scale_{S}_dense" in Zm]
 fig, ax = plt.subplots()
-ax.plot(Ns, dd, "o-", color=C_T, label="dense (zero-padding)"); ax.plot(Ns, cc_, "x--", color=C_REF, label=r"grille $N\times N$")
-ax.set_ylabel(r"$\max|M|$ (eV)"); ax.set_ylim(0, max(dd + cc_) * 1.25); ax.set_xlabel(r"Taille de la super-cellule $N$"); ax.set_xticks(Ns); ax.legend()
+ax.plot(Ns, dd, "o-", color=C_T, label="Grille élargie"); ax.plot(Ns, cc_, "x--", color=C_REF, label="Grille grossière")
+ax.set_ylabel(r"$\max|M|$ (eV)"); ax.set_ylim(5, 9); ax.set_xlabel(r"Taille de la super-cellule $N$"); ax.set_xticks(Ns); ax.legend()
 ax.set_title(r"Convention cellule unitaire : $\max|M|$ indépendant de $N$ (bandes 1–16)", loc="left", fontsize=9); save(fig, "fig_M_scaling_final")
 
 # ---------------- 6. fig_Ved : (a) carte 5×5, (b) carte 9×9, (c) profil radial masqué

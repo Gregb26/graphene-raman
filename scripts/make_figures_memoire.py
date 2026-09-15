@@ -111,7 +111,7 @@ Ns = [int(S.split("x")[0]) for S in SIZES if f"scale_{S}_dense" in Zm]; dd = [fl
 fig, ax = plt.subplots()
 ax.plot(Ns, dd, "o-", color=C_T, label="Grille élargie"); ax.plot(Ns, cc_, "x--", color=C_REF, label="Grille grossière")
 ax.set_ylabel(r"$\max|M|$ (eV)"); ax.set_ylim(5, 9); ax.set_xlabel(r"Taille de la super-cellule $N$"); ax.set_xticks(Ns); ax.legend()
-ax.set_title(r"Convention cellule unitaire : $\max|M|$ indépendant de $N$ (bandes 1–16)", loc="left", fontsize=9); save(fig, "fig_M_scaling_final")
+ax.set_title("Vérification de la convention intensive", loc="left", fontsize=9); save(fig, "fig_M_scaling_final")
 
 # ---------------- 6. fig_Ved : (a) carte 5×5, (b) carte 9×9, (c) profil radial masqué
 V = np.load("results/M/ved_analysis.npz"); LIN = 1e-2

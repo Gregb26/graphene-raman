@@ -62,10 +62,10 @@ L = np.load("results/M/mwr_locality.npz")
 fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=True); axs = axs.ravel()
 for i, S in enumerate(["5x5", "8x8", "9x9", "12x12"]):
     ax = axs[i]; onv = float(L[f"{S}_dense_onsite_pzvac"])
-    ax.semilogy(L[f"{S}_dense_dist"], L[f"{S}_dense_w"], "o", color=COL[S], ms=3.2, zorder=2, label=f"Grille élargie\npz–pz (site) = {onv:.2f} eV")
+    ax.semilogy(L[f"{S}_dense_dist"], L[f"{S}_dense_w"], "o", color=COL[S], ms=3.2, zorder=2, label="Grille élargie")
     if f"{S}_coarse_w" in L:
-        ax.semilogy(L[f"{S}_coarse_dist"], L[f"{S}_coarse_w"], "x", color=C_REF, ms=4, zorder=3, label=f"Grille grossière\npz–pz (site) = {float(L[f'{S}_coarse_onsite_pzvac']):.2f} eV")
-    ax.set_title(famlab(S), loc="left"); ax.legend(loc="upper right", fontsize=7, handletextpad=0.4, labelspacing=0.8); ax.set_ylim(2e-5, 60); panel(ax, "abcd"[i])
+        ax.semilogy(L[f"{S}_coarse_dist"], L[f"{S}_coarse_w"], "x", color=C_REF, ms=4, zorder=3, label="Grille grossière")
+    ax.set_title(famlab(S), loc="left"); ax.legend(loc="upper right", fontsize=7, handletextpad=0.4); ax.set_ylim(2e-5, 60); panel(ax, "abcd"[i])
 for ax in axs[2:]: ax.set_xlabel(r"Distance $|R-R_0|$ ($a$)")
 for ax in axs[::2]: ax.set_ylabel(r"$\|M_{wR}(R,R_0)\|$ (eV)")
 fig.tight_layout(); save(fig, "fig_locality_final")

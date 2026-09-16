@@ -5,7 +5,7 @@ Noms distincts des figures de travail (rien n'est écrasé) :
   fig_convergence        (a) Γ N_cells vs R_cut, six tailles ; (b) carte plateau (grille × η), référence     — 6.5 × 3.4 po
   fig_locality_final     (a) 5×5, (b) 8×8 avec grille aliasée ; (c) 9×9, (d) 12×12                 — 6.5 × 5.6 po
   fig_spectral_final     (a) Γ(ε) T vs Born (log) ; (b) δρ ; (c) T̄_ππ(K,K;ε) ; (d) critère det / λ_min       — 6.5 × 5.6 po
-  fig_M_map_final        (a) M̃_π, (b) M̃_π*, (c) partie locale projetée, (d) partie non locale projetée      — 6.5 × 6.0 po
+  fig_M_map_final        (a) π, (b) π*, (c) partie locale projetée, (d) partie non locale projetée ; colorbars M̃ et M_∥ — 6.5 × 6.0 po
   fig_M_scaling_final    max|M| vs N, convention cellule unitaire (panneau unique)                           — 6.5 × 4.0 po
   fig_Ved                (a) carte 5×5, (b) carte 9×9 (colorbar commune) ; (c) profil radial masqué          — 6.5 × 7.2 po
   fig_Ved_zoom           inchangée (make_figures.py)
@@ -66,8 +66,8 @@ for i, S in enumerate(["5x5", "8x8", "9x9", "12x12"]):
     if f"{S}_coarse_w" in L:
         ax.semilogy(L[f"{S}_coarse_dist"], L[f"{S}_coarse_w"], "x", color=C_REF, ms=4, zorder=3, label="Grille grossière")
     ax.set_title(famlab(S), loc="left"); ax.legend(loc="upper right", fontsize=7, handletextpad=0.4); ax.set_ylim(2e-5, 60); panel(ax, "abcd"[i])
-for ax in axs[2:]: ax.set_xlabel(r"Distance $|R-R_0|$ ($a$)")
-for ax in axs[::2]: ax.set_ylabel(r"$\|M_{wR}(R,R_0)\|$ (eV)")
+for ax in axs[2:]: ax.set_xlabel(r"Distance $|R|$ ($a$)")
+for ax in axs[::2]: ax.set_ylabel(r"$\|M_{ij}(R,0)\|$ (eV)")
 fig.tight_layout(); save(fig, "fig_locality_final")
 
 # ---------------- 3. fig_spectral_final : 2×2
@@ -93,7 +93,7 @@ def bz_vertices(B):
 fig, axs = plt.subplots(2, 2, figsize=(6.5, 6.0), sharex=True, sharey=True, layout="constrained"); axs = axs.ravel()
 vmax = max(Zm["map_Vpi"].max(), Zm["map_Vpistar"].max()); hexa = bz_vertices(Zm["map_B"])
 lo = min(0.0, Zm["map_Lpar"].min(), Zm["map_Npar"].min()); hi = max(Zm["map_Lpar"].max(), Zm["map_Npar"].max())
-specs = ((0, "map_Vpi", r"$\tilde M_{\pi}(\mathbf{k}', K)$", 0, vmax), (1, "map_Vpistar", r"$\tilde M_{\pi^*}(\mathbf{k}', K)$", 0, vmax),
+specs = ((0, "map_Vpi", r"$\pi$", 0, vmax), (1, "map_Vpistar", r"$\pi^*$", 0, vmax),
          (2, "map_Lpar", r"partie locale projetée sur $M$", lo, hi), (3, "map_Npar", r"partie non locale projetée sur $M$", lo, hi))
 for i, key, title, vlo, vhi in specs:
     ax = axs[i]; sc = ax.scatter(Zm["map_kx"], Zm["map_ky"], c=Zm[key], cmap="Blues", vmin=vlo, vmax=vhi, s=22, marker="h", linewidths=0)
@@ -102,8 +102,8 @@ for i, key, title, vlo, vhi in specs:
     ax.set_aspect("equal"); ax.set_title(title, loc="left", fontsize=10); panel(ax, "abcd"[i])
     if i >= 2: ax.set_xlabel(r"$k'_x$ (Å$^{-1}$)")
     if i % 2 == 0: ax.set_ylabel(r"$k'_y$ (Å$^{-1}$)")
-    if i == 1: cb = fig.colorbar(sc, ax=axs[:2], shrink=0.85, pad=0.02); cb.set_label(r"$\tilde M = A_\mathrm{cell}\,|M|$ (eV\,Å$^2$)")
-    if i == 3: cb = fig.colorbar(sc, ax=axs[2:], shrink=0.85, pad=0.02); cb.set_label(r"$A_\mathrm{cell}\,\mathrm{Re}[\hat M^\dagger M^{X}]$ (eV\,Å$^2$)")
+    if i == 1: cb = fig.colorbar(sc, ax=axs[:2], shrink=0.85, pad=0.02); cb.set_label(r"$\tilde M$ (eV\,Å$^2$)")
+    if i == 3: cb = fig.colorbar(sc, ax=axs[2:], shrink=0.85, pad=0.02); cb.set_label(r"$M_\parallel$ (eV\,Å$^2$)")
 save(fig, "fig_M_map_final")
 
 # ---------------- 5. fig_M_scaling_final : panneau unique

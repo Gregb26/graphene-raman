@@ -75,5 +75,5 @@ forthcoming).
 
 ## Author
 
-Greg B. — M.Sc. in computational condensed matter physics,
+Grégoire Barrette, M.Sc. in computational condensed matter physics,
 Université de Montréal. Thesis supervised by Michel Côté.

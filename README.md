@@ -77,3 +77,19 @@ forthcoming).
 
 Grégoire Barrette, M.Sc. in computational condensed matter physics,
 Université de Montréal. Thesis supervised by Michel Côté.
+
+## Acknowledgments
+
+Parts of this codebase (analysis scripts, figure generation, verification
+tooling, and cleanup/automation workflows) were developed with the
+assistance of AI tools (Claude and Claude Code, Anthropic). All physics,
+derivations, and scientific decisions are the author's own. AI-assisted code
+was reviewed by the author and validated through the verification suite
+described above.
+
+Computations were performed on the Rorqual cluster of Calcul Québec and the
+Digital Research Alliance of Canada. This work was supported by NSERC.
+
+## License
+
+MIT

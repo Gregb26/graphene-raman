@@ -17,8 +17,9 @@ from electron_defect_interaction.config import load_production, dense_paths
 
 p = argparse.ArgumentParser(); p.add_argument("--size", required=True); p.add_argument("--rcut", required=True)
 p.add_argument("--grid", type=int, default=None); p.add_argument("--eta", type=float, default=None); p.add_argument("--out", required=True); p.add_argument("--npe", type=int, default=None, help="ne_per_eta override (default: frozen config)")
+p.add_argument("--nk-int", type=int, default=None, help="internal k-grid density N (NxN) for g0 override (default: frozen config); convergence test of N_k^int")
 a = p.parse_args(); cfg = load_production()
-N = a.grid or int(cfg["grid"]); eta = a.eta or float(cfg["eta_eV"]); nk_int = int(cfg["nk_int"]); ew = float(cfg["e_window_eV"]); npe = a.npe or int(cfg["ne_per_eta"])
+N = a.grid or int(cfg["grid"]); eta = a.eta or float(cfg["eta_eV"]); nk_int = a.nk_int or int(cfg["nk_int"]); ew = float(cfg["e_window_eV"]); npe = a.npe or int(cfg["ne_per_eta"])
 dp = dense_paths(cfg, a.size); paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
 M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
 k_coarse = qe_io.get_k_red(dp["uc"])

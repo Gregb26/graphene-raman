@@ -56,6 +56,6 @@ rel = np.max(np.abs(Gl - Gd)) / max(1e-30, np.max(np.abs(Gd)))
 i0 = int(np.argmin(np.abs(Rn).sum(1))); on = Mwr[:, i0, :, i0]
 print(f"[{N}] R_d={Rd.tolist()}  on-site ||V_loc(0,0)||={np.linalg.norm(on):.4f} eV  herm_res={res:.1e}")
 print(f"[{N}] Gamma range dense*Nc: {Gd.min():.3e}..{Gd.max():.3e}  local: {Gl.min():.3e}..{Gl.max():.3e}")
-print(f"[{N}] REAL GOLDEN: max|local - dense*N_cells| rel = {rel:.3e}   (must be ~1e-10)")
+print(f"[{N}] REAL GOLDEN: max|local - dense*N_cells| rel = {rel:.2e} (seuil 1e-8) : {'PASS' if rel < 1e-8 else 'FAIL'}")
 print(f"[{N}] positivity min Gamma(local) = {Gl.min():.3e}")
 print("RESULT:", "PASS" if (rel < 1e-8 and Gl.min() >= -1e-8) else "FAIL")

@@ -57,7 +57,7 @@ def main():
 
     rel_full = np.max(np.abs(Gl_full - Gd_perdef)) / max(1e-30, np.max(np.abs(Gd_perdef)))
     rel_trunc = np.max(np.abs(Gl_trunc - Gd_perdef)) / max(1e-30, np.max(np.abs(Gd_perdef)))
-    print(f"[R_cut full]  rel err vs dense = {rel_full:.2e}   (must be ~1e-8: exact)")
+    print(f"[R_cut full]  rel err vs dense = {rel_full:.2e} (seuil 1e-8, support complet = exact) : {'PASS' if rel_full < 1e-8 else 'FAIL'}")
     print(f"[R_cut {{0}}]   rel diff vs dense = {rel_trunc:.2e}   (should be O(1): truncation matters)")
     ok = rel_full < 1e-8 and rel_trunc > 1e-3 and np.allclose(V_ex, V_full, atol=1e-12)
     print("RESULT:", "PASS" if ok else "FAIL")

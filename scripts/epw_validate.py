@@ -21,7 +21,7 @@ ap.add_argument("--epw-kpt", default="band_freq_interp/graphene_band.kpt"); ap.a
 ap.add_argument("--decay-dir", default="epw1"); ap.add_argument("--decay-prefix", default="decay")
 ap.add_argument("--g-dirs", default="G:dfpt_g_G:epw_g_G,K:dfpt_g_K:epw_g_K"); ap.add_argument("--g-prefix", default="epw_g")
 ap.add_argument("--tol-deg", type=float, default=2e-3); ap.add_argument("--tol-match", type=float, default=0.03); ap.add_argument("--tol-w", type=float, default=0.3)
-ap.add_argument("--out", default=None); a = ap.parse_args()
+ap.add_argument("--out", default=None); ap.add_argument("--fsthick", type=float, default=3.5, help="window |E-E_D| (eV) for the |g| statistics relevant downstream"); a = ap.parse_args()
 R = a.root; out = {}
 def P(x): return os.path.join(R, x)
 
@@ -157,4 +157,11 @@ for spec in a.g_dirs.split(","):
     # pi-only summary: subspaces within 1 eV of E_D at k and k+q
     EDg = out.get("bands_ED_epw", -4.2389); pi = (np.abs(res[:, 1] - EDg) < 1.5) & (np.abs(res[:, 2] - EDg) < 1.5) & big
     if pi.any(): print(f"   pi<->pi (|E-E_D|<1.5 eV, G>20 meV): {pi.sum()} entries, max rel {np.max(err[pi]/res[pi,4]):.2%}, median {np.median(err[pi]/res[pi,4]):.2%}")
+    # fsthick window (P18 complement, 2026-09-21): only sums whose initial (k) AND final (k+q) subspaces lie within |E - E_D| <= fsthick
+    # are relevant downstream (elecselfen/phonselfen use fsthick = 3.5 eV); q = M kept here (excluded only in the control figure)
+    win = (np.abs(res[:, 1] - EDg) <= a.fsthick) & (np.abs(res[:, 2] - EDg) <= a.fsthick) & big; noM = win & ~np.isclose(res[:, 0], 0.634, atol=0.003)
+    for lab, m in (("fsthick window", win), ("fsthick window, q=M excluded", noM)):
+        if m.any(): print(f"   {lab} (|E_k-E_D|,|E_k+q-E_D| <= {a.fsthick} eV, G>20 meV): {m.sum()} sums, rel median {np.median(err[m]/res[m,4]):.2%}, max {np.max(err[m]/res[m,4]):.2%}, |dG| max {err[m].max():.2f} meV")
+    out[f"g_{kname}_win_mask"] = win; out[f"g_{kname}_win_median"] = float(np.median(err[win] / res[win, 4])) if win.any() else np.nan; out[f"g_{kname}_win_max"] = float(np.max(err[win] / res[win, 4])) if win.any() else np.nan
+    out[f"g_{kname}_win_noM_median"] = float(np.median(err[noM] / res[noM, 4])) if noM.any() else np.nan; out[f"g_{kname}_win_noM_max"] = float(np.max(err[noM] / res[noM, 4])) if noM.any() else np.nan; out["g_fsthick"] = a.fsthick
 o = a.out or f"results/epw/validation_{a.tag}.npz"; os.makedirs(os.path.dirname(o), exist_ok=True); np.savez(o, units="energies eV; |g| meV; phonons cm^-1; decay Ry", tag=a.tag, **out); print(f"saved {o}")

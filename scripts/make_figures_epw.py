@@ -78,13 +78,19 @@ if 300 in prod and os.path.exists("results/M/resonance_9x9.npz"):
 if a.control:
     fig, axs = plt.subplots(1, 2, figsize=(6.5, 3.2))
     for ax, kname, letter in ((axs[0], "G", "a"), (axs[1], "K", "b")):
-        g = V[f"g_{kname}"]; keep = (g[:, 4] > 20) & ~np.isclose(g[:, 0], 0.634, atol=0.003)     # q = M exclu (double comptage des groupes de modes)
+        EDg = float(V["bands_ED_epw"]); FS = float(V["g_fsthick"]) if "g_fsthick" in V.files else 3.5
+        g = V[f"g_{kname}"]; keep = (g[:, 4] > 20) & ~np.isclose(g[:, 0], 0.634, atol=0.003) & (np.abs(g[:, 1] - EDg) <= FS) & (np.abs(g[:, 2] - EDg) <= FS)   # q = M exclu (double comptage) ; états initial ET final dans la fenêtre fsthick (P18)
+        klab0 = r"$\Gamma$" if kname == "G" else "K"
+        if keep.sum() == 0: ax.set_title(klab0 + " : aucune somme dans la fenêtre", loc="left", fontsize=8); panel(ax, letter); print(f"[contrôle |g| k={kname}] aucune somme dans la fenêtre fsthick"); continue
         d, e = g[keep, 4], g[keep, 5]; rel = np.abs(e - d) / d
-        ax.loglog(d, e, "o", ms=3, color=C_EPW, label=rf"{keep.sum()} sommes, $q \in \{{{', '.join(fr(v, 3) for v in np.unique(np.round(g[keep,0],3)))}\}}$")
-        lim = [min(d.min(), e.min()) * 0.8, max(d.max(), e.max()) * 1.2]; ax.plot(lim, lim, color=MUTED, lw=0.8); ax.set_xlim(lim); ax.set_ylim(lim)
-        ax.set_xlabel(r"$G$ DFPT (meV)"); ax.set_ylabel(r"$G$ EPW (meV)"); klab = r"$\Gamma$" if kname == "G" else "K"; ax.set_title(rf"$k$ = {klab} : médiane {fr(np.median(rel)*100, 1)}\,\%, max {fr(rel.max()*100, 1)}\,\%", loc="left", fontsize=9); ax.legend(fontsize=6, loc="lower right"); panel(ax, letter)
-        print(f"[contrôle |g| k={kname}] {keep.sum()} sommes (G>20 meV, q=M exclu) : rel. médiane {np.median(rel):.2%}, max {rel.max():.2%}, |ΔG| max {np.abs(e-d).max():.2f} meV")
-    fig.tight_layout(); save(fig, "fig_epw_g_control")
+        nsum = int(keep.sum()); lab = rf"{nsum} somme{'s' if nsum > 1 else ''}, $s_q \in \{{{', '.join(fr(v, 3) for v in np.unique(np.round(g[keep,0],3)))}\}}$" + "\n" + rf"médiane {fr(np.median(rel)*100, 1)}\,\%, max {fr(rel.max()*100, 1)}\,\%"
+        lo, hi = min(d.min(), e.min()), max(d.max(), e.max()); wide = nsum >= 3 and hi / max(lo, 1e-9) > 10
+        if wide: ax.loglog(d, e, "o", ms=3, color=C_EPW, label=lab); lim = [lo * 0.8, hi * 1.2]
+        else: ax.plot(d, e, "o", ms=4, color=C_EPW, label=lab); lim = [lo * 0.7, hi * 1.3]
+        ax.plot(lim, lim, color=MUTED, lw=0.8); ax.set_xlim(lim); ax.set_ylim(lim)
+        ax.set_xlabel(r"$G$ DFPT (meV)"); ax.set_ylabel(r"$G$ EPW (meV)"); ax.set_title(rf"$k$ = {klab0}", loc="left", fontsize=9); fig.suptitle(rf"$|\varepsilon_k - E_D|$ et $|\varepsilon_{{k+q}} - E_D| \leq {fr(FS, 1)}$ eV (fenêtre fsthick), $G > 20$ meV, $q = M$ exclu", fontsize=8, y=0.985); ax.legend(fontsize=6, loc="upper left"); panel(ax, letter)
+        print(f"[contrôle |g| k={kname}] {keep.sum()} sommes (G>20 meV, q=M exclu, |E_k-E_D| et |E_k+q-E_D| <= {FS} eV) : rel. médiane {np.median(rel):.2%}, max {rel.max():.2%}, |ΔG| max {np.abs(e-d).max():.2f} meV")
+    fig.tight_layout(rect=(0, 0, 1, 0.97)); save(fig, "fig_epw_g_control")
 
 # ---------------- 4. fig_epw_phonselfen : γ_qν le long de Γ–K–M–Γ (300 K) + valeurs clés aux deux T
 PH = f"results/epw/phself_{a.phself_tag}.npz"

@@ -21,7 +21,7 @@ def virgule(ax):
     return None
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); ap.add_argument("--phself-tag", default="path_1200_dg0.02")
 ap.add_argument("--val-tag", default="24k24q", help="validation_<tag>.npz (bandes, phonons, décroissance, |g|)"); ap.add_argument("--sel-suffix", default="", help="suffixe des selfen de convergence : selfen_<k><suffixe>_T300.npz")
-ap.add_argument("--kohn-val-tags", default="24k24q,24k24q_mv0.02", help="tags des validation npz (matdyn) pour fig_epw_kohn_degauss, dans l'ordre"); ap.add_argument("--kohn-labels", default="degauss 0.002 Ry,degauss 0.02 Ry"); ap.add_argument("--dfpt-tag", default="24k24q", help="dfpt_path_freq_<tag>.npz (DFPT direct 16×16, 31 q)"); a = ap.parse_args()
+ap.add_argument("--kohn-val-tags", default="24k24q,24k24q_mv0.02", help="tags des validation npz (matdyn) pour fig_epw_kohn_degauss, dans l'ordre"); ap.add_argument("--kohn-sigmas", default="0.002,0.02", help="degauss (Ry) des chaînes matdyn, même ordre que --kohn-val-tags"); ap.add_argument("--dfpt-sigma", default="0.002", help="degauss (Ry) du run DFPT direct"); ap.add_argument("--dfpt-tag", default="24k24q", help="dfpt_path_freq_<tag>.npz (DFPT direct 16×16, 31 q)"); a = ap.parse_args()
 C_DFT, C_EPW, C_T, C_10K, MUTED = "#52514e", "#2a78d6", "#eb6834", "#1baf7a", "#8a8984"
 CONV_COL = {"120_dg0.01": "#eda100", "120_dg0.02": "#2a78d6", "120_dg0.05": "#e87ba4", "240_dg0.02": "#4a3aa7"}
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
@@ -41,13 +41,13 @@ def path_axis(ax):
 V = np.load(f"results/epw/validation_{a.val_tag}.npz", allow_pickle=True)
 ED = float(V["bands_ED_dft"]); s = V["bands_s"]; Ed = V["bands_E_dft"] - ED; Ee = V["bands_E_epw_on_dft"] - ED
 fig, (a1, a2) = plt.subplots(1, 2, figsize=(6.5, 3.4))
-for n in range(Ed.shape[1]): a1.plot(s, Ed[:, n], color=C_DFT, lw=1.0, label="DFT (bands.x)" if n == 0 else None)
-for n in range(Ee.shape[1]): a1.plot(s, Ee[:, n], color=C_EPW, lw=1.2, ls="--", label="EPW (Wannier, 24×24)" if n == 0 else None)
+for n in range(Ed.shape[1]): a1.plot(s, Ed[:, n], color=C_DFT, lw=1.0, label="DFT" if n == 0 else None)
+for n in range(Ee.shape[1]): a1.plot(s, Ee[:, n], color=C_EPW, lw=1.2, ls="--", label="EPW" if n == 0 else None)
 a1.axhline(0, color=MUTED, lw=0.8, ls=":"); a1.axhline(2.5, color=C_T, lw=0.8, ls=":"); a1.text(0.99, 2.6, r"fenêtre gelée $E_D+2.5$ eV", ha="right", va="bottom", fontsize=7, color=C_T)
 a1.set_ylim(-21, 9); a1.set_ylabel(LBL_E); a1.legend(fontsize=7, loc="lower left"); path_axis(a1); panel(a1, "a")
 CM2MEV = 1.0 / 8.06554; sq = V["ph_s"]; Fm = V["ph_F_matdyn"] * CM2MEV; Fe = V["ph_F_epw_on_matdyn"] * CM2MEV
-for m in range(6): a2.plot(sq, Fm[:, m], color=C_DFT, lw=1.0, label="DFPT (matdyn)" if m == 0 else None); a2.plot(sq, Fe[:, m], color=C_EPW, lw=1.2, ls="--", label="EPW (24×24 q)" if m == 0 else None)
-a2.set_ylabel(r"$\hbar\omega_{\mathbf{q}\nu}$ (meV)"); a2.set_ylim(0, 210); a2.legend(fontsize=7, loc="lower right"); path_axis(a2); panel(a2, "b")
+for m in range(6): a2.plot(sq, Fm[:, m], color=C_DFT, lw=1.0, label="DFPT" if m == 0 else None); a2.plot(sq, Fe[:, m], color=C_EPW, lw=1.2, ls="--", label="EPW" if m == 0 else None)
+a2.set_ylabel(r"$\hbar\omega_{\nu\mathbf{q}}$ (meV)"); a2.set_ylim(0, 210); a2.legend(fontsize=7, loc="lower right"); path_axis(a2); panel(a2, "b")
 fig.tight_layout(); save(fig, "fig_epw_validation")
 
 # ---------------- 2. Γ^ep(ε) : convergence + température
@@ -80,7 +80,7 @@ if a.control:
     for ax, kname, letter in ((axs[0], "G", "a"), (axs[1], "K", "b")):
         EDg = float(V["bands_ED_epw"]); FS = float(V["g_fsthick"]) if "g_fsthick" in V.files else 3.5
         g = V[f"g_{kname}"]; keep = (g[:, 4] > 20) & ~np.isclose(g[:, 0], 0.634, atol=0.003) & ~np.isclose(g[:, 0], 0.614, atol=0.003)   # toutes les sommes G > 20 meV ; q = M (s = 0.634) et son voisin s = 0.614 exclus (regroupement ambigu des modes) ; pas de filtre fsthick (clés _win_ du npz non utilisées)
-        klab0 = r"$\Gamma$" if kname == "G" else "K"
+        klab0 = r"\Gamma" if kname == "G" else "K"
         if keep.sum() == 0: ax.set_title(klab0 + " : aucune somme dans la fenêtre", loc="left", fontsize=8); panel(ax, letter); print(f"[contrôle |g| k={kname}] aucune somme dans la fenêtre fsthick"); continue
         d, e = g[keep, 4], g[keep, 5]; rel = np.abs(e - d) / d
         nsum = int(keep.sum()); lab = rf"{nsum} somme{'s' if nsum > 1 else ''}, $s_q \in \{{{', '.join(fr(v, 3) for v in np.unique(np.round(g[keep,0],3)))}\}}$" + "\n" + rf"médiane {fr(np.median(rel)*100, 1)}\,\%, max {fr(rel.max()*100, 1)}\,\%"
@@ -88,9 +88,9 @@ if a.control:
         if wide: ax.loglog(d, e, "o", ms=3, color=C_EPW, label=lab); lim = [lo * 0.8, hi * 1.2]
         else: ax.plot(d, e, "o", ms=4, color=C_EPW, label=lab); lim = [lo * 0.7, hi * 1.3]
         ax.plot(lim, lim, color=MUTED, lw=0.8); ax.set_xlim(lim); ax.set_ylim(lim)
-        ax.set_xlabel(r"$G$ DFPT (meV)"); ax.set_ylabel(r"$G$ EPW (meV)"); ax.set_title(rf"$k$ = {klab0}", loc="left", fontsize=9); fig.suptitle(r"Toutes les sommes $G > 20$ meV ; exclus : $q = M$ ($s_q = 0.634$) et son voisin $s_q = 0.614$ (regroupement ambigu des modes)", fontsize=8, y=0.985); ax.legend(fontsize=6, loc="lower right"); panel(ax, letter)
+        ax.set_xlabel(r"$G$ DFPT (meV)"); ax.set_ylabel(r"$G$ EPW (meV)"); ax.set_title(rf"$\mathbf{{k}} = {klab0}$", loc="left", fontsize=9); panel(ax, letter)
         print(f"[contrôle |g| k={kname}] {keep.sum()} sommes (G>20 meV, q=M et s=0.614 exclus, sans filtre fsthick) : rel. médiane {np.median(rel):.2%}, max {rel.max():.2%} (à s = {g[keep, 0][np.argmax(rel)]:.3f}), |ΔG| max {np.abs(e-d).max():.2f} meV")
-    fig.tight_layout(rect=(0, 0, 1, 0.97)); save(fig, "fig_epw_g_control")
+    fig.tight_layout(); save(fig, "fig_epw_g_control")
 
 # ---------------- 4. fig_epw_phonselfen : γ_qν le long de Γ–K–M–Γ (300 K) + valeurs clés aux deux T
 PH = f"results/epw/phself_{a.phself_tag}.npz"
@@ -108,7 +108,7 @@ if os.path.exists(PH):
     print(f"[phonselfen] E2g(Gamma) = modes {mE[0]+1}+{mE[1]+1} ({om[iG, mE].mean():.2f} meV), A1'(K) = mode {mA+1} ({om[iK, mA]:.2f} meV, plus grand gamma à K)")
     c1.annotate(r"E$_{2g}$", (s[iG], gam[i300, iG, mE[0]]), xytext=(6, 4), textcoords="offset points", fontsize=8)
     c1.annotate(r"A$_1'$", (s[iK], gam[i300, iK, mA]), xytext=(6, -2), textcoords="offset points", fontsize=8)
-    c1.set_ylabel(r"$\gamma_{\mathbf{q}\nu}$ (meV, largeur totale)"); c1.set_title(rf"$T$ = 300 K, {int(P['nkf'])}$^2$ $k$, $\sigma$ = {fr(float(P['degaussw']))} eV", loc="left", fontsize=9)
+    c1.set_ylabel(r"$\gamma_{\nu\mathbf{q}}$ (meV, largeur totale)"); c1.set_title(rf"$T$ = 300 K, {int(P['nkf'])}$^2$ $k$, $\sigma$ = {fr(float(P['degaussw']))} eV", loc="left", fontsize=9)
     c1.legend(fontsize=7, loc="upper right", title="branches (tri en fréquence)", title_fontsize=7, ncol=2); path_axis(c1); panel(c1, "a")
     vals = {r"E$_{2g}$ ($\Gamma$)": (gam[i10, iG, mE].mean(), gam[i300, iG, mE].mean()), r"A$_1'$ (K)": (gam[i10, iK, mA], gam[i300, iK, mA])}
     x = np.arange(len(vals)); w = 0.36
@@ -121,14 +121,14 @@ if os.path.exists(PH):
 # ---------------- 5. fig_epw_decay : décroissance de H, D et g en représentation de Wannier (chaîne 24k-24q, epw1/decay.*)
 # Données : validation_24k24q.npz (decay_<q>_r en Å, decay_<q>_v en Ry tel qu'écrit par EPW), converties en eV (× RY2EV) sur l'axe y.
 # Étiquettes en convention du mémoire (ch. 2) : atome α, direction μ ; en espace réel C = constantes de force (EPW « dynmat », masses identiques :
-# facteur global) et pas d'indice de branche ν (il n'apparaît qu'après recombinaison par les vecteurs propres) ; g_{mn}, m final, n initial.
+# facteur global) et pas d'indice de branche ν (il n'apparaît qu'après recombinaison par les vecteurs propres) ; g_{ij}, i final, j initial.
 RY2EV = 13.605693122994
 if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
     a_A = 2.4659; ws_in = 24 * a_A / 2; ws_out = 24 * a_A / np.sqrt(3)          # demi-largeur (apothème) et rayon (sommet) de la cellule WS de la supercellule 24×24
-    spec = [("H", r"$|R_e|$ (\AA)", r"max$_{nm}\,|H_{nm}(R_e)|$ (eV)", r"$H$ : hamiltonien", "#2a78d6"),
+    spec = [("H", r"$|R_e|$ (\AA)", r"max$_{ij}\,|H_{ij}(R_e)|$ (eV)", r"$H$ : Hamiltonien", "#2a78d6"),
             ("dynmat", r"$|R_p|$ (\AA)", r"max$_{\alpha\mu,\alpha'\mu'}\,|C_{\alpha\mu,\alpha'\mu'}(R_p)|$ (eV)", r"$C$ : constantes de force", "#1baf7a"),
-            ("epmate", r"$|R_e|$ (\AA)", r"max$_{mn,\alpha\mu}\,|g_{mn}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté électron ($R_e$)", "#eb6834"),
-            ("epmatp", r"$|R_p|$ (\AA)", r"max$_{mn,\alpha\mu}\,|g_{mn}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté phonon ($R_p$)", "#eda100")]
+            ("epmate", r"$|R_e|$ (\AA)", r"max$_{ij,\alpha\mu}\,|g_{ij}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté électron ($R_e$)", "#eb6834"),
+            ("epmatp", r"$|R_p|$ (\AA)", r"max$_{ij,\alpha\mu}\,|g_{ij}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté phonon ($R_p$)", "#eda100")]
     fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=False); axs = axs.ravel()
     stats = {}
     for i, (key, xl, yl, title, col) in enumerate(spec):
@@ -145,19 +145,19 @@ if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
     fig.tight_layout(); save(fig, "fig_epw_decay")
 
 # ---------------- 6. fig_epw_kohn_degauss : deux branches optiques les plus hautes sur Γ–K–M–Γ, matdyn (degauss 0.002 / 0.02 Ry) et DFPT direct 16×16 (31 q)
-KV = [(t, l) for t, l in zip(a.kohn_val_tags.split(","), a.kohn_labels.split(",")) if os.path.exists(f"results/epw/validation_{t}.npz")]
+KV = [(t, l) for t, l in zip(a.kohn_val_tags.split(","), a.kohn_sigmas.split(",")) if os.path.exists(f"results/epw/validation_{t}.npz")]
 DF = f"results/epw/dfpt_path_freq_{a.dfpt_tag}.npz"
 if KV and os.path.exists(DF):
     fig, ax = plt.subplots(figsize=(6.5, 3.6)); KCOL = ["#52514e", "#eb6834", "#2a78d6"]
     for i, (t, l) in enumerate(KV):
         Vt = np.load(f"results/epw/validation_{t}.npz", allow_pickle=True); Ft = Vt["ph_F_matdyn"] * CM2MEV
-        for m in (4, 5): ax.plot(Vt["ph_s"], Ft[:, m], color=KCOL[i], lw=1.2, label=rf"matdyn 24$\times$24 q, {l}" if m == 4 else None)
+        for m in (4, 5): ax.plot(Vt["ph_s"], Ft[:, m], color=KCOL[i], lw=1.2, label=rf"24$\times$24 $\mathbf{{k}}$, $\sigma$ = {l} Ry" if m == 4 else None)
     D = np.load(DF, allow_pickle=True); Fd = D["freq"] * CM2MEV
-    for m in (4, 5): ax.plot(D["s"], Fd[:, m], "o", color=KCOL[2], ms=3.2, label=rf"DFPT direct, 16$\times$16 $k$ ({len(D['s'])} $q$)" if m == 4 else None)
-    ax.set_ylabel(r"$\hbar\omega_{\mathbf{q}\nu}$ (meV)"); ax.set_title(r"Branches optiques $\nu$ = 5, 6 : anomalies de Kohn selon degauss", loc="left", fontsize=9); ax.legend(fontsize=7, loc="lower left"); path_axis(ax)
+    for m in (4, 5): ax.plot(D["s"], Fd[:, m], "o", color=KCOL[2], ms=3.2, label=rf"16$\times$16 $\mathbf{{k}}$, $\sigma$ = {a.dfpt_sigma} Ry" if m == 4 else None)
+    ax.set_ylabel(r"$\hbar\omega_{\nu\mathbf{q}}$ (meV)"); ax.set_title(r"Anomalies de Kohn en fonction de l'élargissement de Marzari-Vanderbilt $\sigma$", loc="left", fontsize=9); ax.legend(fontsize=7, loc="lower left"); path_axis(ax)
     for t, l in KV:
         Vt = np.load(f"results/epw/validation_{t}.npz", allow_pickle=True); sq = Vt["ph_s"]; F = Vt["ph_F_matdyn"]; iG = int(np.argmin(sq)); iK = int(np.argmin(np.abs(sq - TICKS[1]))); iM = int(np.argmin(np.abs(sq - TICKS[2])))
-        print(f"[kohn {t} ({l})] matdyn omega(Gamma) = {F[iG, 4]:.2f}/{F[iG, 5]:.2f} cm^-1 ; omega(K), 6 modes = {np.round(F[iK], 2).tolist()} ; omega(M) LO/TO = {F[iM, 4]:.2f}/{F[iM, 5]:.2f} cm^-1")
+        print(f"[kohn {t} (sigma {l} Ry)] matdyn omega(Gamma) = {F[iG, 4]:.2f}/{F[iG, 5]:.2f} cm^-1 ; omega(K), 6 modes = {np.round(F[iK], 2).tolist()} ; omega(M) LO/TO = {F[iM, 4]:.2f}/{F[iM, 5]:.2f} cm^-1")
     iK = int(np.argmin(np.abs(D["s"] - TICKS[1]))); iM = int(np.argmin(np.abs(D["s"] - TICKS[2])))
     print(f"[kohn dfpt {a.dfpt_tag}] omega(Gamma) = {D['freq'][0, 4]:.2f}/{D['freq'][0, 5]:.2f} ; omega(K), 6 modes = {np.round(D['freq'][iK], 2).tolist()} ; omega(M) = {D['freq'][iM, 4]:.2f}/{D['freq'][iM, 5]:.2f} cm^-1")
     fig.tight_layout(); save(fig, "fig_epw_kohn_degauss")

@@ -317,3 +317,18 @@ EPW, la production 240² à 300 K, la chaîne degauss 0.02 et la branche ν = 6 
 ν = 5 et la fenêtre gelée ; références DFT/DFPT en gris moyen épaissi sous le tireté marine ; 10 K en vert ; convergence
 120² à 0.01/0.02/0.05 eV en jaune/bleu ciel/rose. Toutes les figures EPW génériques régénérées ; les `_mv0.002` gardent
 l'ancienne palette (chaîne 0.002, non régénérées). Chiffres inchangés.
+
+**fig_epw_phonons (2026-09-21, remplace l'ancienne figure phonons + DOS du chapitre 5)** : (a) dispersion matdyn sur Γ–K–M–Γ
+(mêmes IFC `24k-24q_mv0.02/phonons/graphene.ifc.xml` que fig_epw_validation / fig_epw_kohn_degauss, 125 points par segment,
+`ph_s`/`ph_F_matdyn` de `validation_24k24q_mv0.02.npz`), (b) DOS matdyn `dos=.true.` sur grille 500×500×1, ΔE = 1 cm⁻¹,
+degauss DOS = 3 cm⁻¹, asr crystal (`matdyn.dos.in`, job 21528485, 10 min 28 s, 1 tâche 4 Go ; sorties `graphene.dos`,
+`graphene.dos.freq`, `graphene.dos.modes` 32 Mo, rien d'écrasé) → `results/epw/phdos_24k24q_mv0.02.npz`
+(`scripts/epw_phdos_extract.py`, paramètres lus dans matdyn.dos.in / scf.in / ph.in). Titres de la figure = paramètres réels :
+24×24 k, 24×24 q, σ_MV = 0.02 Ry (électronique, scf.in) ; l'ancienne légende « σ = 0.01 Ry ≈ 1100 cm⁻¹ » confondait le degauss
+MV électronique (0.01 Ry dans l'ancienne chaîne 27×27 k / 16×16 q de `graphene/qe/`) avec l'élargissement de la DOS (3 cm⁻¹).
+Chiffres bruts : ω(Γ) = 0/0/0/875.91/1550.51/1550.51 ; ω(K) = 532.62/532.62/996.41/1216.38/1216.38/1274.81 ;
+ω(M) = 469.97/625.16/632.27/1331.06/1343.18/1393.64 cm⁻¹ ; ω max chemin 1603.88 ; DOS : 1605 points 0–1604 cm⁻¹, pics
+1602 (0.0168), 1394, 468 cm⁻¹ ; intégrale ΣDOS·ΔE = 3.784 (0–1000 : 2.171 ; 1000–1700 : 1.613), contre 3.940 pour l'ancienne
+DOS — pas 3·nat = 6 : normalisation de matdyn à vérifier avant de citer une valeur absolue de DOS (l'unité de l'axe reste
+« états/cm⁻¹ » telle qu'écrite par matdyn, sans rescalage). Commande de production : ajouter `--phdos-tag 24k24q_mv0.02`
+(défaut = --val-tag).

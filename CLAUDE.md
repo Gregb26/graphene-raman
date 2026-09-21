@@ -243,7 +243,9 @@ utilisent `assume_isolated='2D'` (vérifié dans les scf.out : « running with t
 ## Chapitre 5 — couplage électron-phonon (EPW)
 
 Les calculs EPW vivent hors dépôt dans `graphene/qe/epw/` (voisin du dépôt) ; l'état courant des jobs est dans
-`graphene/qe/epw/NOTES_EPW.md` et les repères durables dans `graphene/qe/epw/CLAUDE.md` (grille 24k-24q,
-degauss 0.002 Ry, décisions arbitrées, conventions Γ^ep = 2 Im Σ, chemin q cartésien dans ph.x, piège OOM d'epw1).
+`NOTES_EPW.md` et les repères durables dans `NOTES_EPW_REPERES.md` (tous deux à la racine du dépôt ; les anciens
+`graphene/qe/epw/NOTES_EPW.md` et `graphene/qe/epw/CLAUDE.md` sont des liens symboliques vers eux) : grilles 24k-24q à
+degauss 0.002 et 0.02 Ry, décisions arbitrées, conventions Γ^ep = 2 Im Σ, chemin q cartésien dans ph.x, piège OOM d'epw1,
+sélection A1'/E2g par caractère jamais par index. Le volet t/Γ (chapitre 4) a son pendant dans `NOTES_TGAMMA.md`.
 Scripts versionnés ici : `scripts/epw_pp_save.py`, `scripts/epw_validate.py`, `scripts/epw_extract_gkk.py`,
 `scripts/submit_epw_p1_post.sh` ; résultats dans `results/epw/` (npz de validation commis, logs non).

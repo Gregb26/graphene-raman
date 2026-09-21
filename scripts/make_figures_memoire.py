@@ -20,9 +20,9 @@ from scipy.spatial import Voronoi
 from electron_defect_interaction.config import load_production
 
 plt.style.use("figures/memoire.mplstyle")
-COL = {"5x5": "#2a78d6", "7x7": "#eb6834", "8x8": "#1baf7a", "9x9": "#eda100", "6x6": "#e87ba4", "12x12": "#4a3aa7"}
+from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
 FAM3 = {"6x6", "9x9", "12x12"}
-C_T, C_BORN, C_REF, C_DIS = "#2a78d6", "#eb6834", "#52514e", "#1baf7a"; INK = "#0b0b0b"; MUTED = "#8a8984"
+C_T, C_BORN, C_REF, C_DIS = NAVY, ORANGE, REF, GREEN
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"; LBL_G = r"$\Gamma\,N_\mathrm{cells}$ (meV)"
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); a = ap.parse_args()
 cfg = load_production(); RC, GRID, ETA = cfg["R_cut"], cfg["grid"], cfg["eta_eV"]; REF = cfg["reference_size"]
@@ -49,7 +49,7 @@ ax1.set_xlabel(r"Rayon de coupure $R_\mathrm{cut}$ (mailles)"); ax1.set_ylabel(L
 ax1.set_title(rf"Grille $k$ {GRID}$\times${GRID}, $\eta$ = {ETA} eV", loc="left", fontsize=9); ax1.legend(title="Super-cellule", ncol=1, fontsize=7, title_fontsize=8, loc="upper right", borderaxespad=0.3); panel(ax1, "a")
 m = maps[REF]; grids = sorted({k[1] for k in m}); etas = sorted({k[2] for k in m}, reverse=True)
 Z = np.array([[m[(RC, N, e)] for e in etas] for N in grids]); ref = Z[grids.index(GRID), etas.index(ETA)]; D = (Z / ref - 1) * 100; vmax = max(5, np.abs(D).max())
-im = ax2.imshow(np.abs(D), cmap="Blues", vmin=0, vmax=vmax, origin="lower", aspect="auto")
+im = ax2.imshow(np.abs(D), cmap=CMAP_SEQ, vmin=0, vmax=vmax, origin="lower", aspect="auto")
 ax2.set_xticks(range(len(etas))); ax2.set_xticklabels([f"{e:g}" for e in etas]); ax2.set_yticks(range(len(grids))); ax2.set_yticklabels([rf"{N}$^2$" for N in grids]); ax2.grid(False)
 for i in range(len(grids)):
     for j in range(len(etas)): ax2.text(j, i, f"{Z[i,j]:.0f}\n({D[i,j]:+.1f}\\,\\%)", ha="center", va="center", fontsize=8, color=INK if abs(D[i, j]) < 0.6 * vmax else "white")
@@ -96,7 +96,7 @@ lo = min(0.0, Zm["map_Lpar"].min(), Zm["map_Npar"].min()); hi = max(Zm["map_Lpar
 specs = ((0, "map_Vpi", r"$\pi$", 0, vmax), (1, "map_Vpistar", r"$\pi^*$", 0, vmax),
          (2, "map_Lpar", r"partie locale projetée sur $M$", lo, hi), (3, "map_Npar", r"partie non locale projetée sur $M$", lo, hi))
 for i, key, title, vlo, vhi in specs:
-    ax = axs[i]; sc = ax.scatter(Zm["map_kx"], Zm["map_ky"], c=Zm[key], cmap="Blues", vmin=vlo, vmax=vhi, s=22, marker="h", linewidths=0)
+    ax = axs[i]; sc = ax.scatter(Zm["map_kx"], Zm["map_ky"], c=Zm[key], cmap=CMAP_SEQ, vmin=vlo, vmax=vhi, s=22, marker="h", linewidths=0)
     ax.add_patch(Polygon(hexa, closed=True, fill=False, ec=MUTED, lw=0.8)); ax.plot(*Zm["map_K"], "o", mfc="none", mec=C_BORN, mew=1.2, ms=8)
     ax.annotate("$K$", Zm["map_K"], xytext=(6, 4), textcoords="offset points", color=C_BORN, fontsize=10)
     ax.set_aspect("equal"); ax.set_title(title, loc="left", fontsize=10); panel(ax, "abcd"[i])
@@ -119,7 +119,7 @@ fig = plt.figure(figsize=(6.5, 6.0)); gs = fig.add_gridspec(2, 2, height_ratios=
 axa, axb, axc = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, :])
 vmax = max(np.abs(V["5x5_map"]).max(), np.abs(V["9x9_map"]).max()); norm = SymLogNorm(linthresh=LIN, vmin=-vmax, vmax=vmax, base=10)
 for ax, S, let in ((axa, "5x5", "a"), (axb, "9x9", "b")):
-    pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap="RdBu_r", shading="nearest", rasterized=True)
+    pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap=CMAP_DIV, shading="nearest", rasterized=True)
     ax.set_aspect("equal"); ax.set_xlabel(r"$x$ (Å)"); ax.set_title(rf"{lab(S)}, plan $z = z_\mathrm{{C}}$", loc="left", fontsize=9); panel(ax, let)
 axa.set_ylabel(r"$y$ (Å)"); axb.tick_params(labelleft=False)
 cb = fig.colorbar(pc, ax=[axa, axb], shrink=1.0, pad=0.02, aspect=16); cb.ax.tick_params(labelsize=7); cb.set_label("$V_\\mathrm{ed}^L$ (eV)\nsymlog, lin. entre $\\pm10^{-2}$ eV", fontsize=7)

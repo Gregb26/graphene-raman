@@ -19,13 +19,12 @@ from matplotlib.patches import Polygon
 from electron_defect_interaction.config import load_production
 
 plt.style.use("figures/memoire.mplstyle")
-# palette catégorielle fixe (ordre du cycler) : taille -> teinte, jamais recyclée
-COL = {"5x5": "#2a78d6", "7x7": "#eb6834", "8x8": "#1baf7a", "9x9": "#eda100", "6x6": "#e87ba4", "12x12": "#4a3aa7"}
+# palette catégorielle fixe (scripts/_palette.py, principale = bleu marine) : taille -> teinte, jamais recyclée ; 9×9 (référence) porte la principale
+from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
 FAM3 = set(cfg_fam) if (cfg_fam := None) else {"6x6", "9x9", "12x12"}   # famille N = 3m (K se replie sur Γ)
 def famlab(S): return lab(S)                      # (mention N = 3m retirée des figures, 2026-09-15)
 def mk(S): return "o"
-C_T, C_BORN, C_REF, C_DIS = "#2a78d6", "#eb6834", "#52514e", "#1baf7a"
-INK = "#0b0b0b"; MUTED = "#8a8984"
+C_T, C_BORN, C_REF, C_DIS = NAVY, ORANGE, REF, GREEN
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
 LBL_G = r"Taux d'amortissement $\Gamma\,N_\mathrm{cells}$ (meV)"
 
@@ -71,7 +70,7 @@ if maps:
     S = cfg["reference_size"]
     if S in maps:
         Z = np.array([[maps[S][(RC, N, e)][0] for e in etas] for N in grids]); ref = Z[-1, etas.index(ETA)]; D = (Z / ref - 1) * 100; vmax = max(5, np.abs(D).max())
-        fig, ax = plt.subplots(figsize=(6.0, 4.4)); im = ax.imshow(np.abs(D), cmap="Blues", vmin=0, vmax=vmax, origin="lower")
+        fig, ax = plt.subplots(figsize=(6.0, 4.4)); im = ax.imshow(np.abs(D), cmap=CMAP_SEQ, vmin=0, vmax=vmax, origin="lower")
         ax.set_xticks(range(len(etas))); ax.set_xticklabels([f"{e:g}" for e in etas]); ax.set_yticks(range(len(grids))); ax.set_yticklabels([rf"{N}$^2$" for N in grids]); ax.grid(False)
         for i in range(len(grids)):
             for j in range(len(etas)):
@@ -140,7 +139,7 @@ if os.path.exists(a.analysis):
     specs = ((0, "map_Vpi", r"$n' = \pi(k')$ : $A_\mathrm{cell}|M|$", 0, vmax), (1, "map_Vpistar", r"$n' = \pi^*(k')$ : $A_\mathrm{cell}|M|$", 0, vmax),
              (2, "map_Lpar", r"$\pi$ : $M^L$ le long de $M$", lo, hi), (3, "map_Npar", r"$\pi$ : $M^{NL}$ le long de $M$", lo, hi))
     for i, key, title, vlo, vhi in specs:
-        ax = axs[i]; sc = ax.scatter(Z["map_kx"], Z["map_ky"], c=Z[key], cmap="Blues", vmin=vlo, vmax=vhi, s=22, marker="h", linewidths=0)
+        ax = axs[i]; sc = ax.scatter(Z["map_kx"], Z["map_ky"], c=Z[key], cmap=CMAP_SEQ, vmin=vlo, vmax=vhi, s=22, marker="h", linewidths=0)
         ax.add_patch(Polygon(hexa, closed=True, fill=False, ec=MUTED, lw=0.8)); ax.plot(*Z["map_K"], "o", mfc="none", mec=C_BORN, mew=1.2, ms=8)
         ax.annotate("$K$", Z["map_K"], xytext=(6, 4), textcoords="offset points", color=C_BORN, fontsize=10)
         ax.set_aspect("equal"); ax.set_title(title, loc="left", fontsize=10); panel(ax, "abcd"[i])
@@ -197,7 +196,7 @@ if os.path.exists(vf):
     fig, axs = plt.subplots(1, 2, figsize=(6.5, 3.4), layout="constrained")
     vmax = max(np.abs(V["5x5_map"]).max(), np.abs(V["9x9_map"]).max()); norm = SymLogNorm(linthresh=LIN, vmin=-vmax, vmax=vmax, base=10)
     for ax, S, let in ((axs[0], "5x5", "a"), (axs[1], "9x9", "b")):
-        pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap="RdBu_r", shading="nearest", rasterized=True)
+        pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap=CMAP_DIV, shading="nearest", rasterized=True)
         ax.set_aspect("equal"); ax.set_xlabel(r"$x$ (Å)"); ax.set_title(rf"{lab(S)}, plan $z = z_\mathrm{{C}}$", loc="left", fontsize=10); panel(ax, let)
     axs[0].set_ylabel(r"$y$ (Å)"); cb = fig.colorbar(pc, ax=axs, shrink=0.9); cb.set_label(r"$V_\mathrm{ed}^L$ (eV), échelle symlog")
     save(fig, "fig_Ved_map")
@@ -231,7 +230,7 @@ if os.path.exists(vf) and "9x9_rad_masked" in np.load(vf):
         Xm, Ym, Vm = V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"]; sel = (np.abs(Xm) <= Z) & (np.abs(Ym) <= Z); vmax = max(vmax, np.abs(Vm[sel]).max())
     norm = SymLogNorm(linthresh=LIN, vmin=-vmax, vmax=vmax, base=10)
     for ax, S, let in ((axs[0], "8x8", "a"), (axs[1], "9x9", "b")):
-        pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap="RdBu_r", shading="nearest", rasterized=True)
+        pc = ax.pcolormesh(V[f"{S}_map_X"], V[f"{S}_map_Y"], V[f"{S}_map"], norm=norm, cmap=CMAP_DIV, shading="nearest", rasterized=True)
         at = V[f"{S}_atoms_xy"]; ax.plot(at[:, 0], at[:, 1], "o", mfc="none", mec=INK, mew=0.7, ms=5); ax.plot(0, 0, "x", color=INK, ms=6)
         ax.set_xlim(-Z, Z); ax.set_ylim(-Z, Z); ax.set_aspect("equal"); ax.set_xlabel(r"$x$ (Å)"); ax.set_title(rf"{lab(S)}, plan $z = z_\mathrm{{C}}$", loc="left", fontsize=10); panel(ax, let)
     axs[0].set_ylabel(r"$y$ (Å)"); cb = fig.colorbar(pc, ax=axs, shrink=0.9); cb.set_label(r"$V_\mathrm{ed}^L$ (eV), échelle symlog")

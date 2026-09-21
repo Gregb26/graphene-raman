@@ -22,8 +22,10 @@ def virgule(ax):
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); ap.add_argument("--phself-tag", default="path_1200_dg0.02")
 ap.add_argument("--val-tag", default="24k24q", help="validation_<tag>.npz (bandes, phonons, décroissance, |g|)"); ap.add_argument("--sel-suffix", default="", help="suffixe des selfen de convergence : selfen_<k><suffixe>_T300.npz")
 ap.add_argument("--kohn-val-tags", default="24k24q,24k24q_mv0.02", help="tags des validation npz (matdyn) pour fig_epw_kohn_degauss, dans l'ordre"); ap.add_argument("--kohn-sigmas", default="0.002,0.02", help="degauss (Ry) des chaînes matdyn, même ordre que --kohn-val-tags"); ap.add_argument("--dfpt-sigma", default="0.002", help="degauss (Ry) du run DFPT direct"); ap.add_argument("--dfpt-tag", default="24k24q", help="dfpt_path_freq_<tag>.npz (DFPT direct 16×16, 31 q)"); a = ap.parse_args()
-C_DFT, C_EPW, C_T, C_10K, MUTED = "#52514e", "#2a78d6", "#eb6834", "#1baf7a", "#8a8984"
-CONV_COL = {"120_dg0.01": "#eda100", "120_dg0.02": "#2a78d6", "120_dg0.05": "#e87ba4", "240_dg0.02": "#4a3aa7"}
+from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
+# principale (marine) = EPW / production 240², 300 K ; C_T = Γ^ep 300 K (fig_gamma b, vs_ed, barres) ; orange = référence directe (DFPT prt), Γ^ed, fenêtre gelée
+C_DFT, C_EPW, C_T, C_10K, C_ED, C_WIN = MUTED, NAVY, NAVY, GREEN, ORANGE, ORANGE   # référence en gris moyen, plus épaisse, sous le marine tireté
+CONV_COL = {"120_dg0.01": GOLD, "120_dg0.02": SKY, "120_dg0.05": PINK, "240_dg0.02": NAVY}
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
 # chemin Γ–K–M–Γ : longueurs |ΓK| = 2/3, |KM| = 1/3, |MΓ| = 1/√3 (unités 2π/a)
 L = np.array([2 / 3, 1 / 3, 1 / np.sqrt(3)]); TICKS = np.concatenate([[0], np.cumsum(L)]) / L.sum(); TLAB = [r"$\Gamma$", "K", "M", r"$\Gamma$"]
@@ -41,12 +43,12 @@ def path_axis(ax):
 V = np.load(f"results/epw/validation_{a.val_tag}.npz", allow_pickle=True)
 ED = float(V["bands_ED_dft"]); s = V["bands_s"]; Ed = V["bands_E_dft"] - ED; Ee = V["bands_E_epw_on_dft"] - ED
 fig, (a1, a2) = plt.subplots(1, 2, figsize=(6.5, 3.4))
-for n in range(Ed.shape[1]): a1.plot(s, Ed[:, n], color=C_DFT, lw=1.0, label="DFT" if n == 0 else None)
+for n in range(Ed.shape[1]): a1.plot(s, Ed[:, n], color=C_DFT, lw=1.8, label="DFT" if n == 0 else None)
 for n in range(Ee.shape[1]): a1.plot(s, Ee[:, n], color=C_EPW, lw=1.2, ls="--", label="EPW" if n == 0 else None)
-a1.axhline(0, color=MUTED, lw=0.8, ls=":"); a1.axhline(2.5, color=C_T, lw=0.8, ls=":"); a1.text(0.99, 2.6, r"fenêtre gelée $E_D+2.5$ eV", ha="right", va="bottom", fontsize=7, color=C_T)
+a1.axhline(0, color=MUTED, lw=0.8, ls=":"); a1.axhline(2.5, color=C_WIN, lw=0.8, ls=":"); a1.text(0.99, 2.6, r"fenêtre gelée $E_D+2.5$ eV", ha="right", va="bottom", fontsize=7, color=C_WIN)
 a1.set_ylim(-21, 9); a1.set_ylabel(LBL_E); a1.legend(fontsize=7, loc="lower left"); path_axis(a1); panel(a1, "a")
 CM2MEV = 1.0 / 8.06554; sq = V["ph_s"]; Fm = V["ph_F_matdyn"] * CM2MEV; Fe = V["ph_F_epw_on_matdyn"] * CM2MEV
-for m in range(6): a2.plot(sq, Fm[:, m], color=C_DFT, lw=1.0, label="DFPT" if m == 0 else None); a2.plot(sq, Fe[:, m], color=C_EPW, lw=1.2, ls="--", label="EPW" if m == 0 else None)
+for m in range(6): a2.plot(sq, Fm[:, m], color=C_DFT, lw=1.8, label="DFPT" if m == 0 else None); a2.plot(sq, Fe[:, m], color=C_EPW, lw=1.2, ls="--", label="EPW" if m == 0 else None)
 a2.set_ylabel(r"$\hbar\omega_{\nu\mathbf{q}}$ (meV)"); a2.set_ylim(0, 210); a2.legend(fontsize=7, loc="lower right"); path_axis(a2); panel(a2, "b")
 fig.tight_layout(); save(fig, "fig_epw_validation")
 
@@ -69,7 +71,7 @@ if conv:
 if 300 in prod and os.path.exists("results/M/resonance_9x9.npz"):
     x, G, R = load_sel(prod[300]); M = np.load("results/M/resonance_9x9.npz", allow_pickle=True); c = float(M["conc"]); xe = M["eg"] - float(M["E_D"])
     fig, ax = plt.subplots(figsize=(6.5, 3.6))
-    ax.semilogy(xe, c * M["Gamma_T"] * 1e3, color=C_EPW, label=rf"$\Gamma^{{ed}}$, lacune, $c$ = {c*100:.0f}\,\% (matrice $T$, 9$\times$9, $\eta$ = {fr(float(M['eta']))} eV)")
+    ax.semilogy(xe, c * M["Gamma_T"] * 1e3, color=C_ED, label=rf"$\Gamma^{{ed}}$, lacune, $c$ = {c*100:.0f}\,\% (matrice $T$, 9$\times$9, $\eta$ = {fr(float(M['eta']))} eV)")
     ax.semilogy(x, G, color=C_T, label=rf"$\Gamma^{{ep}}$, $T$ = 300 K (EPW, {int(R['n_mesh'])}$^2$, $\sigma$ = {fr(float(R['degaussw']))} eV)")
     ax.set_xlabel(LBL_E); ax.set_ylabel(r"$\Gamma$ (meV)"); ax.axvline(0, color=MUTED, lw=0.8, ls=":"); ax.legend(fontsize=8); ax.set_xlim(-3, 3)
     fig.tight_layout(); save(fig, "fig_epw_vs_ed")
@@ -98,7 +100,7 @@ if os.path.exists(PH):
     import electron_defect_interaction.electron_phonon.phself as _ph
     P = np.load(PH, allow_pickle=True); T = P["T"]; s = P["s"]; om = P["omega"]; gam = P["gamma_fwhm"]; i300 = int(np.argmin(np.abs(T - 300))); i10 = int(np.argmin(np.abs(T - 10)))
     fig, (c1, c2) = plt.subplots(1, 2, figsize=(6.5, 3.4), gridspec_kw={"width_ratios": [2.2, 1]})
-    BR_COL = ["#b5b4b0", "#8a8984", "#52514e", "#1baf7a", "#eda100", "#eb6834"]
+    BR_COL = [LIGHT, MUTED, REF, GREEN, ORANGE, NAVY]
     for m in range(6):
         g = gam[i300, :, m].copy()
         if m < 3: g[om[:, m] < 5.0] = np.nan                 # branches acoustiques : divergence q→0 sous smearing, masquées près de Γ
@@ -125,10 +127,10 @@ if os.path.exists(PH):
 RY2EV = 13.605693122994
 if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
     a_A = 2.4659; ws_in = 24 * a_A / 2; ws_out = 24 * a_A / np.sqrt(3)          # demi-largeur (apothème) et rayon (sommet) de la cellule WS de la supercellule 24×24
-    spec = [("H", r"$|R_e|$ (\AA)", r"max$_{ij}\,|H_{ij}(R_e)|$ (eV)", r"$H$ : Hamiltonien", "#2a78d6"),
-            ("dynmat", r"$|R_p|$ (\AA)", r"max$_{\alpha\mu,\alpha'\mu'}\,|C_{\alpha\mu,\alpha'\mu'}(R_p)|$ (eV)", r"$C$ : constantes de force", "#1baf7a"),
-            ("epmate", r"$|R_e|$ (\AA)", r"max$_{ij,\alpha\mu}\,|g_{ij}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté électron ($R_e$)", "#eb6834"),
-            ("epmatp", r"$|R_p|$ (\AA)", r"max$_{ij,\alpha\mu}\,|g_{ij}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté phonon ($R_p$)", "#eda100")]
+    spec = [("H", r"$|R_e|$ (\AA)", r"max$_{ij}\,|H_{ij}(R_e)|$ (eV)", r"$H$ : Hamiltonien", NAVY),
+            ("dynmat", r"$|R_p|$ (\AA)", r"max$_{\alpha\mu,\alpha'\mu'}\,|C_{\alpha\mu,\alpha'\mu'}(R_p)|$ (eV)", r"$C$ : constantes de force", GREEN),
+            ("epmate", r"$|R_e|$ (\AA)", r"max$_{ij,\alpha\mu}\,|g_{ij}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté électron ($R_e$)", ORANGE),
+            ("epmatp", r"$|R_p|$ (\AA)", r"max$_{ij,\alpha\mu}\,|g_{ij}^{(\alpha\mu)}(R_e,\,R_p)|$ (eV)", r"$g$ : côté phonon ($R_p$)", GOLD)]
     fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=False); axs = axs.ravel()
     stats = {}
     for i, (key, xl, yl, title, col) in enumerate(spec):
@@ -148,7 +150,7 @@ if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
 KV = [(t, l) for t, l in zip(a.kohn_val_tags.split(","), a.kohn_sigmas.split(",")) if os.path.exists(f"results/epw/validation_{t}.npz")]
 DF = f"results/epw/dfpt_path_freq_{a.dfpt_tag}.npz"
 if KV and os.path.exists(DF):
-    fig, ax = plt.subplots(figsize=(6.5, 3.6)); KCOL = ["#52514e", "#eb6834", "#2a78d6"]
+    fig, ax = plt.subplots(figsize=(6.5, 3.6)); KCOL = [MUTED, NAVY, ORANGE]
     for i, (t, l) in enumerate(KV):
         Vt = np.load(f"results/epw/validation_{t}.npz", allow_pickle=True); Ft = Vt["ph_F_matdyn"] * CM2MEV
         for m in (4, 5): ax.plot(Vt["ph_s"], Ft[:, m], color=KCOL[i], lw=1.2, label=rf"24$\times$24 $\mathbf{{k}}$, $\sigma$ = {l} Ry" if m == 4 else None)

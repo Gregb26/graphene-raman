@@ -206,8 +206,13 @@ update them to the actual `.save` names (the unit cell is currently `defect_unit
 ## Figures du mémoire (conventions obligatoires)
 
 - Style : `figures/memoire.mplstyle`, chargé par `plt.style.use("figures/memoire.mplstyle")` dans
-  `scripts/make_figures.py` et dans tout script de figure. Palette catégorielle fixe (ordre du
-  cycler : bleu, orange, vert, jaune…), jamais recyclée ; une séquence = une seule teinte.
+  `scripts/make_figures.py` et dans tout script de figure. Palette fixe dans `scripts/_palette.py`
+  (2026-09-21) : **principale = bleu marine #000080** (`\definecolor{darkblue}{rgb}{0,0,0.5}`, couleur des
+  hyperliens du mémoire), portée par la grandeur de production de chaque figure (9×9, matrice T, EPW,
+  240² à 300 K, chaîne degauss 0.02) ; orange #eb6834 pour le contraste (Born, DFPT direct, Γ^ed au ch. 5),
+  vert, jaune, rose, bleu ciel ensuite ; références en gris. Cartes : `CMAP_SEQ` (blanc → marine),
+  `CMAP_DIV` (marine ↔ blanc ↔ orange foncé). Le cycler du style reprend `CYCLE` dans le même ordre.
+  Une teinte par catégorie, jamais recyclée ; une séquence = une seule teinte.
 - Tout le texte des figures est en FRANÇAIS (titres d'axes, légendes, annotations, titres de
   panneaux). `text.usetex` est actif : symboles en LaTeX, unités entre parenthèses. Exemples :
   « Énergie $\varepsilon - E_D$ (eV) », « Taux d'amortissement $\Gamma$ (meV) »,

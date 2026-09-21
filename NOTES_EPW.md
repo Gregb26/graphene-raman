@@ -311,3 +311,9 @@ indices $ij$ (au lieu de $mn$) dans $H_{ij}$ et $g_{ij}^{(\alpha\mu)}$ ; fig_epw
 fonction de l'élargissement de Marzari-Vanderbilt $\sigma$ », légende « $N\times N$ $\mathbf{k}$, $\sigma$ = X Ry » (24×24 à 0.002
 et 0.02 Ry pour matdyn, 16×16 à 0.002 Ry pour le DFPT direct ; options `--kohn-sigmas`, `--dfpt-sigma` remplacent `--kohn-labels`),
 axe $\hbar\omega_{\nu\mathbf{q}}$ ; fig_epw_phonselfen — axe $\gamma_{\nu\mathbf{q}}$. Données et chiffres inchangés.
+
+**Palette (2026-09-21, `scripts/_palette.py`)** : principale = bleu marine #000080 (couleur des hyperliens du mémoire) pour
+EPW, la production 240² à 300 K, la chaîne degauss 0.02 et la branche ν = 6 ; orange pour Γ^ed, le DFPT direct, la branche
+ν = 5 et la fenêtre gelée ; références DFT/DFPT en gris moyen épaissi sous le tireté marine ; 10 K en vert ; convergence
+120² à 0.01/0.02/0.05 eV en jaune/bleu ciel/rose. Toutes les figures EPW génériques régénérées ; les `_mv0.002` gardent
+l'ancienne palette (chaîne 0.002, non régénérées). Chiffres inchangés.

@@ -21,7 +21,7 @@ def virgule(ax):
     return None
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); ap.add_argument("--phself-tag", default="path_1200_dg0.02")
 ap.add_argument("--val-tag", default="24k24q", help="validation_<tag>.npz (bandes, phonons, décroissance, |g|)"); ap.add_argument("--sel-suffix", default="", help="suffixe des selfen de convergence : selfen_<k><suffixe>_T300.npz")
-ap.add_argument("--kohn-val-tags", default="24k24q,24k24q_mv0.02", help="tags des validation npz (matdyn) pour fig_epw_kohn_degauss, dans l'ordre"); ap.add_argument("--kohn-sigmas", default="0.002,0.02", help="degauss (Ry) des chaînes matdyn, même ordre que --kohn-val-tags"); ap.add_argument("--dfpt-sigma", default="0.002", help="degauss (Ry) du run DFPT direct"); ap.add_argument("--dfpt-tag", default="24k24q", help="dfpt_path_freq_<tag>.npz (DFPT direct 16×16, 31 q)"); a = ap.parse_args()
+ap.add_argument("--kohn-val-tags", default="24k24q,24k24q_mv0.02", help="tags des validation npz (matdyn) pour fig_epw_kohn_degauss, dans l'ordre"); ap.add_argument("--kohn-sigmas", default="0.002,0.02", help="degauss (Ry) des chaînes matdyn, même ordre que --kohn-val-tags"); ap.add_argument("--dfpt-sigma", default="0.002", help="degauss (Ry) du run DFPT direct"); ap.add_argument("--dfpt-tag", default="24k24q", help="dfpt_path_freq_<tag>.npz (DFPT direct 16×16, 31 q)"); ap.add_argument("--phdos-tag", default=None, help="phdos_<tag>.npz (DOS matdyn) pour fig_epw_phonons ; défaut = --val-tag"); a = ap.parse_args()
 from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
 # principale (marine) = EPW / production 240², 300 K ; C_T = Γ^ep 300 K (fig_gamma b, vs_ed, barres) ; orange = référence directe (DFPT prt), Γ^ed, fenêtre gelée
 C_DFT, C_EPW, C_T, C_10K, C_ED, C_WIN = MUTED, NAVY, NAVY, GREEN, ORANGE, ORANGE   # référence en gris moyen, plus épaisse, sous le marine tireté
@@ -163,3 +163,21 @@ if KV and os.path.exists(DF):
     iK = int(np.argmin(np.abs(D["s"] - TICKS[1]))); iM = int(np.argmin(np.abs(D["s"] - TICKS[2])))
     print(f"[kohn dfpt {a.dfpt_tag}] omega(Gamma) = {D['freq'][0, 4]:.2f}/{D['freq'][0, 5]:.2f} ; omega(K), 6 modes = {np.round(D['freq'][iK], 2).tolist()} ; omega(M) = {D['freq'][iM, 4]:.2f}/{D['freq'][iM, 5]:.2f} cm^-1")
     fig.tight_layout(); save(fig, "fig_epw_kohn_degauss")
+
+# ---------------- 7. fig_epw_phonons : (a) dispersion matdyn sur Γ–K–M–Γ (mêmes IFC que fig_epw_*), (b) DOS matdyn sur grille dense ; cm⁻¹ ; paramètres réels en titres
+PD = f"results/epw/phdos_{a.phdos_tag or a.val_tag}.npz"
+if os.path.exists(PD) and "ph_F_matdyn" in V.files:
+    P = np.load(PD, allow_pickle=True); Fm = V["ph_F_matdyn"]; sq = V["ph_s"]
+    fig, (d1, d2) = plt.subplots(1, 2, figsize=(6.5, 3.6), sharey=True, gridspec_kw={"width_ratios": [3, 1]})
+    for m in range(Fm.shape[1]): d1.plot(sq, Fm[:, m], color=NAVY, lw=1.1)
+    nk = P["nk_scf"]; nq = P["nq_ph"]; nd = P["nq_dos"]
+    d1.set_ylabel(r"$\omega_{\nu\mathbf{q}}$ (cm$^{-1}$)"); d1.set_ylim(0, 1705); path_axis(d1)
+    d1.set_title(rf"{nk[0]}$\times${nk[1]} $\mathbf{{k}}$, {nq[0]}$\times${nq[1]} $\mathbf{{q}}$, $\sigma_\mathrm{{MV}}$ = {float(P['sigma_mv_Ry']):g} Ry", loc="left", fontsize=9); panel(d1, "a")
+    d2.plot(P["dos"], P["freq_cm"], color=NAVY, lw=1.0); d2.fill_betweenx(P["freq_cm"], 0, P["dos"], color=NAVY, alpha=0.12, lw=0)
+    d2.set_xlim(0, None); d2.set_xticks([]); d2.set_xlabel(r"DOS (états/cm$^{-1}$)", fontsize=9, labelpad=6)
+    d2.text(0.95, 0.66, rf"{nd[0]}$\times${nd[1]} $\mathbf{{q}}$" + "\n" + rf"$\Delta E$ = {float(P['deltaE_cm']):g} cm$^{{-1}}$" + "\n" + rf"$\sigma$ = {float(P['degauss_dos_cm']):g} cm$^{{-1}}$", transform=d2.transAxes, ha="right", va="center", fontsize=7); panel(d2, "b")
+    d2.tick_params(axis="y", labelleft=False)
+    dE = float(np.median(np.diff(P["freq_cm"])))
+    print(f"[phonons] matdyn chemin : ω max {Fm.max():.2f} cm^-1, ω(E2g,Γ) = {Fm[0, 4]:.2f}/{Fm[0, 5]:.2f} ; DOS {PD} : {len(P['dos'])} points, intégrale {P['dos'].sum()*dE:.4f}, "
+          f"grille {nd.tolist()}, deltaE {float(P['deltaE_cm'])} cm^-1, degauss DOS {float(P['degauss_dos_cm'])} cm^-1, sigma_MV {float(P['sigma_mv_Ry'])} Ry, k {nk.tolist()}, q {nq.tolist()}")
+    fig.tight_layout(w_pad=0.4); save(fig, "fig_epw_phonons")

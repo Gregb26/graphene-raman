@@ -78,3 +78,17 @@ def special_points(q, tol=1e-4):
         for name, cands in (("G", [(0, 0)]), ("K", [(2 / 3, 1 / 3), (1 / 3, 2 / 3), (-1 / 3, 1 / 3), (1 / 3, -1 / 3)]), ("M", [(0.5, 0), (0, 0.5), (0.5, 0.5), (-0.5, 0.5)])):
             if any(eq(qq, c) for c in cands): out.setdefault(name, []).append(i)
     return out
+
+
+def mode_A1p(R, iK, it=None):
+    """A1' at K selected by CHARACTER (largest EPW linewidth gamma at that q, T = R['T'][it], default the lowest T), never by mode
+    index: it is branch 3 (972 cm^-1) at degauss 0.002 Ry and branch 6 (1275 cm^-1, the highest) at 0.02 Ry. Returns the 0-based index."""
+    it = int(np.argmin(R["T"])) if it is None else it
+    g = np.nan_to_num(R["gamma_epw"][it, iK, :], nan=-1.0); return int(np.argmax(g))
+
+
+def modes_E2g(R, iG, tol_meV=0.5):
+    """E2g doublet at Gamma = the two highest modes (LO = TO), checked degenerate within tol_meV. Returns (i1, i2) 0-based."""
+    w = R["omega"][iG, :]; order = np.argsort(w); i1, i2 = int(order[-2]), int(order[-1])
+    if abs(w[i1] - w[i2]) > tol_meV: raise ValueError(f"E2g at Gamma not degenerate: omega = {w} meV")
+    return i1, i2

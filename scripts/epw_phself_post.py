@@ -13,11 +13,12 @@ C = phself.MEV2CM
 
 def key_values(R):
     sp = phself.special_points(R["q"]); rows = []
-    for name, modes, label in (("G", (4, 5), "E2g(Gamma) LO/TO"), ("K", (2,), "A1'(K)")):
+    for name, label in (("G", "E2g(Gamma) LO/TO"), ("K", "A1'(K)")):
         for i in sp.get(name, []):
+            modes = phself.modes_E2g(R, i) if name == "G" else (phself.mode_A1p(R, i),)     # by frequency (two highest, degenerate) / by character (largest gamma), never by index
             for it, T in enumerate(R["T"]):
                 g = R["gamma_fwhm"][it, i, list(modes)]; w = R["omega"][i, list(modes)]
-                rows.append((label, i, T, w.mean(), g.mean(), g.max() - g.min()))
+                rows.append((f"{label} [modes {'+'.join(str(m + 1) for m in modes)}]", i, T, w.mean(), g.mean(), g.max() - g.min()))
     return rows
 
 if a.dir:
@@ -37,12 +38,12 @@ if a.dir:
 if a.table is not None:
     rows = []
     for d in a.table:
-        R = phself.read_phself(d); sp = phself.special_points(R["q"]); i = sp["K"][0]
-        rows.append((os.path.basename(d.rstrip("/")), R["nkf"], R["degaussw"], [R["gamma_epw"][it, i, 2] for it in range(len(R["T"]))], R["T"]))
+        R = phself.read_phself(d); sp = phself.special_points(R["q"]); i = sp["K"][0]; m = phself.mode_A1p(R, i)   # A1' by character (largest gamma), not by index
+        rows.append((os.path.basename(d.rstrip("/")) + f" [A1'=mode {m + 1}, {R['omega'][i, m]:.1f} meV]", R["nkf"], R["degaussw"], [R["gamma_epw"][it, i, m] for it in range(len(R["T"]))], R["T"]))
     ref = a.ref and next((r for r in rows if a.ref in r[0]), None)
-    Ts = rows[0][4]; hdr = f"{'run':30s} {'nkf':>5s} {'degaussw':>9s}" + "".join(f"  gamma_epw(A1',K) {T:.0f}K (meV)" for T in Ts) + ("   rel. ref " + " / ".join(f"{T:.0f}K" for T in Ts) if ref else "")
+    Ts = rows[0][4]; hdr = f"{'run':58s} {'nkf':>5s} {'degaussw':>9s}" + "".join(f"  gamma_epw(A1',K) {T:.0f}K (meV)" for T in Ts) + ("   rel. ref " + " / ".join(f"{T:.0f}K" for T in Ts) if ref else "")
     print(hdr)
     for r in rows:
-        line = f"{r[0]:30s} {r[1]:5d} {r[2]:9.3f}" + "".join(f"  {g:22.4f}" for g in r[3])
+        line = f"{r[0]:58s} {r[1]:5d} {r[2]:9.3f}" + "".join(f"  {g:22.4f}" for g in r[3])
         if ref: line += "   " + " / ".join(f"{g/gr-1:+8.2%}" if gr else "   n/a  " for g, gr in zip(r[3], ref[3]))
         print(line)

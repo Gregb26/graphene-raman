@@ -14,18 +14,14 @@ import matplotlib.pyplot as plt
 plt.style.use("figures/memoire.mplstyle")
 from matplotlib.ticker import FuncFormatter, ScalarFormatter, LogFormatterSciNotation
 def fr(x, nd=2):
-    """nombre en typographie française (virgule décimale)."""
-    return f"{x:.{nd}f}".replace(".", ",")
-_fmt_lin = FuncFormatter(lambda v, pos: f"{v:g}".replace(".", ","))
-class _LogFr(LogFormatterSciNotation):
-    def __call__(self, v, pos=None): return super().__call__(v, pos).replace(".", ",")
-from matplotlib.ticker import FixedFormatter
+    """nombre formaté (POINT décimal : convention du mémoire depuis P18, 2026-09-20 ; l'ancienne virgule() n'est plus appliquée)."""
+    return f"{x:.{nd}f}"
 def virgule(ax):
-    """virgule décimale sur les ticks des deux axes (linéaires ou log) ; les axes à étiquettes fixes (Γ, K, M…) sont laissés tels quels."""
-    for axis in (ax.xaxis, ax.yaxis):
-        if isinstance(axis.get_major_formatter(), FixedFormatter) or getattr(axis, "_etiquettes_fixes", False): continue
-        axis.set_major_formatter(_LogFr(base=10) if axis.get_scale() == "log" else _fmt_lin)
-ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); ap.add_argument("--phself-tag", default="path_1200_dg0.02"); a = ap.parse_args()
+    """conservée pour compatibilité : ne fait plus rien (point décimal sur les ticks, formateurs matplotlib par défaut)."""
+    return None
+ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); ap.add_argument("--phself-tag", default="path_1200_dg0.02")
+ap.add_argument("--val-tag", default="24k24q", help="validation_<tag>.npz (bandes, phonons, décroissance, |g|)"); ap.add_argument("--sel-suffix", default="", help="suffixe des selfen de convergence : selfen_<k><suffixe>_T300.npz")
+ap.add_argument("--kohn-val-tags", default="24k24q,24k24q_mv0.02", help="tags des validation npz (matdyn) pour fig_epw_kohn_degauss, dans l'ordre"); ap.add_argument("--kohn-labels", default="degauss 0.002 Ry,degauss 0.02 Ry"); ap.add_argument("--dfpt-tag", default="24k24q", help="dfpt_path_freq_<tag>.npz (DFPT direct 16×16, 31 q)"); a = ap.parse_args()
 C_DFT, C_EPW, C_T, C_10K, MUTED = "#52514e", "#2a78d6", "#eb6834", "#1baf7a", "#8a8984"
 CONV_COL = {"120_dg0.01": "#eda100", "120_dg0.02": "#2a78d6", "120_dg0.05": "#e87ba4", "240_dg0.02": "#4a3aa7"}
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
@@ -42,12 +38,12 @@ def path_axis(ax):
     for t in TICKS[1:-1]: ax.axvline(t, color=MUTED, lw=0.6)
 
 # ---------------- 1. validation bandes + phonons
-V = np.load("results/epw/validation_24k24q.npz", allow_pickle=True)
+V = np.load(f"results/epw/validation_{a.val_tag}.npz", allow_pickle=True)
 ED = float(V["bands_ED_dft"]); s = V["bands_s"]; Ed = V["bands_E_dft"] - ED; Ee = V["bands_E_epw_on_dft"] - ED
 fig, (a1, a2) = plt.subplots(1, 2, figsize=(6.5, 3.4))
 for n in range(Ed.shape[1]): a1.plot(s, Ed[:, n], color=C_DFT, lw=1.0, label="DFT (bands.x)" if n == 0 else None)
 for n in range(Ee.shape[1]): a1.plot(s, Ee[:, n], color=C_EPW, lw=1.2, ls="--", label="EPW (Wannier, 24×24)" if n == 0 else None)
-a1.axhline(0, color=MUTED, lw=0.8, ls=":"); a1.axhline(2.5, color=C_T, lw=0.8, ls=":"); a1.text(0.99, 2.6, r"fenêtre gelée $E_D+2{,}5$ eV", ha="right", va="bottom", fontsize=7, color=C_T)
+a1.axhline(0, color=MUTED, lw=0.8, ls=":"); a1.axhline(2.5, color=C_T, lw=0.8, ls=":"); a1.text(0.99, 2.6, r"fenêtre gelée $E_D+2.5$ eV", ha="right", va="bottom", fontsize=7, color=C_T)
 a1.set_ylim(-21, 9); a1.set_ylabel(LBL_E); a1.legend(fontsize=7, loc="lower left"); path_axis(a1); panel(a1, "a")
 CM2MEV = 1.0 / 8.06554; sq = V["ph_s"]; Fm = V["ph_F_matdyn"] * CM2MEV; Fe = V["ph_F_epw_on_matdyn"] * CM2MEV
 for m in range(6): a2.plot(sq, Fm[:, m], color=C_DFT, lw=1.0, label="DFPT (matdyn)" if m == 0 else None); a2.plot(sq, Fe[:, m], color=C_EPW, lw=1.2, ls="--", label="EPW (24×24 q)" if m == 0 else None)
@@ -56,7 +52,7 @@ fig.tight_layout(); save(fig, "fig_epw_validation")
 
 # ---------------- 2. Γ^ep(ε) : convergence + température
 def load_sel(f): R = np.load(f, allow_pickle=True); return R["eg"] - float(R["E_D"]), R["Gamma_e"] * 1e3, R
-conv = {k: f"results/epw/selfen_{k}_T300.npz" for k in CONV_COL}; conv = {k: f for k, f in conv.items() if os.path.exists(f)}
+conv = {k: f"results/epw/selfen_{k}{a.sel_suffix}_T300.npz" for k in CONV_COL}; conv = {k: f for k, f in conv.items() if os.path.exists(f)}
 prod = {T: f"results/epw/selfen_{a.prod_tag}_T{T}.npz" for T in (300, 10)}; prod = {T: f for T, f in prod.items() if os.path.exists(f)}
 if conv:
     fig, (b1, b2) = plt.subplots(1, 2, figsize=(6.5, 3.4), sharey=True)
@@ -65,7 +61,7 @@ if conv:
     b1.set_xlabel(LBL_E); b1.set_ylabel(r"$\Gamma^{ep}(\varepsilon)$ (meV)"); b1.set_title(r"Convergence, $T$ = 300 K", loc="left", fontsize=9); b1.legend(fontsize=7); b1.axvline(0, color=MUTED, lw=0.8, ls=":"); panel(b1, "a")
     for T, f in prod.items():
         x, G, R = load_sel(f); b2.plot(x, G, color={300: C_T, 10: C_10K}[T], lw=1.2, label=rf"$T$ = {T} K")
-    b2.set_xlabel(LBL_E); b2.set_title(r"Production, 240$^2$, $\sigma$ = 0,02 eV", loc="left", fontsize=9); b2.axvline(0, color=MUTED, lw=0.8, ls=":"); panel(b2, "b")
+    b2.set_xlabel(LBL_E); b2.set_title(r"Production, 240$^2$, $\sigma$ = 0.02 eV", loc="left", fontsize=9); b2.axvline(0, color=MUTED, lw=0.8, ls=":"); panel(b2, "b")
     if prod: b2.legend(fontsize=8)
     fig.tight_layout(); save(fig, "fig_epw_gamma")
 
@@ -102,11 +98,13 @@ if os.path.exists(PH):
         if m < 3: g[om[:, m] < 5.0] = np.nan                 # branches acoustiques : divergence q→0 sous smearing, masquées près de Γ
         c1.plot(s, g, color=BR_COL[m], lw=1.1, label=rf"$\nu$ = {m+1}")
     sp = _ph.special_points(P["q"]); iG, iK = sp["G"][0], sp["K"][0]
-    c1.annotate(r"E$_{2g}$", (s[iG], gam[i300, iG, 4]), xytext=(6, 4), textcoords="offset points", fontsize=8)
-    c1.annotate(r"A$_1'$", (s[iK], gam[i300, iK, 2]), xytext=(6, -2), textcoords="offset points", fontsize=8)
+    Rp = dict(T=T, omega=om, gamma_epw=P["gamma_epw"]); mE = list(_ph.modes_E2g(Rp, iG)); mA = _ph.mode_A1p(Rp, iK)     # par fréquence / par caractère, jamais par index
+    print(f"[phonselfen] E2g(Gamma) = modes {mE[0]+1}+{mE[1]+1} ({om[iG, mE].mean():.2f} meV), A1'(K) = mode {mA+1} ({om[iK, mA]:.2f} meV, plus grand gamma à K)")
+    c1.annotate(r"E$_{2g}$", (s[iG], gam[i300, iG, mE[0]]), xytext=(6, 4), textcoords="offset points", fontsize=8)
+    c1.annotate(r"A$_1'$", (s[iK], gam[i300, iK, mA]), xytext=(6, -2), textcoords="offset points", fontsize=8)
     c1.set_ylabel(r"$\gamma_{\mathbf{q}\nu}$ (meV, largeur totale)"); c1.set_title(rf"$T$ = 300 K, {int(P['nkf'])}$^2$ $k$, $\sigma$ = {fr(float(P['degaussw']))} eV", loc="left", fontsize=9)
     c1.legend(fontsize=7, loc="upper right", title="branches (tri en fréquence)", title_fontsize=7, ncol=2); path_axis(c1); panel(c1, "a")
-    vals = {r"E$_{2g}$ ($\Gamma$)": (gam[i10, iG, 4:6].mean(), gam[i300, iG, 4:6].mean()), r"A$_1'$ (K)": (gam[i10, iK, 2], gam[i300, iK, 2])}
+    vals = {r"E$_{2g}$ ($\Gamma$)": (gam[i10, iG, mE].mean(), gam[i300, iG, mE].mean()), r"A$_1'$ (K)": (gam[i10, iK, mA], gam[i300, iK, mA])}
     x = np.arange(len(vals)); w = 0.36
     c2.bar(x - w / 2, [v[0] for v in vals.values()], w, color=C_10K, label=r"$T$ = 10 K"); c2.bar(x + w / 2, [v[1] for v in vals.values()], w, color=C_T, label=r"$T$ = 300 K")
     for xi, v in zip(x, vals.values()):
@@ -139,3 +137,21 @@ if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
         print(f"[decay {key:7s}] max {v0:.3e} eV à R = {r.min():.2f} Å ; plancher {floor:.2e} eV (médiane R ≥ 0,9 R_max) ; chute de {np.log10(v0/floor):.1f} ordres ; enveloppe < 10 × plancher dès R = {rc:.1f} Å")
     print(f"[decay] cellule de Wigner-Seitz 24×24 : apothème (demi-largeur) {ws_in:.2f} Å, rayon (sommet) {ws_out:.2f} Å = R_max des fichiers")
     fig.tight_layout(); save(fig, "fig_epw_decay")
+
+# ---------------- 6. fig_epw_kohn_degauss : deux branches optiques les plus hautes sur Γ–K–M–Γ, matdyn (degauss 0.002 / 0.02 Ry) et DFPT direct 16×16 (31 q)
+KV = [(t, l) for t, l in zip(a.kohn_val_tags.split(","), a.kohn_labels.split(",")) if os.path.exists(f"results/epw/validation_{t}.npz")]
+DF = f"results/epw/dfpt_path_freq_{a.dfpt_tag}.npz"
+if KV and os.path.exists(DF):
+    fig, ax = plt.subplots(figsize=(6.5, 3.6)); KCOL = ["#52514e", "#eb6834", "#2a78d6"]
+    for i, (t, l) in enumerate(KV):
+        Vt = np.load(f"results/epw/validation_{t}.npz", allow_pickle=True); Ft = Vt["ph_F_matdyn"] * CM2MEV
+        for m in (4, 5): ax.plot(Vt["ph_s"], Ft[:, m], color=KCOL[i], lw=1.2, label=rf"matdyn 24$\times$24 q, {l}" if m == 4 else None)
+    D = np.load(DF, allow_pickle=True); Fd = D["freq"] * CM2MEV
+    for m in (4, 5): ax.plot(D["s"], Fd[:, m], "o", color=KCOL[2], ms=3.2, label=rf"DFPT direct, 16$\times$16 $k$ ({len(D['s'])} $q$)" if m == 4 else None)
+    ax.set_ylabel(r"$\hbar\omega_{\mathbf{q}\nu}$ (meV)"); ax.set_title(r"Branches optiques $\nu$ = 5, 6 : anomalies de Kohn selon degauss", loc="left", fontsize=9); ax.legend(fontsize=7, loc="lower left"); path_axis(ax)
+    for t, l in KV:
+        Vt = np.load(f"results/epw/validation_{t}.npz", allow_pickle=True); sq = Vt["ph_s"]; F = Vt["ph_F_matdyn"]; iG = int(np.argmin(sq)); iK = int(np.argmin(np.abs(sq - TICKS[1]))); iM = int(np.argmin(np.abs(sq - TICKS[2])))
+        print(f"[kohn {t} ({l})] matdyn omega(Gamma) = {F[iG, 4]:.2f}/{F[iG, 5]:.2f} cm^-1 ; omega(K), 6 modes = {np.round(F[iK], 2).tolist()} ; omega(M) LO/TO = {F[iM, 4]:.2f}/{F[iM, 5]:.2f} cm^-1")
+    iK = int(np.argmin(np.abs(D["s"] - TICKS[1]))); iM = int(np.argmin(np.abs(D["s"] - TICKS[2])))
+    print(f"[kohn dfpt {a.dfpt_tag}] omega(Gamma) = {D['freq'][0, 4]:.2f}/{D['freq'][0, 5]:.2f} ; omega(K), 6 modes = {np.round(D['freq'][iK], 2).tolist()} ; omega(M) = {D['freq'][iM, 4]:.2f}/{D['freq'][iM, 5]:.2f} cm^-1")
+    fig.tight_layout(); save(fig, "fig_epw_kohn_degauss")

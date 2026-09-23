@@ -254,3 +254,28 @@ degauss 0.002 et 0.02 Ry, décisions arbitrées, conventions Γ^ep = 2 Im Σ, ch
 sélection A1'/E2g par caractère jamais par index. Le volet t/Γ (chapitre 4) a son pendant dans `NOTES_TGAMMA.md`.
 Scripts versionnés ici : `scripts/epw_pp_save.py`, `scripts/epw_validate.py`, `scripts/epw_extract_gkk.py`,
 `scripts/submit_epw_p1_post.sh` ; résultats dans `results/epw/` (npz de validation commis, logs non).
+
+## Campagnes de calcul (règle du 2026-09-17, CLEANUP.md ; précisée le 2026-09-23)
+
+1. **Une campagne = un répertoire + un README (ou rapport) de dix lignes** : but, prompt
+   d'origine (P/R), statut `TEST` ou `PRODUCTION`, date. Le répertoire vit à côté de ce
+   qu'il prolonge (ex. `graphene/qe/defects/super_cell_relaxed/9x9/` pour R1).
+2. **Le statut est décidé au lancement.** Un `TEST` dont le résultat est consigné
+   (rapport, table du mémoire, npz dans `results/`) a ses `.save`, `.wfcN` et `outdir`
+   supprimables sans arbitrage.
+3. **`PRODUCTION`** : `.save` miroité vers `graphene/qe/qe_tmp_backup/<même chemin que
+   qe_tmp/>` avec md5 en fin de campagne (`rsync -a -r --no-o --no-g --open-noatime`,
+   puis `md5sum -c`), `.wfcN` en vrac supprimés, **rien d'unique sur le scratch** (purge
+   Alliance : 60 jours sans accès ni modification, sans préavis fiable).
+4. Le scratch reste la copie de travail (les `outdir` des `.in` et les liens
+   `data/` y pointent) ; on ne réécrit jamais les `outdir`/`prefix` d'un run terminé.
+
+Classement au 2026-09-23 :
+
+| Campagne | Répertoire | Statut | Miroir |
+|---|---|---|---|
+| R1 relaxation lacune 9×9, Γ, nspin 1/2 | `graphene/qe/defects/super_cell_relaxed/9x9/nspin{1,2}` | PRODUCTION | `qe_tmp_backup/vacancy_relaxed/nspin{1,2}` (md5 OK 2026-09-22, revérifié 2026-09-23) |
+| R1b contrôles 3×3×1 | `graphene/qe/defects/super_cell_relaxed/9x9/k3x3` | TEST consigné (R1b_rapport.md) | aucun ; `.save` scratch supprimables (manifeste 7) |
+| Chaîne M (SCF supercellules, NSCF denses, mailles unitaires) | `graphene/qe/defects/{super_cell,unit_cell}` | PRODUCTION | `qe_tmp_backup/` (md5 OK 2026-09-17) |
+| EPW 24k-24q et 24k-24q_mv0.02 | `graphene/qe/epw/` | PRODUCTION (outdir dans le projet) | — |
+| EPW grilles test avril 2026 | `graphene/qe/epw/{36k-30q,30k-24q,24k-12q,16k-16q,16k-12q,12k-12q}` | TEST consigné (NOTES_EPW) | — (étage 1 du ménage) |

@@ -1,0 +1,8 @@
+# R1 / R1b — relaxation de la supercellule 9x9 avec lacune (préparation article, hors mémoire)
+
+Copie versionnée des inputs, scripts et rapports de `graphene/qe/vacancy_relaxed/` (hors dépôt, à côté de celui-ci, même
+convention que `graphene/qe/epw/` pour le chapitre 5). Les sorties (`relax.out`, `scf.out`, `projwfc.out`, `slurm-*`, `pdos_*`,
+`proj_*`) et les `.save` ne sont pas versionnés : `.save` de R1 sur scratch `qe_tmp/vacancy_relaxed/nspin{1,2}` et miroir
+`graphene/qe/qe_tmp_backup/vacancy_relaxed/` (md5) ; `.save` de R1b (`k3x3/`) sur scratch seulement (tests reproductibles).
+Les scripts `make_inputs.py`, `analyze_relax.py`, `k3x3/make_k3x3.py`, `k3x3/analyze_k3x3.py` portent des chemins absolus
+vers `graphene/qe/` et s'exécutent depuis le répertoire d'origine.

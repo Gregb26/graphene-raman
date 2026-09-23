@@ -1,3 +1,5 @@
+> Répertoire de travail déplacé le 2026-09-23 de `graphene/qe/vacancy_relaxed/` vers `graphene/qe/defects/super_cell_relaxed/9x9/` ; outdir scratch et miroir inchangés (`qe_tmp/vacancy_relaxed/`, `qe_tmp_backup/vacancy_relaxed/`).
+
 # R1 — Relaxation de la supercellule 9x9 avec lacune (préparation article, hors mémoire)
 
 Date de lancement : 2026-09-22. Source confirmée : `graphene/qe/defects/super_cell/9x9/defective/scf.in`

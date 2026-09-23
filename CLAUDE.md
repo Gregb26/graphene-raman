@@ -267,7 +267,16 @@ Scripts versionnés ici : `scripts/epw_pp_save.py`, `scripts/epw_validate.py`, `
    qe_tmp/>` avec md5 en fin de campagne (`rsync -a -r --no-o --no-g --open-noatime`,
    puis `md5sum -c`), `.wfcN` en vrac supprimés, **rien d'unique sur le scratch** (purge
    Alliance : 60 jours sans accès ni modification, sans préavis fiable).
-4. Le scratch reste la copie de travail (les `outdir` des `.in` et les liens
+5. **Deux emplacements par campagne, jamais trois.** Le **répertoire de travail** est
+   hors dépôt, à côté de ce qu'il prolonge (`graphene/qe/defects/super_cell_relaxed/9x9/`
+   pour R1) : il contient TOUT — inputs (`*.in`, `submit.*`), scripts, rapports, sorties
+   (`*.out`, `slurm-*`, `JOBID`, projwfc/pdos), et les `.in` y portent les `outdir` scratch.
+   La **copie versionnée** est dans le dépôt sous `article/<campagne>/` (article) ou le
+   répertoire du chapitre (mémoire) : inputs, `submit.*`, scripts, rapports, analyses `.txt`,
+   README, et les `.out` de pw.x s'ils font moins de ~5 Mo ; jamais `.save`, `slurm-*`,
+   `JOBID`, sorties projwfc/pdos ni fichiers > 5 Mo (les lister dans le rapport). On édite
+   dans le répertoire de travail puis on resynchronise la copie (`cp -p`), pas l'inverse.
+6. Le scratch reste la copie de travail (les `outdir` des `.in` et les liens
    `data/` y pointent) ; on ne réécrit jamais les `outdir`/`prefix` d'un run terminé.
 
 Classement au 2026-09-23 :

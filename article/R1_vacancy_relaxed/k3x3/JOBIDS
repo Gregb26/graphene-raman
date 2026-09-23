@@ -1,0 +1,6 @@
+ideal_nspin1 21600427
+ideal_nspin2 21600428
+relax1_nspin1 21600429
+relax2_nspin2 21600430
+projwfc gamma_nspin2 21600431
+projwfc k3x3_relax2_nspin2 21600432 (afterok:21600430)

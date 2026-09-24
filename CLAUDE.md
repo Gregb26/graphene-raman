@@ -43,6 +43,11 @@ pip install -e .
 
 # Validation tests are standalone scripts: they print PASS/FAIL and exit 0/1 (no pytest).
 # Hard-coded data paths live in scripts/_paths.py (override the data root with EDI_DATA).
+# Repo root: never hard-code the folder path (renamed ab-initio-defects -> graphene-raman on 2026-09-24).
+#   Python: derive it from __file__ (config.ROOT); shell: PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}
+#   (sbatch copies the script to the spool, so $0/BASH_SOURCE are useless there). Scripts outside the repo (graphene/qe/...)
+#   use ${GRAPHENE_RAMAN:-$PROJECTS/graphene-raman}; both variables are exported in ~/.bashrc. Wannier manifests store paths
+#   relative to the manifest directory. pytest needs PYTHONPATH=src (no editable install in the venv).
 .venv/bin/python scripts/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline
 .venv/bin/python scripts/test_wannier.py               # Wannier interpolation pipeline
 .venv/bin/python scripts/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)

@@ -20,7 +20,7 @@
 #
 # Edit SIZES to whatever you need and set --array=0-$((len-1)) to match.
 
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 cd "$PROJ" || exit 1
 
 SIZES=(5x5 6x6 7x7 8x8 9x9 10x10 11x11 12x12)

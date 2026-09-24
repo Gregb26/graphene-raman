@@ -10,9 +10,9 @@ Usage : python3 make_inputs_series.py [N ...]   (défaut 5 6 7 8 10 11 12 ; 9 = 
 import os, re, sys, json
 import numpy as np
 
-ROOT = "/home/gregb26/links/projects/rrg-cotemich-ac/gregb26"
+ROOT = os.environ.get("PROJECTS", "/home/gregb26/links/projects/rrg-cotemich-ac/gregb26")
 SRC = ROOT + "/graphene/qe/defects/super_cell/{N}x{N}/defective/scf.in"
-SIDECAR = ROOT + "/ab-initio-defects/results/M/M_ed_{N}x{N}.json"      # convention A/B du dépôt (tag_vacancy_sublattice.py)
+SIDECAR = ROOT + "/graphene-raman/results/M/M_ed_{N}x{N}.json"      # convention A/B du dépôt (tag_vacancy_sublattice.py)
 SCRATCH = "/home/gregb26/links/scratch/qe_tmp/vacancy_relaxed/series/{N}x{N}/nspin{n}"
 HERE = os.path.dirname(os.path.abspath(__file__))
 BOHR = 0.529177210903

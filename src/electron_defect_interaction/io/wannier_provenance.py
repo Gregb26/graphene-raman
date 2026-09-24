@@ -23,7 +23,9 @@ def _sha256(path):
 
 
 def write_wannier_manifest(out_json, tb, u, u_dis=None, run_id=None):
-    """Record run_id + sha256/mtime of the wannier90 outputs. Run once after wannierization."""
+    """Record run_id + sha256/mtime of the wannier90 outputs. Run once after wannierization.
+    Paths are stored relative to the manifest's directory (so the repo can be moved/renamed)."""
+    man_dir = os.path.dirname(os.path.abspath(out_json))
     entries = {"tb": tb, "u": u}
     if u_dis is not None:
         entries["u_dis"] = u_dis
@@ -31,7 +33,7 @@ def write_wannier_manifest(out_json, tb, u, u_dis=None, run_id=None):
     for key, path in entries.items():
         if not os.path.exists(path):
             raise FileNotFoundError(path)
-        files[key] = {"path": os.path.abspath(path), "sha256": _sha256(path),
+        files[key] = {"path": os.path.relpath(os.path.abspath(path), man_dir), "sha256": _sha256(path),
                       "mtime": os.path.getmtime(path)}
     manifest = {"run_id": run_id or files["tb"]["sha256"][:16], "files": files}
     with open(out_json, "w") as f:
@@ -54,8 +56,11 @@ def load_wannier_checked(manifest_path):
     if "tb" not in files or "u" not in files:
         raise ValueError(f"gauge check: manifest {manifest_path} missing 'tb' and/or 'u' entries.")
     paths = {}
+    man_dir = os.path.dirname(os.path.abspath(manifest_path))
     for key, rec in files.items():
         p = rec["path"]
+        if not os.path.isabs(p):          # relative to the manifest's directory (absolute kept for old manifests)
+            p = os.path.normpath(os.path.join(man_dir, p))
         if not os.path.exists(p):
             raise ValueError(f"gauge check: file '{key}' missing at {p} (referenced by manifest).")
         got = _sha256(p)

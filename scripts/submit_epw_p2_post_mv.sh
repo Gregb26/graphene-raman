@@ -11,7 +11,7 @@
 # P18 post-processing of a re-done EPW chain (default: 24k-24q_mv0.02, tag suffix _mv0.02): selfen (3 runs), phself (path + zoom,
 # K convergence table), <D^2>, ring check (gamma___ / Im Pi with THIS chain's gamma), Gamma^ed / Gamma^ep ratio. Run AFTER the P2/P6
 # EPW jobs and the P1 post (validation_<tag>.npz gives E_D). Usage: sbatch scripts/submit_epw_p2_post_mv.sh [chain dir] [tag] [E_D]
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 CH=${1:-24k-24q_mv0.02}; TAG=${2:-24k24q_mv0.02}; SUF=${3:-_mv0.02}
 EPW=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene/qe/epw/$CH
 cd "$PROJ" || exit 1; module restore qe; module load scipy-stack; PY="$PROJ/.venv/bin/python"

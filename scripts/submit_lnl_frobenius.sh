@@ -8,7 +8,7 @@
 #SBATCH --time=02:00:00
 #SBATCH --output=results/M/logs/%x_%A.out
 #SBATCH --error=results/M/logs/%x_%A.err
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 cd "$PROJ" || exit 1
 module restore qe; module load scipy-stack
 export OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 FLEXIBLAS_NUM_THREADS=4

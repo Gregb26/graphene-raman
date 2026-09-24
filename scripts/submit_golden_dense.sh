@@ -10,7 +10,7 @@
 #SBATCH --error=results/M/logs/%x_%A.err
 # BLOCKING golden test on the dense 5x5 (25x25) M: local Wannier t-matrix vs dense compute_T in the
 # same 5-WF subspace. Then the dense-vs-coarse coincident-k check on M^L (9x9) / M (others).
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 cd "$PROJ" || exit 1
 module restore qe; module load mpi4py/4.0.3 scipy-stack
 export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16

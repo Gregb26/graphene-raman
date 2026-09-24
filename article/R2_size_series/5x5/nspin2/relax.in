@@ -1,0 +1,101 @@
+! R2 — relax (cellule fixe) de la supercellule 5x5 avec lacune, nspin=2
+! dérivé de super_cell/5x5/defective/scf.in (ch. 4) ; perturbation initiale voisins 16-24, C1 = (16, 24, 25)
+
+&CONTROL
+  calculation = 'relax'     ! ions relaxés, cellule fixe
+  prefix      = 'vac_5x5_relax_nspin2'
+  outdir      = '/home/gregb26/links/scratch/qe_tmp/vacancy_relaxed/series/5x5/nspin2'
+  forc_conv_thr = 1.0d-4
+  etot_conv_thr = 1.0d-5
+  nstep       = 200
+  tprnfor     = .true.
+  pseudo_dir  = '/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/abinit_processing/pseudo' ! directory of pseudo potentials
+/
+&SYSTEM
+  ibrav       = 0        ! specified by CELL_PARAMETERS
+  nat         = 49       ! number of atoms (2 x 5 x 5)
+  ntyp        = 2        ! C (46 atomes) + C1 (3 voisins de la lacune, même pseudo)
+  ecutwfc     = 100      ! PW energy cutoff in Ry (1 Ha = 2 Ry)
+  occupations = 'smearing'
+  smearing    = 'mv'     ! Marzari-Vanderbilt cold smearing
+  degauss     = 0.01     ! value of gaussian smearing in Ry
+  nbnd        = 130      ! number of bands (200 valence electrons -> 100 occupied; adjust as needed)
+  assume_isolated = '2D' ! helps for 2d systems
+  nosym       = .true.
+  noinv       = .true.
+  nspin       = 2
+  starting_magnetization(1) = 0.0   ! C
+  starting_magnetization(2) = 0.5   ! C1 (atomes 16, 24, 25)
+/
+&ELECTRONS
+  electron_maxstep =  400   ! number of iterations in SCF step
+  conv_thr         =  1.d-10 ! convergence threshold for self-consistency
+  mixing_beta      =  0.3
+/
+
+&IONS
+  ion_dynamics = 'bfgs'
+/
+
+ATOMIC_SPECIES
+  C 12.011 C.upf ! atom type and pseudo potential
+  C1 12.011 C.upf ! voisins de la lacune (16, 24, 25), même pseudo
+
+
+CELL_PARAMETERS bohr
+  20.1774595305  -11.6494616915   0.0
+  20.1774595305   11.6494616915   0.0
+   0.0             0.0            30.0
+
+ATOMIC_POSITIONS crystal
+  C  0.0666666667  0.0666666667  0.0000000000
+  C  0.1333333333  0.1333333333  0.0000000000
+  C  0.0666666667  0.2666666667  0.0000000000
+  C  0.1333333333  0.3333333333  0.0000000000
+  C  0.0666666667  0.4666666667  0.0000000000
+  C  0.1333333333  0.5333333333  0.0000000000
+  C  0.0666666667  0.6666666667  0.0000000000
+  C  0.1333333333  0.7333333333  0.0000000000
+  C  0.0666666667  0.8666666667  0.0000000000
+  C  0.1333333333  0.9333333333  0.0000000000
+  C  0.2666666667  0.0666666667  0.0000000000
+  C  0.3333333333  0.1333333333  0.0000000000
+  C  0.2666666667  0.2666666667  0.0000000000
+  C  0.3333333333  0.3333333333  0.0000000000
+  C  0.2666666667  0.4666666667  0.0000000000
+  C1 0.3357665695  0.5309000971  0.0000000000
+  C  0.2666666667  0.6666666667  0.0000000000
+  C  0.3333333333  0.7333333333  0.0000000000
+  C  0.2666666667  0.8666666667  0.0000000000
+  C  0.3333333333  0.9333333333  0.0000000000
+  C  0.4666666667  0.0666666667  0.0000000000
+  C  0.5333333333  0.1333333333  0.0000000000
+  C  0.4666666667  0.2666666667  0.0000000000
+  C1 0.5309000971  0.3357665695  0.0000000000
+  C1 0.5333333333  0.5333333333  0.0000000000
+  C  0.4666666667  0.6666666667  0.0000000000
+  C  0.5333333333  0.7333333333  0.0000000000
+  C  0.4666666667  0.8666666667  0.0000000000
+  C  0.5333333333  0.9333333333  0.0000000000
+  C  0.6666666667  0.0666666667  0.0000000000
+  C  0.7333333333  0.1333333333  0.0000000000
+  C  0.6666666667  0.2666666667  0.0000000000
+  C  0.7333333333  0.3333333333  0.0000000000
+  C  0.6666666667  0.4666666667  0.0000000000
+  C  0.7333333333  0.5333333333  0.0000000000
+  C  0.6666666667  0.6666666667  0.0000000000
+  C  0.7333333333  0.7333333333  0.0000000000
+  C  0.6666666667  0.8666666667  0.0000000000
+  C  0.7333333333  0.9333333333  0.0000000000
+  C  0.8666666667  0.0666666667  0.0000000000
+  C  0.9333333333  0.1333333333  0.0000000000
+  C  0.8666666667  0.2666666667  0.0000000000
+  C  0.9333333333  0.3333333333  0.0000000000
+  C  0.8666666667  0.4666666667  0.0000000000
+  C  0.9333333333  0.5333333333  0.0000000000
+  C  0.8666666667  0.6666666667  0.0000000000
+  C  0.9333333333  0.7333333333  0.0000000000
+  C  0.8666666667  0.8666666667  0.0000000000
+  C  0.9333333333  0.9333333333  0.0000000000
+
+K_POINTS gamma

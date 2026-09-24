@@ -1,0 +1,688 @@
+
+===== 5x5 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/5x5/nspin1) : JOB DONE=True, sacct 21666594 COMPLETED 00:02:47, pas scf/BFGS = 17, bfgs converged = True (17 scf, 16 bfgs), « convergence NOT achieved » = 0, WALL = 136.51s
+E finale = -589.72287142 Ry = -8023.588416 eV ; E scf idéal ch. 4 = -589.69692552 Ry ; ΔE_relax = -0.02594590 Ry = -353.012 meV ; Ftot final = 0.000409 Ry/bohr ; |F|max composante final = 9.428e-05 Ry/bohr ; scf iter max/par pas = 22 ; E_F = -4.5458 eV ; -TS = 0.00054697 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.466667 0.466667] ; voisins (16, 24, 25) ; paire (16, 24) ; troisième 25
+  idéal                     : d(16-24)=2.46585  d(16-25)=2.46585  d(24-25)=2.46585
+  initial perturbé          : d(16-24)=2.40585  d(16-25)=2.45099  d(24-25)=2.45099
+  finales                   : d(16-24)=2.53032  d(16-25)=2.53079  d(24-25)=2.53079
+--- déplacement max vs idéal = 0.03761 A (atome 25) ; vs initial perturbé = 0.06500 A ; hors plan max |dz| = 6.05e-07 A
+  atome 16: |d|=0.03730 A, d_inplane=0.03730 A, dz=-4.35e-07 A
+  atome 24: |d|=0.03730 A, d_inplane=0.03730 A, dz=-1.79e-07 A
+  atome 25: |d|=0.03761 A, d_inplane=0.03761 A, dz=+6.05e-07 A
+--- atome 25 : d(25-16)=2.53079 A, d(25-24)=2.53079 A, dz(25)=+6.05e-07 A, d_inplane(25)=0.03761 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(16-24) (A)
+    0 -589.68997927    +0.000 0.283332 0.100283   22 2.40585
+    1 -589.71275536  -309.884 0.178637 0.045419   14 2.47831
+    2 -589.72154752  -119.623 0.052856 0.014298   14 2.49081
+    3 -589.72235686   -11.012 0.032740 0.007858   13 2.49355
+    4 -589.72272905    -5.064 0.009678 0.003955   12 2.50062
+    5 -589.72279118    -0.845 0.007008 0.002427   11 2.50718
+    6 -589.72282146    -0.412 0.004585 0.001577   12 2.51178
+    7 -589.72284043    -0.258 0.003235 0.000860   12 2.51578
+    8 -589.72285072    -0.140 0.002626 0.000822   13 2.51936
+    9 -589.72285502    -0.059 0.001723 0.000475   12 2.52106
+   10 -589.72285800    -0.041 0.001390 0.000546   11 2.52225
+   11 -589.72286131    -0.045 0.001483 0.000500   12 2.52426
+   12 -589.72286424    -0.040 0.001580 0.000558   12 2.52629
+   13 -589.72286777    -0.048 0.001473 0.000555   13 2.52889
+   14 -589.72287021    -0.033 0.001140 0.000335   12 2.53044
+   15 -589.72287113    -0.013 0.000772 0.000232   11 2.53065
+   16 -589.72287142    -0.004 0.000409 0.000094   10 2.53032
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule P-6m2 (n° 187, 12 op.) ; site lacune (atome factice) : -6m2 ; groupe avec factice P-6m2 (12 op.)
+
+===== 5x5 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/5x5/nspin2) : JOB DONE=True, sacct 21666595 COMPLETED 00:07:14, pas scf/BFGS = 20, bfgs converged = True (20 scf, 19 bfgs), « convergence NOT achieved » = 0, WALL = 403.28s
+E finale = -589.73483173 Ry = -8023.751144 eV ; E scf idéal ch. 4 = -589.69692552 Ry ; ΔE_relax = -0.03790621 Ry = -515.740 meV ; Ftot final = 0.000225 Ry/bohr ; |F|max composante final = 4.78e-05 Ry/bohr ; scf iter max/par pas = 36 ; E_F = -4.7458 eV ; -TS = 0.00164394 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.466667 0.466667] ; voisins (16, 24, 25) ; paire (16, 24) ; troisième 25
+  idéal                     : d(16-24)=2.46585  d(16-25)=2.46585  d(24-25)=2.46585
+  initial perturbé          : d(16-24)=2.40585  d(16-25)=2.45099  d(24-25)=2.45099
+  finales                   : d(16-24)=2.20393  d(16-25)=2.59215  d(24-25)=2.59212
+--- déplacement max vs idéal = 0.14660 A (atome 25) ; vs initial perturbé = 0.14660 A ; hors plan max |dz| = 6.03e-08 A
+  atome 16: |d|=0.14582 A, d_inplane=0.14582 A, dz=-6.35e-09 A
+  atome 24: |d|=0.14583 A, d_inplane=0.14583 A, dz=-1.59e-08 A
+  atome 25: |d|=0.14660 A, d_inplane=0.14660 A, dz=+6.03e-08 A
+--- atome 25 : d(25-16)=2.59215 A, d(25-24)=2.59212 A, dz(25)=+6.03e-08 A, d_inplane(25)=0.14660 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(16-24) (A), m_tot, m_abs
+    0 -589.69775342    +0.000 0.258503 0.096268   36 2.40585 +1.6000 2.3800
+    1 -589.71482761  -232.306 0.187836 0.069359   21 2.44854 +1.2600 1.8600
+    2 -589.72407392  -125.802 0.053250 0.017455   20 2.45712 +1.2500 1.8500
+    3 -589.72539563   -17.983 0.039957 0.015472   19 2.44910 +1.4400 2.1200
+    4 -589.72676580   -18.642 0.035037 0.013622   18 2.43899 +1.5900 2.3500
+    5 -589.72813747   -18.663 0.036106 0.012990   18 2.42477 +1.7400 2.5600
+    6 -589.73009255   -26.600 0.040189 0.011841   17 2.39598 +1.9200 2.8300
+    7 -589.73186112   -24.063 0.046367 0.015563   18 2.34156 +2.0000 2.9700
+    8 -589.73282738   -13.147 0.034908 0.013394   13 2.32533 +2.0000 2.9700
+    9 -589.73382796   -13.614 0.023857 0.009913   14 2.29711 +2.0000 2.9600
+   10 -589.73432868    -6.813 0.020636 0.007941   16 2.26360 +2.0000 2.9400
+   11 -589.73458588    -3.499 0.014122 0.004487   16 2.24083 +2.0000 2.9200
+   12 -589.73476563    -2.446 0.008705 0.002653   17 2.21673 +2.0000 2.9000
+   13 -589.73480606    -0.550 0.006117 0.001862   16 2.20762 +2.0000 2.8900
+   14 -589.73482107    -0.204 0.003008 0.000792   13 2.20692 +2.0000 2.8900
+   15 -589.73482720    -0.083 0.002133 0.000646   15 2.20739 +2.0000 2.9000
+   16 -589.73483027    -0.042 0.001229 0.000392   13 2.20654 +2.0000 2.9000
+   17 -589.73483136    -0.015 0.000672 0.000171   15 2.20492 +2.0000 2.8900
+   18 -589.73483165    -0.004 0.000500 0.000122   14 2.20394 +2.0000 2.8900
+   19 -589.73483173    -0.001 0.000225 0.000048   11 2.20393 +2.0000 2.8900
+--- magnétisation finale : totale = +2.0000 µB, absolue = 2.8900 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/5x5/nspin2/projwfc/projwfc.out) : 49 atomes, charge totale 193.854 e, spilling 0.011
+  moment atome 25 (isolé) = +0.9954 µB ; atome 16 = +0.1929 ; atome 24 = +0.1928
+  somme sous-réseau A (lacune, 24 atomes) = -0.6514 ; somme sous-réseau B (25 atomes) = +2.6271 ; total = +1.9757 µB (pw.x : +2.00)
+  composantes atome 25 : s 0.1524, p 0.8429 (pz 0.1801, px 0.6455, py 0.0173)
+
+===== 5x5 : E(nspin2) - E(nspin1) = -0.01196031 Ry = -162.728 meV
+
+===== 6x6 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/6x6/nspin1) : JOB DONE=True, sacct 21666592 COMPLETED 00:06:05, pas scf/BFGS = 22, bfgs converged = True (22 scf, 21 bfgs), « convergence NOT achieved » = 0, WALL = 334.67s
+E finale = -854.72638978 Ry = -11629.144963 eV ; E scf idéal ch. 4 = -854.69845523 Ry ; ΔE_relax = -0.02793455 Ry = -380.069 meV ; Ftot final = 0.000469 Ry/bohr ; |F|max composante final = 9.663e-05 Ry/bohr ; scf iter max/par pas = 23 ; E_F = -4.2384 eV ; -TS = -0.00587259 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau B à [0.444444 0.444444] ; voisins (29, 30, 40) ; paire (29, 30) ; troisième 40
+  idéal                     : d(29-30)=2.46585  d(29-40)=2.46585  d(30-40)=2.46585
+  initial perturbé          : d(29-30)=2.40585  d(29-40)=2.45099  d(30-40)=2.45099
+  finales                   : d(29-30)=2.24641  d(29-40)=2.58226  d(30-40)=2.58226
+--- déplacement max vs idéal = 0.13439 A (atome 40) ; vs initial perturbé = 0.13439 A ; hors plan max |dz| = 1.91e-07 A
+  atome 29: |d|=0.12287 A, d_inplane=0.12287 A, dz=-3.33e-08 A
+  atome 30: |d|=0.12287 A, d_inplane=0.12287 A, dz=+1.05e-07 A
+  atome 40: |d|=0.13439 A, d_inplane=0.13439 A, dz=+1.91e-07 A
+--- atome 40 : d(40-29)=2.58226 A, d(40-30)=2.58226 A, dz(40)=+1.91e-07 A, d_inplane(40)=0.13439 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(29-30) (A)
+    0 -854.69133612    +0.000 0.276019 0.089149   23 2.40585
+    1 -854.71047973  -260.462 0.192466 0.053757   17 2.47912
+    2 -854.72014673  -131.526 0.053911 0.014864   16 2.48614
+    3 -854.72114909   -13.638 0.033483 0.009022   16 2.48566
+    4 -854.72168845    -7.338 0.018230 0.005212   15 2.48926
+    5 -854.72204260    -4.818 0.019409 0.007067   15 2.49023
+    6 -854.72228756    -3.333 0.018373 0.006813   15 2.48322
+    7 -854.72254364    -3.484 0.019401 0.006470   14 2.47510
+    8 -854.72292273    -5.158 0.021666 0.006283   15 2.46290
+    9 -854.72346864    -7.427 0.024210 0.006863   15 2.44419
+   10 -854.72416616    -9.490 0.026865 0.007424   15 2.41549
+   11 -854.72489817    -9.960 0.028841 0.007534   16 2.37212
+   12 -854.72541880    -7.084 0.028185 0.007620   16 2.32132
+   13 -854.72574485    -4.436 0.022231 0.006103   15 2.28915
+   14 -854.72613214    -5.269 0.011610 0.002818   15 2.25643
+   15 -854.72630432    -2.343 0.009247 0.002367   15 2.25289
+   16 -854.72635141    -0.641 0.008246 0.001779   13 2.25746
+   17 -854.72637566    -0.330 0.004069 0.000881   13 2.25734
+   18 -854.72638532    -0.131 0.001989 0.000583   14 2.25349
+   19 -854.72638872    -0.046 0.001446 0.000337   15 2.24797
+   20 -854.72638948    -0.010 0.000785 0.000180   12 2.24644
+   21 -854.72638978    -0.004 0.000469 0.000097   10 2.24641
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+
+===== 6x6 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/6x6/nspin2) : JOB DONE=True, sacct 21666593 COMPLETED 00:13:50, pas scf/BFGS = 18, bfgs converged = True (18 scf, 17 bfgs), « convergence NOT achieved » = 0, WALL = 805.67s
+E finale = -854.76177739 Ry = -11629.626436 eV ; E scf idéal ch. 4 = -854.69845523 Ry ; ΔE_relax = -0.06332216 Ry = -861.542 meV ; Ftot final = 0.000371 Ry/bohr ; |F|max composante final = 8.593e-05 Ry/bohr ; scf iter max/par pas = 34 ; E_F = -4.2736 eV ; -TS = 0.00180896 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau B à [0.444444 0.444444] ; voisins (29, 30, 40) ; paire (29, 30) ; troisième 40
+  idéal                     : d(29-30)=2.46585  d(29-40)=2.46585  d(30-40)=2.46585
+  initial perturbé          : d(29-30)=2.40585  d(29-40)=2.45099  d(30-40)=2.45099
+  finales                   : d(29-30)=2.06819  d(29-40)=2.57963  d(30-40)=2.57962
+--- déplacement max vs idéal = 0.21016 A (atome 30) ; vs initial perturbé = 0.18204 A ; hors plan max |dz| = 7.46e-08 A
+  atome 29: |d|=0.21016 A, d_inplane=0.21016 A, dz=-6.35e-09 A
+  atome 30: |d|=0.21016 A, d_inplane=0.21016 A, dz=-3.02e-08 A
+  atome 40: |d|=0.15972 A, d_inplane=0.15972 A, dz=-7.46e-08 A
+--- atome 40 : d(40-29)=2.57963 A, d(40-30)=2.57962 A, dz(40)=-7.46e-08 A, d_inplane(40)=0.15972 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(29-30) (A), m_tot, m_abs
+    0 -854.71294895    +0.000 0.264059 0.089896   34 2.40585 +1.9900 6.2200
+    1 -854.72964559  -227.169 0.209393 0.068663   19 2.43597 +1.9800 6.0200
+    2 -854.74155005  -161.968 0.066901 0.025083   19 2.43119 +1.9800 5.9800
+    3 -854.74494266   -46.159 0.056886 0.019189   19 2.40768 +2.0100 5.8800
+    4 -854.74999382   -68.725 0.066928 0.025006   21 2.35610 +1.9800 5.6700
+    5 -854.75439845   -59.928 0.057676 0.013206   18 2.28677 +1.9600 5.4500
+    6 -854.75727119   -39.086 0.043888 0.014845   17 2.21816 +1.9600 5.3900
+    7 -854.75932412   -27.932 0.036521 0.010021   15 2.15112 +1.9700 5.4000
+    8 -854.76065582   -18.119 0.029332 0.006949   14 2.09667 +1.9800 5.4100
+    9 -854.76131021    -8.903 0.020520 0.004779   15 2.07241 +1.9800 5.3300
+   10 -854.76162104    -4.229 0.012362 0.003079   15 2.06593 +1.9700 5.2500
+   11 -854.76173926    -1.608 0.007047 0.001358   14 2.06569 +1.9700 5.2400
+   12 -854.76176665    -0.373 0.004292 0.000949   14 2.06640 +1.9700 5.2500
+   13 -854.76177406    -0.101 0.002179 0.000500   15 2.06676 +1.9700 5.2700
+   14 -854.76177616    -0.029 0.001044 0.000264   14 2.06709 +1.9700 5.2800
+   15 -854.76177684    -0.009 0.000697 0.000121   12 2.06756 +1.9700 5.2800
+   16 -854.76177717    -0.004 0.000453 0.000128   11 2.06791 +1.9700 5.2800
+   17 -854.76177739    -0.003 0.000371 0.000086   11 2.06819 +1.9700 5.2700
+--- magnétisation finale : totale = +1.9700 µB, absolue = 5.2700 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/6x6/nspin2/projwfc/projwfc.out) : 71 atomes, charge totale 280.893 e, spilling 0.0109
+  moment atome 40 (isolé) = +0.9738 µB ; atome 29 = +0.1217 ; atome 30 = +0.1217
+  somme sous-réseau B (lacune, 35 atomes) = -2.1947 ; somme sous-réseau A (36 atomes) = +4.1454 ; total = +1.9507 µB (pw.x : +1.97)
+  composantes atome 40 : s 0.1513, p 0.8225 (pz 0.1569, px 0.1754, py 0.4903)
+
+===== 6x6 : E(nspin2) - E(nspin1) = -0.03538761 Ry = -481.473 meV
+
+===== 7x7 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/7x7/nspin1) : JOB DONE=True, sacct 21666590 COMPLETED 00:09:17, pas scf/BFGS = 18, bfgs converged = True (18 scf, 17 bfgs), « convergence NOT achieved » = 0, WALL = 519.82s
+E finale = -1168.09808835 Ry = -15892.784128 eV ; E scf idéal ch. 4 = -1168.07147324 Ry ; ΔE_relax = -0.02661511 Ry = -362.117 meV ; Ftot final = 0.000482 Ry/bohr ; |F|max composante final = 8.459e-05 Ry/bohr ; scf iter max/par pas = 21 ; E_F = -4.6665 eV ; -TS = 0.00143546 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.47619 0.47619] ; voisins (36, 48, 49) ; paire (36, 48) ; troisième 49
+  idéal                     : d(36-48)=2.46585  d(36-49)=2.46585  d(48-49)=2.46585
+  initial perturbé          : d(36-48)=2.40585  d(36-49)=2.45099  d(48-49)=2.45099
+  finales                   : d(36-48)=2.50243  d(36-49)=2.50270  d(48-49)=2.50270
+--- déplacement max vs idéal = 0.04301 A (atome 60) ; vs initial perturbé = 0.04944 A ; hors plan max |dz| = 1.17e-06 A
+  atome 36: |d|=0.02115 A, d_inplane=0.02115 A, dz=+5.52e-07 A
+  atome 48: |d|=0.02115 A, d_inplane=0.02115 A, dz=-1.17e-06 A
+  atome 49: |d|=0.02136 A, d_inplane=0.02136 A, dz=+6.03e-07 A
+--- atome 49 : d(49-36)=2.50270 A, d(49-48)=2.50270 A, dz(49)=+6.03e-07 A, d_inplane(49)=0.02136 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(36-48) (A)
+    0 -1168.06479593    +0.000 0.280350 0.101215   21 2.40585
+    1 -1168.08769017  -311.492 0.173139 0.043881   14 2.47625
+    2 -1168.09620767  -115.886 0.055115 0.014310   13 2.48701
+    3 -1168.09724843   -14.160 0.034130 0.007947   12 2.48875
+    4 -1168.09774157    -6.710 0.013897 0.003542   11 2.49532
+    5 -1168.09791720    -2.390 0.010855 0.003780   11 2.50133
+    6 -1168.09799391    -1.044 0.007996 0.003585   11 2.50289
+    7 -1168.09803597    -0.572 0.004781 0.002156   11 2.50176
+    8 -1168.09805801    -0.300 0.003731 0.001043   11 2.50012
+    9 -1168.09807143    -0.183 0.002892 0.000565   11 2.49891
+   10 -1168.09807948    -0.110 0.001998 0.000377   12 2.49826
+   11 -1168.09808221    -0.037 0.001594 0.000366   11 2.49844
+   12 -1168.09808383    -0.022 0.001067 0.000228   10 2.49884
+   13 -1168.09808508    -0.017 0.000883 0.000196   10 2.49938
+   14 -1168.09808635    -0.017 0.000903 0.000175   11 2.50026
+   15 -1168.09808723    -0.012 0.000857 0.000150   10 2.50112
+   16 -1168.09808793    -0.010 0.000672 0.000172   10 2.50194
+   17 -1168.09808835    -0.006 0.000482 0.000085   10 2.50243
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule P-6m2 (n° 187, 12 op.) ; site lacune (atome factice) : -6m2 ; groupe avec factice P-6m2 (12 op.)
+
+===== 7x7 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/7x7/nspin2) : JOB DONE=True, sacct 21666591 COMPLETED 00:27:37, pas scf/BFGS = 23, bfgs converged = True (23 scf, 22 bfgs), « convergence NOT achieved » = 0, WALL = 1627.46s
+E finale = -1168.11414258 Ry = -15893.002557 eV ; E scf idéal ch. 4 = -1168.07147324 Ry ; ΔE_relax = -0.04266934 Ry = -580.546 meV ; Ftot final = 0.000353 Ry/bohr ; |F|max composante final = 6.24e-05 Ry/bohr ; scf iter max/par pas = 35 ; E_F = -4.7481 eV ; -TS = 0.00092001 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.47619 0.47619] ; voisins (36, 48, 49) ; paire (36, 48) ; troisième 49
+  idéal                     : d(36-48)=2.46585  d(36-49)=2.46585  d(48-49)=2.46585
+  initial perturbé          : d(36-48)=2.40585  d(36-49)=2.45099  d(48-49)=2.45099
+  finales                   : d(36-48)=2.10980  d(36-49)=2.58904  d(48-49)=2.58903
+--- déplacement max vs idéal = 0.19041 A (atome 48) ; vs initial perturbé = 0.16590 A ; hors plan max |dz| = 1.00e-07 A
+  atome 36: |d|=0.19041 A, d_inplane=0.19041 A, dz=+8.10e-08 A
+  atome 48: |d|=0.19041 A, d_inplane=0.19041 A, dz=-2.86e-08 A
+  atome 49: |d|=0.16133 A, d_inplane=0.16133 A, dz=-1.59e-08 A
+--- atome 49 : d(49-36)=2.58904 A, d(49-48)=2.58903 A, dz(49)=-1.59e-08 A, d_inplane(49)=0.16133 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(36-48) (A), m_tot, m_abs
+    0 -1168.07132515    +0.000 0.252422 0.096160   35 2.40585 +1.6200 2.3900
+    1 -1168.08833446  -231.423 0.178796 0.067333   22 2.44591 +1.2200 1.8200
+    2 -1168.09684859  -115.841 0.052421 0.017117   20 2.45483 +1.1800 1.7500
+    3 -1168.09820049   -18.394 0.037847 0.013373   19 2.44665 +1.3900 2.0500
+    4 -1168.09954835   -18.339 0.036769 0.014430   18 2.43423 +1.5800 2.3400
+    5 -1168.10094561   -19.011 0.042068 0.015430   17 2.41733 +1.7600 2.5800
+    6 -1168.10302932   -28.350 0.051116 0.016216   17 2.38545 +1.9500 2.8800
+    7 -1168.10550979   -33.749 0.056274 0.014696   17 2.33234 +2.0000 2.9200
+    8 -1168.10822018   -36.877 0.054621 0.021824   18 2.26240 +2.0000 2.8500
+    9 -1168.11016658   -26.482 0.059622 0.022710   15 2.13384 +2.0000 2.8500
+   10 -1168.11236250   -29.877 0.032968 0.011879   14 2.14457 +2.0000 2.8400
+   11 -1168.11332040   -13.033 0.023868 0.006360   17 2.14843 +2.0000 2.8300
+   12 -1168.11367788    -4.864 0.017357 0.003635   14 2.12051 +2.0000 2.8400
+   13 -1168.11385495    -2.409 0.012392 0.002400   11 2.11092 +2.0000 2.8400
+   14 -1168.11403747    -2.483 0.008793 0.002083   12 2.10273 +2.0000 2.8400
+   15 -1168.11409321    -0.758 0.007037 0.001220   11 2.10354 +2.0000 2.8300
+   16 -1168.11412716    -0.462 0.003754 0.000751   11 2.10575 +2.0000 2.8300
+   17 -1168.11413674    -0.130 0.002575 0.000532   11 2.10758 +2.0000 2.8300
+   18 -1168.11413967    -0.040 0.001500 0.000290   11 2.10847 +2.0000 2.8300
+   19 -1168.11414105    -0.019 0.000927 0.000207   10 2.10853 +2.0000 2.8300
+   20 -1168.11414193    -0.012 0.000710 0.000162   11 2.10863 +2.0000 2.8400
+   21 -1168.11414233    -0.005 0.000540 0.000117   10 2.10915 +2.0000 2.8400
+   22 -1168.11414258    -0.003 0.000353 0.000062   10 2.10980 +2.0000 2.8400
+--- magnétisation finale : totale = +2.0000 µB, absolue = 2.8400 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/7x7/nspin2/projwfc/projwfc.out) : 97 atomes, charge totale 383.764 e, spilling 0.0109
+  moment atome 49 (isolé) = +1.0220 µB ; atome 36 = +0.1978 ; atome 48 = +0.1978
+  somme sous-réseau A (lacune, 48 atomes) = -0.6075 ; somme sous-réseau B (49 atomes) = +2.5805 ; total = +1.9730 µB (pw.x : +2.00)
+  composantes atome 49 : s 0.1520, p 0.8700 (pz 0.2016, px 0.6509, py 0.0176)
+
+===== 7x7 : E(nspin2) - E(nspin1) = -0.01605423 Ry = -218.429 meV
+
+===== 8x8 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/8x8/nspin1) : JOB DONE=True, sacct 21666588 COMPLETED 00:15:01, pas scf/BFGS = 22, bfgs converged = True (22 scf, 21 bfgs), « convergence NOT achieved » = 0, WALL = 869.64s
+E finale = -1529.49014442 Ry = -20809.773540 eV ; E scf idéal ch. 4 = -1529.46517508 Ry ; ΔE_relax = -0.02496934 Ry = -339.725 meV ; Ftot final = 0.000547 Ry/bohr ; |F|max composante final = 8.08e-05 Ry/bohr ; scf iter max/par pas = 24 ; E_F = -4.5344 eV ; -TS = -0.00153117 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.541667 0.541667] ; voisins (58, 72, 73) ; paire (58, 72) ; troisième 73
+  idéal                     : d(58-72)=2.46585  d(58-73)=2.46585  d(72-73)=2.46585
+  initial perturbé          : d(58-72)=2.40585  d(58-73)=2.45099  d(72-73)=2.45099
+  finales                   : d(58-72)=2.45234  d(58-73)=2.53385  d(72-73)=2.53385
+--- déplacement max vs idéal = 0.06048 A (atome 73) ; vs initial perturbé = 0.06048 A ; hors plan max |dz| = 1.24e-05 A
+  atome 58: |d|=0.02248 A, d_inplane=0.02248 A, dz=+7.22e-06 A
+  atome 72: |d|=0.02248 A, d_inplane=0.02248 A, dz=+4.57e-06 A
+  atome 73: |d|=0.06048 A, d_inplane=0.06048 A, dz=-1.24e-05 A
+--- atome 73 : d(73-58)=2.53385 A, d(73-72)=2.53385 A, dz(73)=-1.24e-05 A, d_inplane(73)=0.06048 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(58-72) (A)
+    0 -1529.45844705    +0.000 0.275868 0.099927   24 2.40585
+    1 -1529.47972914  -289.558 0.176280 0.044390   16 2.47556
+    2 -1529.48832112  -116.900 0.053714 0.014939   15 2.48501
+    3 -1529.48929356   -13.231 0.032328 0.006986   15 2.48621
+    4 -1529.48972889    -5.923 0.013429 0.003249   13 2.49154
+    5 -1529.48988432    -2.115 0.010603 0.001893   14 2.49638
+    6 -1529.48996245    -1.063 0.007203 0.002259   13 2.49684
+    7 -1529.49001017    -0.649 0.005035 0.001521   13 2.49437
+    8 -1529.49003400    -0.324 0.004549 0.001177   15 2.49071
+    9 -1529.49004833    -0.195 0.003179 0.000728   13 2.48782
+   10 -1529.49006051    -0.166 0.002612 0.000522   14 2.48417
+   11 -1529.49006804    -0.102 0.002392 0.000597   13 2.48115
+   12 -1529.49007454    -0.088 0.002222 0.000723   13 2.47809
+   13 -1529.49008177    -0.098 0.002394 0.000873   14 2.47447
+   14 -1529.49009089    -0.124 0.002895 0.000999   14 2.47011
+   15 -1529.49010454    -0.186 0.003568 0.000986   15 2.46367
+   16 -1529.49012023    -0.213 0.003555 0.000655   15 2.45727
+   17 -1529.49013359    -0.182 0.002553 0.000557   14 2.45383
+   18 -1529.49014031    -0.091 0.001672 0.000291   13 2.45337
+   19 -1529.49014279    -0.034 0.001156 0.000181   12 2.45318
+   20 -1529.49014396    -0.016 0.000767 0.000129   12 2.45276
+   21 -1529.49014442    -0.006 0.000547 0.000081   11 2.45234
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+
+===== 8x8 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/8x8/nspin2) : JOB DONE=True, sacct 21666589 COMPLETED 00:46:42, pas scf/BFGS = 24, bfgs converged = True (24 scf, 23 bfgs), « convergence NOT achieved » = 0, WALL = 2770.57s
+E finale = -1529.51310712 Ry = -20810.085963 eV ; E scf idéal ch. 4 = -1529.46517508 Ry ; ΔE_relax = -0.04793204 Ry = -652.149 meV ; Ftot final = 0.000349 Ry/bohr ; |F|max composante final = 7.998e-05 Ry/bohr ; scf iter max/par pas = 38 ; E_F = -4.6025 eV ; -TS = 0.00020187 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.541667 0.541667] ; voisins (58, 72, 73) ; paire (58, 72) ; troisième 73
+  idéal                     : d(58-72)=2.46585  d(58-73)=2.46585  d(72-73)=2.46585
+  initial perturbé          : d(58-72)=2.40585  d(58-73)=2.45099  d(72-73)=2.45099
+  finales                   : d(58-72)=2.07452  d(58-73)=2.58478  d(72-73)=2.58477
+--- déplacement max vs idéal = 0.20690 A (atome 72) ; vs initial perturbé = 0.17879 A ; hors plan max |dz| = 1.13e-07 A
+  atome 58: |d|=0.20689 A, d_inplane=0.20689 A, dz=+2.70e-08 A
+  atome 72: |d|=0.20690 A, d_inplane=0.20690 A, dz=+9.53e-09 A
+  atome 73: |d|=0.16479 A, d_inplane=0.16479 A, dz=+4.76e-08 A
+--- atome 73 : d(73-58)=2.58478 A, d(73-72)=2.58477 A, dz(73)=+4.76e-08 A, d_inplane(73)=0.16479 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(58-72) (A), m_tot, m_abs
+    0 -1529.46726671    +0.000 0.255195 0.096465   38 2.40585 +1.7900 2.7600
+    1 -1529.48388891  -226.157 0.185976 0.069276   23 2.44371 +1.4600 2.2400
+    2 -1529.49324173  -127.252 0.056909 0.016722   21 2.44775 +1.5400 2.3700
+    3 -1529.49512073   -25.565 0.044463 0.016364   20 2.43462 +1.7200 2.6600
+    4 -1529.49750231   -32.403 0.045513 0.019415   20 2.41216 +1.8700 2.8800
+    5 -1529.49993910   -33.154 0.047773 0.018464   18 2.38241 +1.9400 2.9700
+    6 -1529.50340842   -47.203 0.050801 0.014786   18 2.32502 +1.9700 2.9600
+    7 -1529.50663248   -43.866 0.058155 0.018392   18 2.23556 +1.9600 2.9400
+    8 -1529.50863112   -27.193 0.044206 0.018731   15 2.19745 +1.9600 2.9200
+    9 -1529.51061172   -26.947 0.035093 0.011176   15 2.14771 +1.9500 2.9000
+   10 -1529.51158814   -13.285 0.028005 0.005097   15 2.11024 +1.9500 2.8800
+   11 -1529.51211594    -7.181 0.020348 0.004206   14 2.08924 +1.9500 2.8600
+   12 -1529.51252647    -5.586 0.016332 0.003932   14 2.07483 +1.9400 2.8500
+   13 -1529.51280689    -3.815 0.014025 0.002809   14 2.06545 +1.9400 2.8500
+   14 -1529.51296169    -2.106 0.010501 0.001828   12 2.06318 +1.9400 2.8400
+   15 -1529.51304602    -1.147 0.007128 0.001363   12 2.06564 +1.9400 2.8400
+   16 -1529.51308046    -0.469 0.004503 0.001046   13 2.06862 +1.9400 2.8500
+   17 -1529.51309236    -0.162 0.002877 0.000613   12 2.07009 +1.9400 2.8500
+   18 -1529.51309824    -0.080 0.002034 0.000550   13 2.07096 +1.9400 2.8500
+   19 -1529.51310245    -0.057 0.001634 0.000359   13 2.07198 +1.9400 2.8500
+   20 -1529.51310514    -0.037 0.001253 0.000228   13 2.07329 +1.9400 2.8500
+   21 -1529.51310636    -0.017 0.000885 0.000127   12 2.07422 +1.9400 2.8500
+   22 -1529.51310690    -0.007 0.000580 0.000105   10 2.07456 +1.9400 2.8500
+   23 -1529.51310712    -0.003 0.000349 0.000080    9 2.07452 +1.9400 2.8500
+--- magnétisation finale : totale = +1.9400 µB, absolue = 2.8500 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/8x8/nspin2/projwfc/projwfc.out) : 127 atomes, charge totale 502.465 e, spilling 0.0109
+  moment atome 73 (isolé) = +0.9842 µB ; atome 58 = +0.1566 ; atome 72 = +0.1566
+  somme sous-réseau A (lacune, 63 atomes) = -0.6459 ; somme sous-réseau B (64 atomes) = +2.5662 ; total = +1.9203 µB (pw.x : +1.94)
+  composantes atome 73 : s 0.1498, p 0.8343 (pz 0.1677, px 0.6496, py 0.0169)
+
+===== 8x8 : E(nspin2) - E(nspin1) = -0.02296270 Ry = -312.423 meV
+
+===== 9x9 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/../9x9/nspin1) : JOB DONE=True, sacct 21587934 COMPLETED 01:03:37, pas scf/BFGS = 28, bfgs converged = True (28 scf, 27 bfgs), « convergence NOT achieved » = 0, WALL = 3788.51s
+E finale = -1939.06466920 Ry = -26382.318835 eV ; E scf idéal ch. 4 = -1939.03777059 Ry ; ΔE_relax = -0.02689861 Ry = -365.974 meV ; Ftot final = 0.000339 Ry/bohr ; |F|max composante final = 7.331e-05 Ry/bohr ; scf iter max/par pas = 26 ; E_F = -4.2239 eV ; -TS = -0.01242651 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.481481 0.481481] ; voisins (64, 80, 81) ; paire (64, 80) ; troisième 81
+  idéal                     : d(64-80)=2.46585  d(64-81)=2.46585  d(80-81)=2.46585
+  initial perturbé          : d(64-80)=2.40585  d(64-81)=2.45099  d(80-81)=2.45099
+  finales                   : d(64-80)=2.19194  d(64-81)=2.57319  d(80-81)=2.57319
+--- déplacement max vs idéal = 0.14608 A (atome 64) ; vs initial perturbé = 0.14181 A ; hors plan max |dz| = 5.19e-07 A
+  atome 64: |d|=0.14608 A, d_inplane=0.14608 A, dz=-1.89e-07 A
+  atome 80: |d|=0.14608 A, d_inplane=0.14608 A, dz=-1.62e-07 A
+  atome 81: |d|=0.14181 A, d_inplane=0.14181 A, dz=+5.19e-07 A
+--- atome 81 : d(81-64)=2.57319 A, d(81-80)=2.57319 A, dz(81)=+5.19e-07 A, d_inplane(81)=0.14181 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(64-80) (A)
+    0 -1939.03085605    +0.000 0.270970 0.096515   26 2.40585
+    1 -1939.04909863  -248.203 0.188660 0.053126   19 2.47737
+    2 -1939.05841262  -126.723 0.050791 0.014834   17 2.48412
+    3 -1939.05921236   -10.881 0.031723 0.008580   16 2.48511
+    4 -1939.05960934    -5.401 0.012811 0.004102   15 2.49036
+    5 -1939.05976129    -2.067 0.011168 0.003126   15 2.49419
+    6 -1939.05988408    -1.671 0.010902 0.004965   15 2.49365
+    7 -1939.06009044    -2.808 0.013398 0.006555   17 2.48568
+    8 -1939.06034636    -3.482 0.017692 0.007864   17 2.47209
+    9 -1939.06069827    -4.788 0.023219 0.008448   17 2.45026
+   10 -1939.06111195    -5.628 0.028578 0.007524   18 2.41563
+   11 -1939.06170574    -8.079 0.028375 0.007062   17 2.38308
+   12 -1939.06243111    -9.869 0.025490 0.006375   16 2.34727
+   13 -1939.06337761   -12.878 0.020328 0.003693   18 2.29356
+   14 -1939.06411322   -10.008 0.017630 0.003943   19 2.21539
+   15 -1939.06430778    -2.647 0.013264 0.002452   16 2.18787
+   16 -1939.06443237    -1.695 0.008379 0.001404   15 2.17980
+   17 -1939.06451733    -1.156 0.007285 0.001242   15 2.18129
+   18 -1939.06455547    -0.519 0.006117 0.001066   14 2.18661
+   19 -1939.06460117    -0.622 0.005370 0.000752   17 2.19193
+   20 -1939.06464150    -0.549 0.004659 0.000795   14 2.19364
+   21 -1939.06465618    -0.200 0.003473 0.000628   14 2.19143
+   22 -1939.06466347    -0.099 0.001929 0.000507   14 2.19007
+   23 -1939.06466631    -0.039 0.001271 0.000225   12 2.19081
+   24 -1939.06466772    -0.019 0.000930 0.000181   12 2.19208
+   25 -1939.06466857    -0.012 0.000629 0.000147   12 2.19292
+   26 -1939.06466898    -0.006 0.000497 0.000100   11 2.19264
+   27 -1939.06466920    -0.003 0.000339 0.000073   12 2.19194
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+
+===== 9x9 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/../9x9/nspin2) : JOB DONE=True, sacct 21587935 COMPLETED 03:18:36, pas scf/BFGS = 24, bfgs converged = True (24 scf, 23 bfgs), « convergence NOT achieved » = 0, WALL = 11886.87s
+E finale = -1939.09828972 Ry = -26382.776265 eV ; E scf idéal ch. 4 = -1939.03777059 Ry ; ΔE_relax = -0.06051913 Ry = -823.405 meV ; Ftot final = 0.000494 Ry/bohr ; |F|max composante final = 9.04e-05 Ry/bohr ; scf iter max/par pas = 54 ; E_F = -4.2244 eV ; -TS = -0.00846913 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.481481 0.481481] ; voisins (64, 80, 81) ; paire (64, 80) ; troisième 81
+  idéal                     : d(64-80)=2.46585  d(64-81)=2.46585  d(80-81)=2.46585
+  initial perturbé          : d(64-80)=2.40585  d(64-81)=2.45099  d(80-81)=2.45099
+  finales                   : d(64-80)=1.98798  d(64-81)=2.57260  d(80-81)=2.57259
+--- déplacement max vs idéal = 0.24811 A (atome 80) ; vs initial perturbé = 0.21937 A ; hors plan max |dz| = 6.03e-08 A
+  atome 64: |d|=0.24811 A, d_inplane=0.24811 A, dz=-2.70e-08 A
+  atome 80: |d|=0.24811 A, d_inplane=0.24811 A, dz=-1.59e-08 A
+  atome 81: |d|=0.17049 A, d_inplane=0.17049 A, dz=+6.03e-08 A
+--- atome 81 : d(81-64)=2.57260 A, d(81-80)=2.57259 A, dz(81)=+6.03e-08 A, d_inplane(81)=0.17049 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(64-80) (A), m_tot, m_abs
+    0 -1939.04549516    +0.000 0.264303 0.095865   54 2.40585 +1.4400 3.0000
+    1 -1939.06160392  -219.171 0.212129 0.077060   24 2.43402 +1.2400 2.4200
+    2 -1939.07370893  -164.697 0.065842 0.019719   42 2.43027 +1.3200 2.6100
+    3 -1939.07691819   -43.664 0.056595 0.018798   24 2.40828 +1.4000 2.7600
+    4 -1939.08183457   -66.891 0.062523 0.026033   24 2.36300 +1.4800 2.8700
+    5 -1939.08632218   -61.057 0.072861 0.021741   22 2.28529 +1.3800 2.6600
+    6 -1939.08960524   -44.668 0.052687 0.015959   21 2.22845 +1.3600 2.5900
+    7 -1939.09244996   -38.704 0.045644 0.018701   20 2.15422 +1.3600 2.5600
+    8 -1939.09443580   -27.019 0.037652 0.009131   20 2.08781 +1.3600 2.5200
+    9 -1939.09581547   -18.771 0.029905 0.007254   19 2.03062 +1.3500 2.4900
+   10 -1939.09659623   -10.623 0.024358 0.005480   18 2.00332 +1.3500 2.4700
+   11 -1939.09717708    -7.903 0.019737 0.004200   17 1.99091 +1.3500 2.4600
+   12 -1939.09761733    -5.990 0.017245 0.002461   17 1.98459 +1.3500 2.4500
+   13 -1939.09789877    -3.829 0.013960 0.002417   14 1.98286 +1.3500 2.4500
+   14 -1939.09810774    -2.843 0.010625 0.002151   12 1.98157 +1.3500 2.4500
+   15 -1939.09819740    -1.220 0.007901 0.001575   12 1.98067 +1.3500 2.4500
+   16 -1939.09823356    -0.492 0.004795 0.000859   11 1.98108 +1.3500 2.4500
+   17 -1939.09825374    -0.275 0.003813 0.000811   12 1.98211 +1.3500 2.4500
+   18 -1939.09826885    -0.206 0.003216 0.000623   14 1.98378 +1.3500 2.4500
+   19 -1939.09827883    -0.136 0.002602 0.000557   17 1.98556 +1.3500 2.4500
+   20 -1939.09828564    -0.093 0.001928 0.000322   16 1.98736 +1.3500 2.4500
+   21 -1939.09828850    -0.039 0.001229 0.000198   14 1.98806 +1.3500 2.4500
+   22 -1939.09828941    -0.012 0.000798 0.000128   11 1.98810 +1.3500 2.4500
+   23 -1939.09828972    -0.004 0.000494 0.000090   10 1.98798 +1.3500 2.4500
+--- magnétisation finale : totale = +1.3500 µB, absolue = 2.4500 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/../9x9/projwfc/gamma_nspin2/projwfc.out) : 161 atomes, charge totale 636.983 e, spilling 0.0109
+  moment atome 81 (isolé) = +0.9111 µB ; atome 64 = +0.0434 ; atome 80 = +0.0434
+  somme sous-réseau A (lacune, 80 atomes) = -0.7294 ; somme sous-réseau B (81 atomes) = +2.0610 ; total = +1.3316 µB (pw.x : +1.35)
+  composantes atome 81 : s 0.1474, p 0.7637 (pz 0.0924, px 0.6555, py 0.0157)
+
+===== 9x9 : E(nspin2) - E(nspin1) = -0.03362052 Ry = -457.430 meV
+
+===== 10x10 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/10x10/nspin1) : JOB DONE=True, sacct 21666586 COMPLETED 00:45:26, pas scf/BFGS = 16, bfgs converged = True (16 scf, 15 bfgs), « convergence NOT achieved » = 0, WALL = 2696.40s
+E finale = -2396.97400552 Ry = -32612.492743 eV ; E scf idéal ch. 4 = -2396.94841705 Ry ; ΔE_relax = -0.02558847 Ry = -348.149 meV ; Ftot final = 0.000515 Ry/bohr ; |F|max composante final = 7.648e-05 Ry/bohr ; scf iter max/par pas = 25 ; E_F = -4.5815 eV ; -TS = -3.256e-05 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau B à [0.466667 0.466667] ; voisins (89, 90, 108) ; paire (89, 90) ; troisième 108
+  idéal                     : d(89-90)=2.46585  d(89-108)=2.46585  d(90-108)=2.46585
+  initial perturbé          : d(89-90)=2.40585  d(89-108)=2.45099  d(90-108)=2.45099
+  finales                   : d(89-90)=2.48474  d(89-108)=2.51089  d(90-108)=2.51089
+--- déplacement max vs idéal = 0.04843 A (atome 91) ; vs initial perturbé = 0.04843 A ; hors plan max |dz| = 9.05e-08 A
+  atome 89: |d|=0.01647 A, d_inplane=0.01647 A, dz=-9.05e-08 A
+  atome 90: |d|=0.01647 A, d_inplane=0.01647 A, dz=-2.70e-08 A
+  atome 108: |d|=0.03301 A, d_inplane=0.03301 A, dz=+2.70e-08 A
+--- atome 108 : d(108-89)=2.51089 A, d(108-90)=2.51089 A, dz(108)=+2.70e-08 A, d_inplane(108)=0.03301 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(89-90) (A)
+    0 -2396.94173142    +0.000 0.276941 0.099831   25 2.40585
+    1 -2396.96347519  -295.839 0.174854 0.043362   15 2.47535
+    2 -2396.97200386  -116.038 0.054317 0.015186   15 2.48533
+    3 -2396.97301450   -13.750 0.032879 0.007622   14 2.48653
+    4 -2396.97347960    -6.328 0.014312 0.003283   13 2.49209
+    5 -2396.97367617    -2.674 0.011803 0.002425   13 2.49763
+    6 -2396.97378750    -1.515 0.009454 0.002810   13 2.49873
+    7 -2396.97388282    -1.297 0.007249 0.001966   13 2.49666
+    8 -2396.97394670    -0.869 0.006527 0.001144   14 2.49256
+    9 -2396.97397841    -0.431 0.004429 0.000761   12 2.48940
+   10 -2396.97399418    -0.215 0.002786 0.000399   12 2.48733
+   11 -2396.97400030    -0.083 0.002109 0.000327   12 2.48637
+   12 -2396.97400312    -0.038 0.001357 0.000223   13 2.48586
+   13 -2396.97400441    -0.018 0.000876 0.000167   11 2.48542
+   14 -2396.97400504    -0.009 0.000649 0.000101   11 2.48508
+   15 -2396.97400552    -0.007 0.000515 0.000076   10 2.48474
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+
+===== 10x10 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/10x10/nspin2) : JOB DONE=True, sacct 21666587 COMPLETED 02:41:26, pas scf/BFGS = 27, bfgs converged = True (27 scf, 26 bfgs), « convergence NOT achieved » = 0, WALL = 9653.37s
+E finale = -2396.99673446 Ry = -32612.801986 eV ; E scf idéal ch. 4 = -2396.94841705 Ry ; ΔE_relax = -0.04831741 Ry = -657.392 meV ; Ftot final = 0.000362 Ry/bohr ; |F|max composante final = 6.084e-05 Ry/bohr ; scf iter max/par pas = 41 ; E_F = -4.616 eV ; -TS = 0.00014611 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau B à [0.466667 0.466667] ; voisins (89, 90, 108) ; paire (89, 90) ; troisième 108
+  idéal                     : d(89-90)=2.46585  d(89-108)=2.46585  d(90-108)=2.46585
+  initial perturbé          : d(89-90)=2.40585  d(89-108)=2.45099  d(90-108)=2.45099
+  finales                   : d(89-90)=2.04976  d(89-108)=2.58525  d(90-108)=2.58525
+--- déplacement max vs idéal = 0.21911 A (atome 90) ; vs initial perturbé = 0.19086 A ; hors plan max |dz| = 1.30e-07 A
+  atome 89: |d|=0.21911 A, d_inplane=0.21911 A, dz=+2.38e-08 A
+  atome 90: |d|=0.21911 A, d_inplane=0.21911 A, dz=-1.59e-08 A
+  atome 108: |d|=0.16917 A, d_inplane=0.16917 A, dz=+8.89e-08 A
+--- atome 108 : d(108-89)=2.58525 A, d(108-90)=2.58525 A, dz(108)=+8.89e-08 A, d_inplane(108)=0.16917 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(89-90) (A), m_tot, m_abs
+    0 -2396.94966480    +0.000 0.254012 0.093379   41 2.40585 +1.7600 2.6900
+    1 -2396.96644340  -228.284 0.182373 0.064502   22 2.44423 +1.3500 2.0500
+    2 -2396.97542281  -122.171 0.055684 0.017388   21 2.44971 +1.4300 2.1800
+    3 -2396.97715020   -23.502 0.042741 0.013437   19 2.43775 +1.6400 2.5000
+    4 -2396.97924291   -28.473 0.043823 0.017058   19 2.41780 +1.8200 2.7700
+    5 -2396.98139802   -29.322 0.047384 0.017087   18 2.39163 +1.9100 2.9000
+    6 -2396.98459266   -43.465 0.051962 0.016675   18 2.34137 +1.9600 2.9300
+    7 -2396.98816532   -48.609 0.056545 0.018965   19 2.26298 +1.9700 2.9000
+    8 -2396.99039336   -30.314 0.055883 0.018314   15 2.16770 +1.9500 2.8700
+    9 -2396.99248347   -28.437 0.041753 0.015064   14 2.14302 +1.9500 2.8600
+   10 -2396.99420967   -23.486 0.029753 0.006972   15 2.11530 +1.9500 2.8400
+   11 -2396.99483245    -8.473 0.024155 0.004743   15 2.09085 +1.9400 2.8300
+   12 -2396.99532624    -6.718 0.018429 0.004635   15 2.06804 +1.9400 2.8100
+   13 -2396.99578410    -6.230 0.017456 0.004392   15 2.04412 +1.9400 2.8000
+   14 -2396.99604497    -3.549 0.015569 0.003243   13 2.03721 +1.9300 2.7900
+   15 -2396.99629441    -3.394 0.012592 0.001595   12 2.03929 +1.9300 2.7900
+   16 -2396.99650869    -2.915 0.011604 0.002162   14 2.04679 +1.9400 2.7900
+   17 -2396.99662458    -1.577 0.009301 0.001840   13 2.05062 +1.9400 2.8000
+   18 -2396.99668387    -0.807 0.005526 0.000931   12 2.04959 +1.9400 2.8000
+   19 -2396.99670726    -0.318 0.003896 0.000667   12 2.04744 +1.9400 2.8000
+   20 -2396.99671834    -0.151 0.002777 0.000485   13 2.04668 +1.9400 2.8000
+   21 -2396.99672495    -0.090 0.001895 0.000317   13 2.04744 +1.9400 2.8000
+   22 -2396.99672902    -0.055 0.001662 0.000254   13 2.04891 +1.9400 2.8000
+   23 -2396.99673158    -0.035 0.001424 0.000215   12 2.04989 +1.9400 2.8000
+   24 -2396.99673355    -0.027 0.000963 0.000163   11 2.05023 +1.9400 2.8000
+   25 -2396.99673426    -0.010 0.000630 0.000110   10 2.04994 +1.9400 2.8000
+   26 -2396.99673446    -0.003 0.000362 0.000061    9 2.04976 +1.9400 2.8000
+--- magnétisation finale : totale = +1.9400 µB, absolue = 2.8000 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/10x10/nspin2/projwfc/projwfc.out) : 199 atomes, charge totale 787.333 e, spilling 0.0109
+  moment atome 108 (isolé) = +0.9957 µB ; atome 89 = +0.1607 ; atome 90 = +0.1607
+  somme sous-réseau B (lacune, 99 atomes) = -0.6142 ; somme sous-réseau A (100 atomes) = +2.5276 ; total = +1.9134 µB (pw.x : +1.94)
+  composantes atome 108 : s 0.1503, p 0.8454 (pz 0.1757, px 0.1759, py 0.4937)
+
+===== 10x10 : E(nspin2) - E(nspin1) = -0.02272894 Ry = -309.243 meV
+
+===== 11x11 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/11x11/nspin1) : JOB DONE=True, sacct 21666584 COMPLETED 02:43:46, pas scf/BFGS = 27, bfgs converged = True (27 scf, 26 bfgs), « convergence NOT achieved » = 0, WALL = 9800.34s
+E finale = -2902.96097163 Ry = -39496.796128 eV ; E scf idéal ch. 4 = -2902.93599922 Ry ; ΔE_relax = -0.02497241 Ry = -339.767 meV ; Ftot final = 0.000591 Ry/bohr ; |F|max composante final = 9.12e-05 Ry/bohr ; scf iter max/par pas = 24 ; E_F = -4.4951 eV ; -TS = -0.00270028 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.484848 0.484848] ; voisins (100, 120, 121) ; paire (100, 120) ; troisième 121
+  idéal                     : d(100-120)=2.46585  d(100-121)=2.46585  d(120-121)=2.46585
+  initial perturbé          : d(100-120)=2.40585  d(100-121)=2.45099  d(120-121)=2.45099
+  finales                   : d(100-120)=2.40959  d(100-121)=2.54232  d(120-121)=2.54232
+--- déplacement max vs idéal = 0.07790 A (atome 121) ; vs initial perturbé = 0.07790 A ; hors plan max |dz| = 7.12e-05 A
+  atome 100: |d|=0.03785 A, d_inplane=0.03785 A, dz=-3.32e-05 A
+  atome 120: |d|=0.03785 A, d_inplane=0.03785 A, dz=-3.19e-05 A
+  atome 121: |d|=0.07790 A, d_inplane=0.07790 A, dz=+7.12e-05 A
+--- atome 121 : d(121-100)=2.54232 A, d(121-120)=2.54232 A, dz(121)=+7.12e-05 A, d_inplane(121)=0.07790 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(100-120) (A)
+    0 -2902.92932255    +0.000 0.274532 0.099668   24 2.40585
+    1 -2902.95012773  -283.069 0.176860 0.044522   17 2.47495
+    2 -2902.95873640  -117.127 0.053185 0.014877   16 2.48359
+    3 -2902.95968481   -12.904 0.032221 0.007164   15 2.48442
+    4 -2902.96011909    -5.909 0.013666 0.003252   13 2.48934
+    5 -2902.96029190    -2.351 0.011216 0.002364   13 2.49362
+    6 -2902.96039390    -1.388 0.009099 0.003039   13 2.49363
+    7 -2902.96048860    -1.288 0.007544 0.002464   15 2.48975
+    8 -2902.96057118    -1.124 0.007659 0.001981   15 2.48231
+    9 -2902.96063219    -0.830 0.006815 0.001643   14 2.47418
+   10 -2902.96067930    -0.641 0.005444 0.001753   15 2.46594
+   11 -2902.96071010    -0.419 0.004589 0.001475   14 2.46065
+   12 -2902.96073790    -0.378 0.004560 0.001103   15 2.45576
+   13 -2902.96076945    -0.429 0.004966 0.000974   14 2.44904
+   14 -2902.96080253    -0.450 0.005293 0.000734   16 2.44121
+   15 -2902.96084134    -0.528 0.005418 0.000890   15 2.43220
+   16 -2902.96088445    -0.587 0.005363 0.000913   15 2.42268
+   17 -2902.96092046    -0.490 0.004601 0.000659   14 2.41500
+   18 -2902.96094131    -0.284 0.003454 0.000590   14 2.41124
+   19 -2902.96095161    -0.140 0.002624 0.000355   13 2.41051
+   20 -2902.96095814    -0.089 0.002133 0.000336   13 2.41065
+   21 -2902.96096363    -0.075 0.001812 0.000309   12 2.41038
+   22 -2902.96096712    -0.047 0.001483 0.000198   14 2.40952
+   23 -2902.96096900    -0.026 0.001094 0.000134   12 2.40890
+   24 -2902.96097021    -0.016 0.000848 0.000108   11 2.40882
+   25 -2902.96097110    -0.012 0.000690 0.000125   11 2.40916
+   26 -2902.96097163    -0.007 0.000591 0.000091   11 2.40959
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+
+===== 11x11 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/11x11/nspin2) : JOB DONE=True, sacct 21666585 COMPLETED 07:34:46, pas scf/BFGS = 28, bfgs converged = True (28 scf, 27 bfgs), « convergence NOT achieved » = 0, WALL = 27252.05s
+E finale = -2902.98659119 Ry = -39497.144700 eV ; E scf idéal ch. 4 = -2902.93599922 Ry ; ΔE_relax = -0.05059197 Ry = -688.339 meV ; Ftot final = 0.000505 Ry/bohr ; |F|max composante final = 8.627e-05 Ry/bohr ; scf iter max/par pas = 31 ; E_F = -4.5332 eV ; -TS = -0.00103955 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau A à [0.484848 0.484848] ; voisins (100, 120, 121) ; paire (100, 120) ; troisième 121
+  idéal                     : d(100-120)=2.46585  d(100-121)=2.46585  d(120-121)=2.46585
+  initial perturbé          : d(100-120)=2.40585  d(100-121)=2.45099  d(120-121)=2.45099
+  finales                   : d(100-120)=2.02325  d(100-121)=2.58144  d(120-121)=2.58145
+--- déplacement max vs idéal = 0.23162 A (atome 100) ; vs initial perturbé = 0.20315 A ; hors plan max |dz| = 1.17e-07 A
+  atome 100: |d|=0.23162 A, d_inplane=0.23162 A, dz=+1.08e-07 A
+  atome 120: |d|=0.23162 A, d_inplane=0.23162 A, dz=+1.03e-07 A
+  atome 121: |d|=0.17113 A, d_inplane=0.17113 A, dz=+5.40e-08 A
+--- atome 121 : d(121-100)=2.58144 A, d(121-120)=2.58145 A, dz(121)=+5.40e-08 A, d_inplane(121)=0.17113 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(100-120) (A), m_tot, m_abs
+    0 -2902.93778131    +0.000 0.256461 0.096727   31 2.40585 +1.7000 2.6300
+    1 -2902.95446137  -226.944 0.187094 0.068613   24 2.44325 +1.2200 1.8300
+    2 -2902.96389870  -128.401 0.056461 0.016632   21 2.44707 +1.3600 2.0800
+    3 -2902.96573543   -24.990 0.044144 0.016162   22 2.43403 +1.5500 2.3800
+    4 -2902.96810788   -32.279 0.045647 0.019268   21 2.41140 +1.7100 2.6400
+    5 -2902.97059741   -33.872 0.049608 0.019100   20 2.38123 +1.8100 2.7800
+    6 -2902.97412845   -48.042 0.055473 0.017071   19 2.32531 +1.8900 2.8500
+    7 -2902.97742195   -44.810 0.065424 0.020254   18 2.23817 +1.8400 2.7800
+    8 -2902.97975878   -31.794 0.050189 0.021607   16 2.19489 +1.8300 2.7400
+    9 -2902.98217517   -32.877 0.039945 0.015947   16 2.13915 +1.8200 2.7000
+   10 -2902.98365665   -20.157 0.032320 0.006300   16 2.08481 +1.8000 2.6500
+   11 -2902.98434376    -9.349 0.024774 0.006191   16 2.05783 +1.7900 2.6200
+   12 -2902.98490282    -7.606 0.019978 0.004881   16 2.03994 +1.7800 2.5900
+   13 -2902.98536847    -6.335 0.018190 0.004014   15 2.02579 +1.7700 2.5700
+   14 -2902.98567733    -4.202 0.016078 0.002275   15 2.01971 +1.7700 2.5600
+   15 -2902.98593697    -3.533 0.013853 0.001779   13 2.01943 +1.7700 2.5600
+   16 -2902.98617193    -3.197 0.013061 0.002768   15 2.02205 +1.7700 2.5700
+   17 -2902.98635405    -2.478 0.011475 0.002235   14 2.02439 +1.7700 2.5700
+   18 -2902.98646780    -1.548 0.008218 0.001207   13 2.02482 +1.7700 2.5700
+   19 -2902.98652688    -0.804 0.005812 0.001098   12 2.02391 +1.7700 2.5700
+   20 -2902.98655322    -0.358 0.004392 0.000588   13 2.02313 +1.7700 2.5700
+   21 -2902.98656756    -0.195 0.003042 0.000437   12 2.02292 +1.7700 2.5700
+   22 -2902.98657727    -0.132 0.002459 0.000357   12 2.02305 +1.7700 2.5700
+   23 -2902.98658310    -0.079 0.002093 0.000328   13 2.02321 +1.7700 2.5700
+   24 -2902.98658690    -0.052 0.001556 0.000250   12 2.02319 +1.7700 2.5700
+   25 -2902.98658952    -0.036 0.001220 0.000218   11 2.02308 +1.7700 2.5700
+   26 -2902.98659074    -0.017 0.000868 0.000172   11 2.02309 +1.7700 2.5700
+   27 -2902.98659119    -0.006 0.000505 0.000086   10 2.02325 +1.7700 2.5700
+--- magnétisation finale : totale = +1.7700 µB, absolue = 2.5700 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/11x11/nspin2/projwfc/projwfc.out) : 241 atomes, charge totale 953.511 e, spilling 0.0109
+  moment atome 121 (isolé) = +0.9654 µB ; atome 100 = +0.1215 ; atome 120 = +0.1215
+  somme sous-réseau A (lacune, 120 atomes) = -0.5583 ; somme sous-réseau B (121 atomes) = +2.3086 ; total = +1.7503 µB (pw.x : +1.77)
+  composantes atome 121 : s 0.1491, p 0.8162 (pz 0.1455, px 0.6543, py 0.0165)
+
+===== 11x11 : E(nspin2) - E(nspin1) = -0.02561956 Ry = -348.572 meV
+
+===== 12x12 nspin1 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/12x12/nspin1) : JOB DONE=True, sacct 21666582 COMPLETED 03:33:17, pas scf/BFGS = 32, bfgs converged = True (32 scf, 31 bfgs), « convergence NOT achieved » = 0, WALL = 12770.10s
+E finale = -3457.11840254 Ry = -47036.492075 eV ; E scf idéal ch. 4 = -3457.09139568 Ry ; ΔE_relax = -0.02700686 Ry = -367.447 meV ; Ftot final = 0.000538 Ry/bohr ; |F|max composante final = 9.785e-05 Ry/bohr ; scf iter max/par pas = 27 ; E_F = -4.2198 eV ; -TS = -0.01330837 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau B à [0.472222 0.472222] ; voisins (131, 132, 154) ; paire (131, 132) ; troisième 154
+  idéal                     : d(131-132)=2.46585  d(131-154)=2.46585  d(132-154)=2.46585
+  initial perturbé          : d(131-132)=2.40585  d(131-154)=2.45099  d(132-154)=2.45099
+  finales                   : d(131-132)=2.15980  d(131-154)=2.56934  d(132-154)=2.56934
+--- déplacement max vs idéal = 0.16084 A (atome 131) ; vs initial perturbé = 0.15140 A ; hors plan max |dz| = 3.13e-07 A
+  atome 131: |d|=0.16084 A, d_inplane=0.16084 A, dz=-1.33e-07 A
+  atome 132: |d|=0.16084 A, d_inplane=0.16084 A, dz=-7.94e-08 A
+  atome 154: |d|=0.14636 A, d_inplane=0.14636 A, dz=+3.13e-07 A
+--- atome 154 : d(154-131)=2.56934 A, d(154-132)=2.56934 A, dz(154)=+3.13e-07 A, d_inplane(154)=0.14636 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(131-132) (A)
+    0 -3457.08464513    +0.000 0.268374 0.090621   27 2.40585
+    1 -3457.10285081  -247.701 0.183975 0.048190   19 2.47569
+    2 -3457.11181651  -121.985 0.049887 0.012871   17 2.48212
+    3 -3457.11259443   -10.584 0.031355 0.007743   18 2.48277
+    4 -3457.11298380    -5.298 0.012822 0.003328   17 2.48752
+    5 -3457.11313998    -2.125 0.011428 0.003136   16 2.49075
+    6 -3457.11327633    -1.855 0.011660 0.004701   16 2.48959
+    7 -3457.11353187    -3.477 0.015232 0.006762   18 2.47969
+    8 -3457.11383821    -4.168 0.019962 0.008395   18 2.46398
+    9 -3457.11423306    -5.372 0.025246 0.009577   18 2.43924
+   10 -3457.11477476    -7.370 0.028371 0.007884   19 2.40002
+   11 -3457.11554725   -10.510 0.025867 0.005367   19 2.35689
+   12 -3457.11635331   -10.967 0.020755 0.004090   18 2.30947
+   13 -3457.11693472    -7.910 0.019640 0.002807   23 2.25328
+   14 -3457.11720121    -3.626 0.014910 0.002096   16 2.23004
+   15 -3457.11746057    -3.529 0.013533 0.001845   16 2.21317
+   16 -3457.11772011    -3.531 0.011996 0.001703   17 2.19477
+   17 -3457.11788775    -2.281 0.011569 0.001672   17 2.18051
+   18 -3457.11802584    -1.879 0.010025 0.001278   17 2.16728
+   19 -3457.11815493    -1.756 0.008654 0.001169   17 2.15385
+   20 -3457.11823082    -1.033 0.007106 0.001230   15 2.15019
+   21 -3457.11828622    -0.754 0.005685 0.000855   14 2.15208
+   22 -3457.11832175    -0.483 0.004727 0.000745   15 2.15731
+   23 -3457.11834297    -0.289 0.003885 0.000485   14 2.16196
+   24 -3457.11836165    -0.254 0.003540 0.000414   15 2.16532
+   25 -3457.11837864    -0.231 0.003059 0.000488   15 2.16616
+   26 -3457.11838941    -0.147 0.002466 0.000387   15 2.16445
+   27 -3457.11839464    -0.071 0.001921 0.000314   16 2.16226
+   28 -3457.11839795    -0.045 0.001427 0.000208   14 2.16091
+   29 -3457.11840078    -0.039 0.001169 0.000154   14 2.15996
+   30 -3457.11840203    -0.017 0.000902 0.000132   14 2.15984
+   31 -3457.11840254    -0.007 0.000538 0.000098   11 2.15980
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+
+===== 12x12 nspin2 (/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/12x12/nspin2) : JOB DONE=True, sacct 21666583 COMPLETED 07:54:45, pas scf/BFGS = 30, bfgs converged = True (30 scf, 29 bfgs), « convergence NOT achieved » = 0, WALL = 28455.78s
+E finale = -3457.15209844 Ry = -47036.950531 eV ; E scf idéal ch. 4 = -3457.09139568 Ry ; ΔE_relax = -0.06070276 Ry = -825.903 meV ; Ftot final = 0.000478 Ry/bohr ; |F|max composante final = 9.765e-05 Ry/bohr ; scf iter max/par pas = 52 ; E_F = -4.2226 eV ; -TS = -0.01013802 Ry
+--- distances C-C entre voisins sous-coordonnés (A) ; lacune sous-réseau B à [0.472222 0.472222] ; voisins (131, 132, 154) ; paire (131, 132) ; troisième 154
+  idéal                     : d(131-132)=2.46585  d(131-154)=2.46585  d(132-154)=2.46585
+  initial perturbé          : d(131-132)=2.40585  d(131-154)=2.45099  d(132-154)=2.45099
+  finales                   : d(131-132)=1.94876  d(131-154)=2.56827  d(132-154)=2.56828
+--- déplacement max vs idéal = 0.26691 A (atome 132) ; vs initial perturbé = 0.23797 A ; hors plan max |dz| = 2.43e-07 A
+  atome 131: |d|=0.26691 A, d_inplane=0.26691 A, dz=+6.35e-09 A
+  atome 132: |d|=0.26691 A, d_inplane=0.26691 A, dz=-1.11e-08 A
+  atome 154: |d|=0.17447 A, d_inplane=0.17447 A, dz=+2.43e-07 A
+--- atome 154 : d(154-131)=2.56827 A, d(154-132)=2.56828 A, dz(154)=+2.43e-07 A, d_inplane(154)=0.17447 A
+--- suivi par pas : k, E (Ry), dE (meV), Ftot (Ry/bohr), Fmax comp., scf iter, d(131-132) (A), m_tot, m_abs
+    0 -3457.09786800    +0.000 0.263041 0.092069   52 2.40585 +1.1000 1.9200
+    1 -3457.11376824  -216.334 0.209041 0.072046   24 2.43471 +0.9700 1.5900
+    2 -3457.12551537  -159.828 0.063853 0.022466   24 2.43206 +1.0200 1.7100
+    3 -3457.12841466   -39.447 0.054364 0.017095   22 2.41181 +1.1000 1.8600
+    4 -3457.13275838   -59.099 0.059039 0.021399   23 2.37171 +1.1900 2.0100
+    5 -3457.13762954   -66.276 0.070717 0.020887   21 2.30048 +1.1400 1.9000
+    6 -3457.14117049   -48.177 0.055064 0.014065   18 2.23487 +1.1300 1.8500
+    7 -3457.14419126   -41.100 0.046940 0.016936   17 2.15427 +1.1300 1.8200
+    8 -3457.14651171   -31.571 0.039118 0.009374   18 2.07944 +1.1300 1.7900
+    9 -3457.14816393   -22.480 0.033328 0.007388   18 2.01467 +1.1300 1.7600
+   10 -3457.14912151   -13.029 0.027090 0.005781   17 1.98399 +1.1300 1.7500
+   11 -3457.14987441   -10.244 0.021895 0.004422   15 1.96761 +1.1300 1.7400
+   12 -3457.15044206    -7.723 0.020161 0.003504   15 1.95752 +1.1300 1.7300
+   13 -3457.15080593    -4.951 0.016946 0.002448   15 1.95466 +1.1300 1.7300
+   14 -3457.15115457    -4.743 0.014747 0.001884   14 1.95291 +1.1300 1.7300
+   15 -3457.15143181    -3.772 0.014354 0.002027   13 1.95138 +1.1300 1.7300
+   16 -3457.15163263    -2.732 0.012596 0.001559   12 1.95094 +1.1300 1.7300
+   17 -3457.15181246    -2.447 0.010284 0.001331   13 1.95079 +1.1300 1.7300
+   18 -3457.15193305    -1.641 0.008315 0.001073   13 1.95072 +1.1300 1.7300
+   19 -3457.15199300    -0.816 0.006382 0.000972   13 1.95068 +1.1300 1.7300
+   20 -3457.15202836    -0.481 0.004828 0.000668   13 1.95034 +1.1300 1.7300
+   21 -3457.15205238    -0.327 0.003999 0.000469   12 1.94967 +1.1300 1.7300
+   22 -3457.15207000    -0.240 0.003495 0.000430   13 1.94886 +1.1300 1.7300
+   23 -3457.15208210    -0.165 0.002852 0.000365   13 1.94817 +1.1300 1.7300
+   24 -3457.15208979    -0.105 0.002235 0.000419   12 1.94782 +1.1300 1.7300
+   25 -3457.15209435    -0.062 0.001770 0.000286   13 1.94783 +1.1300 1.7300
+   26 -3457.15209665    -0.031 0.001192 0.000205   12 1.94809 +1.1300 1.7300
+   27 -3457.15209768    -0.014 0.000830 0.000146   11 1.94836 +1.1300 1.7300
+   28 -3457.15209815    -0.006 0.000628 0.000153   10 1.94858 +1.1300 1.7300
+   29 -3457.15209844    -0.004 0.000478 0.000098   10 1.94876 +1.1300 1.7300
+--- magnétisation finale : totale = +1.1300 µB, absolue = 1.7300 µB
+--- spglib (symprec 0.001 A)
+  initial perturbé          : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+  finales                   : supercellule Amm2 (n° 38, 4 op.) ; site lacune (atome factice) : mm2 ; groupe avec factice Amm2 (4 op.)
+--- Löwdin (projwfc.x, /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/12x12/nspin2/projwfc/projwfc.out) : 287 atomes, charge totale 1135.510 e, spilling 0.0109
+  moment atome 154 (isolé) = +0.9043 µB ; atome 131 = +0.0334 ; atome 132 = +0.0334
+  somme sous-réseau B (lacune, 143 atomes) = -0.3756 ; somme sous-réseau A (144 atomes) = +1.4907 ; total = +1.1151 µB (pw.x : +1.13)
+  composantes atome 154 : s 0.1470, p 0.7572 (pz 0.0837, px 0.1762, py 0.4975)
+
+===== 12x12 : E(nspin2) - E(nspin1) = -0.03369590 Ry = -458.456 meV

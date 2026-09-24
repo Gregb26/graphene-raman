@@ -179,7 +179,7 @@ scripts (chemins absolus de §4 de l'inventaire inchangés).
 
 - Phase 0 : **exécutée, vérifiée** (2026-09-17 : 51,8 Gio, 5 007 fichiers, md5 OK ; 2026-09-22 : + `vacancy_relaxed/nspin{1,2}` 6,3 Gio, md5 OK, revérifié 2026-09-23).
 - Phase 3 : **faite le 2026-09-23** — `origin` → `https://github.com/Gregb26/graphene-raman.git`, `git fetch` OK, `main` à jour avec `origin/main` (78ed94a). Dossier local inchangé.
-- Étage 1 : **exécuté le 2026-09-23** (952,4 Gio). Étage 3 : **exécuté le 2026-09-23** (270,8 Gio). Étage 2 : **exécuté le 2026-09-23** (448,6 Gio, tar de trace sur nearline). Étage 6 : **exécuté le 2026-09-23** (35,1 Gio, tar abinit_assignment sur nearline). Étage 4 : **exécuté le 2026-09-23** (73,7 Gio, tar nb16 sur nearline). Étage 5 : **reporté** (après R2, `vacancy_relaxed/` exclu). Séquence GO du 2026-09-23 : 3 → 2 → 6 → 4, un GO par étage après find frais + diff ; étage 5 **reporté** après R2 (avec `vacancy_relaxed/` exclu).
+- Étage 1 : **exécuté le 2026-09-23** (952,4 Gio). Étage 3 : **exécuté le 2026-09-23** (270,8 Gio). Étage 2 : **exécuté le 2026-09-23** (448,6 Gio, tar de trace sur nearline). Étage 6 : **exécuté le 2026-09-23** (35,1 Gio, tar abinit_assignment sur nearline). Étage 4 : **exécuté le 2026-09-23** (73,7 Gio, tar nb16 sur nearline). Étage 5 : **exécuté le 2026-09-24** (60,2 Gio, `vacancy_relaxed/` exclu). Séquence GO du 2026-09-23 : 3 → 2 → 6 → 4, un GO par étage après find frais + diff ; étage 5 **exécuté le 2026-09-24** après R2 (avec `vacancy_relaxed/` exclu).
   Arbitrages reçus : étage 2 tar de trace nearline + md5 + `tar -tzf` avant rm ; étage 6 `git mv` de hamiltonian_reconstruction.png vers figures/ et tar abinit_assignment ; étage 4 option (a) tar `results_M_nb16_2026-09.tar` nearline + md5 + `tar -tf`, `_norm.npy` et `obsolete_grid_7x7/` supprimés directement.
 - Étage 7 (R1, scratch `qe_tmp/vacancy_relaxed/k3x3`) : **exécuté le 2026-09-23** (46 fichiers, 146,8 Gio ; voir journal).
 - Commits (F) : **faits le 2026-09-23** — 44ceaa4 (CLEANUP, INVENTAIRE, CLAUDE.md, .gitignore `cleanup/`), 11d1695 (article/R1_vacancy_relaxed resynchronisé + .out pw.x), 9fbccd6 (CLAUDE.md règle 5 : répertoire de travail vs copie versionnée). Non poussés.
@@ -212,7 +212,8 @@ scripts (chemins absolus de §4 de l'inventaire inchangés).
 | 6 | 12 819 + 7 vrac | 35,1 | `abinit_assignment_gaas_2026-05.tar.gz` (1 Mo) |
 | 4 | 73 | 73,7 | `results_M_nb16_2026-09.tar` (39,5 Gio) |
 | 7 (scratch) | 46 | 146,8 | — |
-| **Total** | **68 574** | **1 927,4** (projet 1 780,6 + scratch 146,8) | 39,6 Gio sur nearline |
+| 5 (scratch, 2026-09-24) | 10 306 | 60,2 | — |
+| **Total** | **78 880** | **1 987,6** (projet 1 780,6 + scratch 207,0) | 39,6 Gio sur nearline |
 
 Projet gregb26 après : `graphene/` 495 G (dont `qe/epw` 415 G, `qe_tmp_backup` 58 G, `qe/defects` ≈ 22 G), `ab-initio-defects/` ≈ 60 G (`results/M` 59 G), `codes/` 2,8 G ; ≈ 560 Gio au total contre 1 983 avant.
 
@@ -221,3 +222,25 @@ Projet gregb26 après : `graphene/` 495 G (dont `qe/epw` 415 G, `qe_tmp_backup` 
 `graphene/qe/qe_tmp_backup/vacancy_relaxed/series/` : 84 fichiers, 54,45 Go (51 Gio), `MD5SUMS_series_2026-09-24.txt` vérifié 84/84 contre le scratch (O_NOATIME).
 `qe_tmp_backup` passe de 58 G à ≈ 109 G. Piège rencontré : `rsync -a` du scratch recrée les dossiers sans setgid → fichiers au groupe `gregb26` ; corrigé (`chgrp -R` + `chmod g+s`), désormais `--chmod=Dg+s`.
 Étage 5 (scratch `qe_conv`, wfc vrac, dossiers vides) toujours à faire, avec `vacancy_relaxed/` (R1 + `series/`) exclu.
+
+### 2026-09-24 — Étage 5 EXÉCUTÉ (scratch, GO de Greg)
+
+Manifeste frais `cleanup/cleanup_manifest_5_2026-09-24.txt` (find du jour, `vacancy_relaxed/` exclu : R1 + `series/` R2) : 10 306 entrées, 60,21 Gio,
+diff contre le manifeste du 17 = 0 chemin en plus, 0 en moins, tailles de fichiers identiques (seuls les 52 répertoires vides passent de 0 à 25 600 octets, bloc Lustre).
+Les 4 `compmatphys_vide` sont des journaux Wannier90 non vides (7–109 Ko, nom avec U+00A0), repris par nom explicite.
+Supprimé : 10 254 fichiers (60,21 Gio : `qe_conv/` 9 492 = 44,86 Gio ; `prefix.wfcN` en vrac de 11 dossiers `qe_tmp` 758 = 15,34 Gio ; 4 journaux),
+52 répertoires vides listés, puis 236 répertoires de `qe_conv/` vidés par l'étape 1 et `qe_conv/` lui-même. Liste : `cleanup/etage5_supprimes_2026-09-24.lst` (10 542 lignes). 0 ignoré.
+Non touché : `qe_tmp/graphene_scf/graphene_scf.save` (1,95 Gio, hors manifeste), `qe_tmp/vacancy_relaxed/` (k3x3, nspin1, nspin2, series).
+Après : scratch 113 Go / 5 751 fichiers (avant 166 Go / 16 000) ; `qe_tmp` 121 G → 109 G ; `qe_conv` 38 G → supprimé.
+Restent 9 répertoires devenus vides par l'étape 2 (parents des vides listés, hors manifeste, non supprimés) :
+  /scratch/gregb26/compmatphys/basic/Al
+  /scratch/gregb26/compmatphys/basic/AlFe
+  /scratch/gregb26/compmatphys/basic/Si/wannier/test
+  /scratch/gregb26/graphene/supercell/centered
+  /scratch/gregb26/graphene/unitcell
+  /scratch/gregb26/jobs/10x10x1_5x5_Sc/5wann
+  /scratch/gregb26/jobs/10x10x1_5x5_Sc/8wann
+  /scratch/gregb26/jobs/9x9
+  /scratch/gregb26/qe_tmp/graphene_scf/_ph0
+
+Bilan cumulé des étages 1–7 : 78 880 fichiers, 1 987,6 Gio (projet 1 780,6 + scratch 207,0). Tous les étages du plan P13 sont exécutés.

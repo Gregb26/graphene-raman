@@ -215,3 +215,9 @@ scripts (chemins absolus de §4 de l'inventaire inchangés).
 | **Total** | **68 574** | **1 927,4** (projet 1 780,6 + scratch 146,8) | 39,6 Gio sur nearline |
 
 Projet gregb26 après : `graphene/` 495 G (dont `qe/epw` 415 G, `qe_tmp_backup` 58 G, `qe/defects` ≈ 22 G), `ab-initio-defects/` ≈ 60 G (`results/M` 59 G), `codes/` 2,8 G ; ≈ 560 Gio au total contre 1 983 avant.
+
+### 2026-09-24 — R2 phase 2 : miroir des `.save` de la série (ajout, aucune suppression)
+
+`graphene/qe/qe_tmp_backup/vacancy_relaxed/series/` : 84 fichiers, 54,45 Go (51 Gio), `MD5SUMS_series_2026-09-24.txt` vérifié 84/84 contre le scratch (O_NOATIME).
+`qe_tmp_backup` passe de 58 G à ≈ 109 G. Piège rencontré : `rsync -a` du scratch recrée les dossiers sans setgid → fichiers au groupe `gregb26` ; corrigé (`chgrp -R` + `chmod g+s`), désormais `--chmod=Dg+s`.
+Étage 5 (scratch `qe_conv`, wfc vrac, dossiers vides) toujours à faire, avec `vacancy_relaxed/` (R1 + `series/`) exclu.

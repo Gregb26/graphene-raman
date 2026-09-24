@@ -1,0 +1,9 @@
+&PROJWFC
+  prefix   = 'vac_6x6_relax_nspin2'
+  outdir   = '/home/gregb26/links/scratch/qe_tmp/vacancy_relaxed/series/6x6/nspin2'
+  filproj  = 'proj_6x6_nspin2'
+  filpdos  = 'pdos_6x6_nspin2'
+  lwrite_overlaps = .false.
+  Emin = -30.0, Emax = 10.0, DeltaE = 1.0
+  degauss = 0.01, ngauss = -1
+/

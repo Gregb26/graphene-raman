@@ -191,12 +191,14 @@ def compute_ML_R_mpi(prep, grid_block=200_000):
     if (Nx % Ndiag[0]) or (Ny % Ndiag[1]) or (Nz % Ndiag[2]):
         raise ValueError(f"compute_ML_R_mpi: supercell grid {ngfft} not commensurate with Ndiag={tuple(Ndiag)}; use prep_realspace_inputs (resamples)")
 
+    N_cells = np.prod(Ndiag)
+
     u = _build_u_uc(C_nkg, nG, G_red, (nxu, nyu, nzu))   # (nb, nk, Nuc)
     Bk = nb * nk
     Ved_flat = Ved.reshape(-1)                            # C-order [ix,iy,iz]
     Ntot = Nx * Ny * Nz
     dV = Omega_sc / Ntot
-    inv_sqrtO = 1.0 / np.sqrt(Omega_sc)
+    inv_sqrtO = 1.0 / np.sqrt(Omega_sc/N_cells)
     twopi = 2.0 * np.pi
 
     # Contiguous slab of grid points for this rank
@@ -317,9 +319,10 @@ def compute_ML_R_mpi_shared(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_pa
     node.Barrier()
     win_u.Sync(); win_v.Sync()
 
+    N_cells = np.prod(Ndiag)
     Bk = nb * nk
     dV = Omega_sc / Ntot
-    inv_sqrtO = 1.0 / np.sqrt(Omega_sc)
+    inv_sqrtO = 1.0 / np.sqrt(Omega_sc/N_cells)
     twopi = 2.0 * np.pi
 
     counts = [Ntot // size + (1 if r < (Ntot % size) else 0) for r in range(size)]

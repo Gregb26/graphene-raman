@@ -12,8 +12,8 @@ set -euo pipefail
 
 N=${1:?usage: link_data.sh NxN  (e.g. 5x5)}
 
-ROOT=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26
-PROJ=$ROOT/ab-initio-defects
+ROOT=${PROJECTS:-/home/gregb26/links/projects/rrg-cotemich-ac/gregb26}
+PROJ=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)   # racine du dépôt, déduite de l'emplacement du script
 SCRATCH=/home/gregb26/links/scratch/qe_tmp
 GRAPHENE=$ROOT/graphene/qe/defects
 

@@ -1,0 +1,35 @@
+--- /home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene/qe/defects/unit_cell/9x9/scf.in	2026-06-18 13:53:53.000000000 -0400
++++ b/nscf_nb128.in	2026-09-25 12:19:31.000000000 -0400
+@@ -1,10 +1,10 @@
+-! ground state SCF of pristine graphene unit cell
+-! 9x9 k grid
++! R5 (B) : nscf 128 bandes de la maille unitaire, grille 9x9 (81 k, nosym, noinv), dérivé de unit_cell/9x9/scf.in
++! outdir NEUF : copie de charge-density.hdf5 + data-file-schema.xml du .save de production (jamais écrit)
+ 
+ &CONTROL
+-  calculation = 'scf'       ! SCF ground state calculation
++  calculation = 'nscf'      ! R5 : non self-consistent sur la densité copiée
+   prefix      = 'defect_unit_cell_9x9'        ! prefix of output files
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_unit_cell_9x9'   ! directory of tempory files
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/R5_uc9x9_nb128'   ! R5 : outdir neuf (copie du .save)
+   pseudo_dir  = '/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/abinit_processing/pseudo' ! directory of pseudo potentials
+ /
+ &SYSTEM
+@@ -15,7 +15,7 @@
+   occupations = 'smearing' 
+   smearing    = 'mv'     ! Marzari-Vanderbilt cold smearing
+   degauss     = 0.01    ! value of gaussian smearing in Ry
+-  nbnd        = 16       ! number of bands
++  nbnd        = 128      ! R5 : 128 bandes
+   assume_isolated = '2D' ! helps for 2d systems
+   nosym = .true.
+   noinv = .true. 
+@@ -24,6 +24,8 @@
+   electron_maxstep =  400   ! number of iterations in SCF step
+   conv_thr         =  1.d-14 ! convergence threshold for self-consistency
+   mixing_beta      =  0.3
++  diago_full_acc   = .true.   ! R5 : bandes vides convergées comme les occupées
++  diago_thr_init   = 1.0d-12  ! R5 : seuil explicite (défaut nscf = conv_thr/nelec/10 = 1.25e-16, inatteignable)
+ /
+ 
+ ATOMIC_SPECIES

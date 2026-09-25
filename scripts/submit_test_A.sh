@@ -12,7 +12,7 @@
 # Test A (KS Hamiltonian reconstruction) for all unit cells, saving per-cell
 # deviation arrays diag(H)-eps to results/test_A/ for plotting.
 
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 cd "$PROJ" || exit 1
 
 # Module stack that provides h5py (hdf5-mpi), scipy, netCDF4 and mpi4py for the venv.

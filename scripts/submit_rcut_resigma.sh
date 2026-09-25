@@ -9,7 +9,7 @@
 #SBATCH --output=results/M/logs/%x_%A.out
 #SBATCH --error=results/M/logs/%x_%A.err
 # On-shell Re/Im Sigma per R_cut on the dense reference M (complement to m_rcut_convergence): rcut list as arg 2.
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 cd "$PROJ" || exit 1
 module restore qe; module load scipy-stack
 export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16

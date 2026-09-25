@@ -1,0 +1,9 @@
+&PROJWFC
+  prefix   = 'defect_9x9_p'
+  outdir   = '/home/gregb26/links/scratch/qe_tmp/defect_9x9_p'
+  filproj  = 'proj_defect_9x9_p'
+  filpdos  = 'pdos_defect_9x9_p'
+  lwrite_overlaps = .false.
+  Emin = -30.0, Emax = 10.0, DeltaE = 1.0
+  degauss = 0.01, ngauss = -1
+/

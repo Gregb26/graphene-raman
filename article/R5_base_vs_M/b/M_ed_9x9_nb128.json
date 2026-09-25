@@ -1,0 +1,16 @@
+{
+  "bloch_norm": "unit_cell",
+  "units": "hartree",
+  "shape": [
+    128,
+    81,
+    128,
+    81
+  ],
+  "part": "M_ed_coarse_nb128",
+  "nbnd": 128,
+  "nk": 81,
+  "uc_save": "/home/gregb26/links/scratch/qe_tmp/R5_uc9x9_nb128/defect_unit_cell_9x9.save",
+  "date": "2026-09-25",
+  "note": "R5 B.2 : M^L + M^NL, 128 bandes x 81 k"
+}

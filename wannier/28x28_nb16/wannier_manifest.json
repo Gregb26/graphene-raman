@@ -1,0 +1,20 @@
+{
+  "run_id": "59bb7683581bb90c",
+  "files": {
+    "tb": {
+      "path": "../28x28/wannier_tb.dat",
+      "sha256": "59bb7683581bb90c8879e227cbb0ec10b693e2f7c592c0af8830667b15ba88d2",
+      "mtime": 1788519150.0
+    },
+    "u": {
+      "path": "../28x28/wannier_u.mat",
+      "sha256": "9789a234c66a365b6f5d1399298c86cd087bf7b7b9c9806b3dcdbff421aa83e5",
+      "mtime": 1788519150.0
+    },
+    "u_dis": {
+      "path": "../28x28/wannier_u_dis.mat",
+      "sha256": "fa1d7101f9b88847b3e79f9d739ff22cd913625660f8d1c3583e565ab590c4fc",
+      "mtime": 1788519150.0
+    }
+  }
+}

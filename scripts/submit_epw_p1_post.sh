@@ -10,7 +10,7 @@
 #SBATCH --error=results/epw/logs/%x_%A.err
 # P1 post-processing (24k-24q): split prtgkk outputs into per-(ib,jb,nu) files, then run the validations
 # (bands, phonons, decay ratios, |g| DFPT vs EPW by degenerate subspaces). Run AFTER the three EPW interpolation jobs.
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 EPW=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene/qe/epw/${1:-24k-24q}; TAG=${2:-24k24q}
 cd "$PROJ" || exit 1; mkdir -p results/epw/logs
 module restore qe; module load scipy-stack

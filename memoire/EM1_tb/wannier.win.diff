@@ -1,0 +1,10 @@
+--- /home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene/qe/electron_photon/EM1_tb/ref/wannier.win.ref	2026-09-04 12:05:33.000000000 -0400
++++ /home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene/qe/electron_photon/EM1_tb/wannier.win	2026-09-25 12:50:31.000000000 -0400
+@@ -20,6 +20,7 @@
+  write_u_matrices = true
+  guiding_centres = true
+  write_hr = .true.
++ restart = plot
+  mp_grid = 27 27 1
+  begin unit_cell_cart
+ bohr

@@ -19,7 +19,7 @@
 #       G = -2 * S.imag; mm = m & (np.abs(E - ED) <= 1.5); e_res = float(E[mm][np.argmax(G[mm])] - ED)
 #       print(f"nk_int={int(z['nk_int']):4d}  med Gamma = {np.median(G[m])*1e3:8.2f} meV  med ReSigma = {np.median(S.real[m])*1e3:7.2f} meV  E_res-E_D = {e_res:+.3f} eV")
 #   PY
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 cd "$PROJ" || exit 1
 module restore qe; module load scipy-stack
 export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16

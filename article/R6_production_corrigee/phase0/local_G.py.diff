@@ -1,0 +1,19 @@
+--- orig/local_G.py	2026-09-25 15:24:37.320484722 -0400
++++ new/local_G.py	2026-09-25 15:24:37.395485184 -0400
+@@ -49,11 +49,13 @@
+     else:
+         Ved = Vd - Vp # defect potential
+ 
+-    #dDefect potential in reciprocal space
+-    Ved_G = np.fft.fftn(Ved) * (1 / np.prod(ngfft))          
+-
+     # supercell scaling factor, to fold unit cell quantities into supercell
+     Ndiag = np.diag(np.rint(A_sc @ np.linalg.pinv(A_uc))).astype(int)  # (3,)
++    N_cells = float(np.prod(Ndiag))
++
++    # Defect potential in reciprocal space, unit-cell Bloch norm (R6): Ved(G) = (1/Omega_uc) int Ved e^{-iGr}
++    # = N_cells * fftn(Ved)/N_grid  (before R6: 1/Omega_sc, i.e. supercell norm, factor N_cells missing).
++    Ved_G = np.fft.fftn(Ved) * (N_cells / np.prod(ngfft))
+ 
+     # precompute mapping: reduced coords -> FFT index
+     map_dict_x, map_dict_y, map_dict_z = map_G_to_fft_grid(ngfft)

@@ -1,0 +1,21 @@
+{
+  "bloch_norm": "unit_cell",
+  "units": "hartree",
+  "shape": [
+    128,
+    81,
+    128,
+    81
+  ],
+  "part": "M_L_coarse_nb128",
+  "nbnd": 128,
+  "nk": 81,
+  "uc_save": "/home/gregb26/links/scratch/qe_tmp/R5_uc9x9_nb128/defect_unit_cell_9x9.save",
+  "sc_p": "/home/gregb26/links/scratch/qe_tmp/defect_9x9_p/defect_9x9_p.save",
+  "pot_p": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/9x9/pristine/Vks_9x9_p",
+  "pot_d": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/9x9/defective/Vks_9x9_d",
+  "subtract_mean": false,
+  "kernel": "compute_ML_R_mpi_shared",
+  "date": "2026-09-25",
+  "note": "R5 B.2 : M^L grossier 128 bandes x 81 k, norme unit_cell, Hartree"
+}

@@ -1,0 +1,41 @@
+{
+ "herm_L_Ha": 2.604342988979101e-18,
+ "max_L_Ha": 0.010265599718002318,
+ "herm_NL_Ha": 9.565974336450906e-15,
+ "max_NL_Ha": 0.37838048802797886,
+ "herm_tot_Ha": 9.565974336450906e-15,
+ "max_tot_Ha": 0.3886460877459812,
+ "eps16_vs_new_max_eV": 0.0008147682754042762,
+ "block16_vs_june": {
+  "L": {
+   "sv_rel_max": 0.000848421543463253,
+   "sv_max": 1.071255853300596,
+   "eig_H_a1_max_dev_eV": 0.00043800409276251173,
+   "diag_max_dev_Ha": 0.002203959392786544,
+   "diag_mean_Ha": 0.0028139064457667843,
+   "diag_mean_ref_Ha": 0.0028142290057410263
+  },
+  "NL": {
+   "sv_rel_max": 0.0012939696157809974,
+   "sv_max": 28.734540264211862,
+   "eig_H_a1_max_dev_eV": 0.010633961383881285,
+   "diag_max_dev_Ha": 0.05686530914003374,
+   "diag_mean_Ha": 0.028231305794934006,
+   "diag_mean_ref_Ha": 0.028291116632455687
+  },
+  "tot": {
+   "sv_rel_max": 0.0013087862213474063,
+   "sv_max": 27.73527272099511,
+   "eig_H_a1_max_dev_eV": 0.01150278981104158,
+   "diag_max_dev_Ha": 0.057546030583039295,
+   "diag_mean_Ha": 0.031045212240700792,
+   "diag_mean_ref_Ha": 0.03110534563819671
+  }
+ },
+ "files": {
+  "L": "/lustre09/project/6004866/gregb26/graphene/qe/defects/R5_base_vs_M/b/M_L_9x9_nb128.npy",
+  "NL": "/lustre09/project/6004866/gregb26/graphene/qe/defects/R5_base_vs_M/b/M_NL_9x9_nb128.npy",
+  "tot": "/lustre09/project/6004866/gregb26/graphene/qe/defects/R5_base_vs_M/b/M_ed_9x9_nb128.npy",
+  "GB_each": 1.719926784
+ }
+}

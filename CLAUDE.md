@@ -276,15 +276,15 @@ Scripts versionnés ici : `scripts/epw_pp_save.py`, `scripts/epw_validate.py`, `
    hors dépôt, à côté de ce qu'il prolonge (`graphene/qe/defects/super_cell_relaxed/9x9/`
    pour R1) : il contient TOUT — inputs (`*.in`, `submit.*`), scripts, rapports, sorties
    (`*.out`, `slurm-*`, `JOBID`, projwfc/pdos), et les `.in` y portent les `outdir` scratch.
-   La **copie versionnée** est dans le dépôt sous `article/<campagne>/` (article) ou le
-   répertoire du chapitre (mémoire) : inputs, `submit.*`, scripts, rapports, analyses `.txt`,
+   La **copie versionnée** est dans le dépôt sous `article/<campagne>/` (article) ou
+   `memoire/<campagne>/` (mémoire, séries P et EM ; créé le 2026-09-25 avec EM1) : inputs, `submit.*`, scripts, rapports, analyses `.txt`,
    README, et les `.out` de pw.x s'ils font moins de ~5 Mo ; jamais `.save`, `slurm-*`,
    `JOBID`, sorties projwfc/pdos ni fichiers > 5 Mo (les lister dans le rapport). On édite
    dans le répertoire de travail puis on resynchronise la copie (`cp -p`), pas l'inverse.
 6. Le scratch reste la copie de travail (les `outdir` des `.in` et les liens
    `data/` y pointent) ; on ne réécrit jamais les `outdir`/`prefix` d'un run terminé.
 
-Classement au 2026-09-23 :
+Classement au 2026-09-23 (EM1 ajouté le 2026-09-25) :
 
 | Campagne | Répertoire | Statut | Miroir |
 |---|---|---|---|
@@ -293,3 +293,4 @@ Classement au 2026-09-23 :
 | Chaîne M (SCF supercellules, NSCF denses, mailles unitaires) | `graphene/qe/defects/{super_cell,unit_cell}` | PRODUCTION | `qe_tmp_backup/` (md5 OK 2026-09-17) |
 | EPW 24k-24q et 24k-24q_mv0.02 | `graphene/qe/epw/` | PRODUCTION (outdir dans le projet) | — |
 | EPW grilles test avril 2026 | `graphene/qe/epw/{36k-30q,30k-24q,24k-12q,16k-16q,16k-12q,12k-12q}` | TEST consigné (NOTES_EPW) | — (étage 1 du ménage) |
+| EM1 éléments de position r(R) de la wannierisation 27×27 (mémoire §2.5, `restart = plot`) | `graphene/qe/electron_photon/EM1_tb/` (copie `memoire/EM1_tb/`) | PRODUCTION | aucun `.save` produit ; nscf déjà miroité `qe_tmp_backup/defect_uc_dense_27` (md5 2026-09-17) |

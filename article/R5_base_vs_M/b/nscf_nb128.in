@@ -1,0 +1,46 @@
+! R5 (B) : nscf 128 bandes de la maille unitaire, grille 9x9 (81 k, nosym, noinv), dérivé de unit_cell/9x9/scf.in
+! outdir NEUF : copie de charge-density.hdf5 + data-file-schema.xml du .save de production (jamais écrit)
+
+&CONTROL
+  calculation = 'nscf'      ! R5 : non self-consistent sur la densité copiée
+  prefix      = 'defect_unit_cell_9x9'        ! prefix of output files
+  outdir      = '/home/gregb26/links/scratch/qe_tmp/R5_uc9x9_nb128'   ! R5 : outdir neuf (copie du .save)
+  pseudo_dir  = '/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/abinit_processing/pseudo' ! directory of pseudo potentials
+/
+&SYSTEM
+  ibrav       = 0        ! specified by CELL_PARAMETERS
+  nat         = 2        ! number of atoms
+  ntyp        = 1        ! number of atom types
+  ecutwfc     = 100      ! PW energy cutoff in Ry (1 Ha = 2 Ry)
+  occupations = 'smearing' 
+  smearing    = 'mv'     ! Marzari-Vanderbilt cold smearing
+  degauss     = 0.01    ! value of gaussian smearing in Ry
+  nbnd        = 128      ! R5 : 128 bandes
+  assume_isolated = '2D' ! helps for 2d systems
+  nosym = .true.
+  noinv = .true. 
+/
+&ELECTRONS
+  electron_maxstep =  400   ! number of iterations in SCF step
+  conv_thr         =  1.d-14 ! convergence threshold for self-consistency
+  mixing_beta      =  0.3
+  diago_full_acc   = .true.   ! R5 : bandes vides convergées comme les occupées
+  diago_thr_init   = 1.0d-12  ! R5 : seuil explicite (défaut nscf = conv_thr/nelec/10 = 1.25e-16, inatteignable)
+/
+
+ATOMIC_SPECIES
+  C 12.011 C.upf ! atom type and pseudo potential
+
+CELL_PARAMETERS bohr
+  4.0354919061  -2.3298923383   0.0
+  4.0354919061   2.3298923383   0.0
+  0.0            0.0           30.0
+
+ATOMIC_POSITIONS crystal
+  C  0.3333333333  0.3333333333  0.0
+  C  0.6666666667  0.6666666667  0.0
+
+K_POINTS automatic
+9 9 1 0 0 0 
+
+

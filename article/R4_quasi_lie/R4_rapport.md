@@ -957,3 +957,38 @@ nouveaux volumineux ; leur nettoyage éventuel passe par un manifeste et un GO s
 Figures : `d6_toy_1200`, `d6_real_1200`, `d6_toy_grid`, `d1_states`, `d4_ladder`, `d3_alpha_full`, `d3_alpha_pi`, `d5_boundary`.
 
 **STOP — rapport R4 terminé le 2026-09-25.**
+
+## Erratum (R5, 2026-09-25)
+
+Ajouté le 2026-09-25 par la campagne R5 (`graphene/qe/defects/R5_base_vs_M/R5_rapport.md`, §0.3 et §A.4) ; rien n'est modifié au-dessus.
+
+**Cause.** Les poids w₂ des variantes (a2), (a3), (b), (c-all), (c-3) du §D4 sont faux. Le pilote R4 construisait l'index d'ondes planes
+de la super-cellule avec `sc_planewave_index(k81, G20, …)`, k81 étant les 81 k de la maille grossière (écrits dans [−4/9, 4/9]),
+alors que les coefficients C20 lus dans le `.save` dense sont référés aux k du dense, écrits dans [0, 26/27] : 56 des 81 k diffèrent
+d'un vecteur entier ΔG ∈ {(0,1), (1,0), (1,1)}. Chaque ψ_nk du dense était donc multiplié par une phase périodique e^{2πi·9ΔG·x} de
+module 1 : |ψ_nk|² intact (états de Bloch purs à w₂ = 0,027–0,030, ce qui a masqué l'erreur), interférences entre k fausses pour toute
+superposition. (a1) utilise C16 et k81 du même `.save` : correct. Les énergies, les portes 1 et 2, les « poids WF site + voisins »
+et les marches en énergie du §D4 ne dépendent pas de cet index et restent valables ; seuls les w₂ et les étiquettes « localisé » des
+cinq variantes sont à remplacer. Vérification R5 (A.4) : w₂(a2) = w₂(a1) à 2,7e-4 sur les cinq états localisés de (a1).
+
+**Tableau D4 corrigé** (ε − E_D en eV ; w₂ corrigé ; entre parenthèses la valeur fausse du §D4 ; même seuil 0,0812) :
+
+| variante | pairs (σ) localisés | impairs (π) localisés |
+|---|---|---|
+| QE (D1) | +0,101 ×2 (0,713) | −1,759 ×2 (0,114) ; −0,737 (0,246) ; +0,269 (0,102) |
+| (a1) M_ed 16 bandes, total | −2,812 ×2 (0,287) | −1,803 ×2 (0,101) ; −1,350 (0,226) |
+| (a1) M^L seul | aucun | −1,803 ×2 (0,101) ; −1,780 (0,103) |
+| (a1) M^NL seul | −2,847 ×2 (0,255) | −1,370 (0,222) |
+| (a2) M dense ⊂ 81 k, 16 bandes | −2,812 ×2 (**0,287** ; était 0,058 / 0,074, « sous le seuil ») | −1,803 ×2 (**0,101** ; 0,091 / 0,090) ; −1,350 (**0,226** ; 0,084) |
+| (a3) idem 20 bandes | −2,848 ×2 (**0,254** ; 0,067 / 0,055, « sous le seuil ») | −1,803 ×2 (**0,101** ; 0,091 / 0,090) ; −1,359 (**0,225** ; 0,084) |
+| (b) 5 WF, V†εV | −2,514 ×2 (**0,489** ; 0,106 / 0,088) | −1,803 ×2 (**0,101** ; 0,091 / 0,090) ; −1,315 (**0,232** ; 0,083) |
+| (c-all) H(R) + M_W replié, toutes mailles | −2,514 ×2 (**0,489** ; 0,106 / 0,088) | −1,803 ×2 (**0,101**) ; −1,315 (**0,232** ; 0,083) |
+| (c-3) idem, R_cut = 3 | −2,516 / −2,515 (**0,490** ; 0,106 / 0,088) | −1,803 ×2 (**0,100 / 0,101**) ; −1,312 (**0,232** ; 0,083) |
+
+Conséquences sur le texte du §D4 : la phrase « (a1) → (a2) : … la paire paire à −2,812 passe sous le seuil (w₂ 0,287 → 0,058 / 0,074) et
+l'impair −1,350 passe de 0,226 à 0,084 » est caduque (w₂ identiques à 3e-4) ; « (a2) → (a3) : … toujours sous le seuil » et
+« (a3) → (b) : … w₂ 0,067 / 0,055 → 0,106 / 0,088 » sont à lire avec les valeurs corrigées (0,254 → 0,489 pour la paire σ, 0,225 → 0,232
+pour l'impair) ; les lignes « aucun état localisé » des marches (a1)→(a2), (a2)→(a3), (a3)→(b) pour les pairs sont fausses : la paire σ
+est localisée dans toutes les variantes. Les six états localisés par variante sont donc les mêmes de (a1) à (c-3), à ≤ 0,3 eV près en
+énergie. Un second constat de R5 (A.2) concerne la normalisation relative de M^L et M^NL dans les fichiers M de production ; il est
+rapporté dans `R5_rapport.md` et n'est pas repris ici.

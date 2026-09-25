@@ -1,0 +1,37 @@
+--- orig/matrix_io.py	2026-09-25 15:24:37.338484833 -0400
++++ new/matrix_io.py	2026-09-25 15:24:37.395485184 -0400
+@@ -19,6 +19,8 @@
+ 
+ SUPERCELL = "supercell"
+ UNIT_CELL = "unit_cell"
++M_NORM_V2 = "v2"             # R6 (2026-09-25): M^L and M^NL both in unit-cell Bloch norm (M2 = N_cells M^L + M^NL)
++M_NORM_V1 = "v1"             # pre-R6 files (results/M, frozen): M^L in supercell norm, factor N_cells missing
+ HARTREE = "hartree"          # the only unit M files are ever stored in (kernels: V_ed in Ha, psi dimensionless)
+ EV = "eV"
+ HA2EV = 27.211386245988
+@@ -47,9 +49,11 @@
+         return json.load(f)
+ 
+ 
+-def load_M_checked(npy_path, require_bloch_norm=SUPERCELL, units=None):
++def load_M_checked(npy_path, require_bloch_norm=SUPERCELL, units=None, require_normalization=None):
+     """
+-    Load M, refusing (ValueError) unless its manifest declares require_bloch_norm AND units='hartree'.
++    Load M, refusing (ValueError) unless its manifest declares require_bloch_norm AND units='hartree'
++    AND (when require_normalization is given, e.g. matrix_io.M_NORM_V2 from config["M_normalization"][:2])
++    the sidecar key 'M_normalization' starts with that version; a sidecar without the key is a v1 file.
+     `units` (mandatory) is the unit the CALLER wants back:
+         units='hartree' -> raw array (M construction / checks);
+         units='eV'      -> M * HA2EV, the ONLY place this conversion may happen (t-matrix consumers:
+@@ -74,5 +78,11 @@
+             f"{npy_path}: manifest units={stored!r}, expected '{HARTREE}'. Refusing to run: unknown unit "
+             f"would silently mix Hartree and eV in the t-matrix. Tag the sidecar (units='hartree') only if "
+             f"the file was produced by the Ha kernels.")
++    if require_normalization is not None:
++        ver = str(meta.get("M_normalization", M_NORM_V1))
++        if not ver.startswith(require_normalization):
++            raise ValueError(
++                f"{npy_path}: M_normalization={ver!r} but {require_normalization!r} required. Refusing to run "
++                f"(pre-R6 file: M^L in supercell norm, factor N_cells missing; use results/M2).")
+     M = np.load(npy_path)
+     return M * HA2EV if units == EV else M

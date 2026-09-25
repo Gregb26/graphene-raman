@@ -12,7 +12,6 @@ __pycache__/
 # Folders
 data/
 jobs/
-notebooks/
 
 # Computed data (never commit matrices / DFT outputs)
 *.npy
@@ -48,3 +47,6 @@ results/epw/*
 
 # Manifestes de ménage (13,6 Mo, dry-run) — hors dépôt
 cleanup/
+
+# Notebooks
+dev.ipynb

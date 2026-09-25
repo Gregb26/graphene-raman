@@ -1,0 +1,65 @@
+--- orig/local_R.py	2026-09-25 15:24:37.319484716 -0400
++++ new/local_R.py	2026-09-25 15:24:37.395485184 -0400
+@@ -2,6 +2,10 @@
+ local_R.py
+     Python module to compute the local part of the electron-defect scattering matrix by directly evaluating the 
+     integral in real space. Surprisingly fast.
++
++    Bloch normalization (R6, 2026-09-25): psi_nk = u_nk e^{ik.r} / sqrt(Omega_uc) -- UNIT-CELL norm, the same
++    convention as compute_M_NL (prefactor 4 pi / sqrt(Omega_uc)). Before R6 the kernels used 1/sqrt(Omega_sc)
++    (supercell norm), i.e. M^L was N_cells = Omega_sc/Omega_uc times too small relative to M^NL (R5-A.2).
+ """
+ 
+ import numpy as np
+@@ -59,10 +63,12 @@
+ 
+     # Supercell scaling factor
+     Ndiag = tuple(np.diag(np.rint(A_sc @ np.linalg.pinv(A_uc))))
++    N_cells = float(np.prod(Ndiag))
++    Omega_uc = Omega_sc / N_cells   # unit-cell Bloch norm: psi = u e^{ikr}/sqrt(Omega_uc) (R6; was Omega_sc)
+ 
+     # Compute unict wavefunctions unfolded onto supercell from unit cell planewave coefficients
+     print('Computing wavefunctions')
+-    psi = compute_psi_nk_fold_sc(C_nkg, nG, G_red, k_red, Omega_sc, Ndiag, ngfft, bands=bands)
++    psi = compute_psi_nk_fold_sc(C_nkg, nG, G_red, k_red, Omega_uc, Ndiag, ngfft, bands=bands)
+ 
+     R = np.prod(ngfft)
+ 
+@@ -176,7 +182,7 @@
+ 
+     M_ab = dV * sum_r psi*_a(r) Ved(r) psi_b(r), a,b over (band, k). Each rank owns a slab of grid
+     points, rebuilds psi on that slab from the stored unit-cell Bloch parts u_nk (psi_a(r) =
+-    u_nk(p(r)) e^{2pi i k.(i/N_uc)} / sqrt(Omega_sc)), forms the partial M with a BLAS matmul, and the
++    u_nk(p(r)) e^{2pi i k.(i/N_uc)} / sqrt(Omega_uc), unit-cell norm), forms the partial M with a BLAS matmul, and the
+     ranks Allreduce the (Bk, Bk) result. Memory per rank ~ u (unit-cell sized) + one grid block of psi,
+     independent of the number of ranks. Returns M[bra_band, k', ket_band, k] on every rank.
+     """
+@@ -196,7 +202,8 @@
+     Ved_flat = Ved.reshape(-1)                            # C-order [ix,iy,iz]
+     Ntot = Nx * Ny * Nz
+     dV = Omega_sc / Ntot
+-    inv_sqrtO = 1.0 / np.sqrt(Omega_sc)
++    N_cells = float(np.prod(Ndiag))
++    inv_sqrtO = 1.0 / np.sqrt(Omega_sc / N_cells)   # 1/sqrt(Omega_uc): unit-cell Bloch norm (R6; was 1/sqrt(Omega_sc))
+     twopi = 2.0 * np.pi
+ 
+     # Contiguous slab of grid points for this rank
+@@ -253,7 +260,7 @@
+     """
+     Same physics and conventions as compute_ML_R_mpi -- M[bra_band, k', ket_band, k] =
+     dV sum_r psi*_{n'k'}(r) Ved(r) psi_{nk}(r) over the SUPERCELL grid, psi built pointwise from the
+-    unit-cell Bloch part u_nk and the phase e^{2 pi i k.r} -- but organised for LARGE k sets:
++    unit-cell Bloch part u_nk and the phase e^{2 pi i k.r}, unit-cell norm 1/sqrt(Omega_uc) -- but organised for LARGE k sets:
+ 
+       * u_nk (nb, nk, N_uc) is stored ONCE per node in MPI shared memory (tens of GB on dense grids)
+         instead of once per rank; the node-local root reads the inputs and fills it;
+@@ -319,7 +326,8 @@
+ 
+     Bk = nb * nk
+     dV = Omega_sc / Ntot
+-    inv_sqrtO = 1.0 / np.sqrt(Omega_sc)
++    N_cells = float(np.prod(meta["Ndiag"]))
++    inv_sqrtO = 1.0 / np.sqrt(Omega_sc / N_cells)   # 1/sqrt(Omega_uc): unit-cell Bloch norm (R6; was 1/sqrt(Omega_sc))
+     twopi = 2.0 * np.pi
+ 
+     counts = [Ntot // size + (1 if r < (Ntot % size) else 0) for r in range(size)]

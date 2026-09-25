@@ -1,0 +1,246 @@
+[13:22:34] [B.2] M^L 128 bandes : compute_ML_R_mpi_shared(/home/gregb26/links/scratch/qe_tmp/R5_uc9x9_nb128/defect_unit_cell_9x9.save), 32 rangs
+[13:23:43] [C] E_K(maille 9x9) -4.238470 eV ; ħv_F 5.459 eV Å (|δk| 0.1090 Å⁻¹) ; K cart 1.6987 Å⁻¹
+[13:23:45] [bases] 16 (grossier): 16 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238470 eV
+[13:23:46] [bases] 20 (dense ⊂ 81 k): 20 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238895 eV
+[13:23:46] [bases] bug 0.3 : index d'ondes planes différent pour 56/81 k avec k81 ; check_k_reference : check_k_reference: 56 of 81 k differ from the .save k by a non-zero integer vector (offset
+[13:23:47] [C] N=5: E_D -4.23138 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23138 (Δ_Γ +7.08 meV, Δ_fold +0.00 meV, résidu 5.0e-06) ; gap Γ parfaite 2.809 eV ; ħv_F·min|k−K| 1.855 eV ; Lu -122.33 meV ; fenêtre P 6 (0σ/6π), D 9 (2σ/7π) ; seuil 0.2622 ; localisés σ 2 / π 1 ; π (-0.328, 0.267) ; σ [(-0.131, 0.702), (-0.131, 0.702)] (3 s)
+[13:23:48] [A] 30 états QE (bandes 297-326), parité vs D1 max dev 0.0e+00, norme [1.000000000000, 1.000000000000]
+[13:23:52] [C] N=6: E_D -4.23745 (quadruplet) ; quadruplet -4.23745 ; route maille -4.23809 (Δ_Γ +0.37 meV, Δ_fold +0.00 meV, résidu 1.1e-06) ; gap Γ parfaite 1.689 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -98.62 meV ; fenêtre P 19 (0σ/19π), D 21 (2σ/19π) ; seuil 0.1831 ; localisés σ 2 / π 1 ; π (-1.065, 0.284) ; σ [(0.156, 0.711), (0.156, 0.711)] (5 s)
+[13:23:57] [C] N=7: E_D -4.23904 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23904 (Δ_Γ -0.59 meV, Δ_fold +0.02 meV, résidu 1.2e-05) ; gap Γ parfaite 3.003 eV ; ħv_F·min|k−K| 1.325 eV ; Lu -38.54 meV ; fenêtre P 12 (0σ/12π), D 15 (2σ/13π) ; seuil 0.1334 ; localisés σ 2 / π 1 ; π (-0.495, 0.301) ; σ [(-0.282, 0.703), (-0.282, 0.703)] (6 s)
+[13:24:08] [C] N=8: E_D -4.23768 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23768 (Δ_Γ +0.79 meV, Δ_fold -0.01 meV, résidu 3.4e-06) ; gap Γ parfaite 1.976 eV ; ħv_F·min|k−K| 1.159 eV ; Lu -22.97 meV ; fenêtre P 33 (0σ/33π), D 34 (2σ/32π) ; seuil 0.1029 ; localisés σ 2 / π 2 ; π (-0.37, 0.223) ; σ [(-0.195, 0.708), (-0.195, 0.708)] (11 s)
+[13:24:18] [A] H(16) : dim 1296, couplage pair-impair 9.8e-04 eV, hermiticité 1.8e-15, E_D -4.238470
+[13:24:18] [A] H(20) : dim 1620, couplage pair-impair 8.0e-06 eV, hermiticité 2.4e-15, E_D -4.238895
+[13:24:20] [C] N=9: E_D -4.23847 (quadruplet) ; quadruplet -4.23847 ; route maille -4.23847 (Δ_Γ +0.00 meV, Δ_fold -0.00 meV, résidu 1.3e-06) ; gap Γ parfaite 1.608 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -24.65 meV ; fenêtre P 28 (0σ/28π), D 30 (2σ/28π) ; seuil 0.0812 ; localisés σ 2 / π 4 ; π (-0.737, 0.246) ; σ [(0.101, 0.713), (0.101, 0.713)] (12 s)
+[13:24:20] [A.1] recouvrements des 30 états sur les bases 16 et 20 en 2 s
+[13:24:21] [A.1] base 16 sigma_324: δ 0.0362, R-ε -3041.7 meV, résidu 5.0406 eV, top [(-2.812, 0.308), (-2.812, 0.21), (-3.294, 0.112)]
+[13:24:21] [A.1] base 16 sigma_325: δ 0.0362, R-ε -3041.7 meV, résidu 5.0408 eV, top [(-2.812, 0.308), (-2.812, 0.21), (-3.295, 0.112)]
+[13:24:21] [A.1] base 16 pi_320: δ 0.0009, R-ε -305.8 meV, résidu 1.8207 eV, top [(-1.35, 0.809), (0.108, 0.086), (-2.654, 0.02)]
+[13:24:21] [A.1] base 16 pi_318: δ 0.0002, R-ε -43.7 meV, résidu 0.1994 eV, top [(-1.803, 0.856), (-1.803, 0.133), (-2.099, 0.006)]
+[13:24:21] [A.1] base 16 pi_319: δ 0.0002, R-ε -43.7 meV, résidu 0.1994 eV, top [(-1.803, 0.856), (-1.803, 0.133), (-2.099, 0.006)]
+[13:24:21] [A.1] base 16 pi_326: δ 0.0005, R-ε -129.6 meV, résidu 1.2467 eV, top [(0.108, 0.897), (-1.35, 0.054), (2.455, 0.01)]
+[13:24:21] [A.1] base 20 sigma_324: δ 0.0241, R-ε -2986.0 meV, résidu 5.4878 eV, top [(-2.848, 0.436), (-3.314, 0.194), (-3.967, 0.079)]
+[13:24:21] [A.1] base 20 sigma_325: δ 0.0241, R-ε -2986.0 meV, résidu 5.4878 eV, top [(-2.848, 0.436), (-3.314, 0.194), (-3.967, 0.079)]
+[13:24:21] [A.1] base 20 pi_320: δ 0.0007, R-ε -304.6 meV, résidu 1.8658 eV, top [(-1.359, 0.804), (0.106, 0.088), (-2.656, 0.021)]
+[13:24:21] [A.1] base 20 pi_318: δ 0.0002, R-ε -43.3 meV, résidu 0.2186 eV, top [(-1.803, 0.951), (-1.803, 0.039), (-2.099, 0.006)]
+[13:24:21] [A.1] base 20 pi_319: δ 0.0002, R-ε -43.3 meV, résidu 0.2186 eV, top [(-1.803, 0.951), (-1.803, 0.039), (-2.099, 0.006)]
+[13:24:21] [A.1] base 20 pi_326: δ 0.0003, R-ε -129.1 meV, résidu 1.2792 eV, top [(0.106, 0.894), (-1.359, 0.055), (2.45, 0.01)]
+[13:24:25] [ΔV] grille (270, 270, 192), <ΔV>_3D +9.09 meV, ΔV au site +116.243 eV ; projecteur KB de l'atome retiré (indice parfaite 81, 771419 g, |g|max 10.00 < qmax 20.0) en 1 s
+[13:24:26] [A.2] base 16 états purs : max|direct - M/81| = 1.67e-01 eV sur 6 paires (L et NL) -> ÉCHEC : STOP A.2 pour cette base
+[13:24:26]        (3, 57, 3, 57): L direct +0.155642 vs M_L/81 +0.001922 (Δ 1.5e-01) ; NL direct +0.042597 vs M_NL/81 +0.042597 (Δ 1.3e-17)
+[13:24:26]        (3, 57, 4, 57): L direct -0.107647 vs M_L/81 -0.001329 (Δ 1.4e-01) ; NL direct -0.028723 vs M_NL/81 -0.028723 (Δ 1.3e-16)
+[13:24:26]        (3, 57, 3, 33): L direct -0.153420 vs M_L/81 -0.001894 (Δ 1.7e-01) ; NL direct -0.038538 vs M_NL/81 -0.038538 (Δ 2.5e-16)
+[13:24:26]        (0, 0, 0, 0): L direct +0.131946 vs M_L/81 +0.001629 (Δ 1.3e-01) ; NL direct -0.041732 vs M_NL/81 -0.041732 (Δ 1.7e-15)
+[13:24:26]        (2, 5, 7, 40): L direct +0.000000 vs M_L/81 +0.000000 (Δ 2.2e-07) ; NL direct +0.000000 vs M_NL/81 +0.000000 (Δ 9.8e-20)
+[13:24:26]        (10, 17, 1, 60): L direct +0.000908 vs M_L/81 +0.000011 (Δ 2.0e-02) ; NL direct +0.005585 vs M_NL/81 +0.005585 (Δ 3.4e-15)
+[13:24:28] [A.2] base 20 états purs : max|direct - M/81| = 1.47e-01 eV sur 7 paires (L et NL) -> ÉCHEC : STOP A.2 pour cette base
+[13:24:28]        (3, 57, 3, 57): L direct +0.136167 vs M_L/81 +0.001681 (Δ 1.3e-01) ; NL direct +0.037401 vs M_NL/81 +0.037401 (Δ 4.1e-12)
+[13:24:28]        (3, 57, 4, 57): L direct -0.133945 vs M_L/81 -0.001654 (Δ 1.4e-01) ; NL direct -0.035739 vs M_NL/81 -0.035739 (Δ 1.0e-13)
+[13:24:28]        (3, 57, 3, 33): L direct +0.147084 vs M_L/81 +0.001816 (Δ 1.5e-01) ; NL direct +0.036947 vs M_NL/81 +0.036947 (Δ 4.1e-12)
+[13:24:28]        (0, 0, 0, 0): L direct +0.131946 vs M_L/81 +0.001629 (Δ 1.3e-01) ; NL direct -0.041733 vs M_NL/81 -0.041733 (Δ 4.8e-16)
+[13:24:28]        (2, 5, 7, 40): L direct +0.000000 vs M_L/81 +0.000000 (Δ 4.6e-10) ; NL direct +0.000000 vs M_NL/81 +0.000000 (Δ 1.2e-18)
+[13:24:28]        (10, 17, 1, 60): L direct -0.013536 vs M_L/81 -0.000167 (Δ 2.0e-02) ; NL direct -0.000168 vs M_NL/81 -0.000168 (Δ 1.5e-09)
+[13:24:28]        (17, 57, 19, 33): L direct -0.000000 vs M_L/81 -0.000000 (Δ 2.5e-09) ; NL direct +0.000000 vs M_NL/81 +0.000000 (Δ 1.4e-19)
+[13:24:44] [C] N=10: E_D -4.23889 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23889 (Δ_Γ -0.42 meV, Δ_fold -0.01 meV, résidu 2.3e-06) ; gap Γ parfaite 2.039 eV ; ħv_F·min|k−K| 0.927 eV ; Lu -8.22 meV ; fenêtre P 39 (0σ/39π), D 42 (2σ/40π) ; seuil 0.0659 ; localisés σ 2 / π 2 ; π (-0.422, 0.241) ; σ [(-0.238, 0.708), (-0.238, 0.708)] (23 s)
+[13:24:48] [A.3] a1_16 even: QE sous E_D-3 : 241 ; modèle : 241 ; fenêtre QE 2 / modèle 2 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-2.913, -2.913, 0.321] ; (tout) : [-2.913, -2.913, -0.226]
+[13:24:48] [A.3] a1_16 odd: QE sous E_D-3 : 55 ; modèle : 55 ; fenêtre QE 28 / modèle 28 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-0.612, -0.044, -0.005] ; (tout) : [-0.612, -0.057, -0.007]
+[13:24:48] [A.3] a3_20 even: QE sous E_D-3 : 241 ; modèle : 241 ; fenêtre QE 2 / modèle 2 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-2.95, -2.95, 0.285] ; (tout) : [-2.95, -2.95, -0.239]
+[13:24:48] [A.3] a3_20 odd: QE sous E_D-3 : 55 ; modèle : 55 ; fenêtre QE 28 / modèle 28 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-0.621, -0.044, -0.005] ; (tout) : [-0.621, -0.057, -0.007]
+[13:24:48] [A.3] parité de 352 états QE en 21 s (dev max 7.4e-07)
+[13:24:52] [variante] a1_tot: pairs 2 (localisés [(-2.812, 0.287), (-2.812, 0.287)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.35, 0.226)])
+[13:24:55] [variante] a1_L: pairs 0 (localisés []), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.78, 0.103)])
+[13:24:58] [variante] a1_NL: pairs 2 (localisés [(-2.847, 0.255), (-2.847, 0.255)]), impairs 28 (localisés [(-1.37, 0.222)])
+[13:25:02] [variante] a2_16: pairs 2 (localisés [(-2.812, 0.287), (-2.812, 0.287)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.35, 0.226)])
+[13:25:05] [variante] a3_20: pairs 2 (localisés [(-2.848, 0.254), (-2.848, 0.254)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.359, 0.225)])
+[13:25:05] [gauge] provenance OK: /home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene-raman/wannier/27x27/wannier_manifest.json
+[13:25:05] [setup] E_D (Wannier, 90x90) = -4.238896 eV, gap 6.097e-05 meV; H(R): (741, 5, 5), MP (27, 27, 1)
+[13:25:08] [variante] b_5wf: pairs 2 (localisés [(-2.514, 0.489), (-2.514, 0.489)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.315, 0.232)])
+[13:25:12] [C] N=11: E_D -4.24936 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.24936 (Δ_Γ +2373.67 meV, Δ_fold -2384.56 meV, résidu nan) ; gap Γ parfaite 1.509 eV ; ħv_F·min|k−K| 0.843 eV ; Lu -12.16 meV ; fenêtre P 42 (0σ/42π), D 45 (2σ/43π) ; seuil 0.0541 ; localisés σ 2 / π 2 ; π (-0.321, 0.191) ; σ [(-0.153, 0.707), (-0.153, 0.708)] (29 s)
+[13:25:13] [variante] c_all: pairs 2 (localisés [(-2.514, 0.489), (-2.514, 0.489)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.315, 0.232)])
+[13:25:16] [variante] c_3: pairs 2 (localisés [(-2.516, 0.49), (-2.515, 0.49)]), impairs 28 (localisés [(-1.803, 0.1), (-1.803, 0.101), (-1.312, 0.232)])
+[13:25:16] [A.4] vérification w2(a2) = w2(a1) (états localisés de a1) : max|Δw2| = 0.0003 -> OK (28 s)
+[13:25:18] [A.5] M_L_minus_mean_identity: constante 76.58 meV soustraite de la diagonale de M (norme unit_cell) -> décalage rigide médian -0.945 meV (attendu -0.945), max|Δε - médiane| 3.3e-13 eV
+[13:25:19] [A.5] dV_minus_mean_equiv: constante 6202.90 meV soustraite de la diagonale de M (norme unit_cell) -> décalage rigide médian -76.579 meV (attendu -76.579), max|Δε - médiane| 2.1e-13 eV
+[13:25:19] saved a/a_results.json
+[13:25:43] [C] N=12: E_D -4.23869 (quadruplet) ; quadruplet -4.23869 ; route maille -4.23857 (Δ_Γ -0.09 meV, Δ_fold -0.01 meV, résidu 9.5e-07) ; gap Γ parfaite 1.300 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -29.24 meV ; fenêtre P 55 (0σ/55π), D 57 (2σ/55π) ; seuil 0.0457 ; localisés σ 2 / π 9 ; π (-0.551, 0.223) ; σ [(0.114, 0.713), (0.114, 0.713)] (31 s)
+[13:25:43] [C] ajustement pi 3m : N [6, 9, 12] x [-1.065, -0.737, -0.551] ; 1/N : ε_∞ -0.046 (rms 0.007) ; 1/N² : ε_∞ -0.409 (rms 0.024)
+[13:25:43] [C] ajustement sigma 3m : N [6, 9, 12] x [0.156, 0.101, 0.114] ; 1/N : ε_∞ +0.055 (rms 0.012) ; 1/N² : ε_∞ +0.087 (rms 0.011)
+[13:25:43] [C] ajustement pi non3m : N [5, 7, 8, 10, 11] x [-0.328, -0.495, -0.37, -0.422, -0.321] ; 1/N : ε_∞ -0.407 (rms 0.064) ; 1/N² : ε_∞ -0.406 (rms 0.064)
+[13:25:43] [C] ajustement sigma non3m : N [5, 7, 8, 10, 11] x [-0.131, -0.282, -0.195, -0.238, -0.153] ; 1/N : ε_∞ -0.254 (rms 0.053) ; 1/N² : ε_∞ -0.234 (rms 0.051)
+[13:25:44] [C] coût : exposants d 4.96, p 4.59 ; 15x15 44 / 31 min ; 18x18 110 / 71 min (64 rangs)
+[13:25:44] saved c/c_results.json
+[13:30:25] [C] E_K(maille 9x9) -4.238470 eV ; ħv_F 5.459 eV Å (|δk| 0.1090 Å⁻¹) ; K cart 1.6987 Å⁻¹
+[13:30:26] [bases] 16 (grossier): 16 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238470 eV
+[13:30:27] [bases] 20 (dense ⊂ 81 k): 20 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238895 eV
+[13:30:27] [bases] bug 0.3 : index d'ondes planes différent pour 56/81 k avec k81 ; check_k_reference : check_k_reference: 56 of 81 k differ from the .save k by a non-zero integer vector (offset
+[13:30:27] [A] 30 états QE (bandes 297-326), parité vs D1 max dev 0.0e+00, norme [1.000000000000, 1.000000000000]
+[13:30:28] [C] N=5: E_D -4.23138 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23138 (Δ_Γ +7.08 meV, Δ_fold +0.00 meV, résidu 5.0e-06) ; gap Γ parfaite 2.809 eV ; ħv_F·min|k−K| 1.855 eV ; Lu -122.33 meV ; fenêtre P 6 (0σ/6π), D 9 (2σ/7π) ; seuil 0.2622 ; localisés σ 2 / π 1 ; π (-0.328, 0.267) ; σ [(-0.131, 0.702), (-0.131, 0.702)] (3 s)
+[13:30:34] [C] N=6: E_D -4.23745 (quadruplet) ; quadruplet -4.23745 ; route maille -4.23809 (Δ_Γ +0.37 meV, Δ_fold +0.00 meV, résidu 1.1e-06) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -98.62 meV ; fenêtre P 19 (0σ/19π), D 21 (2σ/19π) ; seuil 0.1831 ; localisés σ 2 / π 1 ; π (-1.065, 0.284) ; σ [(0.156, 0.711), (0.156, 0.711)] (6 s)
+[13:30:40] [C] N=7: E_D -4.23904 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23904 (Δ_Γ -0.59 meV, Δ_fold +0.02 meV, résidu 1.2e-05) ; gap Γ parfaite 3.003 eV ; ħv_F·min|k−K| 1.325 eV ; Lu -38.54 meV ; fenêtre P 12 (0σ/12π), D 15 (2σ/13π) ; seuil 0.1334 ; localisés σ 2 / π 1 ; π (-0.495, 0.301) ; σ [(-0.282, 0.703), (-0.282, 0.703)] (6 s)
+[13:30:51] [C] N=8: E_D -4.23768 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23768 (Δ_Γ +0.79 meV, Δ_fold -0.01 meV, résidu 3.4e-06) ; gap Γ parfaite 1.976 eV ; ħv_F·min|k−K| 1.159 eV ; Lu -22.97 meV ; fenêtre P 33 (0σ/33π), D 34 (2σ/32π) ; seuil 0.1029 ; localisés σ 2 / π 2 ; π (-0.37, 0.223) ; σ [(-0.195, 0.708), (-0.195, 0.708)] (11 s)
+[13:30:53] [A] H(16, prod) : dim 1296, couplage pair-impair 9.8e-04 eV, hermiticité 1.8e-15, E_D -4.238470
+[13:30:56] [A] H(20, prod) : dim 1620, couplage pair-impair 8.0e-06 eV, hermiticité 2.4e-15, E_D -4.238895
+[13:30:58] [A] H(16, Lx81) : dim 1296, couplage pair-impair 3.7e-03 eV, hermiticité 1.8e-15, E_D -4.238470
+[13:30:59] [A] H(20, Lx81) : dim 1620, couplage pair-impair 2.9e-05 eV, hermiticité 2.4e-15, E_D -4.238895
+[13:31:01] [A.1] recouvrements des 30 états sur les bases 16 et 20 en 2 s
+[13:31:01] [A.1 prod] base 16 sigma_324: δ 0.0362, R-ε -3041.7 meV, résidu 5.0406 eV, top [(-2.812, 0.308), (-2.812, 0.21), (-3.294, 0.112)]
+[13:31:01] [A.1 prod] base 16 sigma_325: δ 0.0362, R-ε -3041.7 meV, résidu 5.0408 eV, top [(-2.812, 0.308), (-2.812, 0.21), (-3.295, 0.112)]
+[13:31:01] [A.1 prod] base 16 pi_320: δ 0.0009, R-ε -305.8 meV, résidu 1.8207 eV, top [(-1.35, 0.809), (0.108, 0.086), (-2.654, 0.02)]
+[13:31:01] [A.1 prod] base 16 pi_318: δ 0.0002, R-ε -43.7 meV, résidu 0.1994 eV, top [(-1.803, 0.856), (-1.803, 0.133), (-2.099, 0.006)]
+[13:31:01] [A.1 prod] base 16 pi_319: δ 0.0002, R-ε -43.7 meV, résidu 0.1994 eV, top [(-1.803, 0.856), (-1.803, 0.133), (-2.099, 0.006)]
+[13:31:01] [A.1 prod] base 16 pi_326: δ 0.0005, R-ε -129.6 meV, résidu 1.2467 eV, top [(0.108, 0.897), (-1.35, 0.054), (2.455, 0.01)]
+[13:31:01] [A.1 prod] base 20 sigma_324: δ 0.0241, R-ε -2986.0 meV, résidu 5.4878 eV, top [(-2.848, 0.436), (-3.314, 0.194), (-3.967, 0.079)]
+[13:31:01] [A.1 prod] base 20 sigma_325: δ 0.0241, R-ε -2986.0 meV, résidu 5.4878 eV, top [(-2.848, 0.436), (-3.314, 0.194), (-3.967, 0.079)]
+[13:31:01] [A.1 prod] base 20 pi_320: δ 0.0007, R-ε -304.6 meV, résidu 1.8658 eV, top [(-1.359, 0.804), (0.106, 0.088), (-2.656, 0.021)]
+[13:31:01] [A.1 prod] base 20 pi_318: δ 0.0002, R-ε -43.3 meV, résidu 0.2186 eV, top [(-1.803, 0.951), (-1.803, 0.039), (-2.099, 0.006)]
+[13:31:01] [A.1 prod] base 20 pi_319: δ 0.0002, R-ε -43.3 meV, résidu 0.2186 eV, top [(-1.803, 0.951), (-1.803, 0.039), (-2.099, 0.006)]
+[13:31:01] [A.1 prod] base 20 pi_326: δ 0.0003, R-ε -129.1 meV, résidu 1.2792 eV, top [(0.106, 0.894), (-1.359, 0.055), (2.45, 0.01)]
+[13:31:01] [A.1 Lx81] base 16 sigma_324: δ 0.0362, R-ε +2135.6 meV, résidu 5.6494 eV, top [(1.481, 0.63), (1.48, 0.34), (37.7, 0.012)]
+[13:31:01] [A.1 Lx81] base 16 sigma_325: δ 0.0362, R-ε +2135.3 meV, résidu 5.6490 eV, top [(1.48, 0.63), (1.481, 0.34), (37.711, 0.012)]
+[13:31:01] [A.1 Lx81] base 16 pi_320: δ 0.0009, R-ε +28.6 meV, résidu 0.8625 eV, top [(-0.727, 0.999), (0.263, 0.001), (41.028, 0.0)]
+[13:31:01] [A.1 Lx81] base 16 pi_318: δ 0.0002, R-ε -15.6 meV, résidu 0.0465 eV, top [(-1.775, 0.852), (-1.775, 0.147), (-1.832, 0.0)]
+[13:31:01] [A.1 Lx81] base 16 pi_319: δ 0.0002, R-ε -15.6 meV, résidu 0.0464 eV, top [(-1.775, 0.852), (-1.775, 0.147), (-1.832, 0.0)]
+[13:31:01] [A.1 Lx81] base 16 pi_326: δ 0.0005, R-ε +2.5 meV, résidu 0.6234 eV, top [(0.263, 0.999), (-0.727, 0.001), (41.028, 0.0)]
+[13:31:01] [A.1 Lx81] base 20 sigma_324: δ 0.0241, R-ε +1409.9 meV, résidu 4.6087 eV, top [(1.068, 0.969), (1.068, 0.016), (44.969, 0.009)]
+[13:31:01] [A.1 Lx81] base 20 sigma_325: δ 0.0241, R-ε +1409.9 meV, résidu 4.6087 eV, top [(1.068, 0.969), (1.068, 0.016), (44.969, 0.009)]
+[13:31:01] [A.1 Lx81] base 20 pi_320: δ 0.0007, R-ε +16.3 meV, résidu 0.7556 eV, top [(-0.734, 0.999), (0.259, 0.0), (44.328, 0.0)]
+[13:31:01] [A.1 Lx81] base 20 pi_318: δ 0.0002, R-ε -16.1 meV, résidu 0.0494 eV, top [(-1.776, 0.809), (-1.776, 0.19), (-1.832, 0.0)]
+[13:31:01] [A.1 Lx81] base 20 pi_319: δ 0.0002, R-ε -16.1 meV, résidu 0.0494 eV, top [(-1.776, 0.809), (-1.776, 0.19), (-1.832, 0.0)]
+[13:31:01] [A.1 Lx81] base 20 pi_326: δ 0.0003, R-ε -3.8 meV, résidu 0.5451 eV, top [(0.259, 0.999), (-0.734, 0.0), (44.328, 0.0)]
+[13:31:03] [C] N=9: E_D -4.23847 (quadruplet) ; quadruplet -4.23847 ; route maille -4.23847 (Δ_Γ +0.00 meV, Δ_fold -0.00 meV, résidu 1.3e-06) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -24.65 meV ; fenêtre P 28 (0σ/28π), D 30 (2σ/28π) ; seuil 0.0812 ; localisés σ 2 / π 4 ; π (-0.737, 0.246) ; σ [(0.101, 0.713), (0.101, 0.713)] (13 s)
+[13:31:05] [ΔV] grille (270, 270, 192), <ΔV>_3D +9.09 meV, ΔV au site +116.243 eV ; projecteur KB de l'atome retiré (indice parfaite 81, 771419 g, |g|max 10.00 < qmax 20.0) en 1 s
+[13:31:07] [A.2] base 16 états purs : max|direct - M/81| = 1.67e-01 eV sur 6 paires (L 1.7e-01, NL 3.4e-15) -> ÉCHEC : STOP A.2 (production) ; rapport L direct / (M_L/81) : [81.0, 81.0, 81.0, 81.0, 81.0]
+[13:31:07]        (3, 57, 3, 57): L direct +0.155642 vs M_L/81 +0.001922 (Δ 1.5e-01) ; NL direct +0.042597 vs M_NL/81 +0.042597 (Δ 1.3e-17)
+[13:31:07]        (3, 57, 4, 57): L direct -0.107647 vs M_L/81 -0.001329 (Δ 1.4e-01) ; NL direct -0.028723 vs M_NL/81 -0.028723 (Δ 1.3e-16)
+[13:31:07]        (3, 57, 3, 33): L direct -0.153420 vs M_L/81 -0.001894 (Δ 1.7e-01) ; NL direct -0.038538 vs M_NL/81 -0.038538 (Δ 2.5e-16)
+[13:31:07]        (0, 0, 0, 0): L direct +0.131946 vs M_L/81 +0.001629 (Δ 1.3e-01) ; NL direct -0.041732 vs M_NL/81 -0.041732 (Δ 1.7e-15)
+[13:31:07]        (2, 5, 7, 40): L direct +0.000000 vs M_L/81 +0.000000 (Δ 2.2e-07) ; NL direct +0.000000 vs M_NL/81 +0.000000 (Δ 9.8e-20)
+[13:31:07]        (10, 17, 1, 60): L direct +0.000908 vs M_L/81 +0.000011 (Δ 2.0e-02) ; NL direct +0.005585 vs M_NL/81 +0.005585 (Δ 3.4e-15)
+[13:31:08] [A.2] base 16 états purs, M^L x 81 (diagnostique) : max|direct - M/81| = 6.80e-15 eV (L 6.8e-15, NL 3.4e-15) -> OK
+[13:31:18] [A.2 Lx81] base 16 : 30 états en 10 s ; max|(i)-(ii)| in-in L 2.7e-15, NL 3.6e-14 eV ; s_align médiane +24.66 meV (min +24.66, max +24.67) ; décalage Lu -24.65 meV, <ΔV>_3D +9.09 meV
+[13:31:18]        sigma_324: Σ|c|² 0.9638 ; c†(M/81)c tot +5.8490 (L +5.0523, NL +0.7967) ; <in|ΔV|out> L -1.5566, NL -0.5255 ; s +24.67 meV
+[13:31:18]        sigma_325: Σ|c|² 0.9638 ; c†(M/81)c tot +5.8485 (L +5.0519, NL +0.7966) ; <in|ΔV|out> L -1.5563, NL -0.5254 ; s +24.67 meV
+[13:31:18]        pi_320: Σ|c|² 0.9991 ; c†(M/81)c tot +0.3666 (L +0.3383, NL +0.0283) ; <in|ΔV|out> L -0.0382, NL -0.0151 ; s +24.66 meV
+[13:31:18]        pi_318: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0284 (L +0.0284, NL -0.0000) ; <in|ΔV|out> L -0.0091, NL +0.0000 ; s +24.66 meV
+[13:31:18]        pi_319: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0284 (L +0.0284, NL +0.0000) ; <in|ΔV|out> L -0.0091, NL -0.0000 ; s +24.66 meV
+[13:31:18]        pi_326: Σ|c|² 0.9995 ; c†(M/81)c tot +0.1480 (L +0.1338, NL +0.0143) ; <in|ΔV|out> L -0.0195, NL -0.0077 ; s +24.66 meV
+[13:31:19] [A.2] base 20 états purs : max|direct - M/81| = 1.47e-01 eV sur 7 paires (L 1.5e-01, NL 1.5e-09) -> ÉCHEC : STOP A.2 (production) ; rapport L direct / (M_L/81) : [81.0, 81.0, 81.0, 81.0, 81.0]
+[13:31:19]        (3, 57, 3, 57): L direct +0.136167 vs M_L/81 +0.001681 (Δ 1.3e-01) ; NL direct +0.037401 vs M_NL/81 +0.037401 (Δ 4.1e-12)
+[13:31:19]        (3, 57, 4, 57): L direct -0.133945 vs M_L/81 -0.001654 (Δ 1.4e-01) ; NL direct -0.035739 vs M_NL/81 -0.035739 (Δ 1.0e-13)
+[13:31:19]        (3, 57, 3, 33): L direct +0.147084 vs M_L/81 +0.001816 (Δ 1.5e-01) ; NL direct +0.036947 vs M_NL/81 +0.036947 (Δ 4.1e-12)
+[13:31:19]        (0, 0, 0, 0): L direct +0.131946 vs M_L/81 +0.001629 (Δ 1.3e-01) ; NL direct -0.041733 vs M_NL/81 -0.041733 (Δ 4.8e-16)
+[13:31:19]        (2, 5, 7, 40): L direct +0.000000 vs M_L/81 +0.000000 (Δ 4.6e-10) ; NL direct +0.000000 vs M_NL/81 +0.000000 (Δ 1.2e-18)
+[13:31:19]        (10, 17, 1, 60): L direct -0.013536 vs M_L/81 -0.000167 (Δ 2.0e-02) ; NL direct -0.000168 vs M_NL/81 -0.000168 (Δ 1.5e-09)
+[13:31:19]        (17, 57, 19, 33): L direct -0.000000 vs M_L/81 -0.000000 (Δ 2.5e-09) ; NL direct +0.000000 vs M_NL/81 +0.000000 (Δ 1.4e-19)
+[13:31:20] [A.2] base 20 états purs, M^L x 81 (diagnostique) : max|direct - M/81| = 3.54e-09 eV (L 3.5e-09, NL 1.5e-09) -> OK
+[13:31:22] [C] N=10: E_D -4.23889 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23889 (Δ_Γ -0.42 meV, Δ_fold -0.01 meV, résidu 2.3e-06) ; gap Γ parfaite 2.039 eV ; ħv_F·min|k−K| 0.927 eV ; Lu -8.22 meV ; fenêtre P 39 (0σ/39π), D 42 (2σ/40π) ; seuil 0.0659 ; localisés σ 2 / π 2 ; π (-0.422, 0.241) ; σ [(-0.238, 0.708), (-0.238, 0.708)] (19 s)
+[13:31:30] [A.2 Lx81] base 20 : 30 états en 9 s ; max|(i)-(ii)| in-in L 6.7e-09, NL 8.6e-09 eV ; s_align médiane +25.07 meV (min +25.06, max +25.17) ; décalage Lu -24.65 meV, <ΔV>_3D +9.09 meV
+[13:31:30]        sigma_324: Σ|c|² 0.9759 ; c†(M/81)c tot +4.9296 (L +4.3434, NL +0.5862) ; <in|ΔV|out> L -1.0483, NL -0.3517 ; s +25.17 meV
+[13:31:30]        sigma_325: Σ|c|² 0.9759 ; c†(M/81)c tot +4.9296 (L +4.3434, NL +0.5862) ; <in|ΔV|out> L -1.0483, NL -0.3517 ; s +25.17 meV
+[13:31:30]        pi_320: Σ|c|² 0.9993 ; c†(M/81)c tot +0.3491 (L +0.3247, NL +0.0244) ; <in|ΔV|out> L -0.0289, NL -0.0121 ; s +25.06 meV
+[13:31:30]        pi_318: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0275 (L +0.0275, NL +0.0000) ; <in|ΔV|out> L -0.0085, NL -0.0000 ; s +25.07 meV
+[13:31:30]        pi_319: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0275 (L +0.0275, NL +0.0000) ; <in|ΔV|out> L -0.0085, NL -0.0000 ; s +25.07 meV
+[13:31:30]        pi_326: Σ|c|² 0.9997 ; c†(M/81)c tot +0.1390 (L +0.1268, NL +0.0122) ; <in|ΔV|out> L -0.0146, NL -0.0062 ; s +25.07 meV
+[13:31:38] [A.3] a1_16 even: QE sous E_D-3 : 241 ; modèle : 241 ; fenêtre QE 2 / modèle 2 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-2.913, -2.913, 0.321] ; (tout) : [-2.913, -2.913, -0.226]
+[13:31:38] [A.3] a1_16 odd: QE sous E_D-3 : 55 ; modèle : 55 ; fenêtre QE 28 / modèle 28 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-0.612, -0.044, -0.005] ; (tout) : [-0.612, -0.057, -0.007]
+[13:31:38] [A.3] a3_20 even: QE sous E_D-3 : 241 ; modèle : 241 ; fenêtre QE 2 / modèle 2 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-2.95, -2.95, 0.285] ; (tout) : [-2.95, -2.95, -0.239]
+[13:31:38] [A.3] a3_20 odd: QE sous E_D-3 : 55 ; modèle : 55 ; fenêtre QE 28 / modèle 28 ; min_k[λ_k(mod)-λ_(k-s)(QE)] s=0,1,2 (fenêtre) : [-0.621, -0.044, -0.005] ; (tout) : [-0.621, -0.057, -0.007]
+[13:31:38] [A.3] parité de 352 états QE en 8 s (dev max 7.4e-07)
+[13:31:42] [variante] a1_tot: pairs 2 (localisés [(-2.812, 0.287), (-2.812, 0.287)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.35, 0.226)])
+[13:31:47] [C] N=11: E_D -4.24936 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.24936 (Δ_Γ +2373.67 meV, Δ_fold -2384.56 meV, résidu nan) ; gap Γ parfaite 1.509 eV ; ħv_F·min|k−K| 0.843 eV ; Lu -12.16 meV ; fenêtre P 42 (0σ/42π), D 45 (2σ/43π) ; seuil 0.0541 ; localisés σ 2 / π 2 ; π (-0.321, 0.191) ; σ [(-0.153, 0.707), (-0.153, 0.708)] (25 s)
+[13:31:49] [variante] a1_L: pairs 0 (localisés []), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.78, 0.103)])
+[13:31:54] [variante] a1_NL: pairs 2 (localisés [(-2.847, 0.255), (-2.847, 0.255)]), impairs 28 (localisés [(-1.37, 0.222)])
+[13:31:59] [variante] a2_16: pairs 2 (localisés [(-2.812, 0.287), (-2.812, 0.287)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.35, 0.226)])
+[13:32:02] [variante] a3_20: pairs 2 (localisés [(-2.848, 0.254), (-2.848, 0.254)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.359, 0.225)])
+[13:32:05] [variante] a1_tot_Lx81: pairs 0 (localisés []), impairs 28 (localisés [(-1.775, 0.116), (-1.775, 0.116), (-0.727, 0.236), (0.263, 0.107)])
+[13:32:08] [variante] a3_20_Lx81: pairs 0 (localisés []), impairs 28 (localisés [(-1.776, 0.116), (-1.776, 0.116), (-0.734, 0.238), (0.259, 0.106)])
+[13:32:08] [gauge] provenance OK: /home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene-raman/wannier/27x27/wannier_manifest.json
+[13:32:09] [setup] E_D (Wannier, 90x90) = -4.238896 eV, gap 6.097e-05 meV; H(R): (741, 5, 5), MP (27, 27, 1)
+[13:32:14] [variante] b_5wf: pairs 2 (localisés [(-2.514, 0.489), (-2.514, 0.489)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.315, 0.232)])
+[13:32:19] [C] N=12: E_D -4.23869 (quadruplet) ; quadruplet -4.23869 ; route maille -4.23857 (Δ_Γ -0.09 meV, Δ_fold -0.01 meV, résidu 9.5e-07) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -29.24 meV ; fenêtre P 55 (0σ/55π), D 57 (2σ/55π) ; seuil 0.0457 ; localisés σ 2 / π 9 ; π (-0.551, 0.223) ; σ [(0.114, 0.713), (0.114, 0.713)] (31 s)
+[13:32:19] [C] ajustement pi 3m : N [6, 9, 12] x [-1.065, -0.737, -0.551] ; 1/N : ε_∞ -0.046 (rms 0.007) ; 1/N² : ε_∞ -0.409 (rms 0.024)
+[13:32:19] [C] ajustement sigma 3m : N [6, 9, 12] x [0.156, 0.101, 0.114] ; 1/N : ε_∞ +0.055 (rms 0.012) ; 1/N² : ε_∞ +0.087 (rms 0.011)
+[13:32:19] [C] ajustement pi non3m : N [5, 7, 8, 10, 11] x [-0.328, -0.495, -0.37, -0.422, -0.321] ; 1/N : ε_∞ -0.407 (rms 0.064) ; 1/N² : ε_∞ -0.406 (rms 0.064)
+[13:32:19] [C] ajustement sigma non3m : N [5, 7, 8, 10, 11] x [-0.131, -0.282, -0.195, -0.238, -0.153] ; 1/N : ε_∞ -0.254 (rms 0.053) ; 1/N² : ε_∞ -0.234 (rms 0.051)
+[13:32:19] [C] coût : exposants d 4.96, p 4.59 ; 15x15 44 / 31 min ; 18x18 110 / 71 min (64 rangs)
+[13:32:19] saved c/c_results.json
+[13:32:19] [variante] c_all: pairs 2 (localisés [(-2.514, 0.489), (-2.514, 0.489)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.315, 0.232)])
+[13:32:25] [variante] c_3: pairs 2 (localisés [(-2.516, 0.49), (-2.515, 0.49)]), impairs 28 (localisés [(-1.803, 0.1), (-1.803, 0.101), (-1.312, 0.232)])
+[13:32:25] [A.4] vérification w2(a2) = w2(a1) (états localisés de a1) : max|Δw2| = 0.0003 -> OK (47 s)
+[13:32:30] [A.5] M_L_minus_mean_identity: constante 76.58 meV soustraite de la diagonale de M (norme unit_cell) -> décalage rigide médian -0.945 meV (attendu -0.945), max|Δε - médiane| 3.3e-13 eV
+[13:32:32] [A.5] dV_minus_mean_equiv: constante 6202.90 meV soustraite de la diagonale de M (norme unit_cell) -> décalage rigide médian -76.579 meV (attendu -76.579), max|Δε - médiane| 2.1e-13 eV
+[13:32:32] saved a/a_results.json
+[13:33:14] [C] E_K(maille 9x9) -4.238470 eV ; ħv_F 5.459 eV Å (|δk| 0.1090 Å⁻¹) ; K cart 1.6987 Å⁻¹
+[13:33:17] [C] N=5: E_D -4.23138 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23138 (Δ_Γ +7.08 meV, Δ_fold +0.00 meV, résidu 5.0e-06) ; gap Γ parfaite 2.809 eV ; ħv_F·min|k−K| 1.855 eV ; Lu -122.33 meV ; fenêtre P 6 (0σ/6π), D 9 (2σ/7π) ; seuil 0.2622 ; localisés σ 2 / π 1 ; π (-0.328, 0.267) ; σ [(-0.131, 0.702), (-0.131, 0.702)] (3 s)
+[13:33:23] [C] N=6: E_D -4.23745 (quadruplet) ; quadruplet -4.23745 ; route maille -4.23809 (Δ_Γ +0.37 meV, Δ_fold +0.00 meV, résidu 1.1e-06) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -98.62 meV ; fenêtre P 19 (0σ/19π), D 21 (2σ/19π) ; seuil 0.1831 ; localisés σ 2 / π 1 ; π (-1.065, 0.284) ; σ [(0.156, 0.711), (0.156, 0.711)] (6 s)
+[13:33:29] [C] N=7: E_D -4.23904 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23904 (Δ_Γ -0.59 meV, Δ_fold +0.02 meV, résidu 1.2e-05) ; gap Γ parfaite 3.003 eV ; ħv_F·min|k−K| 1.325 eV ; Lu -38.54 meV ; fenêtre P 12 (0σ/12π), D 15 (2σ/13π) ; seuil 0.1334 ; localisés σ 2 / π 1 ; π (-0.495, 0.301) ; σ [(-0.282, 0.703), (-0.282, 0.703)] (6 s)
+[13:33:40] [C] N=8: E_D -4.23768 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23768 (Δ_Γ +0.79 meV, Δ_fold -0.01 meV, résidu 3.4e-06) ; gap Γ parfaite 1.976 eV ; ħv_F·min|k−K| 1.159 eV ; Lu -22.97 meV ; fenêtre P 33 (0σ/33π), D 34 (2σ/32π) ; seuil 0.1029 ; localisés σ 2 / π 2 ; π (-0.37, 0.223) ; σ [(-0.195, 0.708), (-0.195, 0.708)] (11 s)
+[13:33:56] [C] N=9: E_D -4.23847 (quadruplet) ; quadruplet -4.23847 ; route maille -4.23847 (Δ_Γ +0.00 meV, Δ_fold -0.00 meV, résidu 1.3e-06) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -24.65 meV ; fenêtre P 28 (0σ/28π), D 30 (2σ/28π) ; seuil 0.0812 ; localisés σ 2 / π 4 ; π (-0.737, 0.246) ; σ [(0.101, 0.713), (0.101, 0.713)] (16 s)
+[13:34:17] [C] N=10: E_D -4.23889 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23889 (Δ_Γ -0.42 meV, Δ_fold -0.01 meV, résidu 2.3e-06) ; gap Γ parfaite 2.039 eV ; ħv_F·min|k−K| 0.927 eV ; Lu -8.22 meV ; fenêtre P 39 (0σ/39π), D 42 (2σ/40π) ; seuil 0.0659 ; localisés σ 2 / π 2 ; π (-0.422, 0.241) ; σ [(-0.238, 0.708), (-0.238, 0.708)] (20 s)
+[13:34:31] [A] tables a/A_tables.md
+[13:34:47] [C] N=11: E_D -4.24936 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.24936 (Δ_Γ +2373.67 meV, Δ_fold -2384.56 meV, résidu nan) ; gap Γ parfaite 1.509 eV ; ħv_F·min|k−K| 0.843 eV ; Lu -12.16 meV ; fenêtre P 42 (0σ/42π), D 45 (2σ/43π) ; seuil 0.0541 ; localisés σ 2 / π 2 ; π (-0.321, 0.191) ; σ [(-0.153, 0.707), (-0.153, 0.708)] (30 s)
+[13:34:49] [fig] a_delta.pdf/.png
+[13:34:49] [fig] a_ladder_corrected.pdf/.png
+[13:35:23] [C] N=12: E_D -4.23869 (quadruplet) ; quadruplet -4.23869 ; route maille -4.23857 (Δ_Γ -0.09 meV, Δ_fold -0.01 meV, résidu 9.5e-07) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -29.24 meV ; fenêtre P 55 (0σ/55π), D 57 (2σ/55π) ; seuil 0.0457 ; localisés σ 2 / π 9 ; π (-0.551, 0.223) ; σ [(0.114, 0.713), (0.114, 0.713)] (37 s)
+[13:35:23] [C] ajustement pi 3m : N [6, 9, 12] x [-1.065, -0.737, -0.551] ; 1/N : ε_∞ -0.046 (rms 0.007) ; 1/N² : ε_∞ -0.409 (rms 0.024)
+[13:35:23] [C] ajustement sigma 3m : N [6, 9, 12] x [0.156, 0.101, 0.114] ; 1/N : ε_∞ +0.055 (rms 0.012) ; 1/N² : ε_∞ +0.087 (rms 0.011)
+[13:35:23] [C] ajustement pi non3m : N [5, 7, 8, 10, 11] x [-0.328, -0.495, -0.37, -0.422, -0.321] ; 1/N : ε_∞ -0.407 (rms 0.064) ; 1/N² : ε_∞ -0.406 (rms 0.064)
+[13:35:23] [C] ajustement sigma non3m : N [5, 7, 8, 10, 11] x [-0.131, -0.282, -0.195, -0.238, -0.153] ; 1/N : ε_∞ -0.254 (rms 0.053) ; 1/N² : ε_∞ -0.234 (rms 0.051)
+[13:35:23] [C] coût : exposants d 4.96, p 4.59 ; 15x15 44 / 31 min ; 18x18 110 / 71 min (64 rangs)
+[13:35:23] saved c/c_results.json
+[13:35:23] [C] tables c/C_tables.md
+[13:35:25] [fig] size.pdf/.png
+[13:36:39] [C] E_K(maille 9x9) -4.238470 eV ; ħv_F 5.459 eV Å (|δk| 0.1090 Å⁻¹) ; K cart 1.6987 Å⁻¹
+[13:36:41] [C] N=5: E_D -4.23138 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23138 (Δ_Γ +7.08 meV, Δ_fold +0.00 meV, résidu 5.0e-06) ; gap Γ parfaite 2.809 eV ; ħv_F·min|k−K| 1.855 eV ; Lu -122.33 meV ; fenêtre P 6 (0σ/6π), D 9 (2σ/7π) ; seuil 0.2622 ; localisés σ 2 / π 1 ; π (-0.328, 0.267) ; σ [(-0.131, 0.702), (-0.131, 0.702)] (2 s)
+[13:36:48] [C] N=6: E_D -4.23745 (quadruplet) ; quadruplet -4.23745 ; route maille -4.23809 (Δ_Γ +0.37 meV, Δ_fold +0.00 meV, résidu 1.1e-06) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -98.62 meV ; fenêtre P 19 (0σ/19π), D 21 (2σ/19π) ; seuil 0.1831 ; localisés σ 2 / π 1 ; π (-1.065, 0.284) ; σ [(0.156, 0.711), (0.156, 0.711)] (6 s)
+[13:36:53] [C] N=7: E_D -4.23904 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23904 (Δ_Γ -0.59 meV, Δ_fold +0.02 meV, résidu 1.2e-05) ; gap Γ parfaite 3.003 eV ; ħv_F·min|k−K| 1.325 eV ; Lu -38.54 meV ; fenêtre P 12 (0σ/12π), D 15 (2σ/13π) ; seuil 0.1334 ; localisés σ 2 / π 1 ; π (-0.495, 0.301) ; σ [(-0.282, 0.703), (-0.282, 0.703)] (5 s)
+[13:37:04] [C] N=8: E_D -4.23768 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23768 (Δ_Γ +0.79 meV, Δ_fold -0.01 meV, résidu 3.4e-06) ; gap Γ parfaite 1.976 eV ; ħv_F·min|k−K| 1.159 eV ; Lu -22.97 meV ; fenêtre P 33 (0σ/33π), D 34 (2σ/32π) ; seuil 0.1029 ; localisés σ 2 / π 2 ; π (-0.37, 0.223) ; σ [(-0.195, 0.708), (-0.195, 0.708)] (11 s)
+[13:37:35] [C] N=9: E_D -4.23847 (quadruplet) ; quadruplet -4.23847 ; route maille -4.23847 (Δ_Γ +0.00 meV, Δ_fold -0.00 meV, résidu 1.3e-06) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -24.65 meV ; fenêtre P 28 (0σ/28π), D 30 (2σ/28π) ; seuil 0.0812 ; localisés σ 2 / π 4 ; π (-0.737, 0.246) ; σ [(0.101, 0.713), (0.101, 0.713)] (32 s)
+[13:38:04] [C] N=10: E_D -4.23889 (maille (E_K9 + Δ_Γ + Δ_fold)) ; quadruplet nan ; route maille -4.23889 (Δ_Γ -0.42 meV, Δ_fold -0.01 meV, résidu 2.3e-06) ; gap Γ parfaite 2.039 eV ; ħv_F·min|k−K| 0.927 eV ; Lu -8.22 meV ; fenêtre P 39 (0σ/39π), D 42 (2σ/40π) ; seuil 0.0659 ; localisés σ 2 / π 2 ; π (-0.422, 0.241) ; σ [(-0.238, 0.708), (-0.238, 0.708)] (29 s)
+[13:38:38] [C] N=11: E_D -4.23851 (K de la maille N×N + Δ_fold (même run)) ; quadruplet nan ; route maille -4.24936 (Δ_Γ +2373.67 meV, Δ_fold -2384.56 meV, résidu nan) ; gap Γ parfaite 1.509 eV ; ħv_F·min|k−K| 0.843 eV ; Lu -12.16 meV ; fenêtre P 42 (0σ/42π), D 45 (2σ/43π) ; seuil 0.0541 ; localisés σ 2 / π 2 ; π (-0.332, 0.191) ; σ [(-0.164, 0.707), (-0.164, 0.708)] (34 s)
+[13:39:14] [C] N=12: E_D -4.23869 (quadruplet) ; quadruplet -4.23869 ; route maille -4.23857 (Δ_Γ -0.09 meV, Δ_fold -0.01 meV, résidu 9.5e-07) ; gap Γ parfaite 0.000 eV ; ħv_F·min|k−K| 0.000 eV ; Lu -29.24 meV ; fenêtre P 55 (0σ/55π), D 57 (2σ/55π) ; seuil 0.0457 ; localisés σ 2 / π 9 ; π (-0.551, 0.223) ; σ [(0.114, 0.713), (0.114, 0.713)] (36 s)
+[13:39:14] [C] ajustement pi 3m : N [6, 9, 12] x [-1.065, -0.737, -0.551] ; 1/N : ε_∞ -0.046 (rms 0.007) ; 1/N² : ε_∞ -0.409 (rms 0.024)
+[13:39:14] [C] ajustement sigma 3m : N [6, 9, 12] x [0.156, 0.101, 0.114] ; 1/N : ε_∞ +0.055 (rms 0.012) ; 1/N² : ε_∞ +0.087 (rms 0.011)
+[13:39:14] [C] ajustement pi non3m : N [5, 7, 8, 10, 11] x [-0.328, -0.495, -0.37, -0.422, -0.332] ; 1/N : ε_∞ -0.417 (rms 0.062) ; 1/N² : ε_∞ -0.411 (rms 0.061)
+[13:39:14] [C] ajustement sigma non3m : N [5, 7, 8, 10, 11] x [-0.131, -0.282, -0.195, -0.238, -0.164] ; 1/N : ε_∞ -0.264 (rms 0.050) ; 1/N² : ε_∞ -0.239 (rms 0.049)
+[13:39:14] [C] coût : exposants d 4.96, p 4.59 ; 15x15 44 / 31 min ; 18x18 110 / 71 min (64 rangs)
+[13:39:14] saved c/c_results.json
+[13:39:14] [C] tables c/C_tables.md
+[13:39:15] [fig] size.pdf/.png
+[13:50:00] [B.2] M^L sauvé /lustre09/project/6004866/gregb26/graphene/qe/defects/R5_base_vs_M/b/M_L_9x9_nb128.npy (128, 81, 128, 81) en 1646 s ; max|M^L| 1.0266e-02 Ha
+[13:50:02] [B.2] M^NL 128 bandes : compute_M_NL(/home/gregb26/links/scratch/qe_tmp/R5_uc9x9_nb128/defect_unit_cell_9x9.save)
+[14:12:06] [B.2] M^NL sauvé /lustre09/project/6004866/gregb26/graphene/qe/defects/R5_base_vs_M/b/M_NL_9x9_nb128.npy (128, 81, 128, 81) en 1324 s ; max|M^NL| 3.7838e-01 Ha
+[14:12:16] [B.2] bloc 16x16 L vs M grossier juin : VS rel 8.48e-04, eig H(a1) 4.38e-04 eV, diag 2.20e-03 Ha
+[14:12:18] [B.2] bloc 16x16 NL vs M grossier juin : VS rel 1.29e-03, eig H(a1) 1.06e-02 eV, diag 5.69e-02 Ha
+[14:12:20] [B.2] bloc 16x16 tot vs M grossier juin : VS rel 1.31e-03, eig H(a1) 1.15e-02 eV, diag 5.75e-02 Ha
+[14:12:20] saved b/b2_results.json
+[14:12:39] [B.1] k identiques True (max 8.8e-15) ; ε16 vs neuf max 8.15e-04 eV ; E_D -4.238471 ; bande 128 : Γ +74.164, K +80.481, M +75.632 eV ; parité dev max 6.2e-12, pairs 5547 / impairs 4821 ; .save 1.59 Go ; nscf {'wall': 116.69, 'n_not_converged': 0, 'n_k': 162}
+[14:12:39] saved b/b1_results.json
+[14:12:41] [bases] 16 (grossier): 16 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238470 eV
+[14:12:46] [bases] 128 (nscf neuf): 128 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238471 eV
+[14:13:18] [B.3] recouvrements 128 bandes en 4 s ; δ(128) des états en évidence : sigma_324 0.0003, sigma_325 0.0003, pi_320 0.0000, pi_318 0.0000, pi_319 0.0000, pi_326 0.0000
+[14:13:24] [ΔV] grille (270, 270, 192), <ΔV>_3D +9.09 meV, ΔV au site +116.243 eV ; projecteur KB de l'atome retiré (indice parfaite 81, 771419 g, |g|max 10.00 < qmax 20.0) en 2 s
+[14:13:41] [variante] n16: pairs 2 (localisés [(-2.812, 0.287), (-2.812, 0.287)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.35, 0.226)])
+[14:14:02] [variante] n16_Lx81: pairs 0 (localisés []), impairs 28 (localisés [(-1.775, 0.116), (-1.775, 0.116), (-0.727, 0.236), (0.263, 0.107)])
+[14:14:02] [B.3] n=16: dim 1296, fenêtre σ 2 / π 28, π localisé (-1.35, 0.226), σ localisés [(-2.812, 0.287), (-2.812, 0.287)], σ près de +0,101 [] ; médiane|Δε| vs QE σ 2.913132749490763 π 0.007288633372992681 ; δ(π_320) 0.0009, δ(σ_324) 0.0363 ; B4 π_320 <in|ΔV|out> L -0.0382 NL -0.0151 (36 s)
+[14:14:13] [variante] n24: pairs 2 (localisés [(-2.867, 0.236), (-2.867, 0.236)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.368, 0.225)])
+[14:14:23] [variante] n24_Lx81: pairs 2 (localisés [(0.843, 0.674), (0.843, 0.674)]), impairs 28 (localisés [(-1.777, 0.115), (-1.777, 0.115), (-0.741, 0.24), (0.256, 0.105)])
+[14:14:23] [B.3] n=24: dim 1944, fenêtre σ 2 / π 28, π localisé (-1.368, 0.225), σ localisés [(-2.867, 0.236), (-2.867, 0.236)], σ près de +0,101 [] ; médiane|Δε| vs QE σ 2.968477331598745 π 0.0072886329035015684 ; δ(π_320) 0.0005, δ(σ_324) 0.0176 ; B4 π_320 <in|ΔV|out> L -0.0211 NL -0.0094 (21 s)
+[14:14:30] [variante] n32: pairs 2 (localisés [(-2.901, 0.201), (-2.901, 0.201)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.379, 0.224)])
+[14:14:38] [variante] n32_Lx81: pairs 2 (localisés [(0.428, 0.697), (0.428, 0.697)]), impairs 28 (localisés [(-1.779, 0.115), (-1.779, 0.115), (-0.747, 0.242), (0.252, 0.105)])
+[14:14:38] [B.3] n=32: dim 2592, fenêtre σ 2 / π 28, π localisé (-1.379, 0.224), σ localisés [(-2.901, 0.201), (-2.901, 0.201)], σ près de +0,101 [] ; médiane|Δε| vs QE σ 3.002825411082734 π 0.007288632644469661 ; δ(π_320) 0.0003, δ(σ_324) 0.0057 ; B4 π_320 <in|ΔV|out> L -0.0137 NL -0.0068 (15 s)
+[14:14:55] [variante] n48: pairs 2 (localisés [(-2.909, 0.193), (-2.909, 0.193)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.397, 0.222)])
+[14:15:13] [variante] n48_Lx81: pairs 2 (localisés [(0.345, 0.7), (0.345, 0.7)]), impairs 28 (localisés [(-1.78, 0.114), (-1.78, 0.114), (-0.754, 0.244), (0.248, 0.104)])
+[14:15:13] [B.3] n=48: dim 3888, fenêtre σ 2 / π 28, π localisé (-1.397, 0.222), σ localisés [(-2.909, 0.193), (-2.909, 0.193)], σ près de +0,101 [] ; médiane|Δε| vs QE σ 3.0101083194754223 π 0.00728863224478804 ; δ(π_320) 0.0001, δ(σ_324) 0.0039 ; B4 π_320 <in|ΔV|out> L -0.0058 NL -0.0036 (35 s)
+[14:15:49] [variante] n64: pairs 2 (localisés [(-2.922, 0.18), (-2.922, 0.18)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.408, 0.22)])
+[14:16:30] [variante] n64_Lx81: pairs 2 (localisés [(0.211, 0.708), (0.211, 0.708)]), impairs 28 (localisés [(-1.782, 0.114), (-1.782, 0.114), (-0.757, 0.245), (0.247, 0.103)])
+[14:16:30] [B.3] n=64: dim 5184, fenêtre σ 2 / π 28, π localisé (-1.408, 0.22), σ localisés [(-2.922, 0.18), (-2.922, 0.18)], σ près de +0,101 [] ; médiane|Δε| vs QE σ 3.0230296394200584 π 0.007288632044669008 ; δ(π_320) 0.0001, δ(σ_324) 0.0017 ; B4 π_320 <in|ΔV|out> L -0.0032 NL -0.0024 (77 s)
+[14:18:35] [variante] n96: pairs 2 (localisés [(-2.933, 0.168), (-2.933, 0.168)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.423, 0.218)])
+[14:21:19] [variante] n96_Lx81: pairs 2 (localisés [(0.137, 0.713), (0.137, 0.713)]), impairs 28 (localisés [(-1.783, 0.114), (-1.783, 0.114), (-0.759, 0.245), (0.246, 0.103)])
+[14:21:19] [B.3] n=96: dim 7776, fenêtre σ 2 / π 28, π localisé (-1.423, 0.218), σ localisés [(-2.933, 0.168), (-2.933, 0.168)], σ près de +0,101 [] ; médiane|Δε| vs QE σ 3.0345058945514456 π 0.007288631838892723 ; δ(π_320) 0.0000, δ(σ_324) 0.0006 ; B4 π_320 <in|ΔV|out> L -0.0014 NL -0.0013 (289 s)
+[14:26:36] [variante] n128: pairs 2 (localisés [(-2.94, 0.16), (-2.94, 0.16)]), impairs 28 (localisés [(-1.803, 0.101), (-1.803, 0.101), (-1.431, 0.216)])
+[14:32:55] [variante] n128_Lx81: pairs 2 (localisés [(0.116, 0.714), (0.116, 0.714)]), impairs 28 (localisés [(-1.783, 0.114), (-1.783, 0.114), (-0.76, 0.245), (0.245, 0.103)])
+[14:32:55] [B.3] n=128: dim 10368, fenêtre σ 2 / π 28, π localisé (-1.431, 0.216), σ localisés [(-2.94, 0.16), (-2.94, 0.16)], σ près de +0,101 [] ; médiane|Δε| vs QE σ 3.041390446128879 π 0.007288631733762596 ; δ(π_320) 0.0000, δ(σ_324) 0.0003 ; B4 π_320 <in|ΔV|out> L -0.0008 NL -0.0008 (696 s)
+[14:32:55] saved b/b3_results.json
+[14:32:55] [B] tables b/B_tables.md
+[14:33:01] [fig] delta_vs_n.pdf/.png
+[14:33:02] [fig] ladder_bands.pdf/.png

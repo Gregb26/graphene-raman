@@ -11,7 +11,7 @@
 #SBATCH --error=results/M/logs/%x_%A.err
 # Dense M on the (p*N)^2 grid: ml (MPI real-space, node-shared u_nk) -> nl (serial, fresh process) -> combine.
 # Usage: sbatch scripts/submit_M_dense.sh <size> [extra ml args, e.g. --coarse]
-PROJ=/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects
+PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
 cd "$PROJ" || exit 1
 module restore qe; module load mpi4py/4.0.3 scipy-stack
 SIZE=${1:?size e.g. 5x5}; shift

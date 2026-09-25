@@ -1,0 +1,101 @@
+{
+ "code_reading": {
+  "M_NL": "defects/non_local.py compute_M_NL (l. 109-201) : positions de TOUS les atomes lues séparément dans sc_p (tau_s_p) et sc_d (tau_s_d), phases par atome, M_NL = M_d - M_p -> une géométrie relaxée est traitée par construction ; aucun indice de spin ; les projecteurs KB ne dépendent pas du spin -> ΔV^NL identique pour ↑ et ↓ à géométrie donnée",
+  "M_L": "defects/local_R.py compute_ML_R (l. 15-97) et local_G.py : ΔV = V_d - V_p lus par qe_io.get_pot (pp.x plot_num 1) ; positions non utilisées (le potentiel porte la géométrie) ; aucun indice de spin : nspin = 2 exige deux potentiels pp.x (spin_component 1 et 2) et deux passages de la partie LOCALE seulement",
+  "pot": "io/qe_io.py get_pot (l. 393-453) : un fichier filplot, aucune notion de spin",
+  "wfc": "io/qe_io.py _read_all_wfc (l. 342-391) : npol = 1 exigé ; glob wfc*.hdf5 trié par l'attribut ik -> les fichiers wfcup1/wfcdw1 d'un run lsda (même ik) ne sont pas distingués ; gamma_only non géré (demi-sphère) -- ne concerne que les super-cellules, jamais lues par la chaîne M",
+  "missing": "manquant pour R1 : (i) deux potentiels ΔV_↑, ΔV_↓ (pp.x de J0 les fournit) ; (ii) un pilote qui appelle compute_ML_R deux fois (up, down) et compute_M_NL une fois avec sc_d = .save relaxé, puis somme par spin ; (iii) le sidecar matrix_io doit porter le spin ; (iv) la géométrie relaxée entre dans M_NL par les positions du .save relaxé (déjà supporté)"
+ },
+ "dV_R1": {
+  "D_unrelaxed": {
+   "shift_used_eV": -0.02465140127665677,
+   "mean3d": 0.009087407856160717,
+   "site": 116.2432598373603,
+   "end_raw": -0.023959611981717328,
+   "end_sub": -0.03304701983787804,
+   "end_aligned": 0.0006917892949394426,
+   "boundary_raw": 0.034113731241291134,
+   "boundary_sub": 0.04320113909745185,
+   "boundary_aligned": 0.04192524219175625,
+   "boundary_plane_raw": 0.033010568037184385,
+   "boundary_plane_sub": 0.0420979758933451,
+   "boundary_plane_aligned": 0.016984144213978425,
+   "line_end_points": [
+    116.2432598373603,
+    -0.20828561382878058,
+    -0.05370513343692361,
+    -0.042867576348812754,
+    -0.023959611981717328
+   ]
+  },
+  "N1": {
+   "shift_used_eV": 0.020218329149621184,
+   "mean3d": 0.009073717604013062,
+   "site": 116.07878677440522,
+   "end_raw": 0.08902844484867123,
+   "end_sub": 0.07995472724465817,
+   "end_aligned": 0.06881011569905005,
+   "boundary_raw": 2.5878496219721114,
+   "boundary_sub": 2.5787759043680984,
+   "boundary_aligned": 2.5676312928224903,
+   "boundary_plane_raw": 2.5878496219721114,
+   "boundary_plane_sub": 2.5787759043680984,
+   "boundary_plane_aligned": 2.5676312928224903,
+   "line_end_points": [
+    116.07878677440522,
+    -4.336968602633486,
+    -1.8580442019863554,
+    0.22051820865101243,
+    0.08902844484867123
+   ]
+  },
+  "N2u": {
+   "shift_used_eV": 0.015890735523917954,
+   "mean3d": -0.018614845752890834,
+   "site": 115.61931965330837,
+   "end_raw": 0.09172878034760897,
+   "end_sub": 0.1103436261004998,
+   "end_aligned": 0.07583804482369101,
+   "boundary_raw": 3.6738105087946025,
+   "boundary_sub": 3.692425354547493,
+   "boundary_aligned": 3.6579197732706845,
+   "boundary_plane_raw": 3.6738105087946025,
+   "boundary_plane_sub": 3.692425354547493,
+   "boundary_plane_aligned": 3.6579197732706845,
+   "line_end_points": [
+    115.61931965330837,
+    -8.130475900136048,
+    -3.0689582398513044,
+    0.2622597686274974,
+    0.09172878034760897
+   ]
+  },
+  "N2d": {
+   "shift_used_eV": 0.03556501395860323,
+   "mean3d": -0.015973392626889127,
+   "site": 114.91537885198719,
+   "end_raw": 0.08917229781663762,
+   "end_sub": 0.10514569044352674,
+   "end_aligned": 0.053607283858034385,
+   "boundary_raw": 3.668821654874435,
+   "boundary_sub": 3.684795047501324,
+   "boundary_aligned": 3.633256640915832,
+   "boundary_plane_raw": 3.668821654874435,
+   "boundary_plane_sub": 3.684795047501324,
+   "boundary_plane_aligned": 3.633256640915832,
+   "line_end_points": [
+    114.91537885198719,
+    -7.9534452706553775,
+    -3.038829031099098,
+    0.262280180562936,
+    0.08917229781663762
+   ]
+  },
+  "N2_up_minus_dw": {
+   "max_abs_eV": 10.130030527382502,
+   "mean3d_eV": -0.002641453126001706,
+   "boundary_max_abs_eV": 0.0569903572639916,
+   "site_eV": 0.703940801321192
+  }
+ }
+}

@@ -1,0 +1,20 @@
+{
+  "bloch_norm": "unit_cell",
+  "units": "hartree",
+  "shape": [
+    128,
+    81,
+    128,
+    81
+  ],
+  "part": "M_NL_coarse_nb128",
+  "nbnd": 128,
+  "nk": 81,
+  "uc_save": "/home/gregb26/links/scratch/qe_tmp/R5_uc9x9_nb128/defect_unit_cell_9x9.save",
+  "sc_p": "/home/gregb26/links/scratch/qe_tmp/defect_9x9_p/defect_9x9_p.save",
+  "sc_d": "/home/gregb26/links/scratch/qe_tmp/defect_9x9_d/defect_9x9_d.save",
+  "upf": "/home/gregb26/links/scratch/qe_tmp/defect_unit_cell_9x9/defect_unit_cell_9x9.save/C.upf",
+  "kernel": "compute_M_NL",
+  "date": "2026-09-25",
+  "note": "R5 B.2 : M^NL grossier 128 bandes x 81 k, norme unit_cell, Hartree"
+}

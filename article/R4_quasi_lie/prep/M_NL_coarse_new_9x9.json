@@ -1,0 +1,12 @@
+{
+  "bloch_norm": "unit_cell",
+  "units": "hartree",
+  "shape": [
+    16,
+    81,
+    16,
+    81
+  ],
+  "part": "M_NL_coarse_R4",
+  "note": "compute_M_NL sur defect_unit_cell_9x9.save, 2026-09-25"
+}

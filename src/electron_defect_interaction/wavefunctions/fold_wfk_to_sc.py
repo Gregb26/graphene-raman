@@ -90,7 +90,7 @@ def compute_psi_nk_fold_sc(
         u = np.fft.ifftn(C_grid, axes=(1,2,3)) * N # (nband, Nx, Ny, Nz), N undoes the normzalisation of ifftn
         
         # Compute psi = u * exp(ik.r) / sqrt(Omega)
-        psi[:, ik, ...] = (u * phase_k) / np.sqrt(float(Omega_sc)/N)
+        psi[:, ik, ...] = (u * phase_k) / np.sqrt(float(Omega_sc)/np.prod(Ndiag))
 
     if check_normalize:
         # Sanity check, wavefunctions are nornmalized

@@ -40,6 +40,16 @@ results/M/*
 !results/M/ks_reconstruction.npz
 !results/M/ved_analysis.npz
 !results/M/*.csv
+!results/M2/
+results/M2/*
+!results/M2/specwd_*_prod.npz
+!results/M2/resonance_*.npz
+!results/M2/mwr_locality.npz
+!results/M2/M_analysis.npz
+!results/M2/ks_reconstruction.npz
+!results/M2/ved_analysis.npz
+!results/M2/*.csv
+!results/M2/MD5SUMS_*.txt
 !results/epw/
 results/epw/*
 !results/epw/*.npz

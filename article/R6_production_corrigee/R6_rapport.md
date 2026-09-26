@@ -501,3 +501,5 @@ Figure `fig/d3_pole_M2` : |det|/max, min |λ|, −Im T̄(K) à 300², M2 (plein)
   commit de `article/R6_production_corrigee/` (étape 2) et de `scripts/`… si retouchés (aucun script de `scripts/` ni de `src/` modifié à l'étape 2).
 
 **STOP — étape 2 terminée le 2026-09-26 (9 h 10). Attente du GO 3 (production du chapitre 4 avec M2, config v2).**
+
+Mise à jour du 2026-09-26 (Code, à la demande de Greg) : diffs `phase0/production.json.diff` et `phase0/config.py.diff` appliqués (`results_dir = results/M2`, `M_normalization = v2`, `results_dir(cfg)`, clés obligatoires) ; exceptions `.gitignore` pour `results/M2/` (mêmes règles que `results/M/` + `MD5SUMS_*.txt`). Vérifié : `load_production()` exige et affiche les nouvelles clés, `dense_paths` pointe sur `results/M2/M_dense_<S>.npy` (six fichiers présents, sidecar v2). Non commité.

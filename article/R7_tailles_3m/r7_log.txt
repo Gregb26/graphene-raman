@@ -1,0 +1,33 @@
+[16:04:56] [D1] tailles [6, 9, 12] ; fenetre (-3.0, 1.0) ; rayons w2/w1 2.0/1.0 A ; alignement Lu rayons (0.5, 1.0) ; sorties d1_reg
+[16:05:03] [D1] N=6: nat 72/71, nbnd 174/172 ; E_D -4.23745 (etalement 3.2e-07, E_F-E_D +0.0190) ; Lu -98.62 meV (0,5 A -125.83) ; <V_d>-<V_p> +20.83 meV ; fenetre P 19 (0s/19p), D 21 (2s/19p) ; parite max dev 2.0e-12 ; seuil 0.1831 ; localises s 2 / p 1 ; pi (-1.0654, 0.284, 0.053, 140) ; sigma [(0.156, 0.711), (0.156, 0.711)] (6 s)
+[16:05:18] [D1] N=9: nat 162/161, nbnd 354/352 ; E_D -4.23847 (etalement 1.4e-07, E_F-E_D +0.0190) ; Lu -24.65 meV (0,5 A -21.59) ; <V_d>-<V_p> +9.09 meV ; fenetre P 28 (0s/28p), D 30 (2s/28p) ; parite max dev 9.6e-12 ; seuil 0.0812 ; localises s 2 / p 4 ; pi (-0.7373, 0.246, 0.047, 320) ; sigma [(0.1014, 0.713), (0.1014, 0.713)] (15 s)
+[16:05:51] [D1] N=12: nat 288/287, nbnd 606/604 ; E_D -4.23869 (etalement 2.2e-07, E_F-E_D +0.0190) ; Lu -29.24 meV (0,5 A -36.07) ; <V_d>-<V_p> +5.06 meV ; fenetre P 55 (0s/55p), D 57 (2s/55p) ; parite max dev 7.6e-13 ; seuil 0.0457 ; localises s 2 / p 9 ; pi (-0.5508, 0.223, 0.044, 572) ; sigma [(0.114, 0.713), (0.114, 0.713)] (33 s)
+[16:05:51] [fit] pi N [6, 9, 12] x [-1.0654, -0.7373, -0.5508] : 1/N eps_inf -0.0458 (rms 0.0069) ; 1/N^2 eps_inf -0.4089 (rms 0.0241)
+[16:05:51] [fit] pi N [6, 9, 12] x [-1.0654, -0.7373, -0.5508] : 1/N eps_inf -0.0458 (rms 0.0069) ; 1/N^2 eps_inf -0.4089 (rms 0.0241)
+[16:05:51] [fit] sigma N [6, 9, 12] x [0.156, 0.1014, 0.114] : 1/N eps_inf +0.0549 (rms 0.0123) ; 1/N^2 eps_inf +0.0869 (rms 0.0107)
+[16:05:51] [fit] sigma N [6, 9, 12] x [0.156, 0.1014, 0.114] : 1/N eps_inf +0.0549 (rms 0.0123) ; 1/N^2 eps_inf +0.0869 (rms 0.0107)
+[16:05:51] [gate] regression 6/9/12 contre R5 C : PASS (max ecart 0.00e+00, tol 1e-06)
+[16:05:51] saved d1_reg/d1_results.json
+[16:05:51] [tables] d1_reg/D1_tables.md
+[16:06:11] [fig] size_3m_d1_reg.pdf/.png
+[16:06:11] [fig] localized_3m_d1_reg.pdf/.png
+[16:06:11] [D1] termine en 75 s
+[17:46:28] [D1] tailles [6, 9, 12, 15, 18] ; fenetre (-3.0, 1.0) ; rayons w2/w1 2.0/1.0 A ; alignement Lu rayons (0.5, 1.0) ; sorties d1
+[17:46:34] [D1] N=6: nat 72/71, nbnd 174/172 ; E_D -4.23745 (etalement 3.2e-07, E_F-E_D +0.0190) ; Lu -98.62 meV (0,5 A -125.83) ; <V_d>-<V_p> +20.83 meV ; fenetre P 19 (0s/19p), D 21 (2s/19p) ; parite max dev 2.0e-12 ; seuil 0.1831 ; localises s 2 / p 1 ; pi (-1.0654, 0.284, 0.053, 140) ; sigma [(0.156, 0.711), (0.156, 0.711)] (6 s)
+[17:46:49] [D1] N=9: nat 162/161, nbnd 354/352 ; E_D -4.23847 (etalement 1.4e-07, E_F-E_D +0.0190) ; Lu -24.65 meV (0,5 A -21.59) ; <V_d>-<V_p> +9.09 meV ; fenetre P 28 (0s/28p), D 30 (2s/28p) ; parite max dev 9.6e-12 ; seuil 0.0812 ; localises s 2 / p 4 ; pi (-0.7373, 0.246, 0.047, 320) ; sigma [(0.1014, 0.713), (0.1014, 0.713)] (15 s)
+[17:47:24] [D1] N=12: nat 288/287, nbnd 606/604 ; E_D -4.23869 (etalement 2.2e-07, E_F-E_D +0.0190) ; Lu -29.24 meV (0,5 A -36.07) ; <V_d>-<V_p> +5.06 meV ; fenetre P 55 (0s/55p), D 57 (2s/55p) ; parite max dev 7.6e-13 ; seuil 0.0457 ; localises s 2 / p 9 ; pi (-0.5508, 0.223, 0.044, 572) ; sigma [(0.114, 0.713), (0.114, 0.713)] (35 s)
+[17:48:28] [D1] N=15: nat 450/449, nbnd 930/928 ; E_D -4.23878 (etalement 8.2e-08, E_F-E_D +0.0190) ; Lu -15.64 meV (0,5 A -14.54) ; <V_d>-<V_p> +1.42 meV ; fenetre P 76 (0s/76p), D 78 (2s/76p) ; parite max dev 7.5e-13 ; seuil 0.0292 ; localises s 2 / p 10 ; pi (-0.4593, 0.207, 0.041, 896) ; sigma [(0.1033, 0.713), (0.1033, 0.713)] (64 s)
+[17:50:43] [D1] N=18: nat 648/647, nbnd 1326/1324 ; E_D -4.23884 (etalement 1.1e-07, E_F-E_D +0.0190) ; Lu -18.18 meV (0,5 A -20.34) ; <V_d>-<V_p> -8.48 meV ; fenetre P 127 (0s/127p), D 129 (2s/127p) ; parite max dev 1.8e-09 ; seuil 0.0203 ; localises s 2 / p 15 ; pi (-0.3881, 0.194, 0.039, 1292) ; sigma [(0.107, 0.712), (0.107, 0.712)] (136 s)
+[17:50:43] [fit] pi N [6, 9, 12, 15, 18] x [-1.0654, -0.7373, -0.5508, -0.4593, -0.3881] : 1/N eps_inf -0.0493 (rms 0.0055) ; 1/N^2 eps_inf -0.3490 (rms 0.0355) ; 1/N + 1/N^2 eps_inf -0.0325 (rms 0.0052)
+[17:50:43] [fit] pi N [6, 9, 12] x [-1.0654, -0.7373, -0.5508] : 1/N eps_inf -0.0458 (rms 0.0069) ; 1/N^2 eps_inf -0.4089 (rms 0.0241)
+[17:50:43] [fit] sigma N [6, 9, 12, 15, 18] x [0.156, 0.1014, 0.114, 0.1033, 0.107] : 1/N eps_inf +0.0750 (rms 0.0111) ; 1/N^2 eps_inf +0.0944 (rms 0.0092) ; 1/N + 1/N^2 eps_inf +0.1570 (rms 0.0060)
+[17:50:43] [fit] sigma N [6, 9, 12] x [0.156, 0.1014, 0.114] : 1/N eps_inf +0.0549 (rms 0.0123) ; 1/N^2 eps_inf +0.0869 (rms 0.0107)
+[17:50:43] [gate] regression 6/9/12 contre R5 C : PASS (max ecart 0.00e+00, tol 1e-06)
+[17:50:43] saved d1/d1_results.json
+[17:50:43] [tables] d1/D1_tables.md
+[17:50:50] [fig] size_3m.pdf/.png
+[17:50:50] [fig] localized_3m.pdf/.png
+[17:50:50] [D1] termine en 263 s
+[17:56:24] [tables] d1/D1_tables.md
+[17:56:29] [fig] size_3m.pdf/.png
+[17:56:29] [fig] localized_3m.pdf/.png

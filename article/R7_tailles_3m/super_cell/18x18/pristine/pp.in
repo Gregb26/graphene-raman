@@ -1,0 +1,12 @@
+&inputpp
+  prefix   = 'defect_18x18_p'
+  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_18x18_p'   ! directory of tempory files
+  plot_num = 1                ! V_loc + V_Hartree + V_xc
+  filplot  = 'Vks_18x18_p'
+/
+&plot
+  iflag         = 3             ! 3D
+  output_format = 6             ! cube
+/
+
+

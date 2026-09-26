@@ -319,7 +319,7 @@ def compute_ML_R_mpi_shared(uc_wfk_path, sc_wfk_path, sc_p_pot_path, sc_d_pot_pa
     node.Barrier()
     win_u.Sync(); win_v.Sync()
 
-    N_cells = np.prod(Ndiag)
+    N_cells = np.prod(meta["Ndiag"])
     Bk = nb * nk
     dV = Omega_sc / Ntot
     inv_sqrtO = 1.0 / np.sqrt(Omega_sc/N_cells)

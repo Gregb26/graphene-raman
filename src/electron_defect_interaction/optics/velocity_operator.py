@@ -13,7 +13,6 @@ class WannierTB:
     ndegen: np.ndarray
     H_R: np.ndarray
     r_R: np.ndarray
-    t: float
 
 def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     """ Construct graphene's tight-binding Hamiltonian in real space for a p_z orbital per atom """
@@ -58,19 +57,7 @@ def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     r_R[i0, :, A, A] = tau_A
     r_R[i0,:, B, B] = tau_B
 
-    return WannierTB(lattice=lattice, R_int=R_int, ndegen=ndegen, H_R=H_R, r_R=r_R, t=t)
-
-def make_graphene_tb_analytic(t, k, A):
-    """
-    Inputs:
-        -t : float, hopping parameter
-        k  : (Nk, 3) ndarray of floats, kpoint grid in cartesian coordinates
-        A  : (3, 3)  ndarray of floats, primitive lattice vectors stored in columns A[:,i] = a_i
-    Returns:
-        TB Hamiltonian : H_AB(k) = -t(1+e^{-ik.a1}+e^{-ik.a2})
-    """
-
-    return -t*(1+np.exp(-1j*k @ A[:,0].T) + np.exp(-1j*k @ A[:,1].T))
+    return WannierTB(lattice=lattice, R_int=R_int, ndegen=ndegen, H_R=H_R, r_R=r_R)
 
 def reciprocal(lattice):
     """ compute primitive reciprocal lattice vectors from primitive lattice vectors """

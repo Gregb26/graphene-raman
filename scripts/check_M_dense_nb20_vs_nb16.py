@@ -1,6 +1,11 @@
 import numpy as np, sys
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 S=sys.argv[1]
-A=np.load(f"results/M/M_dense_{S}_nb16.npy", mmap_mode="r"); B=np.load(f"results/M/M_dense_{S}.npy", mmap_mode="r")
+import os
+if not os.path.exists(f"{RES}/M_dense_{S}_nb16.npy"): raise SystemExit(f"[non rejouable] {RES}/M_dense_{S}_nb16.npy absent (artefacts nbnd 16 supprimés au ménage de septembre 2026)")
+from electron_defect_interaction.io import matrix_io; matrix_io.check_manifest(f"{RES}/M_dense_{S}.npy", require_normalization=matrix_io.M_NORM_V2)
+A=np.load(f"{RES}/M_dense_{S}_nb16.npy", mmap_mode="r"); B=np.load(f"{RES}/M_dense_{S}.npy", mmap_mode="r")
 nk=A.shape[1]; rng=np.random.default_rng(0); ks=rng.choice(nk, 40, replace=False)
 w15=w16=0.0; wd=0.0
 for i in ks:

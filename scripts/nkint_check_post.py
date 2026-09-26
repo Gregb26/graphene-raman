@@ -1,16 +1,18 @@
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
 nkint_check_post.py -- P13: convergence of the INTERNAL k-grid N_k^int of g0 (reference size, R_cut 3, frozen grid/eta/window).
-Reads results/M/resigma_<size>_rc3_nk<N>.npz (scripts/rcut_resigma.py --nk-int, job submit_nkint_check.sh) and reports, per nk_int:
+Reads <results_dir>/resigma_<size>_rc3_nk<N>.npz (scripts/rcut_resigma.py --nk-int, job submit_nkint_check.sh) and reports, per nk_int:
   * STATE median of Gamma (= Gamma N_cells, intensive V_loc) over the on-shell states of the +-e_window (NOT the Lorentzian curve),
   * median Re Sigma, E_res = argmax Gamma over states with |eps - E_D| <= 1.5 eV, Gamma_T at E_D (mean of the states with eps = E_D, i.e. K),
   * the same restricted to |eps - E_D| <= 0.3 eV,
-with relative deviations to the densest nk_int. Writes results/M/nkint_check_<size>.csv and prints markdown tables.
-Usage: python scripts/nkint_check_post.py --size 9x9 --nk 150,300,450,600 [--pattern results/M/resigma_{S}_rc3_nk{N}.npz]
+with relative deviations to the densest nk_int. Writes <results_dir>/nkint_check_<size>.csv and prints markdown tables.
+Usage: python scripts/nkint_check_post.py --size 9x9 --nk 150,300,450,600 [--pattern <results_dir>/resigma_{S}_rc3_nk{N}.npz]
 """
 import argparse, csv, numpy as np
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default="9x9"); ap.add_argument("--nk", default="150,300,450,600")
-ap.add_argument("--pattern", default="results/M/resigma_{S}_rc3_nk{N}.npz"); ap.add_argument("--zoom", type=float, default=0.3); a = ap.parse_args()
+ap.add_argument("--pattern", default=f"{RES}/resigma_{{S}}_rc3_nk{{N}}.npz"); ap.add_argument("--zoom", type=float, default=0.3); a = ap.parse_args()
 nks = [int(x) for x in a.nk.split(",")]; rows = []
 for N in nks:
     f = a.pattern.format(S=a.size, N=N); z = np.load(f); S = z["Sigma_rc3"]; E = z["E_out"]; ED = float(z["E_D"]); ew = float(z["e_window"])
@@ -33,7 +35,7 @@ print("| nk_int | n états | médiane Γ N_cells (meV) | écart | Re Σ médian 
 print("|---|---|---|---|---|---|---|")
 for r in rows:
     print(f"| {r['nk_int']} | {r['z_n']} | {r['z_medG']:.2f} | {rel(r,'z_medG'):+.2f} % | {r['z_medRe']:.2f} | {rel(r,'z_medRe'):+.2f} % | {r['z_E_res']:+.3f} |")
-out = f"results/M/nkint_check_{a.size}.csv"
+out = f"{RES}/nkint_check_{a.size}.csv"
 with open(out, "w", newline="") as fh:
     w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
 print(f"\nécrit {out}")

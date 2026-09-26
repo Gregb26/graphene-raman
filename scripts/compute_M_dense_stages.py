@@ -65,7 +65,7 @@ def stage_ml(a):
         nk_exp = (int(a.size.split("x")[0]) if a.coarse else P["D"]) ** 2
         assert M_L.shape[1] == nk_exp, f"M has {M_L.shape[1]} k, expected {nk_exp}"
         matrix_io.save_M(a.out, M_L, matrix_io.UNIT_CELL, part="M_L_dense" if not a.coarse else "M_L_coarse_check",
-                         p=(1 if a.coarse else P["p"]), D=(int(a.size.split("x")[0]) if a.coarse else P["D"]), kernel=a.kernel)
+                         p=(1 if a.coarse else P["p"]), D=(int(a.size.split("x")[0]) if a.coarse else P["D"]), kernel=a.kernel, M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
         print(f"[rank0] saved {a.out} shape={M_L.shape}", flush=True)
     comm.Barrier()
 
@@ -75,17 +75,17 @@ def stage_nl(a):
     from electron_defect_interaction.defects.non_local import compute_M_NL
     P = paths(a.size); bands = None if a.bands == "all" else [int(b) for b in a.bands.split(",")]
     M_NL = compute_M_NL(P["uc_dense"], P["scp"], P["scd"], P["upf"], io=qe_io, pseudo_reader=read_upf, bands=bands)
-    matrix_io.save_M(a.out, M_NL, matrix_io.UNIT_CELL, part="M_NL_dense", p=P["p"], D=P["D"])
+    matrix_io.save_M(a.out, M_NL, matrix_io.UNIT_CELL, part="M_NL_dense", p=P["p"], D=P["D"], M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
     print(f"saved {a.out} shape={M_NL.shape}", flush=True)
 
 
 def stage_combine(a):
     P = paths(a.size)
-    M_L = matrix_io.load_M_checked(a.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
-    M_NL = matrix_io.load_M_checked(a.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
+    M_L = matrix_io.load_M_checked(a.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
+    M_NL = matrix_io.load_M_checked(a.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
     assert M_L.shape == M_NL.shape, (M_L.shape, M_NL.shape)
     M = M_L + M_NL; N_kd = M.shape[1]
-    matrix_io.save_M(a.out, M, matrix_io.UNIT_CELL, p=P["p"], D=P["D"], N_kd=int(N_kd))
+    matrix_io.save_M(a.out, M, matrix_io.UNIT_CELL, p=P["p"], D=P["D"], N_kd=int(N_kd), N_cells=int(int(a.size.split("x")[0]) ** 2), M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
     if a.out_norm:
         matrix_io.save_M(a.out_norm, M / N_kd, matrix_io.SUPERCELL, N_cells=int(N_kd), p=P["p"], D=P["D"])
     nb, nk = M.shape[:2]; Op = M.reshape(nb * nk, nb * nk)

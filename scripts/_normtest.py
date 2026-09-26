@@ -1,12 +1,14 @@
 import numpy as np
-from electron_defect_interaction.io import qe_io
+from electron_defect_interaction.io import qe_io, matrix_io
 from electron_defect_interaction.defects.many_body.single_defect import compute_T
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 HA2EV = 27.211386245988
 
 
 def medgamma(N, norm):
     uc = f"data/graphene/unit_cell/qe/defect_{N}.save"
-    M = np.load(f"results/M/M_ed_{N}.npy")
+    matrix_io.check_manifest(f"{RES}/M_ed_{N}.npy", require_normalization=matrix_io.M_NORM_V2); M = np.load(f"{RES}/M_ed_{N}.npy")
     eigs = qe_io.get_eigenvalues(uc, shift_Fermi=True) * HA2EV
     nb, nk = eigs.shape
     NN = nb * nk

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Figures du mémoire (matplotlib, style figures/memoire.mplstyle, texte en français, données lues uniquement dans results/M/*.npz).
+Figures du mémoire (matplotlib, style figures/memoire.mplstyle, texte en français, données lues uniquement dans <results_dir>/*.npz).
   fig_rcut          Γ N_cells vs R_cut, quatre tailles (grille et η gelés)
   fig_plateau       carte (grille × η) à R_cut gelé, taille de référence
   fig_level2        Γ N_cells vs N (niveau 2)
@@ -9,14 +9,15 @@ Figures du mémoire (matplotlib, style figures/memoire.mplstyle, texte en franç
   fig_M_map         |M_nn(k', k=K)| sur la zone de Brillouin (Ṽ = A_cell |M|, eV Å²), π et π*
   fig_Ved_boundary  V_ed^L du site de la lacune à la frontière de la super-cellule, quatre N
   fig_M_scaling     max|M| vs N et max|M| N_cells vs N (convention intensive)
-Écrit aussi results/M/level1_summary.csv et level2_summary.csv.
+Écrit aussi <results_dir>/level1_summary.csv et level2_summary.csv.
 Usage : python scripts/make_figures.py [--tag prod] [--sizes 5x5,7x7,8x8,9x9] [--outdir figures]
 """
 import argparse, csv, os, numpy as np
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
-from electron_defect_interaction.config import load_production
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
 plt.style.use("figures/memoire.mplstyle")
 # palette catégorielle fixe (scripts/_palette.py, principale = bleu marine) : taille -> teinte, jamais recyclée ; 9×9 (référence) porte la principale
@@ -29,8 +30,8 @@ LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
 LBL_G = r"Taux d'amortissement $\Gamma\,N_\mathrm{cells}$ (meV)"
 
 ap = argparse.ArgumentParser(); ap.add_argument("--tag", default="prod"); ap.add_argument("--sizes", default="5x5,6x6,7x7,8x8,9x9,12x12"); ap.add_argument("--outdir", default="figures")
-ap.add_argument("--resonance", default="results/M/resonance_9x9.npz"); ap.add_argument("--locality", default="results/M/mwr_locality.npz")
-ap.add_argument("--analysis", default="results/M/M_analysis.npz")
+ap.add_argument("--resonance", default=f"{RES}/resonance_9x9.npz"); ap.add_argument("--locality", default=f"{RES}/mwr_locality.npz")
+ap.add_argument("--analysis", default=f"{RES}/M_analysis.npz")
 a = ap.parse_args(); cfg = load_production(); sizes = a.sizes.split(","); os.makedirs(a.outdir, exist_ok=True)
 RC, GRID, ETA = cfg["R_cut"], cfg["grid"], cfg["eta_eV"]
 def lab(S): return S.replace("x", r"$\times$")
@@ -41,22 +42,22 @@ def save(fig, name):
     plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png")
 
 def load_map(S):
-    f = f"results/M/specwd_{S}_{a.tag}.npz"
+    f = f"{RES}/specwd_{S}_{a.tag}.npz"
     if not os.path.exists(f): return None
     r = np.load(f)["results"]; return {(int(x[0]), int(x[1]), round(float(x[2]), 4)): (float(x[3]), float(x[4])) for x in r}
 maps = {S: m for S in sizes if (m := load_map(S))}
 
 if maps:
     rcs = sorted({k[0] for m in maps.values() for k in m}); grids = sorted({k[1] for m in maps.values() for k in m}); etas = sorted({k[2] for m in maps.values() for k in m}, reverse=True)
-    with open("results/M/level1_summary.csv", "w", newline="") as f:
+    with open(f"{RES}/level1_summary.csv", "w", newline="") as f:
         w = csv.writer(f); w.writerow(["size", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV", "argmax_E_minus_ED_eV"])
         for S, m in maps.items():
             for (rc, N, e), (med, er) in sorted(m.items()): w.writerow([S, rc, N, e, f"{med:.4f}", f"{er:.4f}"])
-    with open("results/M/level2_summary.csv", "w", newline="") as f:
+    with open(f"{RES}/level2_summary.csv", "w", newline="") as f:
         w = csv.writer(f); w.writerow(["size", "N", "N_cells", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV"])
         for S, m in maps.items():
             N = int(S.split("x")[0]); w.writerow([S, N, N * N, RC, GRID, ETA, f"{m[(RC, GRID, ETA)][0]:.4f}"])
-    print("écrit results/M/level1_summary.csv, level2_summary.csv")
+    print("écrit <results_dir>/level1_summary.csv, level2_summary.csv")
 
     # ---- fig_rcut
     fig, ax = plt.subplots()
@@ -169,7 +170,7 @@ if os.path.exists(a.analysis):
     fig.tight_layout(); save(fig, "fig_M_scaling")
 
 # ---- fig_ks_reconstruction : reconstruction KS avec V_p (super-cellule parfaite), moyenne sur bandes et k
-ks = "results/M/ks_reconstruction.npz"
+ks = f"{RES}/ks_reconstruction.npz"
 if os.path.exists(ks):
     K = np.load(ks); Ns = []; mc = []; md = []; xc = []; xd = []
     for S in sizes:
@@ -188,7 +189,7 @@ if os.path.exists(ks):
     save(fig, "fig_ks_reconstruction")
 
 # ---- vérification de V_ed^L : carte 2D dans le plan, profils avec/sans soustraction de la moyenne, profil radial
-vf = "results/M/ved_analysis.npz"
+vf = f"{RES}/ved_analysis.npz"
 if os.path.exists(vf):
     from matplotlib.colors import SymLogNorm
     V = np.load(vf); LIN = 1e-2

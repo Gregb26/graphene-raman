@@ -1,3 +1,6 @@
+from electron_defect_interaction.config import load_production, results_dir
+raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
 compute_tmatrix.py
@@ -25,7 +28,7 @@ HA2EV = 27.211386245988
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--size", default="7x7", help="supercell size, e.g. 7x7 (needs results/M/M_ed_<size>.npy)")
+    p.add_argument("--size", default="7x7", help="supercell size, e.g. 7x7 (needs <results_dir>/M_ed_<size>.npy)")
     p.add_argument("--ne", type=int, default=600, help="minimum number of energy points (raised if needed for dE<=eta/4)")
     p.add_argument("--eta", type=float, default=None, help="broadening in eV; default = max(2x level spacing, 0.05)")
     p.add_argument("--emin", type=float, default=-3.0, help="min energy in eV rel. E_F (tight window near E_F)")
@@ -39,7 +42,7 @@ def main():
     args = parse_args()
     uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
     # require the supercell-normalized M (matrix_io refuses an un-normalized/untagged one).
-    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
+    M = matrix_io.load_M_checked(f"{RES}/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
     # Structural k-pairing: eps aligned to M's k-grid; asserts the k-count/order match (see qe_io).
     eigs = qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True) * HA2EV
     nb, nk = eigs.shape
@@ -75,7 +78,7 @@ def main():
         dos[s:s + args.chunk] = -1.0 / np.pi * np.sum(Gdiag.imag, axis=(1, 2))
         print(f"  energies {s}-{min(s+args.chunk, ne)}/{ne} done", flush=True)
 
-    out = f"results/M/dos_{args.size}.npz"
+    out = f"{RES}/dos_{args.size}.npz"
     np.savez(out, eps=eps, dos0=dos0, dos=dos, ddos=dos - dos0, eta=eta, size=args.size)
     print(f"saved {out}  (size={args.size}, nb={nb}, nk={nk}, eta={eta} eV)")
 
@@ -92,7 +95,7 @@ def main():
         ax[1].set_ylabel(r"$\Delta$DOS"); ax[1].set_xlabel(r"$E - E_F$ (eV)")
         fig.suptitle(f"Single-defect DOS, {args.size} supercell")
         fig.tight_layout()
-        png = f"results/M/dos_{args.size}.png"
+        png = f"{RES}/dos_{args.size}.png"
         fig.savefig(png, dpi=150)
         print(f"saved {png}")
 

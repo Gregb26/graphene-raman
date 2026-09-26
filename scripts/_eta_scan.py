@@ -3,11 +3,14 @@ import sys
 import numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io
 from electron_defect_interaction.defects.many_body.single_defect import compute_T
+from electron_defect_interaction.config import load_production, results_dir
+raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 HA2EV = 27.211386245988
 N = sys.argv[1]
 etas = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else [0.05,0.10,0.15,0.20,0.30,0.40]
 uc = f"data/graphene/unit_cell/qe/defect_{N}.save"
-M = matrix_io.load_M_checked(f"results/M/M_ed_{N}_norm.npy", units=matrix_io.EV)
+M = matrix_io.load_M_checked(f"{RES}/M_ed_{N}_norm.npy", units=matrix_io.EV)
 eigs = qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True) * HA2EV
 nb, nk = eigs.shape; NN = nb*nk; Ncells = nk; eflat = eigs.reshape(NN)
 lvl = 6.0 / max(1, int((np.abs(eigs) <= 3.0).sum()))

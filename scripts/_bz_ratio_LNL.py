@@ -10,6 +10,7 @@ for S in sys.argv[1:]:
     U, kU = read_w90_mat(f"{dp['wdir']}/wannier_u.mat"); U = U[_match_kpoint_order(kU, kd)]; Ud, kUd = read_w90_mat(f"{dp['wdir']}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, kd)]
     V = np.einsum("kbw,kwv->kbv", Ud, U); w = np.abs(V[:, :, 3]) ** 2 + np.abs(V[:, :, 4]) ** 2                     # pz weight per (k, band)
     pi_idx = np.array([sorted(np.argsort(-w[k])[:2], key=lambda n: eps[k, n]) for k in range(len(kd))])
+    for _f in (dp["mfile"].replace("M_dense_", "M_L_dense_"), dp["mfile"].replace("M_dense_", "M_NL_dense_")): matrix_io.check_manifest(_f, require_normalization=matrix_io.M_NORM_V2)
     ML = np.load(dp["mfile"].replace("M_dense_", "M_L_dense_"), mmap_mode="r"); MN = np.load(dp["mfile"].replace("M_dense_", "M_NL_dense_"), mmap_mode="r"); nk = len(kd)
     fL = np.zeros((nk, nk)); fN = np.zeros((nk, nk))
     for ik in range(nk):

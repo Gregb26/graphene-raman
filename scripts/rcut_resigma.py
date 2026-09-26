@@ -6,14 +6,15 @@ Sigma_nk = <nk| t(eps_nk) |nk> (COMPLEX) of the local Wannier t-matrix, per R_cu
   Gamma_nk     = -2 Im Sigma_nk  (same quantity as compute_spectral_wannier.py, per defect)
 Reports medians over the +-e_window_eV window around E_D. Same loading/gauge/recentering chain and the same
 on-shell nearest-energy-grid evaluation as compute_spectral_wannier.py. Output: npz tagged units='eV', E_D.
-Usage: rcut_resigma.py --size 9x9 --rcut 0,1,2,3 [--grid 240 --eta 0.02] --out results/M/resigma_9x9_rc0123.npz
+Usage: rcut_resigma.py --size 9x9 --rcut 0,1,2,3 [--grid 240 --eta 0.02] --out <results_dir>/resigma_9x9_rc0123.npz
 """
 import argparse, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths
+from electron_defect_interaction.config import load_production, dense_paths, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
 p = argparse.ArgumentParser(); p.add_argument("--size", required=True); p.add_argument("--rcut", required=True)
 p.add_argument("--grid", type=int, default=None); p.add_argument("--eta", type=float, default=None); p.add_argument("--out", required=True); p.add_argument("--npe", type=int, default=None, help="ne_per_eta override (default: frozen config)")
@@ -21,7 +22,7 @@ p.add_argument("--nk-int", type=int, default=None, help="internal k-grid density
 a = p.parse_args(); cfg = load_production()
 N = a.grid or int(cfg["grid"]); eta = a.eta or float(cfg["eta_eV"]); nk_int = a.nk_int or int(cfg["nk_int"]); ew = float(cfg["e_window_eV"]); npe = a.npe or int(cfg["ne_per_eta"])
 dp = dense_paths(cfg, a.size); paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
+M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
 k_coarse = qe_io.get_k_red(dp["uc"])
 U, k_U = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(k_U, k_coarse)]
 U_dis, k_Ud = read_w90_mat(paths["u_dis"]); U_dis = U_dis[_match_kpoint_order(k_Ud, k_coarse)]

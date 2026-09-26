@@ -1,9 +1,11 @@
 """Level-1 summary from specwd logs: R_cut convergence, grid/eta plateau, resonance. Usage: python scripts/summarize_level1_maps.py 5x5:JOB 7x7:JOB ..."""
 import re, sys, numpy as np
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 maps = {}
 for arg in sys.argv[1:]:
     S, J = arg.split(":"); rows = {}
-    for line in open(f"results/M/logs/specwd_{J}.out"):
+    for line in open(f"{RES}/logs/specwd_{J}.out"):
         m = re.match(r"^\s+(\d+)\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s+([-\d.]+)\s*$", line)
         if m: rows[(int(m[1]), int(m[2]), float(m[3]))] = (float(m[4]), float(m[5]))
     maps[S] = rows

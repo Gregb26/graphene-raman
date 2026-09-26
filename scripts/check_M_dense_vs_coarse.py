@@ -4,13 +4,17 @@ coarse NxN grid, the nb x nb blocks M[:,k',:,k] must agree with the coarse M_L u
 Frobenius norms. Usage: python scripts/check_M_dense_vs_coarse.py 5x5"""
 import sys, json, numpy as np
 from electron_defect_interaction.io import qe_io
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 size = sys.argv[1]; N = int(size.split("x")[0])
 D = {"5x5": 25, "6x6": 24, "7x7": 28, "8x8": 32, "9x9": 27, "12x12": 24}[size]
 uc_c = f"data/graphene/unit_cell/qe/defect_{size}.save"
 uc_d = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
 kc = qe_io.get_k_red(uc_c); kd = qe_io.get_k_red(uc_d)
-Mc = np.load(f"results/M/M_L_{size}.npy") if len(sys.argv) < 3 else np.load(sys.argv[2])
-Md = np.load(f"results/M/M_L_dense_{size}.npy") if len(sys.argv) < 4 else np.load(sys.argv[3])
+from electron_defect_interaction.io import matrix_io
+for _f in ([f"{RES}/M_L_{size}.npy"] if len(sys.argv) < 3 else [sys.argv[2]]) + ([f"{RES}/M_L_dense_{size}.npy"] if len(sys.argv) < 4 else [sys.argv[3]]): matrix_io.check_manifest(_f, require_normalization=matrix_io.M_NORM_V2)
+Mc = np.load(f"{RES}/M_L_{size}.npy") if len(sys.argv) < 3 else np.load(sys.argv[2])
+Md = np.load(f"{RES}/M_L_dense_{size}.npy") if len(sys.argv) < 4 else np.load(sys.argv[3])
 key = lambda k: tuple(np.round(np.mod(k + 1e-9, 1.0), 6))
 idx_d = {key(k): i for i, k in enumerate(kd)}
 pairs = [(ic, idx_d[key(k)]) for ic, k in enumerate(kc) if key(k) in idx_d]

@@ -1,3 +1,6 @@
+from electron_defect_interaction.config import load_production, results_dir
+raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
 migrate_M_norm.py
@@ -21,7 +24,7 @@ SIZE_RE = re.compile(r"M_ed_(\d+x\d+)\.npy$")
 
 
 def main():
-    for f in sorted(glob.glob("results/M/M_ed_*x*.npy")):
+    for f in sorted(glob.glob(f"{RES}/M_ed_*x*.npy")):
         if f.endswith("_norm.npy"):
             continue
         m = SIZE_RE.search(os.path.basename(f))
@@ -38,7 +41,7 @@ def main():
         # tag the raw file so future loads know it is un-normalized
         if meta is None:
             matrix_io.save_M(f, M, matrix_io.UNIT_CELL, note="raw, pre-migration")
-        out = f"results/M/M_ed_{size}_norm.npy"
+        out = f"{RES}/M_ed_{size}_norm.npy"
         matrix_io.save_M(out, M / N_cells, matrix_io.SUPERCELL,
                          N_cells=int(N_cells), source=os.path.basename(f),
                          note="migrated: applied 1/N_cells to a unit-cell-normalized M")

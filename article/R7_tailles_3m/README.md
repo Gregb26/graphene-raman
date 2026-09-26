@@ -26,3 +26,6 @@
 - Jobs (fichier `JOBID`) : scf 15×15 p 21818658, d 21818685 ; 18×18 p 21818687, d 21818689 ; pp.x chaînés afterok 21818684 / 21818686 /
   21818688 / 21818690 ; D1 régression 6/9/12 21818859 (`d1_reg/`) ; D1 complet (6, 9, 12, 15, 18) à soumettre en afterok des quatre pp.x
   une fois la régression PASS. Surveillance sans relance. Pilote `r7_driver.py` (d1, tables) + `submit_r7.sh` (16 cœurs, 64 G, 1 h).
+- R7c (demande de Greg, 2026-09-26) : relaxation BFGS nspin 1 des lacunes 15/18/21/24/27 depuis la géométrie relaxée de la 12×12 (R2 nspin1)
+  transplantée par inversion (B → A, R_cut 14,5 Å) ; inputs écrits dans `super_cell_relaxed/series/{15x15,…,27x27}/nspin1/` (`make_inputs_r7_relax.py`,
+  régressions PASS, `relax_phase0.txt`, `transplant.log` par taille) ; GO reçu le 2026-09-26 (« GO en parallèle »), cinq relax soumises (JOBID) ; rapport §R7c.

@@ -5,16 +5,17 @@ analyze_Ved.py -- checks of V_ed^L = V_d - V_p (local defect potential), existin
   2. profile along a1 WITH and WITHOUT the G=0 (3D mean) subtraction; 3D mean and in-plane mean
   3. azimuthal average in the plane vs distance to the vacancy, four N
 Boundary values (max |V| on the half-box planes along a1/a2, all z and in-plane only), raw and mean-subtracted.
-Output: results/M/ved_analysis.npz
+Output: <results_dir>/ved_analysis.npz
 """
 import numpy as np
 from scipy.ndimage import map_coordinates
 from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.config import HA2EV
+from electron_defect_interaction.config import HA2EV, load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 BOHR = 0.529177210903; DATA = "data/graphene"; out = {}
 import sys
 SIZES = sys.argv[1].split(",") if len(sys.argv) > 1 else ["5x5", "7x7", "8x8", "9x9"]
-if len(sys.argv) > 2 and sys.argv[2] == "--merge": out.update(dict(np.load("results/M/ved_analysis.npz")))
+if len(sys.argv) > 2 and sys.argv[2] == "--merge": out.update(dict(np.load(f"{RES}/ved_analysis.npz")))
 for S in SIZES:
     scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
     A, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
@@ -51,11 +52,11 @@ for S in SIZES:
     out.update(**{f"{S}_x": t / 0.5, f"{S}_line_raw": line, f"{S}_line_sub": line - mean3d, f"{S}_mean3d": mean3d, f"{S}_mean_plane": mean_plane, f"{S}_site": site,
                   f"{S}_rc": rc, f"{S}_rad": rad, f"{S}_a": a1_len / int(S.split('x')[0]), f"{S}_halfbox": rmax, f"{S}_b_all": b_all, f"{S}_b_all_sub": b_all_s, f"{S}_b_pl": b_pl, f"{S}_b_pl_sub": b_pl_s, f"{S}_zC": zC, f"{S}_zgrid": zgrid})
     del dV
-np.savez("results/M/ved_analysis.npz", **out); print("saved results/M/ved_analysis.npz")
+np.savez(f"{RES}/ved_analysis.npz", **out); print("saved <results_dir>/ved_analysis.npz")
 
 # ---------------- anomaly at r = 1.42 A: sublattice, grid alignment, neighbour displacements, core-masked radial profile
 print("\n=== anomaly checks ===", flush=True)
-out2 = dict(np.load("results/M/ved_analysis.npz"))
+out2 = dict(np.load(f"{RES}/ved_analysis.npz"))
 for S in SIZES:
     N = int(S.split('x')[0]); scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
     A, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
@@ -87,4 +88,4 @@ for S in SIZES:
     print(f"[{S}] core-masked azimuthal average: r = 1.0 / 2.0 / 3.0 A -> {vals[0]*1e3:+.1f} / {vals[1]*1e3:+.1f} / {vals[2]*1e3:+.1f} meV; masked fraction of the plane {1 - mask.mean():.3f}", flush=True)
     out2.update(**{f"{S}_rad_masked": rad, f"{S}_rc_masked": rc, f"{S}_sublattice": sub, f"{S}_s_vac": s_vac, f"{S}_grid_offset_A": dcart, f"{S}_nn": np.array(disp),
                    f"{S}_atoms_xy": np.array([[(A @ (np.mod(s - s_vac + 0.5, 1) - 0.5))[0] * BOHR, (A @ (np.mod(s - s_vac + 0.5, 1) - 0.5))[1] * BOHR] for s in xd])})
-np.savez("results/M/ved_analysis.npz", **out2); print("saved results/M/ved_analysis.npz (+anomaly)")
+np.savez(f"{RES}/ved_analysis.npz", **out2); print("saved <results_dir>/ved_analysis.npz (+anomaly)")

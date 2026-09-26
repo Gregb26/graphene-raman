@@ -1,7 +1,11 @@
 import numpy as np
 from electron_defect_interaction.io import matrix_io
-old = np.load("results/M/obsolete_grid_7x7/M_L_dense_7x7.npy", mmap_mode="r"); new = np.load("results/M/M_L_dense_7x7.npy", mmap_mode="r")
-oM = np.load("results/M/obsolete_grid_7x7/M_dense_7x7.npy", mmap_mode="r"); nM = np.load("results/M/M_dense_7x7.npy", mmap_mode="r")
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+import os
+if not os.path.isdir(f"{RES}/obsolete_grid_7x7"): raise SystemExit(f"[non rejouable] {RES}/obsolete_grid_7x7 absent (ancien M 7x7 sur grille 216 supprimé au ménage de septembre 2026)")
+old = np.load(f"{RES}/obsolete_grid_7x7/M_L_dense_7x7.npy", mmap_mode="r"); new = np.load(f"{RES}/M_L_dense_7x7.npy", mmap_mode="r")
+oM = np.load(f"{RES}/obsolete_grid_7x7/M_dense_7x7.npy", mmap_mode="r"); nM = np.load(f"{RES}/M_dense_7x7.npy", mmap_mode="r")
 rng = np.random.default_rng(0); ks = rng.choice(784, 40, replace=False); dL = dM = 0.0; svL = svM = 0.0
 for i in ks:
     for j in ks:

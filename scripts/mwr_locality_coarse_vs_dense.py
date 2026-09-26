@@ -4,11 +4,12 @@ from electron_defect_interaction.io import qe_io, matrix_io
 from electron_defect_interaction.io.wannier_io import read_w90_mat
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
+from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 import os
 cfg = load_production(); out = {}
 def run(uc, mfile, wdir, tag):
-    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
+    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
     k = qe_io.get_k_red(uc); MP = _infer_mp_grid(k)
     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
     Ud, kUd = read_w90_mat(f"{wdir}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
@@ -27,7 +28,7 @@ for S in ("5x5", "6x6", "7x7", "8x8", "9x9", "12x12"):
     if not os.path.exists(dp["mfile"]) or not os.path.isdir(dp["wdir"]): print(f"[{S}] dense M or wannier missing; skipped"); continue
     run(dp["uc"], dp["mfile"], dp["wdir"], f"{S}_dense")
     if os.path.isdir(f"wannier/{S}"):
-        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"results/M/M_ed_{S}.npy", f"wannier/{S}", f"{S}_coarse")
+        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"{RES}/M_ed_{S}.npy", f"wannier/{S}", f"{S}_coarse")
     else:
         print(f"[{S}] no coarse wannierization (wannier/{S}); dense only")
-np.savez("results/M/mwr_locality.npz", **out); print("saved results/M/mwr_locality.npz")
+np.savez(f"{RES}/mwr_locality.npz", **out); print("saved <results_dir>/mwr_locality.npz")

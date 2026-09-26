@@ -392,3 +392,62 @@ Faits bruts :
 - 2026-09-26, 09 h 05 : miroir léger 21/24/27 fait (XML, charge-density, C.upf, prefix.xml : 24 fichiers, `MD5SUMS_R7_2026-09-26.txt`,
   `md5sum -c` 24/24, source = miroir sur les 18 fichiers de données, groupe rrg-cotemich-ac). Miroir des six `wfc1.hdf5` (678 Go) :
   job 21850526 (`submit_mirror_wfc_21_24_27.sh`, 10 h ; rsync, chgrp, md5 source et miroir, ajout à `MD5SUMS_R7_2026-09-26.txt`).
+
+## R7c — Relaxation des lacunes 15×15 à 27×27, nspin 1, depuis la géométrie relaxée de la 12×12 (demande de Greg le 2026-09-26)
+
+### Phase 0 (2026-09-26 ; inputs écrits, **rien soumis, GO attendu**)
+
+Cadre : « on ajoute à R7 la relaxation des super-cellules défectives pas encore faite (15, 18, 21, 24, 27). Part de la géométrie
+relaxée de la 12×12. Pas de spin pour l'instant. » Protocole R2 pour tout sauf la géométrie initiale : `calculation = 'relax'`
+(cellule fixe), BFGS, `nstep 200`, `forc_conv_thr 1e-4`, `etot_conv_thr 1e-5`, `tprnfor`, `nosym`, `noinv` ; le reste des namelists =
+`scf.in` R7 de la même taille (cutoffs, Γ, mv 0,01 Ry, `conv_thr 1e-10`, nbnd R7, pseudo). Emplacements comme R2 :
+`super_cell_relaxed/series/NxN/nspin1/{relax.in, submit.relax}`, `series/NxN/transplant.log`, `outdir` scratch
+`qe_tmp/vacancy_relaxed/series/NxN/nspin1/`, prefix `vac_NxN_relax_nspin1`. Générateur `make_inputs_r7_relax.py` (ce répertoire),
+sortie de phase 0 dans `relax_phase0.txt`.
+
+**Géométrie initiale (écart au protocole R2, consigné).** R2 partait de la maille idéale avec la paire de voisins rapprochée de
+0,03 Å ; ici, champ de déplacements u(r) = x_relax − x_idéal de la 12×12 R2 nspin1 (coordonnées finales de `relax.out`, 31 pas BFGS,
+ΔE_relax −367 meV, paire 2,15980 Å) transplanté autour de la lacune de la cellule N×N. La 12×12 a sa lacune sur le sous-réseau B, les
+cellules R7 sur A : transplant **par inversion autour de la lacune** (r → −r, u → −u), qui échange A et B sur le nid d'abeille
+(vérifié : 225/225 sites idéaux appariés à 1e-4 Å). Rayon de transplant R_cut = 14,5 Å (< L₁₂/2 = 14,795 Å, unicité de l'image
+minimale) : 225 atomes déplacés, les autres idéaux. Profil du champ 12×12 (|u| max par couronne) : 0,161 Å (3 voisins), 0,151 (2–4 Å),
+0,073 (4–6), 0,054 (6–8), 0,031 (8–10), 0,018 (10–12), 0,014 (12–14,5), et **0,013 Å pour les 62 atomes au-delà de R_cut** : le champ
+de la 12×12 n'est pas nul à sa frontière (images périodiques), d'où une discontinuité ≈ 0,01 Å à la troncature, à résorber par le
+BFGS. |u_z| max 3e-7 Å (conservé). Régressions (`--check`, PASS) : (1) auto-transplant de la 12×12 sans inversion = coordonnées
+finales R2 à 4e-11 ; (2) namelists et cellule dérivés du `scf.in` 12×12 = `relax.in` R2 12×12 nspin1 hors titre et positions ;
+(3) inversion exacte B → A. Contrôles des cinq géométries : distances entre voisins de la lacune 2,15980 / 2,56934 / 2,56934 Å
+(= 12×12 R2 final), distance interatomique minimale 1,3626 Å (idem 12×12 relaxée), |u| max 0,16084 Å.
+
+| N | nat | nbnd (R7) | lacune A | voisins (1-based) | `submit.relax` (nœuds × rangs, `--mem=0`, limite) | par cycle SCF estimé | 10 / 20 / 30 cycles |
+|---|---|---|---|---|---|---|---|
+| 15 | 449 | 928 | 225 | 225, 224, 196 | 1 × 192, 12 h | ≈ 12 min | 2 / 4 / 6 h |
+| 18 | 647 | 1324 | 343 | 343, 308, 342 | 1 × 192, 1 j | ≈ 29 min | 5 / 10 / 15 h |
+| 21 | 881 | 1854 | 441 | 441, 440, 400 | 2 × 96, 2 j | ≈ 48 min | 8 / 16 / 24 h |
+| 24 | 1151 | 2422 | 601 | 601, 554, 600 | 3 × 64, 3 j | ≈ 110 min | 18 / 37 / 55 h |
+| 27 | 1457 | 3066 | 729 | 729, 728, 676 | 6 × 32, 6 j | ≈ 175 min | 29 / 58 / 88 h |
+
+Coût : un cycle SCF de BFGS ≈ 0,45 × le scf complet de la même taille (R2 12×12 : 6,7 min par cycle contre 15 min), scf complets
+mesurés en R7 (15/18 à 64 rangs ramenés à 192 rangs avec l'efficacité 0,55 mesurée). Nombre de cycles inconnu : R2 en a pris 16–32
+depuis la maille perturbée ; le départ transplanté devrait en demander moins, mais la relaxation « vraie » dépend de N (paire 2,16 Å
+dans la 12×12, à confirmer). Limites choisies pour ≥ 30 cycles. En cas de dépassement : QE écrit les positions à chaque pas ionique,
+reprise possible par `restart_mode = 'restart'` dans le même `outdir` (à décider le cas échéant). Mémoire : celle des scf R7 (15/18
+sur un nœud à 192 rangs : ≈ 190 / 380 G sur 768). Disque : cinq `.save` ≈ 387 Go de wfc sur le scratch (R7 total ≈ 1,26 To sur 20 To) ;
+miroir `qe_tmp_backup/vacancy_relaxed/series/` en fin de campagne, comme R2.
+
+Après relaxation (à préciser au GO) : analyse R2 étendue (`analyze_relax_series.py` : ΔE_relax contre le scf non relaxé R7 de même
+taille, distances de la paire et du troisième voisin, déplacement max, spglib), et, si voulu, pp.x + D1 sur les cellules relaxées
+(E_D de la parfaite R7, alignement Lu avec le potentiel relaxé, comme R4 sur R1).
+
+**STOP — attente du GO R7c** (cinq relax nspin 1 ; ordre : en parallèle ou en cascade ; analyse post-relax).
+
+### GO R7c (Greg, 2026-09-26 ≈ 09:59 : « GO en parallèle ») — cinq relax nspin 1 soumises
+
+- 15x15/nspin1 : job 21852173
+- 18x18/nspin1 : job 21852174
+- 21x21/nspin1 : job 21852175
+- 24x24/nspin1 : job 21852176
+- 27x27/nspin1 : job 21852177
+
+Ressources telles qu'écrites (192 rangs, nœuds entiers, limites 12 h / 1 j / 2 j / 3 j / 6 j) ; sorties `relax.out`, `slurm-<job>.out` dans
+`series/NxN/nspin1/`, `JOBID` par répertoire. Surveillance sans relance. Analyse après relaxation : analyse R2 étendue (sans QE) ;
+pp.x + D1 sur les cellules relaxées seulement sur demande.

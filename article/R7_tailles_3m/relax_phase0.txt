@@ -1,0 +1,31 @@
+[check 1] auto-transplant 12x12 (B, sans inversion, tous atomes) = coordonnees finales R2 : ecart max 4.4e-11 (reduit) ; 287 atomes
+[check 2] namelists/cellule derives du scf.in 12x12 == relax.in R2 12x12 nspin1 (hors titre et positions) : True
+[check 3] inversion B -> A sur la 12x12 ideale : 225/225 sites apparies a 0.0001 A
+[profil] champ 12x12 R2 nspin1 : 287 atomes ; |u| max 0.16084 A (atome 131, |r| 1.424 A) ; |u_z| max 3.1e-07 A ; image minimale unique : False
+[profil]     0.0 <= |r| <   2.0 A :   3 atomes, |u| max 0.16084 A, moyen 0.15602 A
+[profil]     2.0 <= |r| <   4.0 A :  15 atomes, |u| max 0.15140 A, moyen 0.06533 A
+[profil]     4.0 <= |r| <   6.0 A :  21 atomes, |u| max 0.07345 A, moyen 0.03704 A
+[profil]     6.0 <= |r| <   8.0 A :  39 atomes, |u| max 0.05446 A, moyen 0.02411 A
+[profil]     8.0 <= |r| <  10.0 A :  45 atomes, |u| max 0.03107 A, moyen 0.01545 A
+[profil]    10.0 <= |r| <  12.0 A :  45 atomes, |u| max 0.01762 A, moyen 0.01143 A
+[profil]    12.0 <= |r| <  14.5 A :  57 atomes, |u| max 0.01410 A, moyen 0.00769 A
+[profil]    14.5 <= |r| <  20.0 A :  47 atomes, |u| max 0.01278 A, moyen 0.00884 A
+[profil] au-dela de R_CUT = 14.5 A : 62 atomes non transplantes, |u| max 0.01278 A (discontinuite du champ a la troncature)
+[profil] voisins de la lacune 12x12 (1-based) : [154, 132, 131] ; |r| ideal [1.42366 1.42366 1.42366] A
+[profil] distances finales entre voisins : 2.56934, 2.56934, 2.15980 A
+[check] REGRESSION PASS
+[15x15] lacune (7, 7, 'A') s_red (0.488889, 0.488889) ; transplantes 225/225 ; voisins [225, 224, 196] d = [2.1598, 2.56934, 2.56934] A ; d_min 1.3626 A ; |u| max 0.16084 A ; ressources {'nodes': 1, 'ntasks_per_node': 192, 'time': '12:00:00'}
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/15x15/nspin1/relax.in
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/15x15/nspin1/submit.relax
+[18x18] lacune (9, 9, 'A') s_red (0.518519, 0.518519) ; transplantes 225/225 ; voisins [343, 308, 342] d = [2.56934, 2.1598, 2.56934] A ; d_min 1.3626 A ; |u| max 0.16084 A ; ressources {'nodes': 1, 'ntasks_per_node': 192, 'time': '1-00:00:00'}
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/18x18/nspin1/relax.in
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/18x18/nspin1/submit.relax
+[21x21] lacune (10, 10, 'A') s_red (0.492063, 0.492063) ; transplantes 225/225 ; voisins [441, 440, 400] d = [2.1598, 2.56934, 2.56934] A ; d_min 1.3626 A ; |u| max 0.16084 A ; ressources {'nodes': 2, 'ntasks_per_node': 96, 'time': '2-00:00:00'}
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/21x21/nspin1/relax.in
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/21x21/nspin1/submit.relax
+[24x24] lacune (12, 12, 'A') s_red (0.513889, 0.513889) ; transplantes 225/225 ; voisins [601, 554, 600] d = [2.56934, 2.1598, 2.56934] A ; d_min 1.3626 A ; |u| max 0.16084 A ; ressources {'nodes': 3, 'ntasks_per_node': 64, 'time': '3-00:00:00'}
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/24x24/nspin1/relax.in
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/24x24/nspin1/submit.relax
+[27x27] lacune (13, 13, 'A') s_red (0.493827, 0.493827) ; transplantes 225/225 ; voisins [729, 728, 676] d = [2.1598, 2.56934, 2.56934] A ; d_min 1.3626 A ; |u| max 0.16084 A ; ressources {'nodes': 6, 'ntasks_per_node': 32, 'time': '6-00:00:00'}
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/27x27/nspin1/relax.in
+[write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/27x27/nspin1/submit.relax

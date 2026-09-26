@@ -6,7 +6,7 @@ test_ks_reconstruction.py) on every unit-cell .save: coarse N×N (defect_N.save)
     H_mn(k) = T_mn(k) + <psi_mk|V_p|psi_nk> + V^NL_mn(k)   must equal   eps_nk delta_mn (+ constant offset)
 with the kinetic energy T = 1/2 |k+G|^2 added explicitly. k-chunked (psi never materialised for all k).
 Reports per case: offset, max/mean |diag - eps - offset|, per-band max/median (meV), off-diagonal max
-(absolute, and relative to max|eps|). Saves results/M/ks_reconstruction.npz (figure fig_ks_reconstruction).
+(absolute, and relative to max|eps|). Saves <results_dir>/ks_reconstruction.npz (figure fig_ks_reconstruction).
 """
 import numpy as np
 from scipy.interpolate import CubicSpline
@@ -16,14 +16,15 @@ from electron_defect_interaction.utils.planewaves import mask_invalid_G
 from electron_defect_interaction.utils.lattice import red_to_cart
 from electron_defect_interaction.defects.non_local import build_K_vectors, compute_phase, compute_angular_part
 from electron_defect_interaction.wavefunctions.wfk import compute_psi_nk
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
+from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 import sys; sys.path.insert(0, "scripts"); from test_ks_reconstruction import sc_pot_on_uc_grid
 
 cfg = load_production(); DATA = "data/graphene"; out = {}
 import argparse, os
-ap = argparse.ArgumentParser(); ap.add_argument("--sizes", default="5x5,7x7,8x8,9x9"); ap.add_argument("--merge", action="store_true", help="merge into an existing results/M/ks_reconstruction.npz")
+ap = argparse.ArgumentParser(); ap.add_argument("--sizes", default="5x5,7x7,8x8,9x9"); ap.add_argument("--merge", action="store_true", help="merge into an existing <results_dir>/ks_reconstruction.npz")
 args = ap.parse_args()
-if args.merge and os.path.exists("results/M/ks_reconstruction.npz"): out.update(dict(np.load("results/M/ks_reconstruction.npz")))
+if args.merge and os.path.exists(f"{RES}/ks_reconstruction.npz"): out.update(dict(np.load(f"{RES}/ks_reconstruction.npz")))
 
 def sc_pot_on_uc_grid_fourier(uc_save, sc_save, pot_sc_file):
     """Non-commensurate FFT grids: restrict V_p to its unit-cell-periodic Fourier components G_sc = N.G_uc and
@@ -98,4 +99,4 @@ for S in args.sizes.split(","):
             H, eps = reconstruct(uc, V_uc, upf); analyse(tag, H, eps); out[f"{tag}_spread_meV"] = spread * HA2EV * 1e3
         except Exception as e:
             print(f"[{tag}] FAILED: {e}", flush=True)
-np.savez("results/M/ks_reconstruction.npz", **out); print("saved results/M/ks_reconstruction.npz")
+np.savez(f"{RES}/ks_reconstruction.npz", **out); print("saved <results_dir>/ks_reconstruction.npz")

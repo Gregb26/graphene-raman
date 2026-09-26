@@ -1,3 +1,6 @@
+from electron_defect_interaction.config import load_production, results_dir
+raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
 compute_spectral.py
@@ -35,7 +38,7 @@ def main():
     args = parse_args()
     uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
     # require the supercell-normalized M (matrix_io refuses an un-normalized/untagged one).
-    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
+    M = matrix_io.load_M_checked(f"{RES}/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
     # Structural k-pairing: eps aligned to M's k-grid (asserts count/order match, see qe_io).
     eigs = qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True) * HA2EV
     nb, nk = eigs.shape
@@ -69,7 +72,7 @@ def main():
     gamma_pos = np.clip(gamma, 1e-12, None)
     tau = HBAR_EVS / gamma_pos                                  # s (at the array concentration)
 
-    out = f"results/M/gamma_{args.size}.npz"
+    out = f"{RES}/gamma_{args.size}.npz"
     np.savez(out, gamma=gamma, gamma_perdef=gamma_perdef, tau=tau,
              eigs=eigs, eta=eta, N_cells=N_cells, size=args.size)
     print(f"saved {out}  (nb={nb}, nk={nk}, eta={eta:.4f} eV)")
@@ -88,7 +91,7 @@ def main():
         ax.set_title(f"Single-defect scattering rate, {args.size} supercell")
         fig.colorbar(sc, label=r"$\Gamma$ (meV)")
         fig.tight_layout()
-        png = f"results/M/gamma_{args.size}.png"
+        png = f"{RES}/gamma_{args.size}.png"
         fig.savefig(png, dpi=150)
         print(f"saved {png}")
 

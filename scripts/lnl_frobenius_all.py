@@ -3,20 +3,21 @@
 lnl_frobenius_all.py -- <|M^NL|_F>/<|M^L|_F> on the full pi/pi* subspace (2x2 blocks, ALL (k',k) pairs of the dense
 grid) for every size with dense M^L / M^NL files (tab:L_NL). Same metric as the "[BZ avg]" block of analyze_M.py
 (which only does the reference size). No new physics run; reads the dense Hartree M files (mmap) and the dense
-wannierization U, U_dis to select the pi/pi* pair per k by pz weight. Output: results/M/lnl_frobenius.csv.
+wannierization U, U_dis to select the pi/pi* pair per k by pz weight. Output: <results_dir>/lnl_frobenius.csv.
 """
 import csv, os, sys, time, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io
 from electron_defect_interaction.io.wannier_io import read_w90_mat
 from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
+from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
 cfg = load_production()
 SIZES = sys.argv[1].split(",") if len(sys.argv) > 1 else ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"]
-OUT = "results/M/lnl_frobenius.csv"
+OUT = f"{RES}/lnl_frobenius.csv"
 
 def mmap_M(path):
-    meta = matrix_io.read_manifest(path); assert meta and meta.get("units") == matrix_io.HARTREE, f"{path}: untagged/non-Hartree sidecar"
+    matrix_io.check_manifest(path, require_normalization=matrix_io.M_NORM_V2)     # R6 : sidecar v2 exigé (refus sinon)
     return np.load(path, mmap_mode="r")
 def wannier_V(wdir, k):
     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]

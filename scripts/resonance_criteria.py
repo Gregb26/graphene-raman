@@ -7,14 +7,15 @@ resonance_criteria.py -- definitive resonance criterion + sum rule + concentrati
     cross-checked with Lloyd's formula delta_rho = -(1/pi) d/deps Im ln det[1 - g0 V]; where the +-e_window excess is compensated.
   * Gamma_T(eps) at c = 0.1 % on +-1 eV (from resonance_<size>.npz), for the order-of-magnitude comparison with
     Kaasbjerg Fig. 17 (vacancy here vs substitutional N there).
-Output: results/M/resonance_criteria_<size>.npz
+Output: <results_dir>/resonance_criteria_<size>.npz
 """
 import argparse, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths
+from electron_defect_interaction.config import load_production, dense_paths, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--c-compare", type=float, default=1e-3)
 ap.add_argument("--band-de", type=float, default=None, help="energy spacing for the full-band sum rule (default eta/4)"); a = ap.parse_args()
@@ -22,7 +23,7 @@ cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(c
 paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
 rc, eta, nk_int, ew, npe = cfg["R_cut"], cfg["eta_eV"], cfg["nk_int"], cfg["e_window_eV"], cfg["ne_per_eta"]
 
-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
+M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
 k_coarse = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k_coarse)
 U, kU = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(kU, k_coarse)]
 Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k_coarse)]
@@ -78,13 +79,13 @@ cum = np.concatenate([[0], np.cumsum(0.5 * (drho[1:] + drho[:-1]) * np.diff(eb))
 print(f"    cumulative int at window edges: {np.interp(E_D - ew, eb, cum):+.4f} (at -{ew:.0f} eV), {np.interp(E_D + ew, eb, cum):+.4f} (at +{ew:.0f} eV), {cum[-1]:+.4f} (band top)", flush=True)
 
 # --- 3. Gamma_T at c = c_compare on +-1 eV (from resonance_<size>.npz)
-Rz = np.load(f"results/M/resonance_{S}.npz"); x = Rz["eg"] - float(Rz["E_D"]); m1 = np.abs(x) <= 1.0
+Rz = np.load(f"{RES}/resonance_{S}.npz"); x = Rz["eg"] - float(Rz["E_D"]); m1 = np.abs(x) <= 1.0
 Gc = Rz["Gamma_T"] * a.c_compare
 print(f"\n=== Gamma_T at c = {a.c_compare*100:.1f}% on +-1 eV (VACANCY here vs SUBSTITUTIONAL N in Kaasbjerg Fig. 17: order of magnitude only):")
 print(f"    min {np.nanmin(Gc[m1])*1e3:.2f} meV at {x[m1][np.nanargmin(Gc[m1])]:+.2f} eV, max {np.nanmax(Gc[m1])*1e3:.2f} meV at {x[m1][np.nanargmax(Gc[m1])]:+.2f} eV; "
       f"at E_D {np.interp(0, x, Gc)*1e3:.2f} meV, at -0.5 eV {np.interp(-0.5, x, Gc)*1e3:.2f} meV, at +0.5 eV {np.interp(0.5, x, Gc)*1e3:.2f} meV; hbar/Gamma at +-0.3 eV: "
       f"{658.2/ (np.interp(-0.3, x, Gc)*1e3):.0f} fs / {658.2/(np.interp(0.3, x, Gc)*1e3):.0f} fs")
-np.savez(f"results/M/resonance_criteria_{S}.npz", size=S, E_D=E_D, eta=eta, R_cut=rc, eg=eg, logdet_rel=logdet_rel, minlam=minlam, lam_min=lam_min,
+np.savez(f"{RES}/resonance_criteria_{S}.npz", size=S, E_D=E_D, eta=eta, R_cut=rc, eg=eg, logdet_rel=logdet_rel, minlam=minlam, lam_min=lam_min,
          eb=eb, drho_band=drho, drho_lloyd=drho_lloyd, cum_drho=cum, sumrule=tot, sumrule_lloyd=tot_l, sumrule_window=inwin,
          x_c=x[m1], Gamma_c=Gc[m1], c_compare=a.c_compare)
-print(f"saved results/M/resonance_criteria_{S}.npz")
+print(f"saved <results_dir>/resonance_criteria_{S}.npz")

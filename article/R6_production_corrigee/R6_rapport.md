@@ -503,3 +503,52 @@ Figure `fig/d3_pole_M2` : |det|/max, min |λ|, −Im T̄(K) à 300², M2 (plein)
 **STOP — étape 2 terminée le 2026-09-26 (9 h 10). Attente du GO 3 (production du chapitre 4 avec M2, config v2).**
 
 Mise à jour du 2026-09-26 (Code, à la demande de Greg) : diffs `phase0/production.json.diff` et `phase0/config.py.diff` appliqués (`results_dir = results/M2`, `M_normalization = v2`, `results_dir(cfg)`, clés obligatoires) ; exceptions `.gitignore` pour `results/M2/` (mêmes règles que `results/M/` + `MD5SUMS_*.txt`). Vérifié : `load_production()` exige et affiche les nouvelles clés, `dense_paths` pointe sur `results/M2/M_dense_<S>.npy` (six fichiers présents, sidecar v2). Non commité.
+
+## Étape 3 (GO 3 reçu le 2026-09-26 avec les ajouts 3.0, 3.0b, 3.3 porte, 3.4 blocs)
+
+### 3.0 Lecteurs de M (aucun calcul ; `etape3/diff_3.0.patch`, `etape3/diff_3.0.stat.txt`, `etape3/grep_3.0.txt`)
+
+Refonte systématique (script `refactor_3_0.py`, conservé dans `etape3/`) puis corrections à la main ; rien n'est exécuté sur les données.
+
+Règles appliquées :
+- **Chemins** : tout littéral `results/M/` des scripts Python devient `f"{RES}/…"` avec `RES = results_dir(load_production(verbose=False))`
+  (import `config.results_dir` ajouté ; `RES` défini après le bloc d'imports, donc disponible pour les valeurs par défaut d'argparse).
+  Dans les docstrings, commentaires et messages, `results/M/` devient `<results_dir>/`. Dans les `submit_*.sh` : `RES=$(python -c … results_dir …)`
+  après le chargement des modules, `mkdir -p "$RES/logs"`, toutes les sorties `--out "$RES/…"` ; les directives `#SBATCH --output/--error` ne
+  peuvent pas être calculées : littéral `results/M2/logs/` (= `results_dir` de la config ; c'est le seul littéral `M2` des scripts).
+- **Porte v2** : `load_M_checked(…, require_normalization=matrix_io.M_NORM_V2)` dans les dix scripts qui chargent M ainsi ; pour les lectures par
+  `np.load(…, mmap_mode="r")` (gros fichiers denses), nouvelle fonction `matrix_io.check_manifest(path, require_normalization=…)` (même refus que
+  `load_M_checked`, sans charger) appelée avant chaque mmap (`analyze_M.mmap_M`, `lnl_frobenius_all.mmap_M`, `resonance_metrics` (M^L dense),
+  `_bz_ratio_LNL`, `check_onsite_and_NL`, `check_M_dense_vs_coarse`, `check_ML_coarse_kernel`, `check_M_dense_nb20_vs_nb16`, `_mcheck`, `_normtest`).
+  `analyze_M` : le repli « fichier grossier sans sidecar » (`np.load(pb)`) est supprimé, les M2 grossiers ont un sidecar.
+- **Fichiers absents → « non rejouable », pas de plantage** : `analyze_M` (bloc nbnd 16 → 20 : ligne `non rejouable / fichier absent` dans
+  `M_tests_summary.csv`), `check_M_dense_nb20_vs_nb16.py`, `_old_vs_new_7x7.py` (`obsolete_grid_7x7` supprimé au ménage), `validate_ML_grid_7x7.py`
+  (référence série à recalculer avec le noyau corrigé), `compute_convergence.py` (aucun `gamma_*.npz`).
+- **Chaîne obsolète** (`compute_spectral.py`, `compute_tmatrix.py`, `_eta_scan.py`, `migrate_M_norm.py` : lisent les `M_ed_*_norm.npy` supprimés,
+  écrivaient `gamma_*`, `dos_*` sous `results/M`) : chemins convertis comme les autres **et** refus explicite à l'exécution (`SystemExit "[obsolète, R6 …]"`).
+- **Producteurs** : `compute_M_dense_stages.py` tague désormais `M_normalization = v2` sur ses trois sorties (ml, nl, combine, + `N_cells`) et son
+  combine exige v2 sur les parties (comme `compute_M.py` depuis l'étape 1) ; `submit_M_dense.sh` n'écrit plus la copie `_norm` (supprimée au ménage).
+- **PYTHONPATH** : le paquet n'a pas d'installation éditable dans `.venv` (constat de l'étape 1) ; chaque `submit_*.sh` exporte
+  `PYTHONPATH="$PROJ/src:$PYTHONPATH"` (préfixe : h5py de scipy-stack conservé). Sans cela aucun script de production ne s'importe.
+
+Fichiers touchés : 36 scripts Python, 11 `submit_*.sh` (dont `_test_mnl_mpi.sh`), `src/…/io/matrix_io.py` (`check_manifest`) ; avec la config et le
+`.gitignore` de la veille : 50 fichiers, +360/−177 lignes (`etape3/diff_3.0.stat.txt`).
+
+Contrôles :
+- `grep -n "results/M/" scripts/*.py scripts/*.sh src/ tests/` (hors `results/M2/`) : **aucune ligne** (`etape3/grep_3.0.txt`) ; occurrences restantes
+  de `results/M2` : les `#SBATCH --output/--error` de 11 scripts ; 36 scripts définissent `RES = results_dir(…)`, 11 submit définissent `RES=$(…)` ;
+  aucun `load_M_checked` sans porte v2 dans la chaîne.
+- `py_compile` des 80 scripts Python : OK ; `bash -n` des 15 scripts shell : OK.
+- `--help` (argparse, donc `RES` et la config chargés) : `make_figures`, `make_figures_epw`, `nkint_check_post` (après correction du gabarit
+  `--pattern`, devenu f-string par la conversion : `{{S}}`, `{{N}}`), `epw_ed_vs_ep`, `compute_spectral_wannier`, `resonance_metrics`, `rcut_resigma`,
+  `resonance_criteria`, `m_rcut_convergence`, `ks_reconstruction_all` : OK.
+- Gardes : `check_M_dense_nb20_vs_nb16.py 9x9`, `_old_vs_new_7x7.py`, `validate_ML_grid_7x7.py cmp` → `[non rejouable]` ; `compute_spectral.py` → `[obsolète]`.
+- Exécution réelle sur M2 : `check_ML_coarse_kernel.py 9x9` (M_L_9x9 contre coarsecheck, tous deux v2) : rel 1,28e-15, hermiticité 2,3e-16, PASS.
+- Porte v2 : `check_manifest("results/M/M_dense_9x9.npy", v2)` refuse (`M_normalization='v1'`), le même appel sur `results/M2/` accepte.
+- **Garde-fou** : `chmod -R a-w results/M` appliqué (répertoire, `logs/`, fichiers : `r--r-----`) ; `touch results/M/_test_write` → « Permission denied » ;
+  lecture des `M_NL_dense_*` de `results/M2/` (liens) vérifiée. À rétablir (`chmod -R u+w results/M`) seulement sur GO.
+
+Non touchés (à signaler) : `CLAUDE.md` (« Données : lues uniquement dans results/M/*.npz », section figures) et `NOTES_TGAMMA.md` citent encore
+`results/M/` : documentation, pas des scripts ; à mettre à jour par Greg avec le rapport final. Un `.gitignore.swp` (vim) traîne à la racine du dépôt.
+
+**STOP 3.0 — relecture et commit par Greg (`git diff` = `etape3/diff_3.0.patch`), puis GO 3b (test d'or 5×5 dense avec M2, bloquant).**

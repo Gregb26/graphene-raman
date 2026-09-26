@@ -49,6 +49,24 @@ def read_manifest(npy_path):
         return json.load(f)
 
 
+def check_manifest(npy_path, require_bloch_norm=UNIT_CELL, require_normalization=None):
+    """Validate the sidecar of an M file WITHOUT loading it (for mmap consumers): same refusals as load_M_checked
+    (missing sidecar, bloch_norm, units, and M_normalization when require_normalization is given). Returns the manifest."""
+    meta = read_manifest(npy_path)
+    if meta is None:
+        raise ValueError(f"{npy_path}: no manifest sidecar (.json), unknown Bloch normalization. Refusing to run.")
+    if meta.get("bloch_norm") != require_bloch_norm:
+        raise ValueError(f"{npy_path}: bloch_norm={meta.get('bloch_norm')!r} but '{require_bloch_norm}' required. Refusing to run.")
+    if meta.get("units") != HARTREE:
+        raise ValueError(f"{npy_path}: manifest units={meta.get('units')!r}, expected '{HARTREE}'. Refusing to run.")
+    if require_normalization is not None:
+        ver = str(meta.get("M_normalization", M_NORM_V1))
+        if not ver.startswith(require_normalization):
+            raise ValueError(f"{npy_path}: M_normalization={ver!r} but {require_normalization!r} required. Refusing to run "
+                             f"(pre-R6 file: M^L in supercell norm, factor N_cells missing; use results/M2).")
+    return meta
+
+
 def load_M_checked(npy_path, require_bloch_norm=SUPERCELL, units=None, require_normalization=None):
     """
     Load M, refusing (ValueError) unless its manifest declares require_bloch_norm AND units='hartree'

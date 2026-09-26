@@ -17,7 +17,8 @@ import argparse
 import numpy as np
 
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
-from electron_defect_interaction.config import load_production, dense_paths
+from electron_defect_interaction.config import load_production, dense_paths, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order)
@@ -56,14 +57,14 @@ def main():
         dp = dense_paths(cfg, args.size); uc = dp["uc"]; mfile = dp["mfile"]
     else:
         uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
-        mfile = f"results/M/M_ed_{args.size}.npy"
+        mfile = f"{RES}/M_ed_{args.size}.npy"
     # NORMALIZATION CONTRACT (validated by test_local_tmatrix_real.py to 1e-13):
     #   * the LOCAL Wannier t-matrix needs the INTENSIVE real-space potential V_loc = <wR|V|w'R'>,
     #     i.e. Mwr built from the unit-cell-normalized M_raw (bloch_norm='unit_cell');
     #   * the DENSE Bloch T-matrix (single_defect.compute_T) needs M/N_cells ('supercell').
     #   Feeding M_norm here silently suppresses V_loc by 1/N_cells (Born limit, Gamma ~ 0).
     # UNITS: M files are in Hartree, the Wannier Hamiltonian (tb.dat) is in eV -> convert M ONCE here.
-    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
+    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
     k_coarse = qe_io.get_k_red(uc)
 
     U, k_U = read_w90_mat(paths["u"])

@@ -1,7 +1,9 @@
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
 Figures du chapitre 5 (couplage électron-phonon, EPW), style figures/memoire.mplstyle, français, données lues dans results/epw/*.npz
-et results/M/resonance_9x9.npz (Γ^ed). Trois figures :
+et <results_dir>/resonance_9x9.npz (Γ^ed). Trois figures :
   fig_epw_validation : (a) bandes DFT (bands.x) vs EPW/Wannier, (b) phonons matdyn vs EPW, chemin Γ–K–M–Γ    [validation_24k24q.npz]
   fig_epw_gamma      : (a) Γ^ep(ε) convergence (degaussw à 120², 240²), (b) Γ^ep(ε) à 300 K et 10 K (production)  [selfen_*.npz]
   fig_epw_vs_ed      : Γ^ep(300 K) et Γ^ed(c = 1 %) = c × Γ N_cells (matrice T, 9×9, R_cut 3, η 0.02) sur le même axe
@@ -68,8 +70,8 @@ if conv:
     fig.tight_layout(); save(fig, "fig_epw_gamma")
 
 # ---------------- 3. Γ^ep(300 K) vs Γ^ed(c = 1 %)
-if 300 in prod and os.path.exists("results/M/resonance_9x9.npz"):
-    x, G, R = load_sel(prod[300]); M = np.load("results/M/resonance_9x9.npz", allow_pickle=True); c = float(M["conc"]); xe = M["eg"] - float(M["E_D"])
+if 300 in prod and os.path.exists(f"{RES}/resonance_9x9.npz"):
+    x, G, R = load_sel(prod[300]); M = np.load(f"{RES}/resonance_9x9.npz", allow_pickle=True); c = float(M["conc"]); xe = M["eg"] - float(M["E_D"])
     fig, ax = plt.subplots(figsize=(6.5, 3.6))
     ax.semilogy(xe, c * M["Gamma_T"] * 1e3, color=C_ED, label=rf"$\Gamma^{{ed}}$, lacune, $c$ = {c*100:.0f}\,\% (matrice $T$, 9$\times$9, $\eta$ = {fr(float(M['eta']))} eV)")
     ax.semilogy(x, G, color=C_T, label=rf"$\Gamma^{{ep}}$, $T$ = 300 K (EPW, {int(R['n_mesh'])}$^2$, $\sigma$ = {fr(float(R['degaussw']))} eV)")

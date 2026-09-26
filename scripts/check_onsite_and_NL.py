@@ -5,13 +5,16 @@ from electron_defect_interaction.io import qe_io, matrix_io
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 HA = 27.211386245988
 PF = {"5x5": 25, "6x6": 24, "7x7": 28, "8x8": 32, "9x9": 27, "12x12": 24}
 PZ = (3, 4)   # projections: 3 sp2 on atom A (idx 0..2), pz on A (3), pz on B (4)
 
 print("=== Q2/magnitudes: max|M_L|, max|M_NL|, max|M| (Ha) and mean diag of M_L (mean-potential shift)")
 for S, D in PF.items():
-    ML = np.load(f"results/M/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"results/M/M_NL_dense_{S}.npy", mmap_mode="r"); M = np.load(f"results/M/M_dense_{S}.npy", mmap_mode="r")
+    for _f in ("M_L_dense", "M_NL_dense", "M_dense"): matrix_io.check_manifest(f"{RES}/{_f}_{S}.npy", require_normalization=matrix_io.M_NORM_V2)
+    ML = np.load(f"{RES}/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"{RES}/M_NL_dense_{S}.npy", mmap_mode="r"); M = np.load(f"{RES}/M_dense_{S}.npy", mmap_mode="r")
     nb, nk = ML.shape[:2]
     dL = np.array([ML[n, k, n, k] for n in range(nb) for k in range(nk)])
     print(f"[{S}] max|M_L|={np.abs(ML).max():.4e}  max|M_NL|={np.abs(MN).max():.4e}  max|M|={np.abs(M).max():.4e}  "
@@ -26,7 +29,8 @@ if eps.shape[0] != len(kk): eps = eps.T
 for Kp, lab in (((2/3, 1/3, 0), "K"), ((1/3, 2/3, 0), "K'")):   # Dirac points of the 60-deg QE cell
     d = np.linalg.norm(np.mod(k - np.array(Kp) + 0.5, 1.0) - 0.5, axis=1); iK = int(np.argmin(d))
     print(f"[{lab}] k_red={k[iK]} (dist {d[iK]:.2e}); eps bands 3..5 (eV): {np.round(eps[iK, 2:6]*HA, 4)}")
-    ML = np.load(f"results/M/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"results/M/M_NL_dense_{S}.npy", mmap_mode="r")
+    for _f in ("M_L_dense", "M_NL_dense", "M_dense"): matrix_io.check_manifest(f"{RES}/{_f}_{S}.npy", require_normalization=matrix_io.M_NORM_V2)
+    ML = np.load(f"{RES}/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"{RES}/M_NL_dense_{S}.npy", mmap_mode="r")
     bL = np.array(ML[3:5, iK, 3:5, iK]); bN = np.array(MN[3:5, iK, 3:5, iK])
     dL = np.abs(np.diag(bL)); dN = np.abs(np.diag(bN))
     print(f"[{lab}] |M_L[n,K,n,K]| eV: {np.round(dL*HA, 4)}  mean {dL.mean()*HA:.4f} eV   (Re: {np.round(np.diag(bL).real*HA, 4)})")
@@ -37,7 +41,7 @@ for Kp, lab in (((2/3, 1/3, 0), "K"), ((1/3, 2/3, 0), "K'")):   # Dirac points o
 print("\n=== Q1: on-site V_loc (dense) pz-pz in eV")
 for S, D in PF.items():
     uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"; W = f"wannier/{D}x{D}"
-    M = matrix_io.load_M_checked(f"results/M/M_dense_{S}.npy", require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
+    M = matrix_io.load_M_checked(f"{RES}/M_dense_{S}.npy", require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
     k = qe_io.get_k_red(uc); MP = _infer_mp_grid(k)
     U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
     Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]

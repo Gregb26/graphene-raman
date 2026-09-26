@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-analyze_M.py -- post-processing of the M matrix for §4.1.5 (no new physics runs). Produces results/M/M_analysis.npz
-and results/M/M_tests_summary.csv, read by scripts/make_figures.py (fig_M_map, fig_Ved_boundary, fig_M_scaling).
+analyze_M.py -- post-processing of the M matrix for §4.1.5 (no new physics runs). Produces <results_dir>/M_analysis.npz
+and <results_dir>/M_tests_summary.csv, read by scripts/make_figures.py (fig_M_map, fig_Ved_boundary, fig_M_scaling).
   1. |M| map on the BZ for k=K (reference size, dense grid), Kaasbjerg Fig. 3 convention: Vt = A_cell |M| (eV A^2),
      unit-cell Bloch normalization; pi/pi* selected by pz Wannier weight; gauge-invariant sum over the degenerate pair at K.
   2. V_ed^L along a lattice-vector line from the vacancy to the supercell boundary, four N; boundary/site ratio.
@@ -14,16 +14,17 @@ from scipy.ndimage import map_coordinates
 from electron_defect_interaction.io import qe_io, matrix_io
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, Mwr_to_Mwk, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
+from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 BOHR = 0.529177210903
 cfg = load_production(); import os as _os
-SIZES = [S for S in ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"] if _os.path.exists(f"results/M/M_dense_{S}.npy") and _os.path.exists(f"results/M/M_ed_{S}.npy")]; REF = cfg["reference_size"]
+SIZES = [S for S in ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"] if _os.path.exists(f"{RES}/M_dense_{S}.npy") and _os.path.exists(f"{RES}/M_ed_{S}.npy")]; REF = cfg["reference_size"]
 print("[sizes]", SIZES)
 DATA = "data/graphene"; out = {}; tests = []
 
 def mmap_M(path):
     """mmap a Hartree-tagged M without loading it (gate: manifest must say units=hartree)."""
-    meta = matrix_io.read_manifest(path); assert meta and meta.get("units") == matrix_io.HARTREE, f"{path}: untagged/non-Hartree sidecar"
+    matrix_io.check_manifest(path, require_normalization=matrix_io.M_NORM_V2)     # R6 : sidecar v2 exigé (refus sinon)
     return np.load(path, mmap_mode="r")
 def wannier_V(wdir, k):
     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
@@ -112,7 +113,7 @@ for S in SIZES:
     print(f"[LNL] {S}: nearest grid point to K at |dk|={dK:.4f} A^-1 (k={np.round(kd[iK],4)}), pair bands {pr} eps={np.round(eps[iK, pr],3)} eV: "
           f"Re M^L = {reL:+.4f} eV, Re M^NL = {reN:+.4f} eV, |M^L| {abs(np.trace(bL))/2:.4f}, |M^NL| {abs(np.trace(bN))/2:.4f}, NL/L = {reN/reL:.2f}", flush=True)
     M16 = np.array(Md[:16, :, :16, :]); mx_d = float(np.abs(M16).max()) * HA2EV
-    Mc = mmap_M(f"results/M/M_ed_{S}.npy"); Mc16 = np.array(Mc[:16, :, :16, :]); mx_c = float(np.abs(Mc16).max()) * HA2EV
+    Mc = mmap_M(f"{RES}/M_ed_{S}.npy"); Mc16 = np.array(Mc[:16, :, :16, :]); mx_c = float(np.abs(Mc16).max()) * HA2EV
     herm = float(np.abs(M16 - M16.transpose(2, 3, 0, 1).conj()).max() / np.abs(M16).max())
     ncell = int(S.split("x")[0]) ** 2
     print(f"[scale] {S}: max|M| bands 1-16: dense {mx_d:.4f} eV (x N_cells = {mx_d*ncell:.2f}), coarse {mx_c:.4f} eV (x N_cells = {mx_c*ncell:.2f}); hermiticity {herm:.2e}", flush=True)
@@ -131,18 +132,23 @@ for S in SIZES:
             print(f"[pad] {S}: coincident k ({len(pairs)}), bands 1..{nsub}: max rel SV mismatch dense vs coarse = {worst:.2e}", flush=True)
             tests.append((f"padding : k coïncidents, bandes 1–{nsub}, {S}", "max écart relatif des valeurs singulières (dense vs N×N)", f"{worst:.1e}", "2e-3 (tolérance nscf)", "OK" if worst < 2e-3 else "À VOIR", "analyze_M.py"))
         # nb20 vs nb16 non-regression
-        A16 = mmap_M(f"results/M/M_dense_{S}_nb16.npy"); rng = np.random.default_rng(0); ks = rng.choice(len(kd), 30, replace=False); worst = 0.0
-        for i in ks:
-            for j in ks:
-                sa = np.linalg.svd(np.array(A16[:15, i, :15, j]), compute_uv=False); sb = np.linalg.svd(M16[:15, i, :15, j], compute_uv=False); worst = max(worst, np.abs(sa - sb).max() / sa[0])
-        print(f"[pad] {S}: nb20[:16] vs nb16, bands 1..15, 30x30 k pairs: {worst:.2e}", flush=True)
-        tests.append((f"non-régression nbnd 16 → 20, {S}", "max écart relatif des valeurs singulières, bandes 1–15", f"{worst:.1e}", "1e-5", "OK" if worst < 1e-5 else "ÉCHEC", "analyze_M.py"))
+        p16 = f"{RES}/M_dense_{S}_nb16.npy"
+        if _os.path.exists(p16):
+            A16 = mmap_M(p16); rng = np.random.default_rng(0); ks = rng.choice(len(kd), 30, replace=False); worst = 0.0
+            for i in ks:
+                for j in ks:
+                    sa = np.linalg.svd(np.array(A16[:15, i, :15, j]), compute_uv=False); sb = np.linalg.svd(M16[:15, i, :15, j], compute_uv=False); worst = max(worst, np.abs(sa - sb).max() / sa[0])
+            print(f"[pad] {S}: nb20[:16] vs nb16, bands 1..15, 30x30 k pairs: {worst:.2e}", flush=True)
+            tests.append((f"non-régression nbnd 16 → 20, {S}", "max écart relatif des valeurs singulières, bandes 1–15", f"{worst:.1e}", "1e-5", "OK" if worst < 1e-5 else "ÉCHEC", "analyze_M.py"))
+        else:
+            print(f"[pad] {S}: nb20 vs nb16 non rejouable (fichier absent : {p16}, artefacts nbnd 16 supprimés au ménage de septembre)", flush=True)
+            tests.append((f"non-régression nbnd 16 → 20, {S}", "max écart relatif des valeurs singulières, bandes 1–15", "non rejouable", "1e-5", "fichier absent", "analyze_M.py"))
         # plumbing: dense kernel on the coarse grid vs coarse kernel
-        pc = f"results/M/M_L_dense_{S}_coarsecheck.npy"
+        pc = f"{RES}/M_L_dense_{S}_coarsecheck.npy"
         import os
         if os.path.exists(pc):
-            Xa = np.array(mmap_M(pc)); pb = f"results/M/M_L_{S}.npy"
-            Xb = np.array(mmap_M(pb)) if matrix_io.read_manifest(pb) else np.load(pb)   # legacy coarse-kernel output (Hartree, no sidecar): plumbing test only
+            Xa = np.array(mmap_M(pc)); pb = f"{RES}/M_L_{S}.npy"
+            Xb = np.array(mmap_M(pb))
             rel = float(np.abs(Xa - Xb).max() / np.abs(Xb).max())
             print(f"[pad] {S}: real-space dense kernel at p=1 vs coarse M^L: rel {rel:.2e}", flush=True)
             tests.append((f"padding : noyau dense à p=1 vs noyau N×N, {S}", r"max|M^L_dense - M^L| / max|M^L|", f"{rel:.1e}", "1e-10", "OK" if rel < 1e-10 else "ÉCHEC", "analyze_M.py"))
@@ -165,7 +171,7 @@ tests.append(("convention intensive (cellule unitaire)", "(max−min)/moyenne de
 # recorded results of the other gates (log references)
 tests.append(("test d'or (local vs compute_T), 5×5 dense", r"max|\Gamma_{loc} - \Gamma_{dense} N_c| / max", "2.3e-14", "1e-10", "OK", "golden_dense_20294198"))
 tests.append(("g0 par lots vs référence, R_cut 0–3", "max écart relatif", "1.2e-14", "1e-12", "OK", "test_local_green_batch_20238555"))
-with open("results/M/M_tests_summary.csv", "w", newline="") as f:
+with open(f"{RES}/M_tests_summary.csv", "w", newline="") as f:
     w = csv.writer(f); w.writerow(["test", "quantité", "valeur", "seuil", "verdict", "source"]); w.writerows(tests)
 print("\n=== TESTS DE M ==="); [print(f"  {t[0]:55s} {t[1]:60s} {t[2]:>9s}  seuil {t[3]:20s} {t[4]}") for t in tests]
-out["tests"] = np.array(tests, dtype=object); np.savez("results/M/M_analysis.npz", **out); print("saved results/M/M_analysis.npz, results/M/M_tests_summary.csv")
+out["tests"] = np.array(tests, dtype=object); np.savez(f"{RES}/M_analysis.npz", **out); print("saved <results_dir>/M_analysis.npz, <results_dir>/M_tests_summary.csv")

@@ -8,8 +8,8 @@
 #SBATCH --exclusive
 #SBATCH --mem=0
 #SBATCH --time=06:00:00
-#SBATCH --output=results/M/logs/M_ed_%a_%A.out
-#SBATCH --error=results/M/logs/M_ed_%a_%A.err
+#SBATCH --output=results/M2/logs/M_ed_%a_%A.out
+#SBATCH --error=results/M2/logs/M_ed_%a_%A.err
 
 # Compute the full electron-defect scattering matrix M = M^L + M^NL for one supercell per
 # array task, V_ed = V_d - V_p, all bands. Works for ANY size via the two-stage split:
@@ -28,15 +28,18 @@ N=${SIZES[$SLURM_ARRAY_TASK_ID]}
 
 module restore qe
 module load mpi4py/4.0.3 scipy-stack
+export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
+RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
+mkdir -p "$RES/logs"
 
 UC=data/graphene/unit_cell/qe/defect_${N}.save
 SCP=data/graphene/supercell/qe/defect_${N}_p.save
 SCD=data/graphene/supercell/qe/defect_${N}_d.save
 PY="$PROJ/.venv/bin/python"
 
-ML="results/M/M_L_${N}.npy"
-NL="results/M/M_NL_${N}.npy"
-MED="results/M/M_ed_${N}.npy"
+ML="$RES/M_L_${N}.npy"
+NL="$RES/M_NL_${N}.npy"
+MED="$RES/M_ed_${N}.npy"
 
 echo "[$(date)] size=$N  stage 1/3: M^L (MPI, $SLURM_NTASKS ranks)"
 # Pin all threading layers to 1: parallelism is over MPI ranks; oversubscribing BLAS

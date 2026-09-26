@@ -6,8 +6,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=0
 #SBATCH --time=00:45:00
-#SBATCH --output=results/M/logs/%x_%j.out
-#SBATCH --error=results/M/logs/%x_%j.err
+#SBATCH --output=results/M2/logs/%x_%j.out
+#SBATCH --error=results/M2/logs/%x_%j.err
 
 # #3 root-cause test: does the chunked-Allreduce fix make compute_M_NL_mpi work at 9x9
 # (nk=81, the heap-corruption regime)? Run the MPI M^NL (faulthandler on), the serial
@@ -17,13 +17,16 @@ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-top
 cd "$PROJ" || exit 1
 module restore qe
 module load mpi4py/4.0.3 scipy-stack
+export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
+RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
+mkdir -p "$RES/logs"; export RES
 PY="$PROJ/.venv/bin/python"
 
 N=9x9
 UC=data/graphene/unit_cell/qe/defect_${N}.save
 SCP=data/graphene/supercell/qe/defect_${N}_p.save
 SCD=data/graphene/supercell/qe/defect_${N}_d.save
-OUT=results/M/_test_mnl
+OUT=$RES/_test_mnl
 mkdir -p "$OUT"
 
 echo "[$(date)] MPI M^NL (32 ranks, chunked Allreduce + faulthandler, FLEXIBLAS=IMKL)"
@@ -45,8 +48,9 @@ export OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS_NUM_THREADS=8 MKL_NUM_
 echo "[$(date)] compare MPI vs serial"
 "$PY" - <<'PYEOF'
 import numpy as np, os
-mpi_f = "results/M/_test_mnl/M_NL_mpi.npy"
-ser_f = "results/M/_test_mnl/M_NL_serial.npy"
+RES = os.environ["RES"]                                   # exporté par le script (results_dir de la config, R6)
+mpi_f = f"{RES}/_test_mnl/M_NL_mpi.npy"
+ser_f = f"{RES}/_test_mnl/M_NL_serial.npy"
 if not os.path.exists(mpi_f):
     print("RESULT: FAIL (MPI M^NL never written -> it crashed; see faulthandler trace above)")
     raise SystemExit(1)

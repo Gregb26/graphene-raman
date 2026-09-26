@@ -1,3 +1,5 @@
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
 compute_convergence.py
@@ -26,10 +28,12 @@ SIZE_RE = re.compile(r"_(\d+)x(\d+)\.npz$")
 
 def collect(prefix):
     out = {}
-    for f in sorted(glob.glob(f"results/M/{prefix}_*x*.npz")):
+    for f in sorted(glob.glob(f"{RES}/{prefix}_*x*.npz")):
         m = SIZE_RE.search(f)
         if m:
             out[int(m.group(1))] = np.load(f)
+    if not out:
+        raise SystemExit(f"[non rejouable] aucun {RES}/{prefix}_*x*.npz (chaîne compute_spectral/compute_tmatrix obsolète depuis 2026-09-05)")
     return out
 
 
@@ -77,12 +81,12 @@ def main():
     else:
         print("\n(need both 7x7 and 8x8 for the plateau/resonance interpretation)")
 
-    np.savez("results/M/convergence.npz",
+    np.savez(f"{RES}/convergence.npz",
              N=np.array(Ns),
              gperdef_meV=np.array([rows[N]["gperdef"] for N in Ns]),
              e_res=np.array([rows[N]["e_res"] for N in Ns]),
              eta=np.array([rows[N]["eta"] for N in Ns]))
-    print("saved results/M/convergence.npz")
+    print("saved <results_dir>/convergence.npz")
 
     if args.plot:
         import matplotlib
@@ -101,8 +105,8 @@ def main():
         ax[2].plot(Ns, [rows[N]["e_res"] for N in Ns], "s-", color="tab:red")
         ax[2].set_xlabel("N"); ax[2].set_ylabel(r"resonance $E-E_F$ (eV)")
         ax[2].set_title("Vacancy resonance position")
-        fig.tight_layout(); fig.savefig("results/M/convergence.png", dpi=150)
-        print("saved results/M/convergence.png")
+        fig.tight_layout(); fig.savefig(f"{RES}/convergence.png", dpi=150)
+        print("saved <results_dir>/convergence.png")
 
 
 if __name__ == "__main__":

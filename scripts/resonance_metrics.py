@@ -5,7 +5,7 @@ resonance_metrics.py -- reference size (frozen config), +-e_window around E_D, e
   (c) Tbar_nn(K,K;eps) for the pi pair (Re/Im, pole crossing)
   Born vs T: Gamma_Born(eps) = -2 Im <V g0 V> (2nd-order term; the 1st-order <V> is real, contributes 0) vs Gamma_T(eps)
   Potential alignment: Gamma_T(eps) with M and with M - mean_diag(M^L) * 1 (G~=0 component removed)
-All energies eV. Output npz: results/M/resonance_<size>.npz. Hard gauge gate + frozen config.
+All energies eV. Output npz: <results_dir>/resonance_<size>.npz. Hard gauge gate + frozen config.
 Usage: python scripts/resonance_metrics.py [--size 9x9] [--rho0-grid 900]
 """
 import argparse, numpy as np
@@ -13,7 +13,8 @@ from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
+from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--rho0-grid", type=int, default=900)
 ap.add_argument("--out", default=None); a = ap.parse_args()
@@ -21,7 +22,8 @@ cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(c
 paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
 rc, N, eta, nk_int, ew, npe, conc = cfg["R_cut"], cfg["grid"], cfg["eta_eV"], cfg["nk_int"], cfg["e_window_eV"], cfg["ne_per_eta"], cfg["defect_concentration_for_dos"]
 
-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)   # eV, single conversion point
+M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)   # eV, single conversion point
+matrix_io.check_manifest(dp["mfile"].replace("M_dense_", "M_L_dense_"), require_normalization=matrix_io.M_NORM_V2)     # R6
 ML_diag_mean = float(np.mean([np.load(dp["mfile"].replace("M_dense_", "M_L_dense_"), mmap_mode="r")[n, k, n, k].real
                               for n in range(M.shape[0]) for k in range(0, M.shape[1], 7)])) * HA2EV
 print(f"[align] mean diag of M^L (G~=0 component) = {ML_diag_mean*1e3:.2f} meV (unit-cell norm)", flush=True)
@@ -104,7 +106,7 @@ print(f"\n=== Born vs T (+-{ew} eV): median Gamma_T = {np.nanmedian(GT_e[m])*1e3
       f"ratio Born/T median {np.nanmedian(GB_e[m]/GT_e[m]):.3f}, min {np.nanmin(GB_e[m]/GT_e[m]):.3f}, max {np.nanmax(GB_e[m]/GT_e[m]):.3f}")
 print(f"=== alignment: Gamma_T with vs without G~=0 shift ({ML_diag_mean*1e3:.1f} meV): max rel |diff| = {np.nanmax(np.abs(GS_e[m]-GT_e[m])/GT_e[m]):.3e}, "
       f"median rel = {np.nanmedian(np.abs(GS_e[m]-GT_e[m])/GT_e[m]):.3e}; per-state max rel = {np.nanmax(np.abs(G_S-G_T)/np.abs(G_T)):.3e}")
-out = a.out or f"results/M/resonance_{S}.npz"
+out = a.out or f"{RES}/resonance_{S}.npz"
 np.savez(out, size=S, E_D=E_D, eta=eta, R_cut=rc, grid=N, nk_int=nk_int, conc=conc, egrid=egrid, eg=eg,
          Gamma_T=GT_e, Gamma_Born=GB_e, Gamma_T_noshift=GS_e, rho0=rho0, rho0_240=rho0_240, ratio=ratio, drho=drho, rho_dis=rho_dis,
          Tbar=Tbar, Tbar_tr=tr, E_out=E_out, G_T=G_T, G_B=G_B, G_S=G_S, ML_diag_mean=ML_diag_mean, **{k: v for k, v in res.items() if k not in ("Tbar_zero_crossings", "E_D")},

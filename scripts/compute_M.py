@@ -1,3 +1,5 @@
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
 compute_M.py
@@ -31,15 +33,15 @@ compute_M.py
         # local part only (MPI):
         srun -n 32 python scripts/compute_M.py --stage ml \
             --uc uc.save --sc-p sc_p.save --pot-p sc_p.save/Vks_p --pot-d sc_d.save/Vks_d \
-            --out results/M/M_L_9x9.npy
+            --out <results_dir>/M_L_9x9.npy
         # non-local part only (serial, fresh process):
         python scripts/compute_M.py --stage nl \
             --uc uc.save --sc-p sc_p.save --sc-d sc_d.save --upf uc.save/C.upf \
-            --out results/M/M_NL_9x9.npy
+            --out <results_dir>/M_NL_9x9.npy
         # full matrix from the two parts:
         python scripts/compute_M.py --stage combine \
-            --ml results/M/M_L_9x9.npy --nl results/M/M_NL_9x9.npy \
-            --out results/M/M_ed_9x9.npy
+            --ml <results_dir>/M_L_9x9.npy --nl <results_dir>/M_NL_9x9.npy \
+            --out <results_dir>/M_ed_9x9.npy
 """
 
 import os
@@ -148,8 +150,8 @@ def stage_combine(args):
     # both parts in unit-cell Bloch norm (R6 kernels) -> M = M^L + M^NL, unit_cell, same convention as the
     # dense chain (compute_M_dense_stages.py combine) and as every production consumer; the 1/N_cells factor
     # is applied downstream (bloch_folded_hamiltonian, compute_T), never here.
-    M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
-    M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
+    M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
+    M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
     if M_L.shape != M_NL.shape:
         raise SystemExit(f"shape mismatch: M^L {M_L.shape} vs M^NL {M_NL.shape}")
     N_cells = M_L.shape[1]

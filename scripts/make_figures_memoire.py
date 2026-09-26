@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Figures finales du mémoire (retouches), style figures/memoire.mplstyle, français, données lues dans results/M/*.npz.
+Figures finales du mémoire (retouches), style figures/memoire.mplstyle, français, données lues dans <results_dir>/*.npz.
 Noms distincts des figures de travail (rien n'est écrasé) :
   fig_convergence        (a) Γ N_cells vs R_cut, six tailles ; (b) carte plateau (grille × η), référence     — 6.5 × 3.4 po
   fig_locality_final     (a) 5×5, (b) 8×8 avec grille aliasée ; (c) 9×9, (d) 12×12                 — 6.5 × 5.6 po
@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
 from matplotlib.patches import Polygon
 from scipy.spatial import Voronoi
-from electron_defect_interaction.config import load_production
+from electron_defect_interaction.config import load_production, results_dir
+RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
 plt.style.use("figures/memoire.mplstyle")
 from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
@@ -35,7 +36,7 @@ def save(fig, name):
     for ext in ("pdf", "png"): fig.savefig(f"{a.outdir}/{name}.{ext}")
     w, h = fig.get_size_inches(); DONE.append((name, w, h)); plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png  ({w:.2f} × {h:.2f} po)")
 def load_map(S):
-    f = f"results/M/specwd_{S}_prod.npz"
+    f = f"{RES}/specwd_{S}_prod.npz"
     if not os.path.exists(f): return None
     r = np.load(f)["results"]; return {(int(x[0]), int(x[1]), round(float(x[2]), 4)): float(x[3]) for x in r}
 maps = {S: m for S in SIZES if (m := load_map(S))}
@@ -58,7 +59,7 @@ cb = fig.colorbar(im, ax=ax2, shrink=0.9, pad=0.02); cb.set_label(rf"Écart à (
 fig.tight_layout(); save(fig, "fig_convergence")
 
 # ---------------- 2. fig_locality_final : 5×5, 8×8 (aliasée), 9×9, 12×12
-L = np.load("results/M/mwr_locality.npz")
+L = np.load(f"{RES}/mwr_locality.npz")
 fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=True); axs = axs.ravel()
 for i, S in enumerate(["5x5", "8x8", "9x9", "12x12"]):
     ax = axs[i]; onv = float(L[f"{S}_dense_onsite_pzvac"])
@@ -71,7 +72,7 @@ for ax in axs[::2]: ax.set_ylabel(r"$\|M_{ij}(R,0)\|$ (eV)")
 fig.tight_layout(); save(fig, "fig_locality_final")
 
 # ---------------- 3. fig_spectral_final : 2×2
-R = np.load(f"results/M/resonance_{REF}.npz"); C = np.load(f"results/M/resonance_criteria_{REF}.npz")
+R = np.load(f"{RES}/resonance_{REF}.npz"); C = np.load(f"{RES}/resonance_criteria_{REF}.npz")
 ED = float(R["E_D"]); x = R["eg"] - ED; xg = R["egrid"] - ED; c = float(R["conc"])
 fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6)); (a1, a2), (a3, a4) = axs
 a1.semilogy(x, R["Gamma_T"] * 1e3, color=C_T, label=r"matrice $T$ (exacte)"); a1.semilogy(x, R["Gamma_Born"] * 1e3, color=C_BORN, label="approximation de Born (2$^\\mathrm{e}$ ordre)")
@@ -86,7 +87,7 @@ for i, ax in enumerate(axs.ravel()): ax.set_xlabel(LBL_E); ax.axvline(0, color=M
 fig.tight_layout(); save(fig, "fig_spectral_final")
 
 # ---------------- 4. fig_M_map_final
-Zm = np.load("results/M/M_analysis.npz", allow_pickle=True)
+Zm = np.load(f"{RES}/M_analysis.npz", allow_pickle=True)
 def bz_vertices(B):
     pts = np.array([i * B[:2, 0] + j * B[:2, 1] for i in range(-2, 3) for j in range(-2, 3)]); vor = Voronoi(pts)
     v = vor.vertices[vor.regions[vor.point_region[np.argmin(np.linalg.norm(pts, axis=1))]]]; return v[np.argsort(np.arctan2(v[:, 1], v[:, 0]))]
@@ -114,7 +115,7 @@ ax.set_ylabel(r"$\max|M|$ (eV)"); ax.set_ylim(5, 9); ax.set_xlabel(r"Taille de l
 ax.set_title("Vérification de la convention intensive", loc="left", fontsize=9); save(fig, "fig_M_scaling_final")
 
 # ---------------- 6. fig_Ved : (a) carte 5×5, (b) carte 9×9, (c) profil radial masqué
-V = np.load("results/M/ved_analysis.npz"); LIN = 1e-2
+V = np.load(f"{RES}/ved_analysis.npz"); LIN = 1e-2
 fig = plt.figure(figsize=(6.5, 6.0)); gs = fig.add_gridspec(2, 2, height_ratios=[0.78, 1.55], hspace=0.45, wspace=0.10, top=0.97, bottom=0.16)
 axa, axb, axc = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, :])
 vmax = max(np.abs(V["5x5_map"]).max(), np.abs(V["9x9_map"]).max()); norm = SymLogNorm(linthresh=LIN, vmin=-vmax, vmax=vmax, base=10)

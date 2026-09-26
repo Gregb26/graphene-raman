@@ -297,3 +297,98 @@ départagent pas les lois ; le point 6×6 (+0,156) est le seul hors de la bande 
 
 **STOP.** Décisions restantes : (1) miroir des wfc 15/18 (97 Go) ; (2) GO ou non pour 21/24/27 (§0b : cascade ou parallèle) ;
 (3) commit de `article/R7_tailles_3m/`.
+
+## Phase GO 2 (GO de Greg le 2026-09-25, ≈ 18 h : « Miroir vers qe_tmp_backup et GO pour les plus grosses supercellules. Ne commit rien pour l'instant. »)
+
+Amendement au §0b avant soumission : l'excès du rang 0 mesuré à la 18×18 est 0,78 × wfc (25,4 G pour 32,7 Go) et non 0,65 ;
+avec 4 nœuds le 27×27 aurait ≈ 600–630 G par nœud sur 768 (marge 18 %). **27×27 passé à 6 nœuds × 32 rangs** (toujours 192 rangs,
+≈ 450 G par nœud) ; `make_inputs_r7.py` mis à jour, `submit.scf` 27×27 régénérés, `--check` PASS. 21×21 (2 × 96, ≈ 390 G/nœud)
+et 24×24 (3 × 64, ≈ 480 G/nœud) inchangés. Les six scf sont soumis en parallèle (11 nœuds au total), pp.x chaînés en afterok.
+
+| cellule | scf | nœuds × rangs, limite | pp.x (afterok) |
+|---|---|---|---|
+| 21×21 parfaite | 21833299 | 2 × 96, 6 h | 21833300 |
+| 21×21 lacune | 21833301 | 2 × 96, 6 h | 21833302 |
+| 24×24 parfaite | 21833303 | 3 × 64, 8 h | 21833304 |
+| 24×24 lacune | 21833305 | 3 × 64, 8 h | 21833306 |
+| 27×27 parfaite | 21833307 | 6 × 32, 12 h | 21833308 |
+| 27×27 lacune | 21833309 | 6 × 32, 12 h | 21833310 |
+
+D1 à huit points (6, 9, 12, 15, 18, 21, 24, 27) : job 21833311, afterok des six pp.x, 16 cœurs, 256 G, 3 h, sorties `d1_8pts/`
+(le `d1/` à cinq points est conservé). Miroir des `wfc1.hdf5` 15×15/18×18 (97,4 Go) vers `qe_tmp_backup/` : job 21833312
+(`submit_mirror_wfc.sh` : rsync, chgrp, md5 source et miroir comparés, ajout à `MD5SUMS_R7_2026-09-25.txt`). Rien de commis
+(consigne). Surveillance sans relance.
+
+Miroir wfc 15×15/18×18 fait (job 21833312, 22 h 39 → 23 h 02 : rsync 97,4 Go en 8 min ≈ 200 Mo/s, md5 source 8 min, md5 miroir 5 min) :
+**md5 source = miroir 4/4 OK**, `qe_tmp_backup/defect_{15x15,18x18}_{d,p}/` = 93 Go, `MD5SUMS_R7_2026-09-25.txt` 20 lignes (16 + 4 wfc),
+groupe rrg-cotemich-ac. Les `.save` 15/18 sont donc entièrement miroités (règle 3) ; rien supprimé sur le scratch.
+
+Premiers temps à 192 rangs (23 h 05) : 21×21 ≈ 330 s par itération (3 it en 18 min 40), 24×24 ≈ 700 s (1 it en 16 min 30, mise en
+place comprise), 27×27 aucune itération après 21 min : efficacité ≈ 0,55 par rapport à 64 rangs, contre 0,85 supposé au §0b.
+Projection : 21×21 lacune ≈ 2,5 h (limite 6 h), 24×24 lacune ≈ 5 h (8 h), 27×27 lacune ≈ 10 h pour 30 itérations (12 h) :
+à surveiller sur les premières itérations (décision : laisser courir ou annuler et resoumettre avec 24 h).
+
+## Résultats GO 2 — 21×21, 24×24, 27×27 (nuit du 25 au 26 septembre 2026 ; tous COMPLETED, aucune relance)
+
+### Runs QE (192 rangs, nœuds entiers ; `scf.out`, sacct)
+
+| cellule | job scf | nœuds × rangs | it | mur | E_F (eV) | E_tot (Ry) | MaxRSS rang 0 / moyenne | `wfc1.hdf5` | pp.x : mur / MaxRSS |
+|---|---|---|---|---|---|---|---|---|---|
+| 21×21 parfaite | 21833299 | 2 × 96 | 18 | 76 min 29 s | −4.2199 | −10626.23505960 | 49.3 / 3.6 G | 62.40 Go | 6 min 15 / 15.5 G |
+| 21×21 lacune | 21833301 | 2 × 96 | 30 | 105 min 44 s | −4.2205 | −10613.58213655 | 52.8 / 3.6 G | 62.34 Go | 5 min 09 / 15.7 G |
+| 24×24 parfaite | 21833303 | 3 × 64 | 20 | 163 min 17 s | −4.2199 | −13879.18001899 | 29.4 / 5.7 G | 106.44 Go | 6 min 15 / 20.8 G |
+| 24×24 lacune | 21833305 | 3 × 64 | 33 | 245 min 40 s | −4.2222 | −13866.52609300 | 29.7 / 5.7 G | 106.35 Go | 9 min 11 / 20.8 G |
+| 27×27 parfaite | 21833307 | 6 × 32 | 19 | 281 min 40 s | −4.2199 | −17565.84899959 | 142.2 / 9.5 G | 170.49 Go | 14 min 30 / 25.8 G |
+| 27×27 lacune | 21833309 | 6 × 32 | 30 | 388 min 33 s | −4.2237 | −17553.19434454 | 167.9 / 9.6 G | 170.38 Go | 9 min 08 / 26.2 G |
+
+Tous : PWSCF 7.5, 2D cutoff, convergence atteinte (ΔE ≤ 8e-11 Ry), JOB DONE ; grilles 630², 720², 810² × 192 ; `charge-density`
+471 / 615 / 778 Mo ; aucun `.wfcN` ; scratch total R7 : 877 Go. Murs contre les limites : 1,8 / 6 h, 4,1 / 8 h, 6,5 / 12 h.
+Efficacité 64 → 192 rangs (mur par itération rapporté à l'extrapolation N⁵ de la 15×15) ≈ 0,55–0,6, comme relevé à 23 h 05.
+Mémoire : rang 0 = moyenne + 0,8–0,95 × wfc (27×27 : 168 G, nœud à ≈ 475 G sur 768) ; le passage à 6 nœuds était utile mais 4
+auraient tenu (≈ 630 G). Dernière bande − E_F : +1.92 / +1.93, +2.00 / +1.94, +2.04 / +1.92 eV : la règle nbnd = N_occ + ⌈30 (N/12)²⌉
+a donné la couverture visée (≈ 2 eV). pp.x : `Vks` 1.29 / 1.71 / 2.17 Go, `pp.out` 0.99 / 1.31 / 1.66 Go par cellule.
+
+### D1 à huit points (job 21833311, 24 min 13, MaxRSS 109 G ; `d1_8pts/`, porte 6/9/12 contre R5 : PASS, écart 0)
+
+| N | E_D quadruplet | Lu 1,0 / 0,5 Å (meV) | ⟨V_d⟩ − ⟨V_p⟩ (meV) | seuil w₂ | fenêtre P / D | π : ε − E_D ; w₂ ; w₁ ; bande | doublet σ : ε − E_D ; w₂ | localisés σ / π |
+|---|---|---|---|---|---|---|---|---|
+| 21 | −4.23886 | −13.77 / −13.44 | +1.03 | 0.0149 | 154 (0, 154) / 168 (2, 166) | −0.3437 ; 0.183 ; 0.036 ; 1760 | +0.1030 ; 0.711 | 2 / 23 |
+| 24 | −4.23888 | −13.12 / −12.94 | −62.74 | 0.0114 | 217 (0, 217) / 220 (2, 218) | −0.3074 ; 0.174 ; 0.035 ; 2300 | +0.1026 ; 0.712 | 2 / 29 |
+| 27 | −4.23890 | −12.77 / −12.69 | −99.91 | 0.0090 | 262 (0, 262) / 269 (2, 267) | −0.2785 ; 0.166 ; 0.034 ; 2912 | +0.1024 ; 0.712 | 2 / 34 |
+
+Ajustements sur les huit points (6 → 27 ; `fig/size_3m_d1_8pts`) :
+
+| état | loi | ε_∞ (eV) | a | rms (eV) | max résidu | trois points R5 (6, 9, 12) | cinq points (6 → 18) |
+|---|---|---|---|---|---|---|---|
+| π | 1/N | −0.0523 | −6.089 | 0.0045 | 0.0089 | −0.0458 | −0.0493 |
+| π | 1/N² | −0.2963 | −29.345 | 0.0465 | 0.0786 | −0.4089 | −0.3490 |
+| π | 1/N + 1/N² (supplément) | −0.0519 | −6.100 ; b = +0.06 | 0.0045 | — | — | −0.0325 |
+| σ | 1/N | +0.0843 | +0.352 | 0.0095 | 0.0221 | +0.0549 | +0.0750 |
+| σ | 1/N² | +0.0972 | +1.864 | 0.0075 | 0.0189 | +0.0869 | +0.0944 |
+| σ | 1/N + 1/N² (supplément) | +0.1221 | −0.621 ; b = +4.86 | 0.0059 | — | — | +0.1570 |
+
+Faits bruts :
+- π quasi-lié (ε − E_D) : −1.065, −0.737, −0.551, −0.459, −0.388, −0.344, −0.307, −0.279 eV pour N = 6 → 27. La loi 1/N tient sur
+  huit points avec un rms de 4,5 meV (résidu max 8,9 meV) ; le coefficient a = −6,09 eV est stable depuis trois points (−6,14) ;
+  le terme 1/N² ajusté en supplément est nul (b = +0,06 eV, rms inchangé). La loi 1/N² seule a un rms de 46 meV. ε_∞ = −0,052 eV.
+- Doublet σ : +0.1030, +0.1026, +0.1024 eV pour 21, 24, 27 (plateau +0,102–0,107 depuis N = 15 ; 6×6 +0,156 et 9×9 +0,101 hors
+  plateau) ; dégénéré à < 0,1 meV ; w₂ 0,711–0,712, w₁ 0,281 à toutes les tailles. Les ajustements restent pilotés par 6 et 9
+  (ε_∞ de +0,084 à +0,122 selon la loi, rms 6–10 meV).
+- w₂ du π : 0,284 → 0,166 (6 → 27), w₁ 0,053 → 0,034 ; le π reste l'impair de plus grand w₂ (suivant ≤ 0,064 à 21×21).
+- E_D : −4,23886 / −4,23888 / −4,23890 eV (0,04 meV entre 21 et 27) ; E_F(p) − E_D = +19,0 meV partout ; E_F de la lacune décroît
+  avec N (−4,2205 / −4,2222 / −4,2237 contre −4,2199 pour la parfaite).
+- Décalage Lu (1,0 Å) : −13,8 / −13,1 / −12,8 meV (0,5 Å à ≤ 0,4 meV près) ; la moyenne 3D ⟨V_d⟩ − ⟨V_p⟩ vaut +1,0 (21), −62,7 (24),
+  −99,9 meV (27), sans lien avec le décalage local ; rapporté tel quel.
+- Fenêtre [−3, +1] : 154 / 217 / 262 états (parfaite, tous impairs), 168 / 220 / 269 (lacune, dont exactement 2 pairs) ; impairs
+  localisés au-dessus du seuil 3 ⟨w₂⟩_P : 23 / 29 / 34.
+
+### Fichiers et manifeste (21/24/27)
+
+- Répertoires QE `super_cell/{21x21,24x24,27x27}/{defective,pristine}/` : inputs, `scf.out`, `pp.out` (1–1,7 Go, non versionné),
+  `Vks_NxN_{d,p}` (1,3–2,2 Go), `pp.x_*.{out,err}`. Scratch : six `.save` (678 Go de wfc + 3,7 Go), aucun `.wfcN`.
+- `d1_8pts/` : `d1_results.json`, `D1_tables.md`, huit `window_NxN.npz` ; `fig/size_3m_d1_8pts`, `fig/localized_3m_d1_8pts`.
+- Miroir : partie légère (XML, charge-density, C.upf, prefix.xml) et wfc (678 Go) vers `qe_tmp_backup/defect_NxN_{d,p}/`,
+  selon la décision « miroir vers qe_tmp_backup » du GO 2 ; voir les lignes datées ci-dessous. Aucune suppression ; rien de commis.
+- 2026-09-26, 09 h 05 : miroir léger 21/24/27 fait (XML, charge-density, C.upf, prefix.xml : 24 fichiers, `MD5SUMS_R7_2026-09-26.txt`,
+  `md5sum -c` 24/24, source = miroir sur les 18 fichiers de données, groupe rrg-cotemich-ac). Miroir des six `wfc1.hdf5` (678 Go) :
+  job 21850526 (`submit_mirror_wfc_21_24_27.sh`, 10 h ; rsync, chgrp, md5 source et miroir, ajout à `MD5SUMS_R7_2026-09-26.txt`).

@@ -379,3 +379,125 @@ Tous les M2 entrent en production ; aucun fichier de `results/M/` n'a été modi
 - Disque : `results/M2/` 47,3 Go réels sur `/project` (manifeste md5 écrit ; miroir à faire en fin de campagne).
 
 **STOP — étape 1 terminée le 2026-09-25 (17 h 10). Attente du GO 2 (validation contre la super-cellule 9×9 : escalier D4 avec M2).**
+
+## Étape 2 (GO 2 reçu le 2026-09-25, 22 h 50) — Validation contre la super-cellule 9×9 : escalier D4 avec M2
+
+Git : `pull --ff-only` (Code) vers 09280bb « fix normalisation v2 » (Greg : `fold_wfk_to_sc.py:93` → √(Ω_sc/prod(Ndiag)), `local_R.py:322` →
+`meta["Ndiag"]` ; les deux écarts de l'étape 1 sont clos) ; b9f36b0 « R6-R7 » contient les fichiers de l'étape 1. Pilote `r6_d4.py` (prep, d4,
+d3, b3) réutilisant les pilotes R4/R5 ; jobs J5 `r6d4` 21833649 (prep + d4 en 42 s, puis d3 : TIMEOUT à 4 h, voir 2.3), J6 `r6b3` 21833650
+(COMPLETED 10 min 49), J7 `r6d3` (relance de d3 à 1 fil BLAS).
+
+### 2.0 M_W et V_loc de M2 (prep, `d4/prep_results.json`, `cache/`)
+
+Rotation V†M2V des trois parties denses (8 s chacune), double TF, recentrage R_d = [4, 4, 0], R_loc = 29 mailles (R_cut 3, dim 145) : mêmes
+R, R_d et R_loc que R4. Linéarité ‖M_W(tot) − M_W(L) − M_W(NL)‖/‖M_W(tot)‖ = 1,3e-15. Contrôle contre les rotations v1 de R4 :
+max|V_loc(M2) − (81 V_L(v1) + V_NL(v1))| = 8,8e-15 eV (L 1,1e-14, NL 0,0), M_W idem 8,8e-15 : la rotation est linéaire, M2 = 81 L + NL
+exactement en base de Wannier. Éléments sur le site de la lacune (eV, base de Wannier, maille R = 0) :
+
+| élément | M2 tot | M2 L | M2 NL | v1 tot (R4) | v1 L |
+|---|---|---|---|---|---|
+| p_z–p_z lacune (A, R = 0) | **31,5208** | 25,2154 | 6,3053 | 6,6166 | 0,3113 |
+| p_z(B) diagonal, R = 0 et trois voisins | 0,6151 | 0,5779 | 0,0371 | — | — |
+| \|p_z(A)–p_z(B)\| voisins | 1,3905 | 0,9108 | 0,4797 | — | — |
+| sp² diagonaux (×3) | 15,689 | 15,246 | 0,4428 | — | — |
+| ‖M_W(0, 0)‖ | 41,879 | 36,614 | 9,134 | 9,365 | 0,452 |
+| localité : ‖M_W(R, 0)‖ à \|R\| = 1 (a) | 1,963 / 1,963 / 1,388 / 1,388 | | | 0,658 / 0,437 | |
+| hors bloc σ–π de V_loc | 0,0 | 0,0 | 0,0 | | |
+
+### 2.1 Escalier D4 avec M2 (d4, `d4/d4_results.json`, `d4/d4_tables.md`, `fig/d4_ladder_M2`)
+
+Portes de R4 : porte 1 (H(R) replié contre Wannier aux 81 k) 4,88e-14 eV (seuil 1e-8) → OK ; porte 2 (repliement de M_W(M2), même partie à
+un corps) 1,93e-6 eV avec les k du XML dense, **2,26e-12 eV avec k = m/27** (seuil 1e-9) → OK ; V_loc production contre k exacts 7,5e-7 eV
+(p_z–p_z 31,520784 / 31,520784) ; résidu H(R) contre V†εV aux 81 k 7,5e-6 eV. E_D : maille 16 b −4,238470, dense 20 b −4,238895,
+Wannier −4,238896, parfaite −4,238471 eV. M2 : max|tot − L − NL| 4,5e-15 (16 b), 4,9e-15 eV (20 b).
+
+États localisés (ε − E_D en eV ; w₂ disque 2 Å, seuil 0,0812 ; QE = 9×9 lacune de D1, aligné Lu ; même fenêtre de 30 états, 2 pairs + 28 impairs) :
+
+| variante | dim | couplage pair–impair (eV) | pairs (σ) localisés | impairs (π) localisés | décalage rigide résiduel (meV, 269 états < E_D − 4) |
+|---|---|---|---|---|---|
+| QE (D1) | — | — | +0,101 ×2 (0,713) | −1,759 ×2 (0,114) ; **−0,737 (0,246)** ; +0,269 (0,102) | — |
+| (a1) M2 16 bandes, total | 1296 | 3,7e-3 | aucun (2 états pairs de la fenêtre à w₂ < seuil) | −1,775 ×2 (0,116) ; **−0,727 (0,236)** ; +0,263 (0,107) | +24,3 |
+| (a1) M2^L seul | 1296 | — | −2,241 (0,618) | −1,775 ×2 (0,116) ; −0,742 (0,239) ; +0,255 (0,105) | — |
+| (a1) M^NL seul | 1296 | — | −2,847 ×2 (0,255) | −1,370 (0,222) | — |
+| (a2) M2 dense ⊂ 81 k, 16 bandes | 1296 | 3,2e-8 | aucun | −1,775 ×2 (0,116) ; −0,727 (0,236) ; +0,263 (0,107) | +24,4 |
+| (a3) idem 20 bandes | 1620 | 2,9e-5 | aucun | −1,776 ×2 (0,116) ; **−0,734 (0,238)** ; +0,259 (0,106) | +24,4 |
+| (b) 5 WF, V†εV ⊕ M2_W/81 | 405 | 1,7e-8 | **−0,812 (0,821)** | −1,774 ×2 (0,116) ; **−0,689 (0,225)** ; +0,286 (0,115) | +24,0 |
+| (c-all) H(R) + M2_W replié, toutes mailles | 405 | 1,7e-7 | −0,812 (0,821 ; poids WF site + voisins 0,791) | −1,774 ×2 (0,116) ; −0,689 (0,225) ; +0,286 (0,115) | +24,0 |
+| (c-3) idem, R_cut 3 | 405 | 1,7e-7 | −0,813 (0,821 ; 0,791) | −1,765 / −1,763 (0,115) ; −0,677 (0,227) ; +0,302 (0,113) | +6,8 |
+
+Attendu R5 (variante M^L × 81) : (a1) −0,727 (0,236), (a3) −0,734 (0,238) — **reproduits à l'identique** (R5 : −0,72741 / −0,73436 ; ici −0,72741 /
+−0,73436, w₂ 0,2358 / 0,2380). Pour mémoire, v1 (R4, w₂ corrigés) : (a1) −1,350, (a3) −1,359, (b)/(c-all) −1,315, paire σ −2,812 / −2,848 / −2,514.
+
+Marches (états localisés, même parité, plus proche voisin ; Δε en eV) :
+- QE → (a1) : π −0,737 → −0,727 (+0,010) ; −1,759 ×2 → −1,775 (−0,016) ; +0,269 → +0,263 (−0,007) ; σ +0,101 ×2 → absent (aucun état pair localisé
+  dans (a1), (a2), (a3) : les deux états pairs de la fenêtre y sont à −2,818/−2,814 avec w₂ ≤ 0,04). Médiane |Δε| des 28 impairs triés : 24 meV (= le décalage
+  rigide résiduel de 24,3 meV ; QE aligné Lu contre modèle aligné sur son E_D).
+- (a1) → (a2) : identiques (Δε ≤ 1e-6, Δw₂ ≤ 1e-6) ; (a2) → (a3) (16 → 20 bandes) : π −0,727 → −0,734 (−0,007), +0,263 → +0,259 ; −1,775 → −1,776.
+- (a3) → (b) (20 bandes → 5 WF) : π −0,734 → −0,689 (+0,046), +0,259 → +0,286 (+0,028), −1,776 → −1,774 ; **paire σ : apparaît à −0,812 (w₂ 0,821)**,
+  un seul état pair localisé (l'autre membre de la paire QE +0,101 ×2 n'a pas d'équivalent : la base à 5 WF n'a que 3 sp² sur A par maille).
+- (b) → (c-all) : identiques (Δε ≤ 1e-6). (c-all) → (c-3) : Δε = −1 meV (σ), +8 / +11 / +16 meV (π) ; décalage rigide résiduel +6,8 meV contre +24,0.
+- QE → (c-3) (chaîne complète de production, R_cut 3) : π −0,737 → −0,677 (+0,060) ; +0,269 → +0,302 (+0,033) ; −1,759 → −1,763 (−0,003) ;
+  σ +0,101 → −0,813 (−0,915).
+
+Tous les états de la fenêtre par variante : `d4/d4_tables.md`. Figure `fig/d4_ladder_M2` (niveaux par variante et parité, taille ∝ w₂).
+
+### 2.2 (a1) à n bandes avec le M2 à 128 bandes (b3, J6, `b3/b3_tables_M2.md`, `fig/b3_ladder_M2`)
+
+Le « (c-all) avec le M2 à 128 bandes projeté sur 5 WF » n'apporte rien de plus que (c-all) à 20 bandes : les 5 fonctions de Wannier sont
+construites dans les 20 bandes du `.save` dense (V = U_dis·U de dimension 20 × 5, jauge du `.save` dense), donc P M128 P se réduit au bloc 20 × 20 de
+M128, dans une jauge différente (`.save` nb128) pour laquelle il n'y a pas de U. Remplacé par l'échelle gauge-invariante (a1) à n bandes sur le M2
+nb128 réassemblé (`results/M2/M_ed_9x9_nb128.npy`, 1,7 Go, max|M2| 32,9 eV), contre R5 B.3 (variante M^L × 81) :
+
+| n | dim | π localisé (ε − E_D ; w₂) | Δε_π vs n précédent (meV) | σ localisés (×2) | δ(π_320) / δ(σ_324) | médiane \|Δε\| vs QE σ / π (eV) | R5 (M^L × 81) π |
+|---|---|---|---|---|---|---|---|
+| 16 | 1 296 | −0,727 (0,236) | — | aucun | 0,0009 / 0,0363 | — / 0,024 | −0,727 (0,236) |
+| 24 | 1 944 | −0,741 (0,240) | −13,2 | +0,843 (0,674) | 0,0005 / 0,0176 | 0,742 / 0,025 | −0,741 (0,240) |
+| 32 | 2 592 | −0,747 (0,242) | −6,3 | +0,428 (0,697) | 0,0003 / 0,0057 | 0,326 / 0,025 | −0,747 (0,242) |
+| 48 | 3 888 | −0,754 (0,244) | −7,5 | +0,345 (0,700) | 0,0001 / 0,0039 | 0,244 / 0,025 | −0,754 (0,244) |
+| 64 | 5 184 | −0,757 (0,245) | −2,9 | +0,211 (0,708) | 0,0001 / 0,0017 | 0,109 / 0,025 | −0,757 (0,245) |
+| 96 | 7 776 | −0,759 (0,245) | −2,2 | +0,137 (0,713) | 0,0000 / 0,0006 | 0,035 / 0,025 | −0,759 (0,245) |
+| 128 | 10 368 | **−0,760 (0,245)** | −0,9 | **+0,116 (0,714)** | 0,0000 / 0,0003 | 0,014 / 0,025 | −0,760 (0,245) |
+
+QE : π −0,737 (0,246), σ +0,101 ×2 (0,713). Premier n avec une paire σ à moins de 0,3 eV de +0,101 : 48. Identique à R5 B.3 (variante M^L × 81)
+à toutes les décimales rapportées : le fichier M2 nb128 réassemblé est bien le M de cette variante.
+
+### 2.3 Critère de pôle et −Im T̄(K) avec V_loc(M2) (d3, J7 21850495, 1 min 57 ; `d3/d3_results_M2.json`, `d3/d3_tables_M2.md`, `d3/d3_curves_M2.npz`, `fig/d3_pole_M2`)
+
+Même construction que R4 D3 et que `resonance_criteria.py` : V_loc = P M_W P sur les 29 mailles (dim 145), α = 1, η 0,02 eV, g₀ du vrai H(R)
+(caches R4 réutilisés : mêmes R_loc), fenêtre [−3, +3] à 300² et [−3, +1] à 600², |det[1 − g₀V]| normalisé sur la fenêtre, λ_min de 1 − g₀V,
+T̄(K) = trace/2 de la paire π ; blocs par parité (complet, π, σ). Exécution : J5 avait lancé d3 avec 16 fils BLAS (61 ms par matrice au lieu de
+4,7 ms, piège consigné dans R4) : 50 min par variante, mur de 4 h atteint avant l'écriture des fichiers ; J7 (1 fil BLAS, 16 fils Python) : 2 min.
+
+| V_loc | grille | bloc | min \|det\|/max (ε − E_D, eV) | min \|λ\| ; λ (ε − E_D) | vecteur propre (poids) | racines de Re λ_min | pic de −Im T̄(K) (max, eV) | Re T̄(E_D) | zéros de Re T̄ |
+|---|---|---|---|---|---|---|---|---|---|
+| **M2 tot** | 300² | complet | **1,32e-4 (−0,812)** | **0,0019 ; +0,0000 + 0,0019 i (−0,812)** | σ : sp² de l'atome retiré 0,989, autres sp² 0,011, π 0 | −0,813 | **−0,177 (24,45)** | **+11,12** | −2,446 ; −0,222 ; +1,639 |
+| M2 tot | 300² | σ | 3,48e-4 (−0,812) | 0,0019 (−0,812) | idem | −0,813 | — | — | — |
+| M2 tot | 300² | π | 2,33e-2 (−0,172) | 0,3967 ; +0,219 + 0,331 i (−0,170) | p_z lacune 0,997 | −0,371 ; −0,254 (λ ≈ 0,4–0,6 : pas de zéro) | −0,177 (24,45) | +11,12 | idem |
+| M2 tot | 600² | complet | 1,27e-4 (−0,812) | 0,0019 (−0,812) | idem | −0,813 | −0,190 (23,64) | +11,15 | −2,443 ; −0,225 |
+| M2 tot | 600² | π | 3,52e-2 (−0,162) | 0,4066 ; +0,272 + 0,302 i (−0,152) | p_z lacune 0,997 | −0,366 ; −0,247 | −0,190 (23,64) | +11,15 | idem |
+| M2 L seul | 300² | complet | 1,50e-4 (+3,0, bord) | 0,0577 ; −0,058 + 0,001 i (+3,0, bord) | σ | aucune | −0,217 (22,51) | +10,32 | −2,446 ; −0,255 ; +1,639 |
+| M2 L seul | 300² | π | 2,54e-2 (−0,175) | 0,3721 (−0,172) | p_z lacune | −0,431 ; −0,265 | −0,217 | +10,32 | |
+| NL seul | 300² | complet | 2,48e-4 (−2,620) | 0,0123 ; +0,0003 + 0,0123 i (−2,620) | σ (sp² 0,975) | −2,620 | −1,292 (3,02) | +2,41 | aucun |
+| NL seul | 300² | π | 1,83e-1 (−0,905) | 0,7837 (−0,905) | p_z lacune | aucune | −1,292 | +2,41 | |
+| v1 tot (R4, pour mémoire) | 300² | complet | 2,09e-4 (−2,530) | 0,0108 ; +0,0003 + 0,0108 i (−2,530) | σ (sp² 0,976) | −2,531 | −1,292 (3,24) | +2,52 | aucun |
+| v1 tot | 300² | π | 1,74e-1 (−0,905) | 0,7753 (−0,905) | p_z lacune | aucune | −1,292 | +2,52 | |
+| v1 tot | 600² | complet | 3,81e-4 (−2,530) | 0,0108 (−2,530) | | −2,531 | −1,242 (3,15) | +2,52 | |
+
+Minima locaux secondaires de |det|/max (M2 tot, complet, 300²) : −0,630 (7,5e-4), −0,255 (5,7e-4), −0,210 (5,0e-4), −0,172 (4,7e-4), −0,132 (5,2e-4) ;
+bloc π : −0,462 (6,3e-2), −0,412, −0,255, −0,210, −0,172 (2,3e-2), −0,132. Bloc π (M2, 300²) : min |λ| par minimum local 0,574 (−0,252), 0,456 (−0,207),
+0,397 (−0,170), 0,399 (−0,130) ; racines de Re λ_min à −0,371 et −0,254 avec |λ| ≈ 0,4–0,6 (passage de Re λ par zéro, pas de zéro de λ).
+v1 et M2 se retrouvent en regard de −0,73 (π QE −0,737 ; (c-3) −0,677) : v1 : σ à −2,530, pic −Im T̄ à −1,292, bloc π sans zéro (min |λ| 0,78 à −0,905) ;
+M2 : σ à **−0,812** (= la paire σ de (b)/(c) du §2.1, −0,812/−0,813), pic −Im T̄ à **−0,177** (300²) / −0,190 (600²) avec un maximum 7,5 fois plus haut
+(24,5 contre 3,2 eV), bloc π sans zéro (min |λ| 0,40 à −0,17). Le pic de −Im T̄ suit la partie locale (L seul : −0,217 ; NL seul : −1,292 comme v1).
+Figure `fig/d3_pole_M2` : |det|/max, min |λ|, −Im T̄(K) à 300², M2 (plein) contre v1 (tirets), trait à −0,737.
+
+### Fichiers et état à la fin de l'étape 2
+
+- Répertoire de travail : `cache/Mwr_M2_9x9.npz` (638 Mo), `cache/Vloc_M2_9x9.npz`, `d4/` (json, npz, tables), `d3/` (json, npz 1,3 Mo, tables),
+  `b3/`, `fig/{d4_ladder_M2, b3_ladder_M2, d3_pole_M2}`, `r6_d4.py`, `submit_r6.sh` (tâches d4, b3, d3), `slurm-r6-*`, `JOBID`.
+  Copie versionnée `article/R6_production_corrigee/etape2/` (pilote, json, tables, figures ; pas les npz > 5 Mo ni les slurm).
+- Aucun fichier de production modifié ; `results/M/` intact ; `results/M2/` inchangé depuis l'étape 1. Git : rien fait par Code depuis le pull ff-only.
+- Reste à Greg avant GO 3 : `config/production.json` + `config.py` (diffs `phase0/`, couplés) ; exceptions `.gitignore` pour `results/M2/` ;
+  commit de `article/R6_production_corrigee/` (étape 2) et de `scripts/`… si retouchés (aucun script de `scripts/` ni de `src/` modifié à l'étape 2).
+
+**STOP — étape 2 terminée le 2026-09-26 (9 h 10). Attente du GO 3 (production du chapitre 4 avec M2, config v2).**

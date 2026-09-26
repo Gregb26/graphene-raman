@@ -1,0 +1,20 @@
+{
+ "size": "9x9",
+ "bands": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "N_cells": 81,
+ "max_abs_Mp": 147.06179543034165,
+ "max_abs_Luc": 1.815577913483539,
+ "rel_max_diff_diag_vs_Ncells_Luc": 1.0670871679127467e-07,
+ "abs_max_diff_diag_vs_Ncells_Luc_Ha": 1.5692777139975078e-05,
+ "rel_max_diff_diag_vs_Luc": 79.99999143896399,
+ "offdiag_k_max_Ha": 3.6382305059323205e-06,
+ "offdiag_k_rel": 2.4739467482264155e-08,
+ "spread_Vp_meV": 0.018286051571847532,
+ "mean_diag_Mp_eV": -3241.915540055239,
+ "mean_diag_Luc_eV": -40.02365320972443
+}

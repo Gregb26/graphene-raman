@@ -254,3 +254,128 @@ Décisions attendues de Greg avant GO 1 :
 7. **`.gitignore`** : exceptions `results/M2/` identiques à `results/M/` (l. 35–43) pour suivre les npz/csv de production.
 
 **STOP — phase 0 terminée le 2026-09-25.** Rien n'est calculé, rien n'est appliqué ; attente de l'étape G puis du GO 1.
+
+## Étape G — lecture du commit de Greg (ee051ec, 2026-09-25 16:00, « correction de la normalisation du noyau local »)
+
+Le clone local était en retard d'un commit (Greg a poussé depuis une autre machine) : `git pull --ff-only` fait par Code (avance
+rapide, aucune fusion, arbre propre ; seul acte git de la campagne). Diff du commit : `local_R.py` (+5/−2) et `fold_wfk_to_sc.py` (+1/−1).
+
+| noyau | changement commité | lecture |
+|---|---|---|
+| `compute_ML_R_mpi` (l. 194, 201) | `N_cells = np.prod(Ndiag)` ; `inv_sqrtO = 1.0 / np.sqrt(Omega_sc/N_cells)` | conforme au diff proposé (1/√Ω_uc) ; c'est le noyau de `compute_M.py --stage ml` (tous les M^L grossiers) |
+| `compute_ML_R_mpi_shared` (l. 322, 325) | mêmes deux lignes, placées après le `node.bcast(meta)` | **écart d'exécution attendu** : dans cette fonction `Ndiag` n'est défini que sur le rang 0 du nœud (l. 284, sous `if nrank == 0:`) ; les autres rangs ont `meta["Ndiag"]` seulement → `NameError: name 'Ndiag' is not defined` hors rang 0. Noyau de la chaîne dense (`compute_M_dense_stages.py`), non utilisé par l'étape 1 (aucun M dense n'est recalculé) ; testé dans J1 (`--coarse 5x5`, 2 bandes). Correction d'une ligne : `N_cells = np.prod(meta["Ndiag"])` |
+| `compute_psi_nk_fold_sc` (`fold_wfk_to_sc.py:93`) | `psi = (u * phase_k) / np.sqrt(float(Omega_sc)/N)` | **écart** : dans cette routine `N = np.prod(ngfft)` (l. 51) est le nombre de points de grille de la super-cellule, pas N_cells ; ψ y est multipliée par √(N_grid/Ω_sc) au lieu de √(N_cells/Ω_sc), soit un facteur √N_uc = √(N_grid/N_cells) de trop (5×5 : N_uc = 30·30·192 = 172 800 → M^L série × 172 800 par rapport au noyau MPI). Seul le noyau **série** `compute_ML_R` en dépend (`scripts/run.py`, `test_ks_reconstruction.null_test` (0 quelle que soit la norme), `validate_ML_grid_7x7.py`) ; aucun M de production. Testé dans J1 (`serial`, 5×5, 2 bandes). Correction : `np.sqrt(float(Omega_sc) / float(np.prod(Ndiag)))` |
+
+Aucun M de l'étape 1 ne passe par ces deux noyaux ; ils sont rapportés (écart → rapporter), non corrigés par Code.
+
+## Étape 1 (GO 1 reçu le 2026-09-25) — Assemblage et portes
+
+Décisions prises par Code faute de réponse explicite aux sept points de la phase 0 (toutes réversibles, tout est nouveau fichier) :
+(1) M^L grossier recalculé avec le noyau corrigé pour 5×5, 6×6, 8×8 (parties absentes) ; (2) 10×10 réassemblé (parties par différence)
+et 11×11 réassemblé avec un M^L recalculé (grille 363) et M^NL = M_ed − M_L(juin) ; (3) test V_p fait des deux façons (maille : reconstruction
+KS rejouée ; super-cellule : attendu × N_cells) ; (4) noyau G non touché ; (5) Code a appliqué les diffs `matrix_io.py` (porte v2, compatible)
+et `compute_M.py` (tag v2 sur les parties, combine en `unit_cell`) — `config.py` et `production.json` restent à appliquer par Greg avant l'étape 3
+(couplés) ; (6) `M_NL_dense_*` en liens symboliques vers `results/M/` ; (7) `.gitignore` à Greg. Modules promus : `src/electron_defect_interaction/
+wavefunctions/sc_projection.py` et `defects/deltav_pw.py` (en-tête de rôle, code inchangé). Scripts versionnés nouveaux : `scripts/assemble_M2.py`,
+`scripts/gate_M_normalization.py`. `results/M/README.md` déposé (gel), `results/M2/` créé. Le paquet n'a pas d'installation éditable dans
+`.venv` (import impossible sans `sys.path`) : les jobs préfixent `PYTHONPATH=$PROJ/src:$PYTHONPATH` (le préfixe garde h5py de scipy-stack).
+
+Jobs (répertoire de travail, `JOBID`) : J1 `r6kernel` 21819922 (nœud exclusif 32 rangs : M^L grossier 9, 7, 5, 6, 8, 11 ; V_p ; série ; KS ;
+partagé) → J2 `r6assemble` 21819923 (afterok J1) → J3 `r6gate` 21819938 et J4 `r6states` 21819939 (afterok J2).
+Vérifications préalables sur le nœud de connexion : `assemble_M2.py` reproduit bit à bit 49·M_L + M_NL du 7×7 et M_NL(9×9) = M_ed − M_L égale
+`_test_mnl/M_NL_serial.npy` à 1,3e-13 ; la porte sur les fichiers v1 gelés donne direct/(M^L/N_cells) = 49,000000 (7×7 grossier, grille 217)
+et 25,000000 (5×5 dense, 25 k coïncidents), NL exact (≤ 2e-15 eV), verdict REFUSÉ comme attendu.
+
+### Résultats de l'étape 1 (jobs du 2026-09-25 : J1 21819922 échoué au 11×11 puis J1b 21820489 COMPLETED 24 min ; J2b 21820490 COMPLETED 10 min 53 ; J3b 21820491 COMPLETED 3 min 03 ; J4b 21820492 COMPLETED 43 s)
+
+Le premier J1 a calculé les M^L grossiers 9×9 (143 s, 32 rangs), 7×7 (62 s, grille rééchantillonnée 217), 5×5 (26 s), 6×6 (33 s), 8×8 (89 s) puis a
+échoué sur le 11×11 : `ValueError: operands could not be broadcast together with shapes (16,121,50000) (1,181,50000)` — le `.save` de maille
+11×11 (`data/graphene/unit_cell/qe/defect_11x11.save`) a été écrasé par un run `bands` (XML : `<calculation>bands`, 181 k du chemin
+Γ-K-M-Γ ; 121 fichiers wfc de la grille encore présents). Aucun M^L 11×11 n'est recalculable sans nscf QE → **11×11 exclu de R6**
+(aucun consommateur de production ; son M_L de juin est de toute façon sur une grille non commensurable). Chaîne resoumise sans 11×11.
+
+#### 1.1 Noyau corrigé (J1b, `kernel/*.json`, journal `r6_log.txt`)
+
+| test | résultat | attendu |
+|---|---|---|
+| M^L 9×9 grossier (16 b, 81 k), noyau `compute_ML_R_mpi` ee051ec, contre 81 × `M_L_9x9.npy` (juin) | max\|v2 − 81 v1\| / max\|81 v1\| = **8,97e-16** ; rapport v2/(81 v1) médian 1,000000 (min 1,0000, max 1,0000) ; hermiticité 2,3e-16 ; max\|v2\| 0,6923 Ha | ≤ 1e-12 : **OK** |
+| idem contre 81 × `M_L_dense_9x9_coarsecheck.npy` (noyau partagé de septembre) | 1,36e-15 | — |
+| M^L 7×7 grossier contre 49 × `M_L_7x7.npy` (sept., grille 217) | **8,72e-16** ; rapport médian 1,000000 ; hermiticité 2,2e-16 ; max 0,6400 Ha | OK |
+| M^L 5×5, 6×6, 8×8 (parties absentes en v1) | max\|v2\| 0,6710 / 0,8025 / 0,6519 Ha (max/N_cells 2,68e-2 / 2,23e-2 / 1,02e-2 Ha) ; hermiticité 2,2e-16 | — |
+| Porte A.2 sur le M^L 9×9 recalculé (NL = `_test_mnl/M_NL_serial.npy` de juin), 8 paires dont (3,K,3,K) L direct +0,155642 = M^L/81 | max\|Δ_L\| = **6,79e-15 eV**, max\|Δ_NL\| = 3,44e-15 eV ; rapports médians 1,000000 / 1,000000 | ≤ 1e-6 eV : **OK** |
+| Potentiel périodique, maille : `ks_reconstruction_all.py --sizes 9x9` rejoué après ee051ec (sortie hors `results/`) contre `results/M/ks_reconstruction.npz` | 24 clés (9×9 grossier et dense), écart **0,00e+00** ; grossier max 0,0015 meV, dense max 0,4606 meV (identiques aux anciens) | inchangé : **OK** (la reconstruction ne passe pas par le noyau) |
+| Potentiel périodique, super-cellule : `compute_ML_R_mpi` avec `pristine=True` (V_p, 9×9, 4 bandes, `subtract_mean=False`) contre ⟨u\|V_p\|u⟩ sur la grille de la maille (V_p restreint, périodicité 0,018 meV) | blocs k = k′ : max\|M^L(V_p) − 81 ⟨u\|V_p\|u⟩\| / max = **1,07e-7** (1,6e-5 Ha absolu ; sans le facteur 81 : 80,0) ; blocs k ≠ k′ : max 3,6e-6 Ha = 2,5e-8 × max\|M\| ; moyenne diagonale −3241,92 eV = 81 × (−40,02 eV) | × N_cells par construction (§0.2) : **conforme** |
+| Noyau série `compute_ML_R` (`fold_wfk_to_sc.py:93` ee051ec), 5×5, bandes 0–1, contre le noyau MPI corrigé | rapport série/MPI = **172 800** (min = max = médiane) = N_uc = 30·30·192 ; max\|M\| 9,23e4 Ha | **écart confirmé** : diviseur √(Ω_sc/N_grid) au lieu de √(Ω_sc/N_cells) ; correction `np.sqrt(float(Omega_sc)/np.prod(Ndiag))` (Greg) |
+| Noyau partagé `compute_ML_R_mpi_shared` (`--coarse 5x5`, 2 bandes, 32 rangs) | `UnboundLocalError: cannot access local variable 'Ndiag'` sur 31 rangs (tous sauf le rang 0 du nœud) ; le rang 0 attend au `Reduce`, étape tuée par le `timeout 20m` ; aucun fichier produit | **écart confirmé** : `N_cells = np.prod(meta["Ndiag"])` (Greg) ; ce noyau sera nécessaire pour tout futur M dense |
+
+#### 1.2 Réassemblage M2 (J2b, `scripts/assemble_M2.py`, `assemble_summary.jsonl`, `results/M2/`)
+
+M2 = N_cells·M^L + M^NL, N_cells = N² (dense compris), par blocs (memmap), vérifications relues sur disque. Pour les 15 assemblages :
+max\|out_L − N_cells·M^L\| = 0, max\|out_NL − source\| = 0, max\|M2 − (out_L + out_NL)\| = 0 (exact au bit), hermiticité max\|M2 − M2†\|/max\|M2\| ≤ 2,0e-14.
+
+| fichier (`results/M2/`) | N_cells | source de M^L | source de M^NL | max\|N·M^L\| (Ha) | max\|M^NL\| | max\|M2\| | herm. rel. | durée |
+|---|---|---|---|---|---|---|---|---|
+| `M_ed_5x5` (16, 25) | 25 | recalculé ee051ec (`ml/M_L_5x5_v2`) | M_ed(juin) − M^L_v2/25 | 0,6710 | 0,2698 | 0,9260 | 2,4e-16 | 2 s |
+| `M_ed_6x6` (16, 36) | 36 | recalculé | M_ed(juin) − M^L_v2/36 | 0,8025 | 0,2698 | 1,0034 | 2,2e-16 | 1 s |
+| `M_ed_7x7` (16, 49) | 49 | `M_L_7x7` (sept.) × 49 | `M_NL_7x7` (sept.) | 0,6400 | 0,2698 | 0,8544 | 4,3e-15 | 4 s |
+| `M_ed_8x8` (16, 64) | 64 | recalculé | M_ed(juin) − M^L_v2/64 | 0,6519 | 0,2698 | 0,8934 | 3,7e-16 | 2 s |
+| `M_ed_9x9` (16, 81) | 81 | `M_L_9x9` (juin) × 81 | M_ed(juin) − M_L(juin) (= `M_NL_serial` à 1,3e-13) | 0,6923 | 0,2698 | 0,9114 | 5,9e-15 | 1 s |
+| `M_ed_10x10` (16, 100) | 100 | `M_L_10x10` (juin) × 100 | M_ed − M_L (juin) | 0,6460 | 0,2698 | 0,8557 | 9,3e-15 | 79 s |
+| `M_ed_12x12` (16, 144) | 144 | `M_L_12x12` (juin) × 144 | M_ed − M_L (juin) | 0,7116 | 0,2698 | 0,9355 | 1,5e-14 | 3 s |
+| `M_dense_5x5` (20, 625) | 25 | `M_L_dense_5x5` × 25 | lien → `results/M/M_NL_dense_5x5` | 0,6879 | 0,2893 | 0,9632 | 3,7e-15 | 56 s |
+| `M_dense_6x6` (20, 576) | 36 | × 36 | lien | 0,7409 | 0,2913 | 1,0235 | 5,2e-15 | 50 s |
+| `M_dense_7x7` (20, 784) | 49 | × 49 | lien | 0,6952 | 0,2913 | 0,9733 | 7,5e-15 | 83 s |
+| `M_dense_8x8` (20, 1024) | 64 | × 64 | lien | 0,7052 | 0,2913 | 0,9826 | 1,1e-14 | 200 s |
+| `M_dense_9x9` (20, 729) | 81 | × 81 | lien | 0,7591 | 0,2896 | 1,0425 | 1,0e-14 | 72 s |
+| `M_dense_12x12` (20, 576) | 144 | × 144 | lien | 0,7781 | 0,2913 | 1,0612 | 2,0e-14 | 46 s |
+| `M_L_dense_9x9_coarsecheck` (16, 81) | 81 | × 81 (L seul) | — | 0,6923 | — | — | — | 1 s |
+| `M_ed_9x9_nb128` (128, 81) | 81 | R5 `b/M_L_9x9_nb128` × 81 | R5 `b/M_NL_9x9_nb128` (copie) | 0,8315 | 0,3784 | 1,2099 | 7,9e-15 | 43 s |
+
+Sidecars : `bloch_norm = unit_cell`, `units = hartree`, `M_normalization = "v2 : L et NL en norme unit_cell, 2026-09-25"`, `N_cells`, `part`,
+`assembled_from` (chemins, facteur, mtime et taille de la source, mode), `date`, `md5`, `checks`, `campaign = R6`, clés v1 reprises (`p`, `D`,
+`N_kd`, `vacancy_*`). `results/M2/MD5SUMS_2026-09-25.txt` : 43 fichiers, 47,3 Go réels + 20,8 Go de liens vers `results/M/` (inchangés).
+Grandeur brute : max\|N_cells·M^L\| vaut 0,64–0,80 Ha pour toutes les tailles (contre 0,26–0,29 pour M^NL), alors que max\|M^L\| v1 valait
+4,9e-3–1,3e-2 Ha.
+
+9×9, porte A.2 sur états purs et identité des 30 états QE (J4b, `states/`) : base 16 (M2 grossier) états purs max\|Δ\| = 6,80e-15 eV (L 6,8e-15,
+NL 3,4e-15), rapport L direct/(M2_L/81) = 1,000000 ; base 20 (M2 dense restreint aux 81 k coïncidents) 3,54e-9 eV (L 3,5e-9, NL 1,5e-9) ;
+30 états : (i) c†(M2/81)c = (ii) application directe à 2,7e-15 (L) / 3,6e-14 eV (NL) sur la base 16, 6,7e-9 / 8,6e-9 sur la base 20 ; constante
+d'alignement s = **+24,66 meV** (min +24,66, max +24,67 ; base 20 : +25,06 à +25,17) pour Lu = −24,65 meV. Les valeurs par état
+(σ 324/325 : c†(M2/81)c = +5,849 eV dont L +5,052 ; π 320 : +0,367 dont L +0,338 ; etc., tableau `states/states_tables.md`) sont identiques
+à la variante diagnostique « M^L × 81 » de R5 (§A.2), qui est maintenant la convention.
+
+#### 1.3 Porte A.2 pour chaque M2 (J3b, `gate/gate_*.json`, `gate/gate_table.md`)
+
+Huit paires par fichier (intra-k à K ou au k le plus proche, inter-k K→K′, Γ, bandes hautes, paires mixtes) ; pour le dense, les N² k coïncidents
+avec la grille grossière, coefficients et k du `.save` dense ; union des ondes planes repliées = sphère de la super-cellule pour les 14 cas
+(238 019 à 1 371 809 g) ; 7×7 sur la grille 217 rééchantillonnée.
+
+| N | grossier : max\|Δ_L\| / max\|Δ_NL\| (eV) | dense : max\|Δ_L\| / max\|Δ_NL\| (eV) | rapports direct/(M/N_cells) médians (L ; NL) | verdict |
+|---|---|---|---|---|
+| 5×5 | 4,16e-15 / 2,91e-15 | 3,55e-15 / 9,44e-16 | 1,000000 ; 1,000000 | OK |
+| 6×6 | 3,30e-14 / 6,40e-15 | 3,45e-10 / 5,20e-11 | 1,000000 ; 1,000000 | OK |
+| 7×7 | 1,51e-14 / 8,08e-15 | 1,21e-8 / 4,04e-9 | 1,000000 ; 1,000000 | OK |
+| 8×8 | 1,32e-14 / 6,60e-15 | 4,66e-15 / 1,56e-15 | 1,000000 ; 1,000000 | OK |
+| 9×9 | 6,80e-15 / 3,41e-15 | 3,54e-9 / 1,54e-9 | 1,000000 ; 1,000000 | OK |
+| 9×9, 128 bandes | 3,52e-15 / 5,76e-16 | — | 1,000000 ; 1,000000 | OK |
+| 10×10 | 4,34e-15 / 5,55e-16 | — | 1,000000 ; 1,000000 | OK |
+| 11×11 | — (exclu) | — | — | — |
+| 12×12 | 6,63e-15 / 3,10e-15 | 1,10e-10 / 3,19e-11 | 1,000000 ; 1,000000 | OK |
+| contrôle : v1 gelé `results/M/M_L_dense_9x9` | — | 1,47e-1 / 1,54e-9 | **81,000000** ; 1,000000 | REFUSÉ (attendu) |
+
+Seuil 1e-6 eV ; les écarts denses de 1e-10–1e-8 eV sont ceux des k du XML dense (bruit 1e-7 sur k, R5 A.2) ; les grossiers sont à la précision machine.
+Tous les M2 entrent en production ; aucun fichier de `results/M/` n'a été modifié (README de gel déposé).
+
+#### Fichiers, état du dépôt, points pour Greg
+
+- Répertoire de travail : `ml/` (5 M^L recalculés, 61 Mo), `kernel/` (json + `Mp_9x9_4b.npy` 1,7 Mo), `gate/` (15 json + table), `states/`,
+  `assemble_summary.jsonl`, `assemble_ls.txt`, `ksrec/` (liens + npz rejoué), `r6_log.txt`, `JOBID`, `slurm-r6-*`. Copie versionnée
+  `article/R6_production_corrigee/` : rapport, scripts R6, json, tables (pas les npy ni les slurm).
+- Non commité dans le dépôt (Greg) : `scripts/assemble_M2.py`, `scripts/gate_M_normalization.py`, `src/electron_defect_interaction/wavefunctions/
+  sc_projection.py`, `src/electron_defect_interaction/defects/deltav_pw.py` (nouveaux) ; `scripts/compute_M.py`, `src/electron_defect_interaction/
+  io/matrix_io.py` (diffs de la phase 0 appliqués) ; `article/R6_production_corrigee/`.
+- Avant l'étape 3 (Greg) : `config/production.json` + `config.py` (diffs `phase0/`, couplés : `results_dir`, `M_normalization`) ; corrections des deux
+  noyaux non utilisés ici (`fold_wfk_to_sc.py:93`, `local_R.py:322`) ; exceptions `.gitignore` pour `results/M2/` ; le `.save` 128 b de R5 reste non miroité.
+- Disque : `results/M2/` 47,3 Go réels sur `/project` (manifeste md5 écrit ; miroir à faire en fin de campagne).
+
+**STOP — étape 1 terminée le 2026-09-25 (17 h 10). Attente du GO 2 (validation contre la super-cellule 9×9 : escalier D4 avec M2).**

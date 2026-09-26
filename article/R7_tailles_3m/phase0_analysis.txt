@@ -1,0 +1,91 @@
+=== A. Règle de position de la lacune (5..12) ===
+  N nat_p nat_d  idx1    (i,j) SR                   frac    centre-décalage nbnd_p occ_p   + nbnd_d occ_d   +
+  5    50    49    25   (2, 2)  A (0.466667,0.466667) (-0.0333,-0.0333)    130   100 +30    130    98 +32  ordre_conservé=True kp=gamma/gamma
+  6    72    71    30   (2, 2)  B (0.444444,0.444444) (-0.0556,-0.0556)    174   144 +30    172   142 +30  ordre_conservé=True kp=gamma/gamma
+  7    98    97    49   (3, 3)  A (0.476190,0.476190) (-0.0238,-0.0238)    226   196 +30    224   194 +30  ordre_conservé=True kp=gamma/gamma
+  8   128   127    73   (4, 4)  A (0.541667,0.541667) (+0.0417,+0.0417)    286   256 +30    284   254 +30  ordre_conservé=True kp=gamma/gamma
+  9   162   161    81   (4, 4)  A (0.481481,0.481481) (-0.0185,-0.0185)    354   324 +30    352   322 +30  ordre_conservé=True kp=gamma/gamma
+ 10   200   199    90   (4, 4)  B (0.466667,0.466667) (-0.0333,-0.0333)    430   400 +30    428   398 +30  ordre_conservé=True kp=gamma/gamma
+ 11   242   241   121   (5, 5)  A (0.484848,0.484848) (-0.0152,-0.0152)    514   484 +30    512   482 +30  ordre_conservé=True kp=gamma/gamma
+ 12   288   287   132   (5, 5)  B (0.472222,0.472222) (-0.0278,-0.0278)    606   576 +30    604   574 +30  ordre_conservé=True kp=gamma/gamma
+
+=== B. Hypothèse de construction des positions de la parfaite ===
+N= 5: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=2 -> oui ; vacance = (i,j)=(2, 2) A
+N= 6: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=3 -> non ; vacance = (i,j)=(2, 2) B
+N= 7: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=3 -> oui ; vacance = (i,j)=(3, 3) A
+N= 8: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=4 -> oui ; vacance = (i,j)=(4, 4) A
+N= 9: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=4 -> oui ; vacance = (i,j)=(4, 4) A
+N=10: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=5 -> non ; vacance = (i,j)=(4, 4) B
+N=11: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=5 -> oui ; vacance = (i,j)=(5, 5) A
+N=12: ordre (i,j,A,B) i extérieur j intérieur : True ; a = 4.6597846766 bohr (2.465852 Å), angle 60.0000°, c = 30.0000 bohr ; vacance A-nearest-centre i=j=6 -> non ; vacance = (i,j)=(5, 5) B
+
+=== C. Proposition 15x15 / 18x18 (A, même règle) ===
+N=15: A le plus proche du centre : i=j=7 -> (0.4888888889, idem) ; floor(N/2)=7 ; indice 1-based dans la parfaite = 225 ; nat_p=450, nat_d=449 ; occ_p=900, occ_d=898 -> nbnd(+30) p=930, d=928
+N=18: A le plus proche du centre : i=j=9 -> (0.5185185185, idem) ; floor(N/2)=9 ; indice 1-based dans la parfaite = 343 ; nat_p=648, nat_d=647 ; occ_p=1296, occ_d=1294 -> nbnd(+30) p=1326, d=1324
+
+=== D. XML : E_F, quadruplet, couverture de la fenêtre par nbnd (parfaite et lacune) ===
+             cas  nbnd      npw       E_F E_D(quad) quad spread e[nbnd-1]-E_D e[nbnd-1]-E_F n(e<=E_D+1) n(e<=E_D+1.5) marge(n bandes au-dessus de E_D+1)
+           5x5_p   130   119010   -4.3551   -4.3266      2.8093         5.535         5.564         100           106         30
+           5x5_d   130   119010   -4.5908   -4.3266      2.8093         5.534         5.798         100           105         30
+           6x6_p   174   171510   -4.2185   -4.2375      0.0000         4.915         4.896         146           146         28
+           6x6_d   172   171510   -4.2390   -4.2375      0.0000         4.866         4.867         146           146         26
+           7x7_p   226   233409   -3.8093   -4.2457      3.0030         3.999         3.563         196           196         30
+           7x7_d   224   233409   -4.6755   -4.2457      3.0030         4.005         4.435         196           202         28
+           8x8_p   286   304854   -3.9655   -4.2742      1.9761         3.835         3.526         262           262         24
+           8x8_d   284   304854   -4.5488   -4.2742      1.9761         3.800         4.075         261           262         23
+           9x9_p   354   385710   -4.2195   -4.2385      0.0000         3.327         3.308         326           326         28
+           9x9_d   352   385710   -4.2219   -4.2385      0.0000         3.300         3.283         326           326         26
+         10x10_p   430   476289   -4.0750   -4.2462      2.0389         2.712         2.541         400           412         30
+         10x10_d   428   476289   -4.5837   -4.2462      2.0389         2.661         2.999         401           412         27
+         11x11_p   514   576360   -4.2945   -4.2568      1.5093         1.977         2.014         490           490         24
+         11x11_d   512   576360   -4.5038   -4.2568      1.5093         1.971         2.218         490           490         22
+         12x12_p   606   685905   -4.2197   -4.2387      0.0000         1.964         1.945         578           596         28
+         12x12_d   604   685905   -4.2172   -4.2387      0.0000         1.950         1.928         578           595         26
+
+=== E. Temps de mur et ajustement t ∝ N^p ===
+N= 5: d    12.9 s (22 it,   0.6 s/it)   p    12.9 s (16 it,   0.8 s/it)
+N= 6: d    29.4 s (23 it,   1.3 s/it)   p    32.9 s (26 it,   1.3 s/it)
+N= 7: d    50.4 s (20 it,   2.5 s/it)   p    41.0 s (16 it,   2.6 s/it)
+N= 8: d   118.2 s (24 it,   4.9 s/it)   p    98.9 s (17 it,   5.8 s/it)
+N= 9: d   199.8 s (24 it,   8.3 s/it)   p   160.9 s (19 it,   8.5 s/it)
+N=10: d   300.8 s (23 it,  13.1 s/it)   p   331.9 s (18 it,  18.4 s/it)
+N=11: d   721.0 s (26 it,  27.7 s/it)   p   472.7 s (18 it,  26.3 s/it)
+N=12: d   907.1 s (27 it,  33.6 s/it)   p   673.3 s (17 it,  39.6 s/it)
+    d N∈5-12: p = 4.96 ; t(15) = 44 min, t(18) = 110 min
+    d N∈8-12: p = 5.28 ; t(15) = 51 min, t(18) = 134 min
+    d par itération N∈5-12: p = 4.74 ; s/it(15) = 99, s/it(18) = 235 -> ×27 it (comme 12x12) = 45 / 106 min
+    d par itération N∈8-12: p = 4.98 ; s/it(15) = 110, s/it(18) = 272 -> ×27 it (comme 12x12) = 49 / 122 min
+    p N∈5-12: p = 4.59 ; t(15) = 31 min, t(18) = 71 min
+    p N∈8-12: p = 4.87 ; t(15) = 35 min, t(18) = 85 min
+    p par itération N∈5-12: p = 4.67 ; s/it(15) = 107, s/it(18) = 251 -> ×17 it (comme 12x12) = 30 / 71 min
+    p par itération N∈8-12: p = 4.91 ; s/it(15) = 121, s/it(18) = 295 -> ×17 it (comme 12x12) = 34 / 84 min
+  d+p N∈5-12: p = 4.79 ; t(15) = 75 min, t(18) = 180 min
+  d+p N∈8-12: p = 5.11 ; t(15) = 87 min, t(18) = 220 min
+
+=== F. Mémoire QE estimée par rang (scf.out) et extrapolation N^4 ===
+N= 5 d: par rang 42.79 MB, total 2.67 GB, FFT ('150', '150', '192'), G dense 952545
+N= 5 p: par rang 43.03 MB, total 2.69 GB, FFT ('150', '150', '192'), G dense 952545
+N= 6 d: par rang 75.84 MB, total 4.74 GB, FFT ('180', '180', '192'), G dense 1371813
+N= 6 p: par rang 76.61 MB, total 4.79 GB, FFT ('180', '180', '192'), G dense 1371813
+N= 7 d: par rang 130.16 MB, total 8.13 GB, FFT ('216', '216', '192'), G dense 1867248
+N= 7 p: par rang 131.21 MB, total 8.20 GB, FFT ('216', '216', '192'), G dense 1867248
+N= 8 d: par rang 208.23 MB, total 13.01 GB, FFT ('240', '240', '192'), G dense 2438859
+N= 8 p: par rang 209.58 MB, total 13.10 GB, FFT ('240', '240', '192'), G dense 2438859
+N= 9 d: par rang 320.05 MB, total 20.00 GB, FFT ('270', '270', '192'), G dense 3086523
+N= 9 p: par rang 321.76 MB, total 20.11 GB, FFT ('270', '270', '192'), G dense 3086523
+N=10 d: par rang 473.80 MB, total 29.61 GB, FFT ('300', '300', '192'), G dense 3810786
+N=10 p: par rang 475.90 MB, total 29.74 GB, FFT ('300', '300', '192'), G dense 3810786
+N=11 d: par rang 682.27 MB, total 42.64 GB, FFT ('360', '360', '192'), G dense 4610682
+N=11 p: par rang 684.81 MB, total 42.80 GB, FFT ('360', '360', '192'), G dense 4610682
+N=12 d: par rang 943.63 MB, total 58.98 GB, FFT ('360', '360', '192'), G dense 5487066
+N=12 p: par rang 946.65 MB, total 59.17 GB, FFT ('360', '360', '192'), G dense 5487066
+N=15: par rang (×(N/12)^4 de 946.65 MB) = 2.26 GB ; total = 144 GB ; G dense ≈ 8.57 M ; FFT (450,450,192) ; npw(Γ, demi-sphère?) ≈ 536 k
+N=18: par rang (×(N/12)^4 de 946.65 MB) = 4.68 GB ; total = 300 GB ; G dense ≈ 12.35 M ; FFT (540,540,192) ; npw(Γ, demi-sphère?) ≈ 772 k
+
+=== G. Taille des fichiers wfc/charge (12x12) et extrapolation ===
+9x9_d: wfc1.hdf5 2.177 GB (npw 385710 × nbnd 352 × 16 B = 2.172 GB), charge-density 86.4 MB
+9x9_p: wfc1.hdf5 2.189 GB (npw 385710 × nbnd 354 × 16 B = 2.185 GB), charge-density 86.4 MB
+12x12_d: wfc1.hdf5 6.637 GB (npw 685905 × nbnd 604 × 16 B = 6.629 GB), charge-density 153.6 MB
+12x12_p: wfc1.hdf5 6.659 GB (npw 685905 × nbnd 606 × 16 B = 6.651 GB), charge-density 153.6 MB
+N=15: wfc ≈ 16.2 GB/cellule, charge-density ≈ 240 MB, Vks (filplot) ≈ 669 MB, pp.out (cube sur stdout) ≈ 512 MB ; 2 cellules : wfc 32 GB
+N=18: wfc ≈ 33.6 GB/cellule, charge-density ≈ 346 MB, Vks (filplot) ≈ 963 MB, pp.out (cube sur stdout) ≈ 737 MB ; 2 cellules : wfc 67 GB

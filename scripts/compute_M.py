@@ -120,7 +120,7 @@ def stage_ml(args):
 
     if rank == 0:
         # raw part (unit-cell-normalized Bloch states); the 1/N_cells factor is applied at combine.
-        matrix_io.save_M(args.out, M_L, matrix_io.UNIT_CELL, part="M_L")
+        matrix_io.save_M(args.out, M_L, matrix_io.UNIT_CELL, part="M_L", M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
         print(f"[rank0] saved M^L {args.out}  shape={M_L.shape} (bloch_norm=unit_cell)", flush=True)
     comm.Barrier()
 
@@ -137,7 +137,7 @@ def stage_nl(args):
     M_NL = compute_M_NL(args.uc, args.sc_p, args.sc_d, args.upf,
                         io=io, pseudo_reader=pseudo_reader, bands=bands)
     # raw part (unit-cell-normalized Bloch states); the 1/N_cells factor is applied at combine.
-    matrix_io.save_M(args.out, M_NL, matrix_io.UNIT_CELL, part="M_NL")
+    matrix_io.save_M(args.out, M_NL, matrix_io.UNIT_CELL, part="M_NL", M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
     print(f"saved M^NL {args.out}  shape={M_NL.shape} (bloch_norm=unit_cell)", flush=True)
 
 
@@ -145,17 +145,17 @@ def stage_combine(args):
     """Assemble the full matrix M = M^L + M^NL from two precomputed parts."""
     require(args, ["ml", "nl"], "combine")
 
-    # require raw (unit_cell) parts so the 1/N_cells factor is applied exactly once here.
+    # both parts in unit-cell Bloch norm (R6 kernels) -> M = M^L + M^NL, unit_cell, same convention as the
+    # dense chain (compute_M_dense_stages.py combine) and as every production consumer; the 1/N_cells factor
+    # is applied downstream (bloch_folded_hamiltonian, compute_T), never here.
     M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
     M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
     if M_L.shape != M_NL.shape:
         raise SystemExit(f"shape mismatch: M^L {M_L.shape} vs M^NL {M_NL.shape}")
-
-    # Bloch states normalized over the supercell -> divide by N_cells = number of unit cells = nk.
     N_cells = M_L.shape[1]
-    M = (M_L + M_NL) / N_cells
-    matrix_io.save_M(args.out, M, matrix_io.SUPERCELL, N_cells=int(N_cells))
-    print(f"saved M {args.out}  shape={M.shape}  N_cells={N_cells}  bloch_norm=supercell  "
+    M = M_L + M_NL
+    matrix_io.save_M(args.out, M, matrix_io.UNIT_CELL, N_cells=int(N_cells), M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
+    print(f"saved M {args.out}  shape={M.shape}  N_cells={N_cells}  bloch_norm=unit_cell  M_normalization=v2  "
           f"max|M-M^dag|={hermiticity(M):.2e}", flush=True)
 
 

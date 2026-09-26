@@ -6,7 +6,8 @@
 - Statut : **PRODUCTION** (règle 3 de CLAUDE.md : miroir `qe_tmp_backup/` avec md5 en fin de campagne ; rien d'unique sur le
   scratch ; aucune suppression dans cette campagne, tout nettoyage passe par un manifeste et un GO séparé).
 - Dates : phase 0 le 2026-09-25 (inputs écrits) ; GO reçu le 2026-09-25 (ressources A ; pp.x chaînés en afterok) ; jobs soumis vers 15 h 30,
-  tous COMPLETED à 17 h 51 (scf, pp.x, D1 cinq points) ; rapport et copie article le 2026-09-25 (STOP : miroir des wfc, GO 21/24/27, commit).
+  tous COMPLETED à 17 h 51 (scf, pp.x, D1 cinq points) ; GO 2 ≈ 18 h (miroir wfc 15/18 fait, md5 4/4) ; 21/24/27 : scf, pp.x et D1 huit points
+  COMPLETED dans la nuit du 25 au 26 (dernier job 05 h 49, `d1_8pts/`) ; rapport complété le 2026-09-26 ; pas de commit (consigne).
 - Emplacements (règle 5 de CLAUDE.md) : les calculs QE vivent comme les tailles 5…12 dans
   `graphene/qe/defects/super_cell/{15x15,18x18}/{defective,pristine}/` (`scf.in`, `submit.scf`, `pp.in`, `submit.pp`, puis
   `scf.out`, `pp.out`, `Vks_NxN_{d,p}`) avec `outdir` sur le scratch (`qe_tmp/defect_NxN_{d,p}/`) ; ce répertoire-ci
@@ -19,9 +20,9 @@
   (diffs des huit fichiers d'entrée, positions exclues), `phase0_inventory.py` + `phase0_analysis.txt` (inventaire de phase 0 : règle de position, nbnd, XML, temps, mémoire, tailles).
 - Inputs dérivés du 12×12 : seuls nat, CELL_PARAMETERS, ATOMIC_POSITIONS, nbnd, prefix, outdir et ressources changent.
   Lacune sur le sous-réseau A, atome A le plus proche du centre (i = j = ⌊N/2⌋ : 15×15 atome 225, 18×18 atome 343 de la parfaite).
-- Extension 21×21 / 24×24 / 27×27 (demande de Greg, 2026-09-25) : inputs écrits dans `super_cell/{21x21,24x24,27x27}/`, **non soumis, GO
-  attendu** ; deux règles adaptées (rapport §0b) : nbnd = N_occ + ⌈30 (N/12)²⌉ (+92/+120/+152, couverture ≈ 1,96 eV comme la 12×12) et
-  nœuds entiers à 192 rangs (2 × 96, 3 × 64, 4 × 48 ; `--mem=0` ; 6/8/12 h) ; lacune A atomes 441 / 601 / 729 ; `inputs_diff_21_24_27.txt`.
+- Extension 21×21 / 24×24 / 27×27 (demande de Greg, 2026-09-25) : inputs écrits dans `super_cell/{21x21,24x24,27x27}/`, **GO reçu ≈ 18 h,
+  soumis** (scf 21833299/301/303/305/307/309, pp.x afterok 21833300–310, D1 huit points 21833311 → `d1_8pts/`, miroir wfc 15/18 21833312) ; deux règles adaptées (rapport §0b) : nbnd = N_occ + ⌈30 (N/12)²⌉ (+92/+120/+152, couverture ≈ 1,96 eV comme la 12×12) et
+  nœuds entiers à 192 rangs (2 × 96, 3 × 64, 6 × 32 ; `--mem=0` ; 6/8/12 h) ; lacune A atomes 441 / 601 / 729 ; `inputs_diff_21_24_27.txt`.
 - Jobs (fichier `JOBID`) : scf 15×15 p 21818658, d 21818685 ; 18×18 p 21818687, d 21818689 ; pp.x chaînés afterok 21818684 / 21818686 /
   21818688 / 21818690 ; D1 régression 6/9/12 21818859 (`d1_reg/`) ; D1 complet (6, 9, 12, 15, 18) à soumettre en afterok des quatre pp.x
   une fois la régression PASS. Surveillance sans relance. Pilote `r7_driver.py` (d1, tables) + `submit_r7.sh` (16 cœurs, 64 G, 1 h).

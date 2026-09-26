@@ -32,7 +32,7 @@ RES = {15: dict(ntasks_per_node=8, mem_per_cpu="8G", time="03:00:00"),
        18: dict(ntasks_per_node=8, mem_per_cpu="16G", time="06:00:00"),
        21: dict(nodes=2, ntasks_per_node=96, mem="0", time="06:00:00"),          # 192 rangs, noeuds entiers (memoire totale ~0,7 To)
        24: dict(nodes=3, ntasks_per_node=64, mem="0", time="08:00:00"),          # 192 rangs (~1,2 To)
-       27: dict(nodes=4, ntasks_per_node=48, mem="0", time="12:00:00")}          # 192 rangs (~1,9 To)
+       27: dict(nodes=6, ntasks_per_node=32, mem="0", time="12:00:00")}          # 192 rangs (~1,9 To) ; 6 noeuds : exces du rang 0 mesure 0,78 x wfc a 18x18
 PP_MEM = {27: "48G"}                                                            # pp.x : 32G suffit jusqu'a 24x24 (~21 G), 27x27 ~27 G
 
 

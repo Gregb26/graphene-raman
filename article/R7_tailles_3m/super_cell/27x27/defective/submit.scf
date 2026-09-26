@@ -2,9 +2,9 @@
 #SBATCH --account=rrg-cotemich-ac
 #SBATCH --job-name=pw.x
 #SBATCH --mail-type=NONE          # Mail events (NONE,BEGIN,END,FAIL,ALL)
-#SBATCH --nodes=4
+#SBATCH --nodes=6
 #SBATCH --ntasks=192
-#SBATCH --ntasks-per-node=48
+#SBATCH --ntasks-per-node=32
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=0               # memory; default unit is megabytes
 #SBATCH --time=12:00:00          # time (DD-HH:MM)

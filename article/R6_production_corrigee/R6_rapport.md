@@ -821,7 +821,9 @@ dans `article/R6_production_corrigee/etape3/figures_v2/`). Le classificateur du 
     `m_rcut_resigma.csv` reconstruit le 2026-09-27) ;
   - non suivis : `resigma_9x9_*.npz` (55 Mo), `logs/`.
 
-  Le miroir des M2 denses prévu en phase 0 n'est pas fait : décision à Greg.
+  Miroir des M2 denses (prévu en phase 0) : pas de copie, décision de Greg du 2026-09-27. Les 43 M se reconstruisent en ≈ 11 min à partir
+  de `results/M/`, de `R6_production_corrigee/ml/` (M^L grossiers 5×5, 6×6, 8×8 recalculés) et de `R5_base_vs_M/b/` (128 bandes) ; recette,
+  dépendances (liens `M_NL_dense_*` vers `results/M/`) et contrôle md5 dans `results/M2/README.md` (versionné : exception `.gitignore`).
 - `.save` à 128 bandes de R5 (`qe_tmp/R5_uc9x9_nb128/defect_unit_cell_9x9.save`, scratch, 1,5 Go) miroité dans `qe_tmp_backup/R5_uc9x9_nb128/`
   (`MD5SUMS_2026-09-26.txt`, `md5sum -c` : 0 écart). La copie du scratch n'est pas supprimée (GO séparé).
 

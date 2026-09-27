@@ -51,6 +51,7 @@ results/M2/*
 !results/M2/*.csv
 !results/M2/MD5SUMS_*.txt
 !results/M2/ed_vs_ep_*.npz
+!results/M2/README.md
 !results/epw/
 results/epw/*
 !results/epw/*.npz

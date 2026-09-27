@@ -94,13 +94,24 @@ def profile(F, lines):
     return rn, un
 
 
+def field_relaxed(Ns):
+    """Champ de deplacements d'une cellule Ns x Ns relaxee de la serie R7c (lacune A, i = j = Ns//2) : r_i, u_i cartesiens (A)."""
+    head, cell_txt, X0, A_b, kp = parse_scf(os.path.join(SC, f"{Ns}x{Ns}", "defective", "scf.in"))
+    Xf = final_coords(os.path.join(SER, f"{Ns}x{Ns}", "nspin1", "relax.out"))
+    assert len(Xf) == len(X0) == 2 * Ns * Ns - 1, (len(Xf), len(X0))
+    A_A = A_b * BOHR; vac = g.vacancy_A(Ns); s = np.array([(vac[0] + 1 / 3) / Ns] * 2 + [0.0])
+    r = minimg_cart(X0 - s, A_A); u = minimg_cart(Xf - X0, A_A)
+    return dict(X0=X0, Xf=Xf, A_A=A_A, A_b=A_b, s12=s, r=r, u=u, unique=True, head=head, cell_txt=cell_txt, kp=kp, Ns=Ns, vac=vac,
+                rcut_max=float(np.linalg.norm(A_A[0]) / 2))                          # L/2 : unicite de l'image minimale
+
+
 def transplant(F, N, invert=True, rcut=R_CUT):
     """Positions reduites de la cellule N x N (lacune A, i=j=N//2) avec le champ transplante. Retourne (X_red, info)."""
-    vac = g.vacancy_A(N) if invert else (5, 5, "B")
+    vac = g.vacancy_A(N) if (invert or F.get("Ns")) else (5, 5, "B")
     i0 = vac[0]; f = 1 / 3 if vac[2] == "A" else 2 / 3
     sN = np.array([(i0 + f) / N, (i0 + f) / N, 0.0])
     XN = np.array(g.positions(N, vac)); assert len(XN) == 2 * N * N - 1
-    A_A = F["A_A"] * (N / 12.0)                                                # cellule 12x12 x N/12 (comme le generateur R7)
+    A_A = F["A_A"] * (N / float(F.get("Ns", 12)))                                # cellule source x N/N_source (comme le generateur R7)
     rN = minimg_cart(XN - sN, A_A)
     sign = -1.0 if invert else 1.0
     src = sign * F["r"]; usrc = sign * F["u"]                                  # inversion : r -> -r, u -> -u
@@ -171,10 +182,13 @@ def build_submit(N):
     return t
 
 
-def title_for(N, info):
+def title_for(N, info, F=None, rcut=R_CUT):
+    if F is not None and F.get("Ns"):
+        src = f"champ de déplacements de la {F['Ns']}x{F['Ns']} relaxée (R7c nspin1) transplanté sans inversion (lacune A -> A)"
+    else:
+        src = "champ de déplacements de la 12x12 relaxée (R2 nspin1) transplanté par inversion (lacune B -> A)"
     return [f"! R7c — relax (cellule fixe) de la supercellule {N}x{N} avec lacune, nspin=1",
-            f"! dérivé de super_cell/{N}x{N}/defective/scf.in (R7) ; géométrie initiale = champ de déplacements de la 12x12 relaxée (R2 nspin1) "
-            f"transplanté par inversion (lacune B -> A), R_cut = {R_CUT} A, {info['n_transplanted']} atomes déplacés ; voisins {info['nn_1based']}"]
+            f"! dérivé de super_cell/{N}x{N}/defective/scf.in (R7) ; géométrie initiale = {src}, R_cut = {rcut} A, {info['n_transplanted']} atomes déplacés ; voisins {info['nn_1based']}"]
 
 
 def check(F):
@@ -208,25 +222,48 @@ def check(F):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true"); ap.add_argument("--write", action="store_true"); ap.add_argument("--sizes", default="15,18,21,24,27")
-    a = ap.parse_args(); F = field_12x12()
-    if a.check and not check(F):
-        sys.exit(1)
+    ap.add_argument("--source", type=int, default=12, help="12 (R2, inversion B->A) ou N relaxee de R7c (A->A, sans inversion)")
+    ap.add_argument("--force", action="store_true", help="ecrase relax.in existant (sauvegarde .bak)")
+    a = ap.parse_args()
+    if a.source == 12:
+        F = field_12x12(); rcut = R_CUT; invert = True
+        if a.check and not check(F):
+            sys.exit(1)
+    else:
+        F = field_relaxed(a.source); rcut = F["rcut_max"] - 0.3; invert = False
+        Xs, info_s = transplant(F, a.source, invert=False, rcut=1e9)
+        d = Xs - np.mod(F["Xf"], 1.0); d -= np.rint(d); dev = np.abs(d).max()
+        rn = np.linalg.norm(F["r"], axis=1); un = np.linalg.norm(F["u"], axis=1); beyond = rn >= rcut
+        print(f"[check source {a.source}x{a.source}] auto-transplant = coordonnees finales : ecart max {dev:.1e} ; R_cut {rcut:.2f} A ; "
+              f"{beyond.sum()} atomes au-dela (|u| max {un[beyond].max() if beyond.any() else 0:.5f} A, moyen {un[beyond].mean() if beyond.any() else 0:.5f}) ; |u| max {un.max():.5f} A")
+        lines = []; 
+        for lo, hi in ((0, 3), (3, 8), (8, 13), (13, 18), (18, 23), (23, 28), (28, 35)):
+            m = (rn >= lo) & (rn < hi)
+            if m.any(): lines.append(f"{lo}-{hi} A : {m.sum()} at., |u| max {un[m].max():.4f}, moyen {un[m].mean():.4f}")
+        print("[profil " + f"{a.source}x{a.source}] " + " ; ".join(lines))
+        if a.check and dev > 1e-9:
+            print("[check] FAIL"); sys.exit(1)
     for N in [int(s) for s in a.sizes.split(",")]:
-        Xred, info = transplant(F, N)
+        Xred, info = transplant(F, N, invert=invert, rcut=rcut)
         print(f"[{N}x{N}] lacune {info['vac']} s_red ({info['sN'][0]:.6f}, {info['sN'][1]:.6f}) ; transplantes {info['n_transplanted']}/{info['n_sel']} ; voisins {info['nn_1based']} d = "
               f"{[round(v, 5) for v in info['d_nn']]} A ; d_min {info['dmin']:.4f} A ; |u| max {info['umax']:.5f} A ; ressources {RES[N]}")
         if a.write:
             d = os.path.join(SER, f"{N}x{N}", "nspin1"); os.makedirs(d, exist_ok=True)
-            for f, txt in (("relax.in", build_relax_in(N, Xred, title_for(N, info))), ("submit.relax", build_submit(N))):
+            for f, txt in (("relax.in", build_relax_in(N, Xred, title_for(N, info, F, rcut))), ("submit.relax", build_submit(N))):
                 p = os.path.join(d, f)
                 if os.path.exists(p):
-                    print(f"[write] {p} existe : NON ecrase"); continue
+                    if a.force and f == "relax.in" and g.read(p) != txt:
+                        import shutil; bak = p + f".bak_source{'12' if a.source == 12 else a.source}"; shutil.copy2(p, bak); print(f"[write] sauvegarde {bak}")
+                    else:
+                        print(f"[write] {p} existe : NON ecrase"); continue
                 open(p, "w").write(txt); print(f"[write] {p}")
-            lines = [f"R7c {N}x{N} nspin1 : geometrie initiale transplantee de la 12x12 R2 nspin1 (relax.out final) par inversion (B -> A) ; R_cut {R_CUT} A ; TOL {TOL_MATCH} A",
+            srcname = f"{F['Ns']}x{F['Ns']} R7c nspin1 (relax.out final), sans inversion (A -> A)" if F.get("Ns") else "12x12 R2 nspin1 (relax.out final) par inversion (B -> A)"
+            lines = [f"R7c {N}x{N} nspin1 : geometrie initiale transplantee de la {srcname} ; R_cut {rcut} A ; TOL {TOL_MATCH} A",
                      f"lacune {info['vac']} s_red {info['sN']} ; {info['n_transplanted']} atomes deplaces sur {2*N*N-1} ({info['n_sel']} sites 12x12 sous R_cut, tous apparies)",
                      f"voisins (1-based) {info['nn_1based']} ; distances entre voisins {[round(v, 5) for v in info['d_nn']]} A (12x12 R2 final : 2.15980 / 2.56934 / 2.56934) ; d_min {info['dmin']:.5f} A ; |u| max {info['umax']:.5f} A"]
-            profile(F, lines)
-            open(os.path.join(SER, f"{N}x{N}", "transplant.log"), "w").write("\n".join(lines) + "\n")
+            if not F.get("Ns"):
+                profile(F, lines)
+            open(os.path.join(SER, f"{N}x{N}", "transplant.log"), "a" if F.get("Ns") else "w").write("\n".join(lines) + "\n")
 
 
 if __name__ == "__main__":

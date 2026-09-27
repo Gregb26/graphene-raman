@@ -17,7 +17,10 @@ from electron_defect_interaction.config import load_production, dense_paths, HA2
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--rho0-grid", type=int, default=900)
-ap.add_argument("--out", default=None); a = ap.parse_args()
+ap.add_argument("--out", default=None)
+ap.add_argument("--shift-L-meV", default="", help="R6 (3.5, C14 redéfini) : constante(s) C en meV ajoutée(s) uniformément à dV^L sur la super-cellule, "
+                "soit V_loc + C·1 en base de Wannier (ex. 25,-25) ; variantes Gamma_T_shift<C>, E_res_shift<C>"); a = ap.parse_args()
+SHIFTS = [float(x) for x in a.shift_L_meV.split(",") if x.strip()]
 cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(cfg, S)
 paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
 rc, N, eta, nk_int, ew, npe, conc = cfg["R_cut"], cfg["grid"], cfg["eta_eV"], cfg["nk_int"], cfg["e_window_eV"], cfg["ne_per_eta"], cfg["defect_concentration_for_dos"]
@@ -61,6 +64,7 @@ I = np.eye(nL * nw)
 t_T = np.array([V @ np.linalg.solve(I - g0[j] @ V, I) for j in range(nE)])
 t_B = np.array([V + V @ g0[j] @ V for j in range(nE)])                          # Born, first two terms
 t_S = np.array([V_sub @ np.linalg.solve(I - g0[j] @ V_sub, I) for j in range(nE)])
+t_C = {c: np.array([(V + 1e-3 * c * I) @ np.linalg.solve(I - g0[j] @ (V + 1e-3 * c * I), I) for j in range(nE)]) for c in SHIFTS}   # R6 C14 : V_loc + C·1
 drho = np.array([(1.0 / np.pi) * np.trace(t_T[j] @ g0p[j]).imag for j in range(nE)])   # per defect, per spin, states/eV
 print(f"[drho] integral over the window = {np.trapz(drho, egrid):+.4f} states (Friedel: -> 0 over the full band)", flush=True)
 
@@ -72,6 +76,10 @@ def onshell(tc):
         g[m] = -2.0 * np.einsum("mi,mi->m", P.conj() @ tc[j], P).imag
     return g
 G_T, G_B, G_S = onshell(t_T), onshell(t_B), onshell(t_S)
+G_C = {c: onshell(t_C[c]) for c in SHIFTS}
+def eres_states(g):
+    """E_res as in compute_spectral_wannier (level 1): energy of the max on-shell |Gamma| among states within +-1.5 eV of E_D."""
+    mm = np.isfinite(g) & (np.abs(E_out - E_D) <= 1.5); return float(E_out[mm][np.argmax(np.abs(g)[mm])] - E_D) if mm.any() else float("nan")
 # energy-resolved (Lorentzian-weighted average of the on-shell states) and pristine DOS
 eg = egrid[::2]
 def lor(x): return (eta / np.pi) / (x * x + eta * eta)
@@ -79,6 +87,7 @@ Es, W = E_out[sel], None
 def eres(g):
     w = lor(eg[:, None] - Es[None, :]); return (w * g[sel][None, :]).sum(1) / w.sum(1)
 GT_e, GB_e, GS_e = eres(G_T), eres(G_B), eres(G_S)
+GC_e = {c: eres(G_C[c]) for c in SHIFTS}
 rho0_240 = np.array([lor(e - E_out).sum() / len(k_out) for e in eg])
 kf = lt.mp_grid(a.rho0_grid, a.rho0_grid, 1); _, E_f, _ = lt.Hwr_to_Hwk(Hwr, Rw, kf, ndegen=nd)
 rho0 = np.array([lor(e - E_f).sum() / len(kf) for e in eg])                       # per unit cell, per spin
@@ -104,11 +113,19 @@ for k, v in res.items(): print(f"  {k:22s} {v}")
 m = np.abs(eg - E_D) <= ew
 print(f"\n=== Born vs T (+-{ew} eV): median Gamma_T = {np.nanmedian(GT_e[m])*1e3:.2f} meV, median Gamma_Born = {np.nanmedian(GB_e[m])*1e3:.2f} meV, "
       f"ratio Born/T median {np.nanmedian(GB_e[m]/GT_e[m]):.3f}, min {np.nanmin(GB_e[m]/GT_e[m]):.3f}, max {np.nanmax(GB_e[m]/GT_e[m]):.3f}")
+shift_out = {"E_res_states": eres_states(G_T), "median_GT_states_meV": float(np.nanmedian(np.abs(G_T[sel])) * 1e3)}
+for c in SHIFTS:
+    tag = f"{c:+g}".replace("+", "p").replace("-", "m").replace(".", "_")
+    shift_out.update({f"Gamma_T_shift{tag}": GC_e[c], f"G_T_shift{tag}": G_C[c], f"peak_GT_shift{tag}": peak(eg, GC_e[c]) - E_D, f"E_res_states_shift{tag}": eres_states(G_C[c]),
+                      f"median_GT_states_shift{tag}_meV": float(np.nanmedian(np.abs(G_C[c][sel])) * 1e3)})
+    print(f"=== C14 (R6) : V_loc + ({c:+g} meV)·1 : médiane |Gamma_T|·N_cells (états) {shift_out[f'median_GT_states_shift{tag}_meV']:.2f} meV (sans décalage {shift_out['median_GT_states_meV']:.2f}) ; "
+          f"E_res (états, ±1,5 eV) {shift_out[f'E_res_states_shift{tag}']:+.3f} eV (sans {shift_out['E_res_states']:+.3f}) ; pic de la courbe Gamma_T {shift_out[f'peak_GT_shift{tag}']:+.3f} eV (sans {peak(eg, GT_e) - E_D:+.3f}) ; "
+          f"max rel |diff| Gamma_T {np.nanmax(np.abs(GC_e[c][m]-GT_e[m])/GT_e[m]):.3e}, médian {np.nanmedian(np.abs(GC_e[c][m]-GT_e[m])/GT_e[m]):.3e}", flush=True)
 print(f"=== alignment: Gamma_T with vs without G~=0 shift ({ML_diag_mean*1e3:.1f} meV): max rel |diff| = {np.nanmax(np.abs(GS_e[m]-GT_e[m])/GT_e[m]):.3e}, "
       f"median rel = {np.nanmedian(np.abs(GS_e[m]-GT_e[m])/GT_e[m]):.3e}; per-state max rel = {np.nanmax(np.abs(G_S-G_T)/np.abs(G_T)):.3e}")
 out = a.out or f"{RES}/resonance_{S}.npz"
 np.savez(out, size=S, E_D=E_D, eta=eta, R_cut=rc, grid=N, nk_int=nk_int, conc=conc, egrid=egrid, eg=eg,
          Gamma_T=GT_e, Gamma_Born=GB_e, Gamma_T_noshift=GS_e, rho0=rho0, rho0_240=rho0_240, ratio=ratio, drho=drho, rho_dis=rho_dis,
          Tbar=Tbar, Tbar_tr=tr, E_out=E_out, G_T=G_T, G_B=G_B, G_S=G_S, ML_diag_mean=ML_diag_mean, **{k: v for k, v in res.items() if k not in ("Tbar_zero_crossings", "E_D")},
-         Tbar_zero_crossings=np.array(res["Tbar_zero_crossings"]))
+         Tbar_zero_crossings=np.array(res["Tbar_zero_crossings"]), shifts_meV=np.array(SHIFTS), **shift_out)
 print(f"saved {out}")

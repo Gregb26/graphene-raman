@@ -133,8 +133,9 @@ for S in SIZES:
             tests.append((f"padding : k coïncidents, bandes 1–{nsub}, {S}", "max écart relatif des valeurs singulières (dense vs N×N)", f"{worst:.1e}", "2e-3 (tolérance nscf)", "OK" if worst < 2e-3 else "À VOIR", "analyze_M.py"))
         # nb20 vs nb16 non-regression
         p16 = f"{RES}/M_dense_{S}_nb16.npy"
+        rng = np.random.default_rng(0); ks = rng.choice(len(kd), 30, replace=False)          # échantillon de k (graine fixe) : nb16 et fermeture Wannier
         if _os.path.exists(p16):
-            A16 = mmap_M(p16); rng = np.random.default_rng(0); ks = rng.choice(len(kd), 30, replace=False); worst = 0.0
+            A16 = mmap_M(p16); worst = 0.0
             for i in ks:
                 for j in ks:
                     sa = np.linalg.svd(np.array(A16[:15, i, :15, j]), compute_uv=False); sb = np.linalg.svd(M16[:15, i, :15, j], compute_uv=False); worst = max(worst, np.abs(sa - sb).max() / sa[0])
@@ -169,7 +170,9 @@ for S in SIZES:
 sd = np.array([out[f"scale_{S}_dense"] for S in SIZES]); spread = float((sd.max() - sd.min()) / sd.mean())
 tests.append(("convention intensive (cellule unitaire)", "(max−min)/moyenne de max|M| sur N = 5,7,8,9 (bandes 1–16)", f"{spread:.1e}", "5e-2", "OK" if spread < 5e-2 else "À VOIR", "analyze_M.py"))
 # recorded results of the other gates (log references)
-tests.append(("test d'or (local vs compute_T), 5×5 dense", r"max|\Gamma_{loc} - \Gamma_{dense} N_c| / max", "2.3e-14", "1e-10", "OK", "golden_dense_20294198"))
+# R6 : le résultat du test d'or n'est plus codé en dur ; GOLDEN_RESULT="<valeur>,<source>" (ex. "1.80e-13,r6golden_21852238"), sinon ligne « à renseigner »
+_g = _os.environ.get("GOLDEN_RESULT", "").split(",")
+tests.append(("test d'or (local vs compute_T), 5×5 dense", r"max|\Gamma_{loc} - \Gamma_{dense} N_c| / max", _g[0] if _g[0] else "à renseigner", "1e-8", ("OK" if (_g[0] and float(_g[0]) < 1e-8) else "à renseigner"), (_g[1] if len(_g) > 1 else "GOLDEN_RESULT non défini")))
 tests.append(("g0 par lots vs référence, R_cut 0–3", "max écart relatif", "1.2e-14", "1e-12", "OK", "test_local_green_batch_20238555"))
 with open(f"{RES}/M_tests_summary.csv", "w", newline="") as f:
     w = csv.writer(f); w.writerow(["test", "quantité", "valeur", "seuil", "verdict", "source"]); w.writerows(tests)

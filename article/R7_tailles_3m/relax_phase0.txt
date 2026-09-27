@@ -29,3 +29,7 @@
 [27x27] lacune (13, 13, 'A') s_red (0.493827, 0.493827) ; transplantes 225/225 ; voisins [729, 728, 676] d = [2.1598, 2.56934, 2.56934] A ; d_min 1.3626 A ; |u| max 0.16084 A ; ressources {'nodes': 6, 'ntasks_per_node': 32, 'time': '6-00:00:00'}
 [write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/27x27/nspin1/relax.in
 [write] /lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell_relaxed/series/27x27/nspin1/submit.relax
+[check source 15x15] auto-transplant = coordonnees finales : ecart max 4.4e-11 ; R_cut 18.19 A ; 93 atomes au-dela (|u| max 0.01109 A, moyen 0.00718) ; |u| max 0.16492 A
+[profil 15x15] 0-3 A : 12 at., |u| max 0.1649, moyen 0.0927 ; 3-8 A : 66 at., |u| max 0.1024, moyen 0.0329 ; 8-13 A : 120 at., |u| max 0.0354, moyen 0.0143 ; 13-18 A : 156 at., |u| max 0.0139, moyen 0.0072 ; 18-23 A : 57 at., |u| max 0.0102, moyen 0.0069 ; 23-28 A : 32 at., |u| max 0.0111, moyen 0.0081 ; 28-35 A : 6 at., |u| max 0.0060, moyen 0.0041
+[18x18] lacune (9, 9, 'A') s_red (0.518519, 0.518519) ; transplantes 356/356 ; voisins [343, 308, 342] d = [2.56611, 2.14997, 2.56611] A ; d_min 1.3623 A ; |u| max 0.16492 A ; ressources {'nodes': 1, 'ntasks_per_node': 192, 'time': '1-00:00:00'}
+[27x27] lacune (13, 13, 'A') s_red (0.493827, 0.493827) ; transplantes 356/356 ; voisins [729, 676, 728] d = [2.56611, 2.14997, 2.56611] A ; d_min 1.3623 A ; |u| max 0.16492 A ; ressources {'nodes': 6, 'ntasks_per_node': 32, 'time': '6-00:00:00'}

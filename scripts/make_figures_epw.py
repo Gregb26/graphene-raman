@@ -76,6 +76,7 @@ if 300 in prod and os.path.exists(f"{RES}/resonance_9x9.npz"):
     ax.semilogy(xe, c * M["Gamma_T"] * 1e3, color=C_ED, label=rf"$\Gamma^{{ed}}$, lacune, $c$ = {c*100:.0f}\,\% (matrice $T$, 9$\times$9, $\eta$ = {fr(float(M['eta']))} eV)")
     ax.semilogy(x, G, color=C_T, label=rf"$\Gamma^{{ep}}$, $T$ = 300 K (EPW, {int(R['n_mesh'])}$^2$, $\sigma$ = {fr(float(R['degaussw']))} eV)")
     ax.set_xlabel(LBL_E); ax.set_ylabel(r"$\Gamma$ (meV)"); ax.axvline(0, color=MUTED, lw=0.8, ls=":"); ax.legend(fontsize=8); ax.set_xlim(-3, 3)
+    ax.set_ylim(top=4 * max(c * M["Gamma_T"][np.abs(xe) <= 3].max() * 1e3, G[np.abs(x) <= 3].max()))   # R6 : place au-dessus des courbes pour la légende (le pic de Γ^ed M2 passait dessous)
     fig.tight_layout(); save(fig, "fig_epw_vs_ed")
 
 # ---------------- optionnel : contrôle |g|

@@ -75,8 +75,9 @@ fig.tight_layout(); save(fig, "fig_locality_final")
 R = np.load(f"{RES}/resonance_{REF}.npz"); C = np.load(f"{RES}/resonance_criteria_{REF}.npz")
 ED = float(R["E_D"]); x = R["eg"] - ED; xg = R["egrid"] - ED; c = float(R["conc"])
 fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6)); (a1, a2), (a3, a4) = axs
-a1.semilogy(x, R["Gamma_T"] * 1e3, color=C_T, label=r"matrice $T$ (exacte)"); a1.semilogy(x, R["Gamma_Born"] * 1e3, color=C_BORN, label="approximation de Born (2$^\\mathrm{e}$ ordre)")
-a1.set_ylabel(LBL_G); a1.set_title(rf"$\Gamma(\varepsilon)$ sur-couche, {lab(REF)}", loc="left", fontsize=9); a1.set_ylim(4e2, 8e4); a1.legend(fontsize=7, loc="upper center", title=rf"$\eta$ = {float(R['eta'])} eV", title_fontsize=7)
+GT, GB = R["Gamma_T"] * 1e3, R["Gamma_Born"] * 1e3
+a1.semilogy(x, GT, color=C_T, label=r"matrice $T$ (exacte)"); a1.semilogy(x, GB, color=C_BORN, label="approximation de Born (2$^\\mathrm{e}$ ordre)")
+a1.set_ylabel(LBL_G); a1.set_title(rf"$\Gamma(\varepsilon)$ sur-couche, {lab(REF)}", loc="left", fontsize=9); a1.set_ylim(0.5 * min(GT.min(), GB.min()), 10 * max(GT.max(), GB.max())); a1.legend(fontsize=7, loc="upper center", title=rf"$\eta$ = {float(R['eta'])} eV", title_fontsize=7)
 a2.plot(x, R["rho0"], color=C_REF, label=r"$\rho_0$ (cristal parfait)"); a2.plot(x, R["rho_dis"], color=C_DIS, label=rf"$\rho_0 + c\,\delta\rho$, $c$ = {c*100:.0f}\,\%")
 a2.set_ylabel("Densité d'états (états/eV/cellule)"); a2.set_title(r"$\delta\rho = \rho_\mathrm{dis}-\rho_0$", loc="left", fontsize=9); a2.legend(fontsize=8)
 tr = R["Tbar_tr"]; a3.plot(xg, tr.real, color=C_T, label=r"Re $\bar T_{\pi\pi}(K,K;\varepsilon)$"); a3.plot(xg, tr.imag, color=C_BORN, label=r"Im $\bar T_{\pi\pi}(K,K;\varepsilon)$"); a3.axhline(0, color=MUTED, lw=0.8)
@@ -111,7 +112,7 @@ save(fig, "fig_M_map_final")
 Ns = [int(S.split("x")[0]) for S in SIZES if f"scale_{S}_dense" in Zm]; dd = [float(Zm[f"scale_{S}_dense"]) for S in SIZES if f"scale_{S}_dense" in Zm]; cc_ = [float(Zm[f"scale_{S}_coarse"]) for S in SIZES if f"scale_{S}_dense" in Zm]
 fig, ax = plt.subplots()
 ax.plot(Ns, dd, "o-", color=C_T, label="Grille élargie"); ax.plot(Ns, cc_, "x--", color=C_REF, label="Grille grossière")
-ax.set_ylabel(r"$\max|M|$ (eV)"); ax.set_ylim(5, 9); ax.set_xlabel(r"Taille de la super-cellule $N$"); ax.set_xticks(Ns); ax.legend()
+ax.set_ylabel(r"$\max|M|$ (eV)"); ax.set_ylim(0, max(dd + cc_) * 1.25); ax.set_xlabel(r"Taille de la super-cellule $N$"); ax.set_xticks(Ns); ax.legend()
 ax.set_title("Vérification de la convention intensive", loc="left", fontsize=9); save(fig, "fig_M_scaling_final")
 
 # ---------------- 6. fig_Ved : (a) carte 5×5, (b) carte 9×9, (c) profil radial masqué

@@ -552,3 +552,284 @@ Non touchés (à signaler) : `CLAUDE.md` (« Données : lues uniquement dans res
 `results/M/` : documentation, pas des scripts ; à mettre à jour par Greg avec le rapport final. Un `.gitignore.swp` (vim) traîne à la racine du dépôt.
 
 **STOP 3.0 — relecture et commit par Greg (`git diff` = `etape3/diff_3.0.patch`), puis GO 3b (test d'or 5×5 dense avec M2, bloquant).**
+
+### 3.0b Test d'or (GO 3b ; `scripts/submit_golden_dense.sh 5x5`, job `r6golden` 21852238, COMPLETED 1 h 52 min 27 s, 16 cœurs, 120 Go)
+
+Commit de Greg après 3.0 : 2e49ffa « r6 stage 3 » (clone à jour, arbre propre). `test_local_tmatrix_real.py 5x5 --dense` sur `results/M2/M_dense_5x5.npy`
+(sidecar v2 exigé) : R_d = [2, 2, 0], ‖V_loc(0, 0)‖ = **40,8800 eV** (v1 : 9,9183), résidu d'hermiticité 1,3e-14 ; Γ dense × N_cells et Γ local sur
+[0,2646, 14,93] eV ; **max|Γ_loc − Γ_dense N_cells| / max = 1,80e-13 (seuil 1e-8) : PASS** ; positivité min Γ_loc = +0,2646 : OK. Code de sortie 0 →
+3.1 autorisé.
+
+Second contrôle du même job (`check_M_dense_vs_coarse.py 5x5`, M2 complet dense contre grossier aux 25 k coïncidents, 16 bandes) : écart relatif
+maximal des valeurs singulières 3,48e-1, des normes de Frobenius 2,20e-1, max|M| 0,9632 (dense) / 0,9260 (grossier) → « CHECK ». Valeur v1 du même
+contrôle : voir ci-dessous (§3.6) ; le test de la chaîne `analyze_M` restreint ce contrôle aux bandes 1–8 et 1–15 (la 16ᵉ bande est dégénérée avec la
+17ᵉ dans le `.save` dense, R4 §D4), c'est cette version qui entre dans `tab:tests_M`.
+
+### 3.1–3.3 Jobs A/B/C (après le test d'or ; `etape3/runbook_3.sh`, `JOBID`)
+
+| job | script | durée | produit (`results/M2/`) |
+|---|---|---|---|
+| specwd_5x5 21857272 / 6x6 21857273 / 7x7 21857274 / 8x8 21857275 / 9x9 21857276 / 12x12 21857277 | `submit_spectral_wannier_dense.sh S prod` (grilles 60/120/240, η 0,05/0,02/0,01, R_cut 0…4 : 45 combinaisons par taille) | 1 h 38 / 1 h 47 / 52 min / 1 h 23 / 53 min / 2 h 10 | `specwd_<S>_prod.npz` |
+| nkint 21857278 | `submit_nkint_check.sh 9x9` (N_k^int 150, 300, 450, 600) | 7 min | `resigma_9x9_rc3_nk*.npz` |
+| resigma 21857279 / 21857280 | `submit_rcut_resigma.sh 9x9 0,1,2,3` / `9x9 4` | 3 min / 2 min | `resigma_9x9_rc0123.npz`, `resigma_9x9_rc4.npz` |
+| post_locality 21857281 | `submit_post.sh locality` (`mwr_locality_coarse_vs_dense.py` ; `m_rcut_convergence.py` 9×9 et 12×12, R_cut 0…6) | 9 min | `mwr_locality.npz`, `m_rcut_convergence.csv` |
+| post_ksrec 21857284 | `submit_post.sh ksrec` (`ks_reconstruction_all.py` six tailles ; copie de `ved_analysis.npz` v1, indépendant de M ; `sampling_table.py`) | 16 min | `ks_reconstruction.npz`, `ved_analysis.npz`, `sampling_table.csv` |
+| post_analyze 21857283, 21857345 | `submit_post.sh analyze` | FAILED | `analyze_M.py` : `NameError: ks` — l'échantillon de k (graine 0) avait été déplacé dans le bloc « nb16 » par la refonte 3.0 et sert aussi à la fermeture Wannier ; corrigé (défini hors du bloc, même graine), 3ᵉ soumission (voir `JOBID`). Ligne « test d'or » d'`analyze_M` paramétrée par `GOLDEN_RESULT="1.80e-13,r6golden_21852238"` (elle était codée en dur avec la valeur v1) |
+
+### 3.3 Porte de niveau 1 sur les paramètres gelés (`r6_level1_gate.py`, `etape3/level1_gate.md`)
+
+Même critère que celui qui a figé `config/production.json` le 2026-09-05 (NOTES_TGAMMA §3 : C11 ≤ 5 % quand la grille double et quand η est
+divisé par 2 ; C10 ≤ 5 % de R_cut 3 à 4 ; N_k^int rapporté avec le même seuil sur la médiane de la fenêtre, Γ(E_D) à part). Médianes de |Γ|·N_cells
+(meV, états de la fenêtre ±3 eV) :
+
+| taille | médiane (R_cut 3, 240², η 0,02) | E_res (eV) | C11 grille 120 → 240 | C11 η 0,02 → 0,01 | C10 R_cut 3 → 4 | verdict |
+|---|---|---|---|---|---|---|
+| 5×5 | 3 288,90 | −0,284 | 0,34 % | 1,06 % | 0,42 % | OK |
+| 6×6 | 3 155,98 | −0,227 | 0,01 % | 0,52 % | 1,58 % | OK |
+| 7×7 | 3 052,03 | −0,269 | 0,09 % | 0,53 % | 2,99 % | OK |
+| 8×8 | 3 020,42 | −0,269 | 0,10 % | 0,45 % | 2,08 % | OK |
+| **9×9** | **3 132,60** | **−0,175** | 0,49 % | 0,10 % | 0,47 % | **OK** |
+| 12×12 | 3 162,78 | −0,175 | 0,41 % | 0,44 % | 0,04 % | OK |
+
+N_k^int (9×9, R_cut 3) : 150 → 3 155,57 (+0,73 % vs 300), 300 → 3 132,60, 450 → 3 135,87, 600 → 3 135,65 (300 vs 600 : 0,10 %) ; E_res −0,238 / −0,175 /
+−0,202 / −0,202 ; Γ_T(E_D) (états à K) 4 801,9 / 3 630,7 / 3 489,5 / 3 463,9 meV (300 → 600 : +4,81 % ; v1 : +5,36 %). R_cut par `rcut_resigma` (9×9) :
+0 → 3 009,73 (+4,38 % vs R_cut 4), 1 → 3 223,74, 2 → 3 170,21, 3 → 3 132,60 (+0,47 %), 4 → 3 147,47 ; E_res −0,175 pour R_cut 0, 2, 3, 4 (−0,227 à R_cut 1) ;
+Re Σ médian à R_cut 3 : −26,65 meV (v1 : +722,3), |Re Σ|/Γ médian 0,125 (v1 : 0,227). Pour mémoire, v1 : médiane 9×9 2 473,55 meV, E_res −1,238 eV.
+
+**Verdict : les paramètres gelés satisfont le critère du 2026-09-05 avec M2 ; la config n'est pas modifiée ; 3.4 lancé.**
+
+Niveau 2 (post_fig 21872955 ; `level2_summary.csv`, `level2_families.csv` ; R_cut 3, 240², η 0,02) :
+
+| taille | famille | sous-réseau de la lacune | médiane Γ·N_cells v2 (meV) | v1 | p_z–p_z lacune (eV) | Re M^L(K) / Re M^NL(K), paire π (eV) | écart Δk à K (Å⁻¹) |
+|---|---|---|---|---|---|---|---|
+| 6×6 | 3m | B | 3 155,98 | 2 509,20 | 31,502 | +11,356 / +3,103 | 0,000 |
+| 9×9 | 3m | A | 3 132,60 | 2 473,55 | 31,521 | +11,305 / +3,103 | 0,000 |
+| 12×12 | 3m | B | 3 162,78 | 2 458,74 | 31,528 | +11,222 / +3,103 | 0,000 |
+| 5×5 | non-3m | A | 3 288,90 | 2 524,30 | 31,002 | +10,534 / +3,100 | 0,055 |
+| 7×7 | non-3m | A | 3 052,03 | 2 487,46 | 30,936 | +10,486 / +3,101 | 0,050 |
+| 8×8 | non-3m | A | 3 020,42 | 2 478,47 | 31,092 | +10,734 / +3,101 | 0,043 |
+
+Familles : 3m moyenne 3 150,5 meV, écart (max − min)/moyenne 0,96 % (v1 : 2 480,5 meV ; 2,03 %) ; non-3m 3 120,5 meV, 8,60 % (v1 : 2 496,7 meV ;
+1,84 %). Re M^L(K) v1 : +0,316 (6×6), +0,140 (9×9), +0,078 (12×12), +0,421 (5×5), +0,214 (7×7), +0,168 (8×8) ; Re M^NL(K) inchangé.
+
+### 3.1 Rotation de Wannier, recentrage, localité de M_W, tableau R_cut (post_locality 21857281 ; `mwr_locality.npz`, `m_rcut_convergence.csv`)
+
+Recentrage inchangé (R_d = [4, 4, 0] pour la 9×9 dense, [2, 2, 0] pour la 5×5 et la 6×6). Localité de M_W (eV ; ‖M_W(0, 0)‖, p_z–p_z du site
+de la lacune, p_z de l'autre sous-réseau, premières couronnes ‖M_W(R, 0)‖ à |R| = 1) :
+
+| taille (dense) | ‖M_W(0,0)‖ v2 | v1 | p_z–p_z lacune v2 | v1 | p_z autre sous-réseau v2 | couronne \|R\| = 1, v2 (v1) |
+|---|---|---|---|---|---|---|
+| 5×5 | 40,880 | 9,918 | 31,002 (A) | 7,296 | 0,316 | 1,965 / 1,385 / 1,495 (0,681 / 0,441 / 0,468) |
+| 6×6 | 35,290 | — | 31,502 (B) | 7,007 | 0,569 | 2,327 / 0,757 / 0,832 |
+| 7×7 | 40,777 | — | 30,937 (A) | 6,807 | 0,319 | 1,962 / 1,385 / 1,498 |
+| 8×8 | 41,072 | — | 31,092 (A) | 6,691 | 0,393 | 1,962 / 1,386 / 1,498 |
+| **9×9** | **41,879** | 9,365 | **31,521 (A)** | 6,617 | 0,615 | 1,963 / 1,388 / 1,501 (0,658 / 0,437 / 0,460) |
+| 12×12 | 35,329 | — | 31,528 (B) | 6,483 | 0,635 | 2,328 / 0,756 / 0,832 |
+
+Grossiers (wannierisations N×N, 5×5, 7×7, 8×8 ; aliasés) : ‖M_W(0,0)‖ 4,010 / 2,235 / 1,958 eV (v1 : 0,924 pour la 5×5).
+
+Tableau R_cut (tab:rcut_M ; `m_rcut_convergence.py`, grille fine 60², max|ΔM|/max|M| de la paire π reconstruite avec V_loc tronqué) :
+
+| R_cut | n_sites | 9×9 v2 | 9×9 v1 | 12×12 v2 | 12×12 v1 |
+|---|---|---|---|---|---|
+| 0 | 1 | 3,16e-1 | 4,09e-1 | 8,67e-1 | 7,31e-1 |
+| 1 | 5 | 2,13e-1 | 1,74e-1 | 2,17e-1 | 1,86e-1 |
+| 2 | 13 | 1,14e-1 | 4,97e-2 | 1,25e-1 | 1,16e-1 |
+| **3** | 29 | **6,68e-2** | 2,27e-2 | **9,02e-2** | 2,58e-2 |
+| 4 | 49 | 4,42e-2 | 1,57e-2 | 7,57e-2 | 1,57e-2 |
+| 5 | 81 | 1,75e-2 | 1,25e-2 | 5,36e-2 | 1,24e-2 |
+| 6 | 113 | 1,21e-2 | 1,08e-2 | 3,29e-2 | 1,15e-2 |
+
+max|M_π| (eV) : 25,44 (9×9), 25,94 (12×12) (v1 : 6,46 / 6,37).
+
+### 3.2 Cartes de couplage, comparaison Kaasbjerg, tableau L / NL (post_analyze 21862371 ; `M_analysis.npz`, `lnl_frobenius.csv`)
+
+9×9 dense 27×27, K à l'indice 495, paire π/π* = bandes (3, 4) (poids p_z 1,0), A_cell = 5,266 Å² : M̃ = |M|·A_cell (eV Å²) max 116,46 (π ; à K 107,22) et
+146,02 (π* ; à K 109,79) — v1 : 23,95 (23,87) et 34,16. Kaasbjerg : V₀ = 70 eV Å², soit 13,3 eV par maille (27 eV par atome pour A_cell 5,24 Å²).
+Échelle intensive (max|M|, bandes 1–16, eV) : dense 23,85 / 25,15 / 23,82 / 24,31 / 25,35 / 25,72 et grossier 25,20 / 27,30 / 23,25 / 24,31 / 24,80 / 25,46
+pour N = 5, 6, 7, 8, 9, 12 (v1 dense : 0,26–0,27 eV, maxima dominés par M^NL).
+
+Tableau L / NL (tab:L_NL ; `lnl_frobenius_all.py`, moyennes des normes de Frobenius des blocs 2 × 2 π/π* sur tous les couples (k′, k)) :
+
+| taille | ⟨‖M^NL‖_F⟩ / ⟨‖M^L‖_F⟩ v2 | v1 | ⟨‖M^L‖_F⟩ v2 (eV) | v1 | ⟨‖M^NL‖_F⟩ (eV, inchangé) |
+|---|---|---|---|---|---|
+| 5×5 | 0,258 | 6,45 | 24,44 | 0,977 | 6,300 |
+| 6×6 | 0,252 | 9,09 | 24,83 | 0,690 | 6,268 |
+| 7×7 | 0,258 | 12,66 | 24,36 | 0,497 | 6,291 |
+| 8×8 | 0,257 | 16,43 | 24,52 | 0,383 | 6,292 |
+| 9×9 | 0,252 | 20,44 | 25,01 | 0,309 | 6,311 |
+| 12×12 | 0,252 | 36,31 | 24,86 | 0,173 | 6,268 |
+
+(v1 : le rapport croissait comme N_cells parce que M^L portait 1/N_cells de trop ; v2 : rapport 0,25 indépendant de N.)
+
+### 3.4 Résonance et critères (post_res9x9 21862372 [6 h 35 : métriques 7 min 49, critères 6 h 27], post_res6x6 21862373 [2 h 39], post_res12x12 21862374 [1 h 38] ; `resonance_<S>.npz`, `resonance_criteria_<S>.npz`)
+
+`resonance_metrics.py` (R_cut 3, 240², η 0,02, N_k^int 300, ρ₀ 900², c = 1 %) ; énergies en eV relatives à E_D ; médianes des courbes sur ±3 eV :
+
+| grandeur | 9×9 v2 | 9×9 v1 | 6×6 v2 (v1) | 12×12 v2 (v1) |
+|---|---|---|---|---|
+| médiane courbe Γ_T (meV) | **3 740,2** | 2 343,6 | 3 780,1 (2 453,6) | 3 749,5 (2 304,4) |
+| médiane états \|Γ_T\|·N_cells (meV) ; E_res états ±1,5 eV | 3 132,9 ; −0,175 | 2 473,5 ; −1,238 | 3 156,5 ; −0,227 | 3 166,6 ; −0,175 |
+| médiane Γ_Born (meV) ; Born/T médian (min, max) | 177 204,7 ; 46,5 (1,11, 211,7) | 7 405,8 ; 3,30 (0,68, 16,5) | 174 332,9 ; 46,5 | 179 060,4 ; 45,9 |
+| pic Γ_T ; pic Γ_Born | −0,180 ; +1,695 | −1,240 ; +1,695 | −0,240 ; +1,695 | −0,180 ; +1,695 |
+| pic Γ_T/ρ₀ ; pic δρ ; pic ρ_dis | −0,175 ; −0,815 ; +1,710 | −0,015 ; −2,530 ; −2,530 | −0,175 ; −0,847 ; +1,705 | −0,170 ; −0,820 ; +1,710 |
+| pic \|T̄\| ; pic −Im T̄ ; min \|Re T̄\| | −0,172 ; −0,177 ; −2,447 | −0,905 ; −1,292 ; −2,145 | −0,177 ; −0,220 ; +1,435 | −0,170 ; −0,175 ; −2,207 |
+| Re T̄(E_D) ; Im T̄(E_D) | +11,122 ; −1,796 | +2,521 ; −0,091 | +9,218 ; −1,394 | +12,429 ; −2,103 |
+| zéros de Re T̄ | −2,447 ; −0,222 ; +1,638 | aucun | −0,262 ; +1,433 | −2,207 ; −2,170 ; −2,160 ; −0,210 ; puis 9 entre +2,69 et +2,94 |
+| moyenne diagonale de M^L (meV, C14 ancien) ; effet sur Γ_T (max rel / médian) | 5 427,3 ; 5,2e-2 / 1,1e-2 | 67,0 ; 6,4e-4 / 1,8e-4 | 5 498,5 ; 6,5e-2 / 1,8e-2 | 5 417,4 ; 6,3e-2 / 1,3e-2 |
+
+Critères par bloc (`resonance_criteria.py --blocks full,pi,sigma`, même g₀, fenêtre ±3 eV pour det/λ, toute la bande pour Friedel et Lloyd) — 9×9, 6×6 et 12×12 :
+
+| taille | bloc | min \|det\|/max (ε − E_D) | λ_min (ε − E_D) | ∫δρ bande (Tr[t g₀′]) / Lloyd / ±3 eV (états) |
+|---|---|---|---|---|
+| **9×9** | complet | 1,32e-4 (−0,812) | +0,0000 + 0,0019 i (−0,812) | −1,0007 / −1,0007 / +0,669 |
+| 9×9 | π | 2,33e-2 (−0,172) | +0,219 + 0,331 i, \|λ\| 0,397 (−0,170) | −0,9980 / −0,9980 / −0,285 |
+| 9×9 | σ | 3,48e-4 (−0,812) | +0,0000 + 0,0019 i (−0,812) | −0,0028 / −0,0028 / +0,955 |
+| 6×6 | complet | 1,43e-4 (−0,847) | +0,0001 + 0,0019 i (−0,847) | −1,0009 / −1,0009 / +0,635 |
+| 6×6 | π | 3,30e-2 (−0,175) | +0,340 + 0,361 i, \|λ\| 0,496 (−0,175) | −0,9978 / −0,9978 / −0,317 |
+| 6×6 | σ | 3,03e-4 (−0,847) | +0,0001 + 0,0019 i (−0,847) | −0,0030 / −0,0030 / +0,952 |
+| 12×12 | complet | 1,44e-4 (−0,817) | −0,0000 + 0,0019 i (−0,817) | −1,0005 / −1,0005 / +0,697 |
+| 12×12 | π | 1,83e-2 (−0,170) | +0,251 + 0,236 i, \|λ\| 0,344 (−0,127) | −0,9981 / −0,9981 / −0,261 |
+| 12×12 | σ | 4,44e-4 (−0,817) | −0,0000 + 0,0019 i (−0,817) | −0,0024 / −0,0024 / +0,958 |
+| 6×6 v1 | complet | 2,01e-4 (−2,415) | +0,0003 + 0,0094 i (−2,410) | −0,0341 / −0,0341 / +1,785 |
+| 9×9 v1 | complet | 2,09e-4 (−2,530) | +0,0003 + 0,0108 i (−2,530) | −0,0569 / −0,0569 / +1,782 |
+
+Pôle σ signalé (§2.3) : minimum du bloc σ le plus proche de −0,81 eV : 9×9 à −0,812 (|λ| 0,0019, |det|/max 3,5e-4 ; même énergie que le d3
+de l'étape 2), 6×6 à −0,847 (|λ| 0,0019, |det|/max 3,0e-4), 12×12 à −0,817 (0,0019 ; 4,4e-4) ; c'est le minimum global de la matrice complète dans
+les trois cas, et le bloc π n'a pas de zéro (|λ| ≥ 0,34). Autres minima locaux de |det|/max de la matrice complète 9×9 : −0,630 (7,5e-4 ; |λ| 0,017),
+−0,255 (5,7e-4), −0,210 (5,0e-4), −0,172 (4,7e-4), −0,132 (5,2e-4). Écart ponctuel maximal entre les deux formules de δρ (Tr[t g₀′] et Lloyd) sur la
+bande, 9×9 : 0,630 (complet), 0,263 (π), 0,594 (σ) états/eV ; leurs intégrales sont égales aux quatre décimales imprimées.
+
+Γ_T à c = 0,1 % sur ±1 eV (lacune ici, azote substitutionnel dans Kaasbjerg Fig. 17 : ordre de grandeur seulement) : 9×9 min 2,25 meV (+1,00), max 37,84
+(−0,18), 7,79 à E_D, 13,86 à −0,5 eV, 2,62 à +0,5 eV, ħ/Γ à ∓0,3 eV 24 / 230 fs ; 6×6 : 2,03 (+1,00), 33,47 (−0,24), 6,85 à E_D, 23 / 259 fs ; 12×12 : 2,45
+(+1,00), 40,52 (−0,18), 8,43 à E_D, 26 / 213 fs (v1 9×9 : 0,63 (+0,24) / 5,55 (−1,00) / 1,27 à E_D ; 419 / 1 025 fs ; v1 6×6 : 0,68 / 6,19 / 1,37 ; 371 / 961 fs).
+
+### 3.5 C14 redéfini (post_c14 21862375, 10 min ; `resonance_9x9_shiftL.npz`)
+
+C ajouté uniformément à ΔV^L sur la super-cellule = C·1 sur V_loc en base de Wannier (29 mailles × 5 fonctions), R_cut 3, 240², η 0,02, 9×9 :
+
+| variante | médiane états \|Γ_T\|·N_cells (meV) | E_res états ±1,5 eV (eV) | pic de la courbe Γ_T (eV) | max rel \|ΔΓ_T\| / médian |
+|---|---|---|---|---|
+| sans décalage | 3 132,87 | −0,175 | −0,180 | — |
+| C = +25 meV (= −Lu, R5) | 3 187,96 | −0,175 | −0,180 | 1,92e-1 / — |
+| C = −25 meV | 3 158,54 | −0,227 | −0,235 | 1,63e-1 / — |
+| C14 ancien : M − ⟨M^L⟩_diag·1 (5 427 meV) | Γ_T_noshift | — | — | 5,2e-2 / 1,1e-2 |
+
+### 3.6 Tests de la chaîne (tab:tests_M ; `M_tests_summary.csv` v2, + ligne porte A.2 ajoutée par `r6_tests_gate_row.py` dans le job final)
+
+| test | valeur v2 | seuil | verdict | v1 |
+|---|---|---|---|---|
+| hermiticité M2 dense 5 / 6 / 7 / 8 / 9 / 12 | 4,1e-15 / 5,8e-15 / 8,4e-15 / 1,2e-14 / 1,2e-14 / 2,3e-14 | 1e-12 | OK | 1,4e-14 … 8,1e-14 |
+| padding, k coïncidents, bandes 1–8 / 1–15, 9×9 | 5,0e-4 / 1,3e-3 | 2e-3 | OK | 5,5e-4 / 1,2e-3 |
+| non-régression nbnd 16 → 20 | non rejouable (fichiers `_nb16` supprimés au ménage) | 1e-5 | fichier absent | 1,2e-7 |
+| noyau dense à p = 1 vs noyau N×N, 9×9 | 1,3e-15 | 1e-10 | OK | 1,3e-15 |
+| fermeture Fourier (k → R → k) ; Bloch → Wannier → Bloch | 2,4e-14 ; 1,3e-15 | 1e-12 | OK | 2,4e-14 ; 1,3e-15 |
+| convention intensive : (max−min)/moyenne de max\|M\| sur N = 5, 7, 8, 9 (bandes 1–16) | **7,7e-2** | 5e-2 | **À VOIR** | 2,7e-2 (OK) |
+| test d'or 5×5 dense (local vs compute_T) | 1,80e-13 | 1e-8 | OK | 2,3e-14 |
+| g₀ par lots vs référence | 1,2e-14 (inchangé) | 1e-12 | OK | 1,2e-14 |
+| porte A.2 (ΔV appliqué aux états purs contre M2/N_cells), 8 grossiers (5, 6, 7, 8, 9, 9 à 128 b, 10, 12) + 6 denses (5, 6, 7, 8, 9, 12) ; ajoutée le 2026-09-27 (problème 1 ci-dessous) | L ≤ 3,3e-14 / 1,2e-8 eV, NL ≤ 8,1e-15 / 4,0e-9 eV | 1e-6 eV | OK | (v1 : L = N_cells × direct, refusé) |
+| reconstruction KS (fig_ks_reconstruction) | identique à v1 au bit (0,00) | — | OK | — |
+
+La ligne « convention intensive » sort du seuil avec M2 (7,7 % contre 5 %) : max|M| des bandes 1–16 vaut 23,85 (5×5), 23,82 (7×7), 24,31 (8×8), 25,35 eV
+(9×9) ; en v1 le maximum était porté par M^NL (inchangé, 6,3 eV de norme moyenne), en v2 par M^L. Rapporté, sans jugement.
+
+### 3.7 Table de correspondance ancien → nouveau (`etape3/table_v1_v2.md`, 126 lignes ; `r6_compare_v1_v2.py`)
+
+Colonnes : grandeur ; v1 (`results/M/`, et `results/epw/` pour le chapitre 5) ; v2 (`results/M2/`) ; fichier source ; figure, tableau ou section de
+NOTES_TGAMMA / NOTES_EPW. Blocs : niveau 1 (médianes et E_res des six tailles, variantes 9×9 de grille, η et R_cut), niveau 2 (p_z–p_z, Re M^L et Re M^NL
+à K), tab:L_NL, localité de M_W, tab:rcut_M, N_k^int, résonance 9×9, critères 9×9 par bloc, Friedel et Lloyd, Γ_T à c = 0,1 %, tab:tests_M (dont les deux
+lignes « porte A.2 », nouvelles), C14 redéfini, Γ^ed/Γ^ep du chapitre 5. `défauts.tex` n'est pas sur Rorqual : la dernière colonne donne les étiquettes
+(tab:…, fig_…) et les sections des notes ; le texte du mémoire est à reprendre par Greg avec cette table.
+
+Principaux changements (9×9 sauf mention) :
+
+| grandeur | v1 | v2 |
+|---|---|---|
+| médiane Γ·N_cells (R_cut 3, 240², η 0,02) | 2 473,55 meV | 3 132,60 meV |
+| E_res (argmax des états ±1,5 eV) | −1,238 eV | −0,175 eV |
+| pic −Im T̄(K) ; Re T̄(E_D) | −1,292 eV ; +2,521 eV | −0,177 eV ; +11,122 eV |
+| minimum de det et λ (matrice complète) | −2,530 eV (λ = 0,0108 i) | −0,812 eV (λ = 0,0019 i), porté par le bloc σ |
+| ∫δρ sur toute la bande (Friedel) | −0,057 | −1,0007 (π −0,998 ; σ −0,003) |
+| Born/T médian | 3,30 | 46,5 |
+| p_z–p_z sur le site de la lacune | 6,617 eV | 31,521 eV |
+| ⟨‖M^NL‖_F⟩/⟨‖M^L‖_F⟩ | 20,44 (croît comme N_cells) | 0,252 (0,25 pour les six tailles) |
+| tab:rcut_M, R_cut 3 | 2,27e-2 | 6,68e-2 |
+| Re Σ médian (R_cut 3) | +722,3 meV | −26,65 meV |
+| Γ^ed/Γ^ep médian (ch. 5 ; c = 1 %, 300 K, ±3 eV) | 0,361 | 0,537 |
+
+### 3.7b Chapitre 5 : Γ^ed/Γ^ep et fig_epw_vs_ed (2026-09-27, nœud de connexion, accord de Greg)
+
+`epw_ed_vs_ep.py --selfen results/epw/selfen_240_dg0.02_mv0.02_T300.npz --tag 24k24q_mv0.02` (chaîne mv0.02 de production, NOTES_EPW) avec la résonance
+9×9 de M2 : médiane Γ^ed 37,462 meV (±1,2 eV : 59,298), Γ^ep 56,956 meV (±1,2 eV : 21,653 ; inchangé), rapport médian 0,537, min 0,123 à +1,875 eV,
+max 32,442 à −0,180 eV, croisements (rapport = 1) à −1,504 et +0,690 eV. v1 : 0,361 ; 0,088 à +1,875 ; 2,011 à −0,755 ; −1,619 et −0,215 ; Γ^ed 23,497
+(±1,2 eV : 10,737) meV. Sortie `results/M2/ed_vs_ep_24k24q_mv0.02.npz` ; les `results/epw/ed_vs_ep_*.npz` (v1, commités) sont intacts. Figure :
+`etape3/figures_fix/fig_epw_vs_ed.{pdf,png}`. Non refaits : `ed_vs_ep_24k24q.npz` et `fig_epw_vs_ed_mv0.002` (ancienne chaîne EPW, Γ^ed v1).
+
+### Figures (post_fig 21872955, puis relecture et corrections du 2026-09-27)
+
+Le job a régénéré dans `figures/` (versions v1 sauvegardées dans `etape3/figures_v1/`, identiques au bit aux blobs de HEAD 2e49ffa) :
+- qui dépendent de M2 : fig_convergence, fig_locality_final, fig_spectral_final, fig_M_map_final, fig_M_scaling_final (`make_figures_memoire.py`) ;
+  fig_rcut, fig_plateau, fig_level2, fig_locality, fig_spectral, fig_M_map, fig_M_scaling (`make_figures.py`) ;
+- qui ne dépendent pas de M : fig_Ved*, fig_ks_reconstruction, fig_epw_kohn_degauss (PNG identiques au bit à HEAD ; PDF différents seulement par
+  /CreationDate, 6 à 7 octets).
+
+Relecture visuelle : fig_locality_final, fig_M_map_final, fig_convergence (b), fig_level2, fig_plateau et fig_M_scaling sont lisibles. Défauts trouvés :
+
+| figure | défaut avec M2 | suite |
+|---|---|---|
+| fig_M_scaling_final | vide : `set_ylim(5, 9)` calé sur v1, alors que max\|M\| vaut 23,3 à 27,3 eV avec M2 | `set_ylim(0, 1,25 max)`, comme fig_M_scaling de `make_figures.py` |
+| fig_spectral_final (a) | Born hors cadre (`set_ylim(4e2, 8e4)` calé sur v1 ; Born M2 de 4,2e4 à 4,7e5 meV) ; légende sur le pic de T | bornes tirées des données (0,5 × min, 10 × max), légende au-dessus des courbes |
+| fig_epw_vs_ed (ch. 5) | non régénérée par le job (problème 2) ; avec M2, la légende couvre le pic de Γ^ed | M2 et marge au-dessus des courbes (4 × max) |
+| fig_convergence (a) | la légende semi-transparente couvre les points R_cut 3–4 de 5×5, 6×6 et 12×12 | non corrigé (choix de mise en page) |
+| fig_spectral (figure de travail) | (a) en échelle linéaire écrasé par Born ; titres (a) et (b) qui se chevauchent ; titre (f) coupé | non corrigé |
+
+Versions corrigées : `etape3/figures_fix/` (les 6 figures du mémoire et les 8 figures EPW, régénérées par les scripts corrigés). Seules fig_spectral_final,
+fig_M_scaling_final et fig_epw_vs_ed diffèrent de `figures/` ; les sept figures EPW sans M sont identiques au bit à HEAD. Installation par Greg :
+`bash etape3/install_figures_R6.sh [--pdf-dates]` (copie des trois figures ; avec l'option, PDF à date seule rétablis depuis HEAD ; puis copie versionnée
+dans `article/R6_production_corrigee/etape3/figures_v2/`). Le classificateur du mode automatique a refusé à Code l'écrasement de fichiers de `figures/`.
+
+### Problèmes d'exécution (job du 2026-09-26 au soir) et corrections (2026-09-27)
+
+1. `r6_tests_gate_row.py` (job r6final) cherchait les json de la porte dans `etape1/gate/` (chemin de la copie `article/`) au lieu de `gate/` : aucune ligne
+   ajoutée, message « porte A.2 ajoutée » quand même. Corrigé : chemin ; refus (sortie ≠ 0) si aucun json ; message avec le nombre de lignes. Relancé :
+   deux lignes (8 grossiers, 6 denses) dans `M_tests_summary.csv` ; table 3.7 et copies `article/` régénérées.
+2. `submit_post.sh figures` lançait `make_figures_epw.py` sans les options de production de NOTES_EPW. Conséquences : fig_epw_validation, fig_epw_gamma,
+   fig_epw_phonselfen et fig_epw_decay réécrites avec la chaîne mv0.002 (rétablies par Greg par `git checkout`, 2026-09-27 14:39) ; fig_epw_vs_ed non produite
+   (`selfen_prod_T300.npz` absent). Corrigé avec l'accord de Greg :
+   - `submit_post.sh` passe les options (`--prod-tag 240_dg0.02_mv0.02 --phself-tag path_1200_dg0.02_mv0.02 --val-tag 24k24q_mv0.02 --sel-suffix _mv0.02 --control
+     --kohn-val-tags 24k24q,24k24q_mv0.02 --dfpt-tag 24k24q`) et lance `epw_ed_vs_ep.py` ;
+   - `epw_ed_vs_ep.py` écrit dans `results_dir` (sinon il aurait écrasé `results/epw/ed_vs_ep_*.npz`, qui sont v1) ;
+   - `.gitignore` : `!results/M2/ed_vs_ep_*.npz`.
+
+   Contrôle : avec ces options, les sept figures EPW sans M sortent identiques au bit à HEAD.
+3. Limites d'axe calées sur v1 dans `make_figures_memoire.py` (deux) et place de la légende de fig_epw_vs_ed dans `make_figures_epw.py` : voir Figures.
+
+### Manifestes
+
+- Aucune suppression pendant R6. `results/M/` intact : README déposé (« résultats obtenus avec M^L non normalisé (facteur N_cells manquant), remplacés par
+  R6 »), en lecture seule (`chmod -R a-w`) depuis 3.0. Le droit d'écriture (`chmod -R u+w results/M`) sera rétabli sur GO.
+- `results/M2/` (sur `/project`) : 43 fichiers M (47,3 Go réels, plus 20,8 Go de liens `M_NL_dense_*` vers `results/M/`). `MD5SUMS_2026-09-25.txt` relu le
+  2026-09-26 par le job r6final : 43 OK sur 43. Produits de l'étape 3 :
+  - suivis par les exceptions `.gitignore` : `specwd_*_prod.npz` (6), `resonance_*.npz` (6x6, 9x9, 12x12, 9x9_shiftL, criteria ×3), `mwr_locality.npz`,
+    `M_analysis.npz`, `ks_reconstruction.npz`, `ved_analysis.npz` (copie v1, indépendant de M), `ed_vs_ep_24k24q_mv0.02.npz`, `*.csv` (9) ;
+  - non suivis : `resigma_9x9_*.npz` (55 Mo), `logs/`.
+
+  Le miroir des M2 denses prévu en phase 0 n'est pas fait : décision à Greg.
+- `.save` à 128 bandes de R5 (`qe_tmp/R5_uc9x9_nb128/defect_unit_cell_9x9.save`, scratch, 1,5 Go) miroité dans `qe_tmp_backup/R5_uc9x9_nb128/`
+  (`MD5SUMS_2026-09-26.txt`, `md5sum -c` : 0 écart). La copie du scratch n'est pas supprimée (GO séparé).
+
+### État du dépôt (rien n'est commité par Code)
+
+- Modifiés depuis 2e49ffa : `scripts/analyze_M.py` (échantillon `ks` hors du bloc nb16, `GOLDEN_RESULT`), `scripts/resonance_criteria.py` (`--blocks`,
+  `--flag-eV`), `scripts/resonance_metrics.py` (`--shift-L-meV`), `scripts/epw_ed_vs_ep.py` (sortie dans `results_dir`), `scripts/make_figures_memoire.py` et
+  `scripts/make_figures_epw.py` (limites d'axe), `.gitignore` (`ed_vs_ep`), `article/R6_production_corrigee/R6_rapport.md`.
+- Nouveaux : `scripts/submit_post.sh` ; `results/M2/` (produits ci-dessus) ; `article/R6_production_corrigee/etape3/` (csv_v2, figures_v2, table_v1_v2.md,
+  level1_gate.md, scripts R6).
+- `figures/` : 33 fichiers modifiés par le job ; après `install_figures_R6.sh --pdf-dates`, restent les figures qui dépendent de M2.
+- Documentation qui cite encore v1 : `NOTES_TGAMMA.md` §2 et §6, `CLAUDE.md` (« Données : results/M/ »), NOTES_EPW (Γ^ed/Γ^ep 0,361) : à mettre à jour
+  avec la table 3.7 (par Greg, ou par Code sur demande).
+- Les modifications de `article/R7_tailles_3m/` visibles dans `git status` viennent de R7, pas de R6.
+
+**STOP — étape 3 terminée le 2026-09-27.** Reste à Greg : installer les figures corrigées (`etape3/install_figures_R6.sh`), commit, GO pour rétablir
+l'écriture sur `results/M/`, décision sur le miroir des M2 denses, mise à jour de NOTES_TGAMMA, CLAUDE.md, NOTES_EPW et `défauts.tex` avec la table 3.7.
+

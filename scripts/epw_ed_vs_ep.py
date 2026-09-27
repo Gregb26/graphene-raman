@@ -5,7 +5,8 @@ RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (re
 epw_ed_vs_ep.py -- point-by-point ratio Gamma^ed(c) / Gamma^ep(T) on the energy axis eps - E_D (each curve relative to ITS OWN E_D),
 Gamma^ed = c x Gamma_T (Lorentzian-averaged curve of resonance_<size>.npz, eta 0.02), Gamma^ep = Gamma_e of a selfen npz
 (Lorentzian eta 0.02). Reports median / min / max of the ratio on |eps - E_D| <= window and the crossings (ratio = 1), plus
-the window medians of both curves. Output: results/epw/ed_vs_ep_<tag>.npz. No new run.
+the window medians of both curves. Output: <results_dir>/ed_vs_ep_<tag>.npz (R6 : dépend de M ; les results/epw/ed_vs_ep_*.npz
+sont les produits v1, gelés). No new run.
 Usage: python scripts/epw_ed_vs_ep.py --selfen results/epw/selfen_240_dg0.02_T300.npz --tag 24k24q [--resonance <results_dir>/resonance_9x9.npz] [--window 3]
 """
 import argparse, os, numpy as np
@@ -20,6 +21,6 @@ med_ed = float(np.median(ed)); med_ep = float(np.median(ep)); m12 = np.abs(x) <=
 print(f"[ed/ep {a.tag}] c = {c*100:.0f} %, T = {float(S['T']):.0f} K, {int(S['n_mesh'])}^2, degaussw {float(S['degaussw'])} eV ; window +-{a.window} eV ({m.sum()} pts, 5 meV)")
 print(f"   median Gamma^ed = {med_ed*1e3:.3f} meV (+-1.2 eV: {np.median(ed[m12])*1e3:.3f}), median Gamma^ep = {med_ep*1e3:.3f} meV (+-1.2 eV: {np.median(ep[m12])*1e3:.3f})")
 print(f"   ratio Gamma^ed/Gamma^ep: median {np.median(r):.3f}, min {r[imin]:.3f} at {x[imin]:+.3f} eV, max {r[imax]:.3f} at {x[imax]:+.3f} eV ; crossings (ratio = 1) at {np.round(xc, 3).tolist()} eV")
-out = f"results/epw/ed_vs_ep_{a.tag}.npz"; np.savez(out, x=x, Gamma_ed=ed, Gamma_ep=ep, ratio=r, c=c, T=float(S["T"]), median=np.median(r), min=r[imin], x_min=x[imin], max=r[imax], x_max=x[imax],
+out = f"{RES}/ed_vs_ep_{a.tag}.npz"; np.savez(out, x=x, Gamma_ed=ed, Gamma_ep=ep, ratio=r, c=c, T=float(S["T"]), median=np.median(r), min=r[imin], x_min=x[imin], max=r[imax], x_max=x[imax],
                                                   crossings=xc, median_ed=med_ed, median_ep=med_ep, selfen=a.selfen, resonance=a.resonance, units="eV; ratio dimensionless; energies rel. E_D of each chain")
 print(f"saved {out}")

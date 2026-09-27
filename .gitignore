@@ -50,6 +50,7 @@ results/M2/*
 !results/M2/ved_analysis.npz
 !results/M2/*.csv
 !results/M2/MD5SUMS_*.txt
+!results/M2/ed_vs_ep_*.npz
 !results/epw/
 results/epw/*
 !results/epw/*.npz

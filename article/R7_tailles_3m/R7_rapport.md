@@ -451,3 +451,68 @@ taille, distances de la paire et du troisième voisin, déplacement max, spglib)
 Ressources telles qu'écrites (192 rangs, nœuds entiers, limites 12 h / 1 j / 2 j / 3 j / 6 j) ; sorties `relax.out`, `slurm-<job>.out` dans
 `series/NxN/nspin1/`, `JOBID` par répertoire. Surveillance sans relance. Analyse après relaxation : analyse R2 étendue (sans QE) ;
 pp.x + D1 sur les cellules relaxées seulement sur demande.
+
+2026-09-26, 10:03 : sur demande de Greg (fair share : la 27×27 seule vaut 65 000 cœur-h attendus, 162 000 à la limite),
+**`scontrol hold 21852177` (relax 27×27)** ; reste en file sans consommer ni accumuler d'âge. À relâcher (`scontrol release`), avec
+limite de temps ajustée si besoin, quand le nombre de cycles BFGS de 15/18/21 sera connu. 15×15, 18×18 et 24×24 en cours ; 21×21 en file.
+- 2026-09-26, 12:27 : miroir des six `wfc1.hdf5` 21/24/27 terminé (job 21850526, 03:18:13 : rsync 678 Go en 80 min,
+  md5 source 74 min, md5 miroir 70 min) : **MD5 SOURCE = MIROIR : OK (6/6)**, `MD5SUMS_R7_2026-09-26.txt` 30 lignes. Les `.save` 15 à 27
+  (parfaite et lacune non relaxée) sont tous miroités dans `qe_tmp_backup/` (731 Go au total, du -sh) ; rien supprimé sur le scratch.
+
+**Suivi du 2026-09-26 (après-midi).** Forces initiales : composante max 1,6e-2 Ry/bohr à 14,2 Å de la lacune (troncature du champ
+transplanté), 2e-3 à moins de 3 Å : la discontinuité à R_cut domine le départ. 15×15 : force totale 0,086 → 0,018 (pas 2) → 0,0045
+(pas 12) → 0,0011 (pas 24) ; au pas 24, composante max 2,6e-4 sur 2 atomes, 8–12 atomes > 1e-4, ΔE 0,02 meV par pas : convergence
+attendue vers 28–32 pas (R2 12×12 : 31 pas depuis la maille perturbée) — le départ transplanté ne raccourcit guère la relaxation,
+qui est collective à grande longueur d'onde (311 atomes > 1e-4 au pas 12). Temps par pas mesurés (192 rangs) : 15×15 ≈ 10 min,
+18×18 ≈ 40 min, 24×24 premier cycle 4 h 15. Risque de dépassement : 18×18 (≈ 30 pas × 40 min ≈ 20–24 h pour 24 h), 24×24 (≈ 60–65 h
+pour 72 h). Préparés sans lancement : `relax_restart.in` (`restart_mode = 'restart'`, positions et historique BFGS relus dans l'outdir)
+et `submit.relax_restart` dans `series/{18x18,21x21,24x24}/nspin1/`, à soumettre seulement si un job s'arrête sur la limite (GO).
+Pour la 27×27 (hold) : transplanter la géométrie relaxée de la 21×21 ou 24×24 (R_cut 25,9 / 29,6 Å) avant le release, pour supprimer
+la discontinuité ; décision de Greg.
+
+### R7c — 15×15 relaxée (job 21852173, COMPLETED le 2026-09-26 à 14 h 23)
+
+`bfgs converged in 29 scf cycles and 28 bfgs steps`, mur 4 h 24 (192 rangs, 1 nœud ; ≈ 9 min par cycle), MaxRSS 12,2 G, `.save`
+15,93 Go + 240 Mo (scratch `qe_tmp/vacancy_relaxed/series/15x15/nspin1/`). E finale −5408.8923933889 Ry ; **ΔE_relax = −365,62 meV** par
+rapport au scf non relaxé R7 (12×12 R2 : −367,45 meV). Géométrie finale : paire 2,14997 Å, troisième voisin 2,56611 / 2,56611 Å
+(12×12 : 2,15980 / 2,56934) ; |u| max 0,16492 Å (voisin 224 ; 12×12 : 0,16084) ; |u_z| max 2,5e-5 Å ; |u| moyen par couronne 0,093 (0–3 Å),
+0,033 (3–8), 0,014 (8–13), 0,008 (13–16), 0,005 Å (16–19) : le champ n'est pas nul à la frontière de la 15×15 non plus. Force totale
+finale 9,7e-4 Ry/bohr (critère par composante 1e-4 satisfait). Le départ transplanté (12×12 tronqué à 14,5 Å) a coûté 28 pas contre 31
+pour R2 depuis la maille perturbée : gain marginal, la relaxation étant collective (§ suivi).
+
+**Décision de Greg (2026-09-26, ≈ 15 h) : la 27×27 sera relâchée après transplant de la géométrie relaxée de la 21×21 (première
+disponible) ou de la 24×24.** Générateur généralisé (`--source N`) : champ u(r) d'une cellule relaxée de la série (lacune A, i = j = N/2),
+transplanté sans inversion, R_cut = L_source/2 − 0,3 Å (25,6 Å pour la 21×21, 29,3 Å pour la 24×24 ; la 27×27 a une demi-largeur de
+33,3 Å) ; `--force` écrase `27x27/nspin1/relax.in` avec sauvegarde `.bak_source12` ; le job en hold lit `relax.in` au démarrage.
+Essai à blanc avec la 15×15 relaxée (source 15 → 18, 27) : voir `relax_phase0.txt` (suite). À la fin de la 21×21 : `--source 21 --sizes 27
+--write --force`, régression, puis `scontrol release 21852177` (limite de temps réduite à 3 j proposée, partition plus fournie).
+
+**Précision de Greg (2026-09-26, ≈ 16 h 30)** : la 27×27 attendra son GO explicite, avec transplant depuis la **24×24** relaxée ; suivi
+silencieux jusqu'à la fin des trois relaxations en cours (18, 21, 24).
+**Autorisation de Greg (2026-09-26, 16 h 05)** : si la 18×18 bute sur sa limite de 24 h, resoumission automatique de
+`submit.relax_restart` (même outdir ; checkpoint vérifié : `vac_18x18_relax_nspin1.bfgs` 99 Mo, `.update`, XML et densité réécrits
+à chaque pas ionique, dernier à 16 h 01 au pas 13 ; les fonctions d'onde seules sont recalculées), deux reprises au plus ; 21×21 et
+24×24 : GO requis. Veille silencieuse : réveil à la fin des trois relaxations ou sur un échec.
+
+### R7c — 18×18 relaxée (job 21852174, COMPLETED le 2026-09-27 à 00 h 36, sans reprise)
+
+`bfgs converged in 34 scf cycles and 33 bfgs steps`, mur 14 h 35 (192 rangs, 1 nœud ; ≈ 26 min par cycle), MaxRSS 29,2 G, `.save` 32,7 Go
++ 346 Mo. E finale −7794.3888024228 Ry ; **ΔE_relax = −362,97 meV** (12×12 : −367,45 ; 15×15 : −365,62). Géométrie finale : paire
+2,14773 Å, troisième voisin 2,56364 / 2,56382 Å ; |u| max 0,16548 Å (voisin 342) ; |u_z| max 1,1e-4 Å ; |u| moyen par couronne 0,093
+(0–3 Å), 0,034 (3–8), 0,016 (8–13), 0,008 (13–18), 0,005 Å (18–23). Force totale : 0,087 → 0,018 (pas 3) → 0,0050 (pas 11–13, plateau) →
+0,0023 (pas 19–21, plateau) → 0,0010 (pas 30–34). Session interrompue dans la nuit (veille automatique perdue) : constaté au réveil
+du 2026-09-27, 14 h 13 ; la 18×18 n'a pas eu besoin de reprise. À ce moment : 21×21 au pas 27 (26 h 53 sur 48 h), 24×24 au pas 14
+(28 h 11 sur 72 h) ; veille silencieuse réarmée (réveil à la fin des deux, ou sur TIMEOUT/échec : GO requis pour toute reprise).
+
+### R7c — reprise de la 24×24 soumise d'avance (2026-09-27, 14 h 43)
+
+Projection recalée à 14 h 22 sur les trajectoires de force des 15×15 et 18×18 : la 21×21 avance à 0,94 h par cycle (force totale 0,00178
+au cycle 27 ; la 18×18 a convergé 9 cycles après ce niveau, la 15×15 12), convergence attendue vers les cycles 36–39, soit le 27 entre
+22 h 30 et le 28 à 1 h 30 (≈ 36–38 h sur 48). La 24×24 avance à 1,97 h par cycle (et non 110 min comme estimé plus tôt) : la limite de
+72 h (2026-09-29, 10 h 01) tombe vers le cycle 36, alors qu'il en faudra probablement 38–42 (15×15 : 29, 18×18 : 34) → TIMEOUT probable.
+Greg autorise la reprise de la 24×24 sans GO, soumise d'avance : job **21908867**, `submit.relax_restart_auto` (= `submit.relax_restart`
++ limite 36 h + garde), `--dependency=afternotok:21852176 --kill-on-invalid-dep=yes` (SLURM l'annule si la 24×24 converge). La garde ne
+lance `pw.x` que si l'état sacct de 21852176 est TIMEOUT ou NODE_FAIL, ou, si sacct reste muet, si `relax.out` s'interrompt sans erreur
+QE. Elle ne relance jamais si `relax.out` contient « bfgs converged » et n'écrase jamais un `relax_restart.out` existant. Banc d'essai
+(garde extraite telle quelle, sacct simulé) conforme sur dix cas. La reprise écrit dans `relax_restart.out` (`relax.out` intact) et ne perd
+que le cycle en cours ; il resterait 2–6 cycles (6–14 h avec le premier cycle, fonctions d'onde recalculées).

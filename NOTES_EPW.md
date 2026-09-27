@@ -5,6 +5,9 @@ vivent dans le dépôt `ab-initio-defects` depuis le 2026-09-21 (liens symboliqu
 versionnés dans le dépôt (`scripts/epw_*.py`, `scripts/submit_epw_*.sh`, `results/epw/`). Tout tourne en job SLURM
 (compte rrg-cotemich-ac), jamais sur le nœud de connexion.
 
+**R6 (2026-09-27)** : Γ^ed (chapitre 4, matrice T) a été recalculé avec M2 (normalisation de M^L corrigée, facteur N_cells) : voir la note
+sous §1b et la ligne « Γ^ed/Γ^ep avec M2 » du tableau P18 (§1g) ; toutes les autres grandeurs de ce fichier (EPW) sont indépendantes de M.
+
 ## 1. État de la chaîne 24k-24q
 
 Grille grossière 24×24 k / 24×24 q, degauss 0.002 Ry, ecutwfc 100 Ry, assume_isolated '2D', QE 7.5 / EPW 6.0.
@@ -52,6 +55,7 @@ Post-traitement : `scripts/epw_selfen_post.py --dir <rép> --tag <nkf>_dg<dg>` �
 
 degaussw retenu : 0.02 eV ; grille retenue : 240² (120² → 240² : +2.32 % / +1.39 %, sous le critère 5 % ; pas de 360²). Valeur à E_D : 19.3 meV à 120², 31.5 meV à 240² — artefact de la moyenne lorentzienne dans une région de densité d'états nulle, quantifié en §1f point 4 ; pas un critère.
 Γ^ed(c = 1 %) = c × Γ N_cells (`results/M/resonance_9x9.npz`, matrice T, R_cut 3, η 0.02) : médiane 23.436 meV (±3 eV), 10.844 meV (±1.2 eV) ; Γ^ed/Γ^ep(300 K) : médiane 0.36, min 0.088 à +1.87 eV (van Hove π*), max 2.01 à −0.755 eV ; égalité à −1.62 et −0.225 eV.
+R6 (2026-09-27) : les valeurs de Γ^ed ci-dessus sont v1 (M^L sans le facteur N_cells). Avec M2 (`results/M2/resonance_9x9.npz`) : médiane Γ^ed 37.402 meV (±3 eV), 59.298 meV (±1.2 eV) sur sa propre grille ; Γ^ed/Γ^ep(300 K) avec la chaîne mv0.02 de production : ligne « Γ^ed/Γ^ep avec M2 » du tableau P18 (§1g). La chaîne mv0.002 n'est pas refaite avec M2.
 Figures (P5, `scripts/make_figures_epw.py --prod-tag 240_dg0.02`, PDF+PNG dans `figures/`) : `fig_epw_validation` (bandes + phonons), `fig_epw_gamma` ((a) convergence degaussw/grille, (b) 300 K et 10 K), `fig_epw_vs_ed` (Γ^ep 300 K et Γ^ed c = 1 %, même axe, log). Les trois figures ont été inspectées. À signaler sur fig_epw_gamma/fig_epw_vs_ed : bosse de Γ^ep à E_D (≈ 35 meV, largeur ≈ 0.1 eV) sur les deux grilles, zone à très peu d'états (moyenne lorentzienne mal échantillonnée) ; pics de van Hove à −2.55 et +1.88 eV. P3 (phonselfen) non demandé dans le plan révisé.
 
 ## 1c. P6 phonselfen (2026-09-11) — largeurs de phonons γ_qν, **prêt pour ch. 3/5**
@@ -285,6 +289,7 @@ avant le correctif : sa ligne « anneau » a transmis γ_K = 0 ; l'anneau a ét�
 | convergence γ(A1', K) gamma___ 10 K / 300 K (meV), σ = 0.01 / 0.02 / 0.05 | §1c (réf. 1200², 0.02 : 2.6448 / 2.1770 ; 960² +0.8 % ; 0.05 +0.5 %) | 120² : 0 / 0 ; 0 / 0 ; 0.093 / 0.092 — 240² : 0.048 / 0.041 ; 1.772 / 1.526 (−36.7 %) ; 2.714 / 2.378 — 480² : 0.188 / 0.175 ; 1.940 / 1.782 (−30.7 %) ; 2.797 / 2.535 — 720² : 4.512 / 4.114 ; 2.988 / 2.721 (+6.8 %) ; 2.798 / 2.536 — 960² : 2.464 / 2.229 ; 2.787 / 2.533 (−0.40 %) ; 2.798 / 2.536 — **1200² : 2.665 / 2.432 (−4.7 %) ; 2.798 / 2.544 ; 2.798 / 2.536 (+0.01 %)** | même conclusion : 1200², σ 0.02 retenu (960² à −0.4 %, σ 0.05 à +0.01 %) ; à 240² l'écart est −37 % au lieu de +119 % | log post P2 (table `--ref 1200_dg0.02`) |
 | anneau (P11) : S(Γ), interbande ; S(K), interbande ; Im Π ; gamma___/Im Π | 0.37275, S/4.00 ; 0.49846, S/2.00 ; 0.6685 / 1.3246 meV ; **1.997 / 1.997** | 0.32589, S/4.00 ; 0.40234, S/2.00 ; 0.6907 / 1.4023 meV ; **1.996 / 1.995** | — | `ring_check_24k24q_mv0.02.npz` (refait à la main, voir P18b) ; énergies d'anneau ±91 et ±67 meV |
 | Γ^ed/Γ^ep (c = 1 %, 300 K, ±3 eV) : médiane ; min ; max ; croisements | 0.360 ; 0.088 à +1.875 eV ; 2.006 à −0.755 ; −1.617, −0.224 eV | 0.361 ; 0.088 à +1.875 ; 2.011 à −0.755 ; −1.619, −0.215 | — | `ed_vs_ep_<tag>.npz` (`scripts/epw_ed_vs_ep.py`, Γ^ed interpolé sur la grille EPW : médiane Γ^ed 23.497 meV, §1b citait 23.436 sur sa propre grille) |
+| Γ^ed/Γ^ep avec M2 (R6, 2026-09-27 ; c = 1 %, 300 K, ±3 eV) : médiane ; min ; max ; croisements | — | 0.537 ; 0.123 à +1.875 ; 32.442 à −0.180 ; −1.504, +0.690 | — | `results/M2/ed_vs_ep_24k24q_mv0.02.npz` (`epw_ed_vs_ep.py`, sortie dans `results_dir` depuis R6) ; médiane Γ^ed 37.462 meV (±1.2 eV : 59.298), Γ^ep inchangé 56.956 (21.653) ; la ligne précédente est v1 |
 
 Lecture (constats) : ω(E2g, Γ) et ω(A1', K) remontent à 1550.5 et 1274.8 cm⁻¹, à 1.1 % des DFPT « prt » hors grille (1567.5 / 1289.2) ; il
 subsiste un adoucissement à K de 14 cm⁻¹ et à Γ de 17 cm⁻¹. La branche A1' redevient la plus haute à K. Le vertex ⟨D²⟩ passe de 0.96/0.94 à
@@ -303,6 +308,9 @@ matdyn 0.02, DFPT direct 16×16 aux 31 q du chemin). Les huit figures ont été 
 branche A1' à K est la 3 (972 cm⁻¹) : elle n'apparaît pas dans ν = 5, 6 pour cette chaîne (les deux branches tracées y sont le doublet E' à
 1208.5) ; à 0.02 la branche 6 porte l'anomalie A1' (158.1 meV) et la 5 le E' (150.8). fig_epw_gamma (a) a les quatre courbes (120² σ 0.01 / 0.02 / 0.05, 240² σ 0.02) depuis le complément
 du 2026-09-21. Tous les npz `_mv0.02` et `dfpt_path_freq_*`, `ed_vs_ep_*` sont commis ; logs non.
+R6 (2026-09-27) : `fig_epw_vs_ed` refaite avec Γ^ed de M2 (mêmes options ; marge au-dessus des courbes pour la légende, `make_figures_epw.py`),
+dans `graphene/qe/defects/R6_production_corrigee/etape3/figures_fix/`, à installer dans `figures/` par `install_figures_R6.sh` ;
+`fig_epw_vs_ed_mv0.002` et `results/epw/ed_vs_ep_*.npz` restent v1. `submit_post.sh figures` passe désormais ces options de production.
 
 **Étiquettes des figures (2026-09-21, cohérence avec le texte du mémoire, `scripts/make_figures_epw.py`)** : fig_epw_validation —
 légendes « DFT / EPW » et « DFPT / EPW » sans parenthèses, axe $\hbar\omega_{\nu\mathbf{q}}$ ; fig_epw_g_control — titres

@@ -598,6 +598,11 @@ Re Σ médian à R_cut 3 : −26,65 meV (v1 : +722,3), |Re Σ|/Γ médian 0,125 
 
 **Verdict : les paramètres gelés satisfont le critère du 2026-09-05 avec M2 ; la config n'est pas modifiée ; 3.4 lancé.**
 
+Complément du 2026-09-27 : C10 selon la définition de NOTES_TGAMMA (écart médian **par état** à R_cut 4, rapporté à la médiane de R_cut 4) :
+13,1 / 4,1 / 4,2 / 1,15 % pour R_cut 0…3 (v1 : 10,0 / 4,6 / 1,5 / 0,63 %) ; la porte ci-dessus compare les médianes (0,47 %). Source :
+`results/M2/m_rcut_resigma.csv`, reconstruit par `r6_m_rcut_resigma.py` (mêmes colonnes que le csv v1 de a9855af, dont le script n'est pas dans
+`scripts/` ; appliqué aux npz v1, il redonne le csv v1 à 0,0 près).
+
 Niveau 2 (post_fig 21872955 ; `level2_summary.csv`, `level2_families.csv` ; R_cut 3, 240², η 0,02) :
 
 | taille | famille | sous-réseau de la lacune | médiane Γ·N_cells v2 (meV) | v1 | p_z–p_z lacune (eV) | Re M^L(K) / Re M^NL(K), paire π (eV) | écart Δk à K (Å⁻¹) |
@@ -807,11 +812,13 @@ dans `article/R6_production_corrigee/etape3/figures_v2/`). Le classificateur du 
 ### Manifestes
 
 - Aucune suppression pendant R6. `results/M/` intact : README déposé (« résultats obtenus avec M^L non normalisé (facteur N_cells manquant), remplacés par
-  R6 »), en lecture seule (`chmod -R a-w`) depuis 3.0. Le droit d'écriture (`chmod -R u+w results/M`) sera rétabli sur GO.
+  R6 »), en lecture seule (`chmod -R a-w`) pendant l'étape 3 ; écriture rétablie le 2026-09-27 sur GO de Greg (`chmod -R u+w results/M` : 479 entrées,
+  répertoires `drwxr-s---`, fichiers `-rw-r-----`).
 - `results/M2/` (sur `/project`) : 43 fichiers M (47,3 Go réels, plus 20,8 Go de liens `M_NL_dense_*` vers `results/M/`). `MD5SUMS_2026-09-25.txt` relu le
   2026-09-26 par le job r6final : 43 OK sur 43. Produits de l'étape 3 :
   - suivis par les exceptions `.gitignore` : `specwd_*_prod.npz` (6), `resonance_*.npz` (6x6, 9x9, 12x12, 9x9_shiftL, criteria ×3), `mwr_locality.npz`,
-    `M_analysis.npz`, `ks_reconstruction.npz`, `ved_analysis.npz` (copie v1, indépendant de M), `ed_vs_ep_24k24q_mv0.02.npz`, `*.csv` (9) ;
+    `M_analysis.npz`, `ks_reconstruction.npz`, `ved_analysis.npz` (copie v1, indépendant de M), `ed_vs_ep_24k24q_mv0.02.npz`, `*.csv` (10, dont
+    `m_rcut_resigma.csv` reconstruit le 2026-09-27) ;
   - non suivis : `resigma_9x9_*.npz` (55 Mo), `logs/`.
 
   Le miroir des M2 denses prévu en phase 0 n'est pas fait : décision à Greg.
@@ -826,10 +833,13 @@ dans `article/R6_production_corrigee/etape3/figures_v2/`). Le classificateur du 
 - Nouveaux : `scripts/submit_post.sh` ; `results/M2/` (produits ci-dessus) ; `article/R6_production_corrigee/etape3/` (csv_v2, figures_v2, table_v1_v2.md,
   level1_gate.md, scripts R6).
 - `figures/` : 33 fichiers modifiés par le job ; après `install_figures_R6.sh --pdf-dates`, restent les figures qui dépendent de M2.
-- Documentation qui cite encore v1 : `NOTES_TGAMMA.md` §2 et §6, `CLAUDE.md` (« Données : results/M/ »), NOTES_EPW (Γ^ed/Γ^ep 0,361) : à mettre à jour
-  avec la table 3.7 (par Greg, ou par Code sur demande).
+- Notes mises à jour par Code le 2026-09-27 (demande de Greg) : `NOTES_TGAMMA.md` (§1–§3 et §6 en v2, v1 entre crochets ; C18 = porte A.2 ; §6d =
+  N_k^int avec M2 ; §7 = R6 ; trois lignes du tableau §1 dont les « | » n'étaient pas échappés, déjà dans HEAD) et `NOTES_EPW.md` (note R6 en tête,
+  sous §1b, ligne « Γ^ed/Γ^ep avec M2 » du tableau P18, fig_epw_vs_ed). `CLAUDE.md` l. 230 (données lues dans le `results_dir` de la config, `results/M2/` depuis R6) et l. 241 (`results/M2/sampling_table.csv`) :
+  appliqué le 2026-09-27 sur accord de Greg.
 - Les modifications de `article/R7_tailles_3m/` visibles dans `git status` viennent de R7, pas de R6.
 
 **STOP — étape 3 terminée le 2026-09-27.** Reste à Greg : installer les figures corrigées (`etape3/install_figures_R6.sh`), commit, GO pour rétablir
-l'écriture sur `results/M/`, décision sur le miroir des M2 denses, mise à jour de NOTES_TGAMMA, CLAUDE.md, NOTES_EPW et `défauts.tex` avec la table 3.7.
+l'écriture sur `results/M/` (fait le 2026-09-27), décision sur le miroir des M2 denses, mise à jour de `défauts.tex` avec la table 3.7
+(NOTES_TGAMMA, NOTES_EPW et CLAUDE.md mis à jour le 2026-09-27).
 

@@ -17,17 +17,13 @@ PZ_A, PZ_B = 3, 4 # WF 4 = p_z of C1, WF 5 = p_z of C2 (WF 1-3: sigma bonds)
 
 @pytest.fixture(scope="module")
 def w90(w90_dir):
-    """
-    (HR, R, ndegen, rR, lattice) of the 27 x 27 _tb.dat, read once for the module.
-    """
+    """(HR, R, ndegen, rR, lattice) of the 27 x 27 _tb.dat, read once for the module."""
     return read_w90_tb(w90_dir / "wannier_tb.dat")
 
 
 @pytest.fixture(scope="module")
 def centres(w90_dir):
-    """
-    Final Wannier centres printed in the .wout, (5, 3) Angstrom: an independent source for r(0).
-    """
+    """Final Wannier centres of the .wout, (5, 3) Angstrom: independent of the reader."""
     text = (w90_dir / "wannier.wout").read_text()
     final = text[text.rindex("Final State"):]
     rows = re.findall(r"WF centre and spread\s+\d+\s+\(([^)]*)\)", final)
@@ -35,9 +31,7 @@ def centres(w90_dir):
 
 
 def minus_index(R):
-    """
-    Row of -R for every row of R (KeyError if the list is not closed under R -> -R).
-    """
+    """Row of -R for every row of R (KeyError if some -R is missing)."""
     index = {tuple(r): i for i, r in enumerate(R)}
     return np.array([index[tuple(-r)] for r in R])
 
@@ -53,9 +47,7 @@ def test_tb_shapes(w90):
 
 
 def test_tb_lattice(w90):
-    """
-    Lattice vectors in the COLUMNS of `lattice`, in Angstrom (EM.md section 2).
-    """
+    """Lattice vectors in the columns of `lattice`, Angstrom (EM.md section 2)."""
     lattice = w90[-1]
 
     assert np.allclose(lattice[:, 0], [2.135490, -1.232926, 0], rtol=0, atol=1e-6)
@@ -64,10 +56,7 @@ def test_tb_lattice(w90):
 
 
 def test_tb_ndegen(w90):
-    """
-    The Wigner-Seitz points tile the 27 x 27 supercell: sum 1/ndegen = 729, with 24 boundary points
-    shared by two cells (ndegen = 2) and ndegen(-R) = ndegen(R).
-    """
+    """sum 1/ndegen = 27^2 (717 x 1, 24 x 2) and ndegen(-R) = ndegen(R)."""
     _, R, ndegen, _, _ = w90
 
     assert np.isclose(np.sum(1/ndegen), 27**2, rtol=0, atol=1e-10)
@@ -77,8 +66,8 @@ def test_tb_ndegen(w90):
 
 def test_tb_H_hermitian_r_not(w90):
     """
-    H_ij(R) = H_ji(-R)* to rounding, but r keeps its finite-difference defect (2.5e-3 Angstrom in x,
-    1.7e-3 in y): the reader returns r raw, hermitize is the caller's job.
+    H_ij(R) = H_ji(-R)*, but r keeps its finite-difference defect (2.5e-3 Angstrom in x): the reader
+    does not hermitize.
     """
     HR, R, _, rR, _ = w90
     minus = minus_index(R)
@@ -89,10 +78,7 @@ def test_tb_H_hermitian_r_not(w90):
 
 
 def test_tb_centres(w90, centres):
-    """
-    The diagonal of r(0) is the set of Wannier centres of the .wout (printed with 6 decimals), real,
-    in the order x, y, z: checks the interleaving Re(x) Im(x) Re(y) ... of the r lines.
-    """
+    """Diagonal of r(0) = .wout centres, real; also checks the Re/Im interleaving of the r lines."""
     _, R, _, rR, _ = w90
     i0 = np.flatnonzero((R == 0).all(axis=1))[0]
     diag = np.diagonal(rR[i0], axis1=-2, axis2=-1).T # (nW, 3)
@@ -103,11 +89,8 @@ def test_tb_centres(w90, centres):
 
 def test_tb_row_column_order(w90, centres):
     """
-    X_R[iR, m, n] = <0m|X|Rn> with m the FIRST column of the file. The three largest hops
-    |H_{pzA,pzB}(R)| join C1 of cell 0 to its three C2 neighbours, at |tau_B + R - tau_A| = a_cc,
-    i.e. R = 0, -a1, -a2. Transposed indices would pick R = 0, +a1, +a2 (3.77 Angstrom). The
-    eigenvalues cannot see this (H(R)^T gives H(k)*), hence a geometric test. H and r share the
-    parsing routine, so this also fixes the order in r.
+    X_R[iR, m, n] = <0m|X|Rn>, m = first column. Eigenvalues cannot see a transposition (H(k) -> H(k)*),
+    hence a geometric test: the three largest |H_45(R)| join nearest neighbours (R = 0, -a1, -a2, at a_cc).
     """
     HR, R, _, _, lattice = w90
     R_cart = R @ lattice.T
@@ -121,10 +104,7 @@ def test_tb_row_column_order(w90, centres):
 
 
 def interpolated_bands(w90, k_red):
-    """
-    Eigenvalues of H(k) = sum_R e^{2 pi i k.R} H(R) / ndegen(R), written out here to stay independent
-    of the module under test. Returns (nk, nW), eV, ascending.
-    """
+    """Eigenvalues of sum_R e^{2 pi i k.R} H(R)/ndegen(R), written out here, eV."""
     HR, R, ndegen, _, _ = w90
     phase = np.exp(2j*np.pi * k_red @ R.T) / ndegen[None, :] # (nk, nR)
     H_k = np.einsum("kr,rmn->kmn", phase, HR)
@@ -133,9 +113,8 @@ def interpolated_bands(w90, k_red):
 
 def test_tb_bands_match_eig(w90, eig_w90):
     """
-    At the 729 points of the coarse grid, the interpolated bands reproduce the DFT eigenvalues of the
-    .eig inside the frozen window (the lowest 4 or 5 bands). Measured 1.3e-5 eV: the residue of
-    use_ws_distance, which Wannier90 applies and we do not (7.7e-5 eV without ndegen).
+    Interpolated bands = .eig in the frozen window at the 729 coarse points (1.3e-5 eV: use_ws_distance,
+    which Wannier90 applies and we do not).
     """
     k_red, E_dft = eig_w90
 
@@ -148,9 +127,7 @@ def test_tb_bands_match_eig(w90, eig_w90):
 
 
 def test_tb_dirac_point(w90):
-    """
-    At K = (2/3, 1/3, 0) the two p_z bands are degenerate at E_D.
-    """
+    """p_z bands degenerate at E_D at K = (2/3, 1/3, 0)."""
     eps = interpolated_bands(w90, np.array([[2/3, 1/3, 0]]))[0]
 
     assert abs(eps[4] - eps[3]) < 1e-6
@@ -158,8 +135,6 @@ def test_tb_dirac_point(w90):
 
 
 def test_read_w90_HR_wrapper(w90, w90_dir):
-    """
-    The former name returns exactly (HR, R, ndegen) of read_w90_tb.
-    """
+    """The former name returns exactly (HR, R, ndegen) of read_w90_tb."""
     for old, new in zip(read_w90_HR(w90_dir / "wannier_tb.dat"), w90[:3]):
         assert np.array_equal(old, new)

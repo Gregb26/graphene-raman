@@ -83,10 +83,7 @@ def test_tb_shift_same_bonds():
 
 
 def test_wannier_tb_fields(tb_w90):
-    """
-    make_wannier_tb fills the derived fields consistently: R_cart = R_int @ lattice.T, index and
-    minus invert the R list, and H is Hermitian in R space (r is not, see the Berry test).
-    """
+    """R_cart, index and minus consistent with R_int; H Hermitian in R space."""
     tb = tb_w90
 
     assert tb.H_R.shape == (741, 5, 5) and tb.r_R.shape == (741, 3, 5, 5)
@@ -97,11 +94,7 @@ def test_wannier_tb_fields(tb_w90):
 
 
 def test_wannier_tb_bands_match_eig(tb_w90, eig_w90):
-    """
-    Whole Cartesian chain on the real model: k_cart = k_red @ B.T, then compute_velocity, reproduces
-    the .eig in the frozen window at the 729 coarse points (1.3e-5 eV, as the transform in reduced
-    coordinates of test_wannier_io). Checks k_cart . R_cart = 2 pi k_red . R_int on the real lattice.
-    """
+    """Cartesian chain (k_red @ B.T, compute_velocity) reproduces the .eig in the frozen window."""
     k_red, E_dft = eig_w90
     B = reciprocal(tb_w90.lattice)
 
@@ -113,10 +106,7 @@ def test_wannier_tb_bands_match_eig(tb_w90, eig_w90):
 
 
 def test_wannier_tb_dirac_point(tb_w90):
-    """
-    The K of GridTB, (2 b1 + b2)/3, is the Dirac point of the real lattice too (a1, a2 at 60 degrees,
-    oriented differently from M0): the p_z bands 4 and 5 are degenerate at E_D.
-    """
+    """The K of GridTB is the Dirac point of the real lattice: p_z bands degenerate at E_D."""
     K = make_grid_tb(tb_w90, 3).K
 
     _, eps, _, _ = compute_velocity(tb_w90, K[None, :], mode='berry')
@@ -126,10 +116,7 @@ def test_wannier_tb_dirac_point(tb_w90):
 
 
 def test_wannier_tb_berry_connection_raw(tb_w90):
-    """
-    r_R is kept raw: A(K) = fourier(r_R) is not Hermitian (2.3e-3 Angstrom in x, 4.9e-3 in y, EM.md
-    section 2), and hermitize removes the defect.
-    """
+    """A(K) from the raw r is not Hermitian (EM.md section 2); hermitize fixes it."""
     K = make_grid_tb(tb_w90, 3).K
 
     A = fourier(tb_w90.r_R, tb_w90.R_cart, tb_w90.ndegen, K[None, :]) # (1, 3, nW, nW)
@@ -141,11 +128,7 @@ def test_wannier_tb_berry_connection_raw(tb_w90):
 
 
 def test_wannier_tb_ring(tb_w90):
-    """
-    The M0 defaults t = 2.7 eV and a_cc = 1.42 Angstrom suffice for `ring` on the real data: at 2.33 eV
-    and mu = E_D the bracket [0, 2 q0] holds (q/q0 = 0.95-1.29; real hbar v_F = 5.47 eV Angstrom
-    against 5.75 for the defaults), and every point is on shell between the p_z bands 4 and 5.
-    """
+    """The default t, a_cc bracket the 2.33 eV ring on the real data; points on shell."""
     K = make_grid_tb(tb_w90, 3).K
 
     k, _, q, q0 = ring(tb_w90, K, HW, mu=E_D)
@@ -157,26 +140,19 @@ def test_wannier_tb_ring(tb_w90):
 
 
 def random_k(tb, n, seed=0):
-    """
-    n Cartesian k points drawn uniformly in the in-plane Brillouin zone of tb, (n, 3), 1/Angstrom.
-    """
+    """n random Cartesian k points in the in-plane Brillouin zone of tb, (n, 3), 1/Angstrom."""
     k_red = np.random.default_rng(seed).random((n, 3)) * [1, 1, 0]
     return k_red @ reciprocal(tb.lattice).T
 
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
 def test_centres_only_graphene(tb):
-    """
-    The M0 model has only centres: centres_only changes nothing, in both gauges.
-    """
+    """The M0 model has only centres: centres_only changes nothing, in both gauges."""
     assert np.array_equal(centres_only(tb).r_R, tb.r_R)
 
 
 def test_centres_only_structure(tb_w90):
-    """
-    Only the diagonal of r(0) survives, unchanged; tb itself is not modified (tb_w90 is shared by
-    the whole session) and the other fields are the same objects.
-    """
+    """Only the diagonal of r(0) survives; tb is not modified (session fixture); other fields shared."""
     r_before = tb_w90.r_R.copy()
     tb_c = centres_only(tb_w90)
     i0 = tb_w90.index[(0, 0, 0)]
@@ -192,9 +168,7 @@ def test_centres_only_structure(tb_w90):
 
 
 def test_centres_only_berry_connection(tb_w90):
-    """
-    A(k) = diag(tau_n) at every k: constant, and Hermitian without hermitize.
-    """
+    """A(k) = diag(tau_n): constant in k, Hermitian without hermitize."""
     tb_c = centres_only(tb_w90)
     i0 = tb_w90.index[(0, 0, 0)]
     k = random_k(tb_w90, 200)
@@ -206,10 +180,7 @@ def test_centres_only_berry_connection(tb_w90):
 
 
 def test_centres_only_diagonal_unchanged(tb_w90):
-    """
-    The Berry term vanishes on the band diagonal: eps and hbar v_nn = d eps_n / dk are the same with
-    the full r and with the centres only.
-    """
+    """The Berry term vanishes on the band diagonal: eps and hbar v_nn unchanged."""
     k = random_k(tb_w90, 200)
 
     _, eps, _, hv = compute_velocity(tb_w90, k, mode='berry')
@@ -222,9 +193,8 @@ def test_centres_only_diagonal_unchanged(tb_w90):
 
 def velocity_atomic_gauge(tb, k):
     """
-    hbar v from dH_at/dk alone, with H in the atomic gauge,
-    H_at,mn(k) = sum_R e^{ik.(R + tau_n - tau_m)} H_mn(R) / ndegen(R), tau from the diagonal of r(0):
-    no Berry term, no `fourier`, no commutator. Returns hv (Nk, 3, nW, nW), eV*Angstrom.
+    hbar v = V^dagger dH_at/dk V with H_at,mn(k) = sum_R e^{ik.(R + tau_n - tau_m)} H_mn(R)/ndegen(R):
+    no Berry term, no `fourier`. Returns hv (Nk, 3, nW, nW), eV*Angstrom.
     """
     tau = np.diagonal(tb.r_R[tb.index[(0, 0, 0)]].real, axis1=-2, axis2=-1).T # (nW, 3)
     d = tb.R_cart[:, None, None, :] + tau[None, None, :, :] - tau[None, :, None, :] # (nR, m, n, 3)
@@ -238,10 +208,8 @@ def velocity_atomic_gauge(tb, k):
 
 def test_centres_only_atomic_gauge(tb_w90):
     """
-    With the centres only, the Berry term turns dH/dk into its atomic-gauge form (EM.md,
-    implementation notes): |hbar v_mn|^2 equals that of velocity_atomic_gauge (measured 2e-12
-    eV^2 Angstrom^2), while the full r differs by up to ~30 eV^2 Angstrom^2. Moduli only: the phases
-    of the two sets of eigenvectors are unrelated.
+    Centres only = atomic gauge: |hbar v_mn|^2 agree (2e-12), while the full r differs by ~30 eV^2 Angstrom^2.
+    Moduli only, the eigenvector phases are unrelated.
     """
     k = random_k(tb_w90, 200)
 

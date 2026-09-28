@@ -122,16 +122,14 @@ def read_w90_hr(w90_path):
 
 def _read_tb_blocks(f, nrpts, nw, ncomp):
     """
-    Read one section of a Wannier90 `_tb.dat` (H: ncomp = 1, r: ncomp = 3) from the open file `f`.
-
-    For each R: a blank line, the line "R1 R2 R3", then nw*nw lines
-    "m n Re(X_1) Im(X_1) ... Re(X_ncomp) Im(X_ncomp)" holding <0m|X|Rn>. The first index m is the
-    ROW (it varies fastest in the file). H and r share this routine, hence the same index convention.
+    Read one section of a `_tb.dat` (H: ncomp = 1, r: ncomp = 3) from the open file `f`: per R, a blank
+    line, "R1 R2 R3", then nw*nw lines "m n Re Im ..." holding <0m|X|Rn> (m = row). Shared by H and r,
+    hence one index convention.
 
     Returns
     -------
         X_R: (nrpts, ncomp, nw, nw) array of complex
-        R:   (nrpts, 3) array of ints           -- R vectors (reduced coords), in file order
+        R:   (nrpts, 3) array of ints
     """
     X_R = np.zeros((nrpts, ncomp, nw, nw), dtype=complex)
     R = np.zeros((nrpts, 3), dtype=int)
@@ -147,24 +145,15 @@ def _read_tb_blocks(f, nrpts, nw, ncomp):
 
 def read_w90_tb(w90_path):
     """
-    Read a Wannier90 `seedname_tb.dat` file: lattice, R vectors and Wigner-Seitz degeneracies, the
-    Hamiltonian H(R) and the position operator r(R) in the Wannier basis.
-
-    Format (Wannier90 3.1): header (date), three lattice-vector lines (Angstrom), nw, nrpts, the
-    Wigner-Seitz degeneracy list (nrpts ints, 15 per line), then two sections over the same R list,
-    H with lines "m n Re Im" and r with lines "m n Re(x) Im(x) Re(y) Im(y) Re(z) Im(z)" (see
-    `_read_tb_blocks`). No value in the file is divided by ndegen: for both,
-    X(k) = sum_R e^{ik.R} X(R) / ndegen(R).
+    Read a Wannier90 `seedname_tb.dat` (format: memoire/EM/EM.md, section 2). Values are raw: no
+    division by ndegen, r not hermitized; the Hermiticity of H is checked.
 
     Returns
     -------
-        HR: (nrpts, nw, nw) array of complex     -- H_mn(R) = <0m|H|Rn> in eV, Hermiticity checked
+        HR: (nrpts, nw, nw) array of complex     -- <0m|H|Rn>, eV
         R:  (nrpts, 3) array of ints             -- R vectors (reduced coords)
         ndegen: (nrpts,) array of ints           -- Wigner-Seitz degeneracies
-        rR: (nrpts, 3, nw, nw) array of complex  -- <0m|r_alpha|Rn> in Angstrom, alpha = x, y, z; the
-                                                    diagonal of r(0) holds the Wannier centres. Not
-                                                    Hermitian (~1e-3 Angstrom, finite differences):
-                                                    no check here.
+        rR: (nrpts, 3, nw, nw) array of complex  -- <0m|r_alpha|Rn>, Angstrom; diagonal of r(0) = centres
         lattice: (3, 3) array of floats          -- Angstrom, lattice[:, i] = a_i
     """
     from pathlib import Path
@@ -193,10 +182,6 @@ def read_w90_tb(w90_path):
     return HR, R, ndegen, rR, lattice
 
 def read_w90_HR(w90_path):
-    """
-    Former name of `read_w90_tb`, returning only (HR, R, ndegen). Kept for the frozen campaign
-    drivers (article/R4_quasi_lie, article/R9_controles), their working directories on the cluster and
-    the notebooks; new code calls `read_w90_tb`.
-    """
+    """Former name of `read_w90_tb`, returning (HR, R, ndegen). Kept for the frozen campaign drivers."""
     HR, R, ndegen, _, _ = read_w90_tb(w90_path)
     return HR, R, ndegen

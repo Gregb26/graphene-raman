@@ -124,8 +124,7 @@ def compute_velocity(tb, k, mode='berry'):
         tb   : WannierTB
         k    : (Nk, 3) float, 1/Angstrom, any list of Cartesian k points
         mode : 'berry' (full velocity) or 'no_berry' (dH/dk only, eq. (2.5.7) of the thesis as
-               written); anything else raises ValueError. The centres-only approximation is not a
-               mode but a model: compute_velocity(centres_only(tb), k, 'berry')
+               written); anything else raises ValueError. Centres only: pass centres_only(tb)
     Returns:
         H_k : (Nk, nW, nW) complex, eV, H(k) in the Wannier gauge
         eps, V, hv : as returned by `velocity`

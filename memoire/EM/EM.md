@@ -351,7 +351,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   - Mutations : entrée modifiée sur place (3 échecs), `np.eye` oublié (2), diagonale placée dans la mauvaise ligne R (5).
 - **Premier coup d'œil (2026-09-28)** sur les anneaux résonants, à consolider en M2 et M3 : ⟨|ħv_cv|²⟩ centres seuls / complet = 0.9976 à 0.5 eV, 0.9904 à 1 eV et **0.951 à 2.33 eV**. L'écart croît à peu près comme (ħω)² ; à l'énergie du laser, l'approximation de liaisons fortes coûte ~5 % sur |v_cv|².
 
-**F10 — `hermiticity_report(tb, blocks, k)`** → défaut d'hermiticité de r par bloc, en R et en k. Plan du 2026-09-28 (Greg code) :
+**F10 — `hermiticity_report(tb, blocks, k)`** → défaut d'hermiticité de r par bloc, en R et en k. **Fait (Greg, 2026-09-28)**, dans le nouveau module `electron_photon/diagnostics.py` (rapports sur un modèle, sans le modifier) :
 - `blocks` : dict nom → (lignes, colonnes), par exemple σ = WF 1–3, p_z = WF 4–5, croisé = (σ, p_z) ; `k` : points cartésiens (grille de `make_grid_tb`) ; retour : dict nom → `max_R` (3,), `frob_R`, `max_k` (3,).
 - Défaut en R : D = r(R) − r(−R)† (= 2 × partie anti-hermitienne), avec `minus` et `dagger`. Défaut en k : A(k) − A(k)† sur A **brut** (sans `hermitize`).
 - **Normalisation sans les centres** : la partie hermitienne contient les centres τ_n, qui dépendent de l'origine choisie ; un rapport de Frobenius qui les inclut est arbitraire. EM1 donne 1.21×10⁻³ avec les centres, **6.1×10⁻³** sans. On normalise par r − r_centres (`centres_only`).
@@ -363,11 +363,17 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   | p_z | 1.22×10⁻³, 1.37×10⁻³ | 2.6×10⁻² | 1.28×10⁻², 1.42×10⁻² |
   | croisé | ~10⁻¹¹ | ~3×10⁻¹¹ | ~10⁻¹¹ |
 
-  Composante z : ~10⁻¹⁴ partout. En R, le bloc p_z est **moins** défectueux que σ en absolu, mais plus en relatif ; en k, c'est lui qui domine (somme cohérente sur R, maximum loin de K, en k_red ≈ (0.51, 0.89)).
+  Sur la grille 100², max_k du bloc p_z monte à (1.34, 1.50)×10⁻² Å : un maximum en k est un échantillonnage, il croît avec la grille ; les valeurs en R sont exactes. Composante z : ~10⁻¹⁴ partout. En R, le bloc p_z est **moins** défectueux que σ en absolu, mais plus en relatif ; en k, c'est lui qui domine (somme cohérente sur R, maximum loin de K, en k_red ≈ (0.51, 0.89)).
+- Sur le modèle M0 (centres seuls), S est nul : `frob_R` vaut `nan` (avec un `RuntimeWarning` de NumPy, 0/0 non traité explicitement).
+- Tests (`tests/test_diagnostics.py`, 6) : M0 sans défaut et `frob_R` = nan (deux jauges) ; valeurs du tableau (σ, p_z, grille 60², rtol 10⁻³) ; bloc croisé au niveau du bruit ; rapport inchangé quand on déplace l'origine (centres + c). Mutations : S avec les centres (5 échecs), A hermitisé avant la mesure (2), indices appariés au lieu du sous-bloc (6), mauvais axes de réduction (4), transposée sans conjugaison (2).
 - **Budget sur ħv_cv (pour M2)** : ce que `hermitize` jette vaut δħv_cv = i(ε_c − ε_v)(V†A_anti V)_cv. Sur l'anneau de 2.33 eV : max |δħv_cv| = **7.2×10⁻³ eV·Å, soit 0.13 % de ħv_F** (2.4×10⁻³ eV·Å à 1 eV). Le budget de §2 (≲ 0.2 %) tient ; l'estimation de 0.6 % notée plus tôt prenait le maximum sur toute la zone et oubliait le facteur ½ de la partie anti-hermitienne.
 
-**F11 — `symmetry_report(tb)`** → max |H_{σ,pz}(R)| et max |r^{x,y}_{σ,pz}(R)|.
-- **Attendu :** du bruit numérique, par la symétrie miroir σ_h. Le 0.220 Å de EM1 entre σ et p_z doit être en z uniquement.
+**F11 — `symmetry_report(tb, even, odd)`** → règles de sélection du miroir σ_h (z → −z), dans `diagnostics.py`. Plan du 2026-09-28 (Greg code) :
+- `even` = WF paires sous σ_h (σ : [0, 1, 2]), `odd` = WF impaires (p_z : [3, 4]). H, x et y sont pairs, z est impair : un élément ⟨0m|O|Rn⟩ s'annule quand la parité totale (m, O, n) est impaire.
+- Retour : `H_mixed` = max_R |H_{pair,impair}(R)| ; `r_mixed` (3,) = max_R |r^α_{pair,impair}(R)| (x, y interdits, z permis) ; `rz_same` = max_R |r^z| dans les blocs pair-pair et impair-impair (interdit).
+- Rien à faire en k : la transformée est linéaire, un bloc nul en R l'est à tout k.
+- **Valeurs cibles (27×27, 2026-09-28)** : `H_mixed` = 5.5×10⁻¹⁰ eV (pour des |H| jusqu'à 15 eV) ; `r_mixed` = (8.4×10⁻¹², 7.9×10⁻¹², **0.2204**) Å ; `rz_same` = 7.9×10⁻¹² Å sans les centres (5.9×10⁻¹¹ avec : c'est leur cote z ; le miroir est le plan du graphène, donc on mesure r^z sans les centres, comme en F10).
+- **Conséquence** : pour la lumière dans le plan, σ et π sont découplés à ~10⁻¹¹ près, dans H comme dans v_x, v_y. Ça justifie `pz_block` (F14) et le choix c, v = π*, π ; le 0.220 Å de EM1 est bien en z seulement.
 
 **Critère de sortie** : toutes les vérifications de F8, avec les normes de F10 et F11 consignées.
 
@@ -514,7 +520,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
 | M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (78 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
-| M1 — lecteur et diagnostics | en cours : F8 fait (lecteur `read_w90_tb`, 9 tests ; `make_wannier_tb`, 5 tests), F9 fait (`centres_only`, 6 tests) ; F10–F11 à faire | 2026-09-28 |
+| M1 — lecteur et diagnostics | en cours : F8 fait (lecteur `read_w90_tb`, 9 tests ; `make_wannier_tb`, 5 tests), F9 fait (`centres_only`, 6 tests), F10 fait (`hermiticity_report`, 6 tests) ; F11 à faire | 2026-09-28 |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |
 | EM2 — DFT directe et postw90 | après M3 | |

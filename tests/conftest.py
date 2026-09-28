@@ -42,9 +42,7 @@ def grid(tb):
 
 @pytest.fixture(scope="session")
 def w90_dir():
-    """
-    Directory of the tracked 27 x 27 wannierisation: wannier_tb.dat, .wout, .eig, wannier_u.mat.
-    """
+    """Directory of the tracked 27 x 27 wannierisation (tb.dat, .wout, .eig, u.mat)."""
     return W90_DIR
 
 
@@ -58,10 +56,7 @@ def tb_w90(w90_dir):
 
 @pytest.fixture(scope="session")
 def eig_w90(w90_dir):
-    """
-    DFT eigenvalues of the coarse grid: k_red (729, 3), in the order of the .eig (the k list of u.mat),
-    and E (729, 20) in eV.
-    """
+    """Coarse-grid DFT eigenvalues: k_red (729, 3) in .eig order (from u.mat), E (729, 20) in eV."""
     eig = np.loadtxt(w90_dir / "wannier.eig") # lines: band, k, energy (eV), band fastest
     nb, nk = int(eig[:, 0].max()), int(eig[:, 1].max())
     _, k_red = read_w90_mat(w90_dir / "wannier_u.mat")

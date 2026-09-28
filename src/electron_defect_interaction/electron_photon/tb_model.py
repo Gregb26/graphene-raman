@@ -24,8 +24,8 @@ class WannierTB:
         r_R     : (nR, 3, nW, nW) complex, Angstrom, <0m| r_alpha |Rn>; diagonal of r(0) = centres
         index   : dict, tuple(R) -> row of R in R_int
         minus   : (nR,) int, row of -R, so that X_R[minus] = X(-R)
-        t, a_cc : float, eV and Angstrom, hopping and bond length of the toy model (not Wannier90
-                  quantities: make_wannier_tb sets the M0 values; only `ring` uses them, for q0)
+        t, a_cc : float, eV and Angstrom, hopping and bond length of the toy model (defaults for
+                  Wannier90 data; only `ring` uses them, for q0)
     """
     lattice: np.ndarray
     R_int: np.ndarray
@@ -108,17 +108,13 @@ def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
 
 def make_wannier_tb(path):
     """
-    WannierTB of a real Wannier90 model, from its `_tb.dat` (read by io/wannier_io.read_w90_tb).
-
-    H_R and r_R are kept raw: no division by ndegen (done in `fourier`), r not hermitized (the
-    caller applies `hermitize` to A(k)). R_cart, index and minus are filled as in make_graphene_tb.
-    t and a_cc are not Wannier90 quantities: they take the M0 values, which only set the q0 of
-    `ring` (bracket [0, 2 q0]; the 27 x 27 data give q/q0 = 0.95-1.29 at 2.33 eV).
+    WannierTB from a Wannier90 `_tb.dat` (read by io/wannier_io.read_w90_tb). H_R and r_R stay raw
+    (no ndegen division, r not hermitized). t and a_cc take the M0 values: only `ring` uses them (q0).
 
     Inputs:
-        path : str or Path, Wannier90 `seedname_tb.dat`
+        path : str or Path, `seedname_tb.dat`
     Returns:
-        WannierTB, lattice and R_cart in Angstrom, H_R in eV, r_R in Angstrom
+        WannierTB (Angstrom, eV)
     """
     H_R, R_int, ndegen, r_R, lattice = read_w90_tb(path)
     R_cart = R_int @ lattice.T
@@ -129,20 +125,9 @@ def make_wannier_tb(path):
 
 def centres_only(tb):
     """
-    Copy of `tb` whose position operator keeps only the Wannier centres: r_R vanishes except on the
-    diagonal of r(0), tau_n = <0n| r |0n>. Then A(k) = diag(tau_n) at every k (ndegen(0) = 1),
-    Hermitian without `hermitize`, and the Berry term only turns dH/dk into its atomic-gauge form
-    (EM.md, implementation notes): the usual tight-binding (Peierls) approximation, each Wannier
-    function a point at its centre. It drops the other r_mn(R), up to 3e-2 Angstrom in the p_z block
-    of the 27 x 27 data. Identity on the M0 model, which has only centres.
-
-    Used as compute_velocity(centres_only(tb), k, 'berry'). `tb` is not modified; the other fields
-    are shared with it, not copied (dataclasses.replace).
-
-    Inputs:
-        tb : WannierTB
-    Returns:
-        WannierTB, same fields as tb except r_R (nR, 3, nW, nW), zero outside the diagonal of r(0)
+    Copy of `tb` whose r keeps only the Wannier centres (diagonal of r(0)): A(k) = diag(tau_n), the
+    tight-binding (Peierls) approximation. Use as compute_velocity(centres_only(tb), k, 'berry').
+    `tb` is not modified; the other fields are shared with it (dataclasses.replace).
     """
     r_R_centres = np.zeros_like(tb.r_R) # (nR, 3, nW, nW)
     iR0 = tb.index[(0,0,0)]

@@ -6,7 +6,7 @@ Contexte pour le dépôt `graphene-raman`. Rédigé le 2026-09-28.
 - **EM1, EM2, …** : prompts de calcul exécutés par Code (cluster, QE, Wannier90).
 - **P28** : modifications du texte du mémoire. Aucune n'est faite avant que tous les résultats EM soient validés.
 
-**Ce plan est un guide, pas un cadre strict.** En implémentant, Greg ajuste les signatures et les structures quand ça aide. En cas d'écart, le code (`src/electron_defect_interaction/optics/velocity_operator.py` et `tests/test_velocity_operator.py`) fait foi, et EM.md est réaligné ensuite. Dernier alignement : 2026-09-28.
+**Ce plan est un guide, pas un cadre strict.** En implémentant, Greg ajuste les signatures et les structures quand ça aide. En cas d'écart, le code (`src/electron_defect_interaction/electron_photon/` et `tests/`) fait foi, et EM.md est réaligné ensuite. Dernier alignement : 2026-09-28.
 
 ---
 
@@ -198,11 +198,12 @@ Construite par `make_grid_tb(tb, N)` (F2 + F3), pour les appelants seulement.
   - |v_cv| sans/avec ∈ [0.664, 1.271] ;
   - ⟨|v_x|²⟩ sans/avec = 1.125.
 
-**F7 — `kubo_accumulate(ε, ħv, ω, mu, eta)` → S (nω, 3, 3) ; `kubo_normalize(S, ω, N_k, A_cell)` → σ/σ₀**
-- **Calcul :** S est la somme de la formule de Kubo sur un bloc de k, et la normalisation se fait à la fin (§3).
+**F7 — `kubo_accumulate(eps, hv, hw, mu=0, eta=0.04)` → S (nω, 3, 3) ; `kubo_normalize(S, hw, nk, A_cell)` → σ/σ₀ ; `gaussian_eta(x, eta)`**
+- **Calcul :** S est la somme de la formule de Kubo sur un bloc de k, et la normalisation se fait une seule fois à la fin (§3). Les transitions sont choisies par l'énergie et mises à plat en une liste, et la somme sur elles est un seul produit matriciel. `hw` peut être un scalaire.
 
-**Pilote — `sigma_on_grid(tb, N, ω, mu, eta, mode, chunk)`**
-- Boucle sur les blocs : F4 → F5 → F7, puis normalisation.
+**Pilote — `sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', chunk=10⁵)`**
+- Boucle sur les blocs : F4 → F5 → F7, puis normalisation avec N_k = N². `mode` vaut `'berry'` ou `'no_berry'` (`'centres'` viendra en M1).
+- Environ 3 s par appel à N = 1800 en M0. N = 300 est déjà à 3×10⁻⁴ près.
 - C'est **la** fonction de M4.
 
 ### Critères de sortie de M0
@@ -220,11 +221,11 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 - σ_yy sans Berry est inchangé par le déplacement : L = a₁ est purement selon x. C'est un contrôle de plus.
 - Ces valeurs ont été obtenues par deux implémentations indépendantes, en jauge du réseau et en jauge atomique.
 
-### Tests pytest (`tests/test_velocity_operator.py`)
+### Tests pytest (`tests/test_{tb_model,kgrid,velocity_operator,ring,kubo}.py`)
 
-Lancer avec `.venv/bin/python -m pytest tests/test_velocity_operator.py -v`. Fixtures : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
+Lancer avec `.venv/bin/python -m pytest tests -v`. Fixtures partagées dans `tests/conftest.py` : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
-**Faits (F1–F6, 67 exécutions ; à partir de F6, les tests sont écrits par Code) :**
+**Faits (F1–F7 et pilote, 77 exécutions ; à partir de F6, les tests sont écrits par Code) :**
 
 F1–F4 :
 - `test_tb_hermitian` (deux jauges) : liste de R fermée sous R → −R, H_ij(R) = H_ji(−R)*, idem pour r, ndegen(−R) = ndegen(R).
@@ -254,9 +255,18 @@ F6 :
 - `test_ring_average` (deux jauges) : rapport 1 à 0.1 eV (limite de Dirac) et 0.98909 à 2.33 eV.
 - `test_ring_without_berry` : les chiffres « sans Berry » ci-dessus.
 
-**À faire :**
-- `test_kubo_reference` : les huit valeurs du tableau, à 10⁻⁴ près.
-- `test_gauge_shift` : avec Berry inchangé ; sans Berry, σ_xx = 2.2896 à 2.33 eV.
+F7 et pilote :
+- `test_gaussian_eta` : intégrale 1, second moment η² (η est l'écart-type), valeur au sommet.
+- `test_kubo_accumulate_synthetic` : une transition fabriquée à la main contre la forme fermée g(ħω − gap)·Re(v_α* v_β) ; un k sans transition ; invariance par la phase de v_cv.
+- `test_kubo_accumulate_no_transition` : un bloc sans transition donne S = 0.
+- `test_sigma_dirac_limit` : σ/σ₀ = 1 à 0.3 eV (1.00145), isotrope, nul hors du plan.
+- `test_kubo_reference` (4 cas : avec/sans Berry × deux jauges) : les 16 valeurs du tableau sur la grille 1800², à 10⁻⁴ près (écart mesuré 4.8×10⁻⁵ ; ~13 s en tout).
+- `test_kubo_gauge_shift` (N = 300) : avec Berry, σ inchangé à 5×10⁻¹⁵ ; sans Berry, σ_xx change et σ_yy non.
+- `test_sigma_on_grid_blocks_and_inputs` : indépendance vis-à-vis de `chunk`, `hw` scalaire, mode inconnu refusé.
+
+Les tests de F7 détectent trois bugs injectés dans une copie du code : normalisation par la taille du dernier bloc, gaussienne en largeur à mi-hauteur, paires (c, v) inversées.
+
+Au total : 77 exécutions, ~16 s. Pour sauter le tableau à 1800² : `-k "not kubo_reference"`.
 
 ### Notes d'implémentation (M0)
 
@@ -284,6 +294,12 @@ Les démonstrations et ordres de grandeur derrière le code et les tolérances d
 | anneau : ε_c − ε_v − ħω | 5×10⁻¹² eV | atol 10⁻¹⁰ |
 | anneau à 0.1 eV : q/q₀ − 1 | ±3×10⁻³ | rtol 5×10⁻³ |
 
+**Kubo (F7).** La formule de Kubo donne Re σ_αβ = (πe²g_s/(ωN_kA_cell)) Σ Re[v^α* v^β]_cv δ(ħω − ε_c + ε_v), avec v = (ħv)/ħ et g_s = 2. Divisée par σ₀ = e²/4ħ, elle laisse le préfacteur 8π/(ħωN_kA_cell). Un cône de Dirac parfait donne exactement 1 ; la déformation trigonale ajoute un terme en ω² (1.00145 à 0.3 eV, 1.0156 à 1 eV). Les conventions qui reproduisent le tableau :
+- g_η est une gaussienne d'**écart-type** η, et non de largeur à mi-hauteur (2.355 η) ;
+- N_k est le nombre de points de **toute** la grille, jamais celui d'un bloc ;
+- A_cell = |a₁ × a₂| est l'aire **dans le plan** (5.2388 Å² en M0) ;
+- la grille décalée de ½ couvre toute la zone de Brillouin, donc les deux vallées.
+
 Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 
 ---
@@ -292,7 +308,8 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 
 **But** : remplacer la source des données sans toucher au reste de la chaîne.
 
-**F8 — `read_w90_tb(path)`** → `WannierTB`
+**F8 — lecture du `_tb.dat`** → `WannierTB`
+- **Répartition (décidée le 2026-09-28)** : la lecture du fichier reste dans `io/wannier_io.py`, qui lit déjà le bloc H (`read_w90_HR`) ; on y ajoute la lecture du bloc r, qui retourne des tableaux. Le `WannierTB` est construit dans `electron_photon/tb_model.py`.
 - Lecture selon le format du §2.
 - **Attention à l'ordre des indices** : dans une ligne `j i …`, la valeur va dans `X_R[iR, j−1, i−1]` (ligne = j).
 - On garde les valeurs brutes, avec la division par ndegen au même endroit que pour H dans `Hwr_to_Hwk`.
@@ -455,7 +472,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | Étape | Statut | Date |
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
-| M0 — modèle de liaisons fortes | en cours : F1–F6 faits et testés (67 exécutions), F7 (Kubo) et pilote à faire | 2026-09-28 |
+| M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (77 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
 | M1 — lecteur et diagnostics | à faire | |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |

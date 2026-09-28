@@ -127,9 +127,12 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   `fft_utils` (`map_G_to_fft_grid`, `fft_grid_from_G_red`), `interpolation` (periodic
   tri-linear / cubic-spline).
 - **defects/many_body/single_defect.py** — orphan / work-in-progress (not imported anywhere).
-- **optics/velocity_operator.py** — electron-photon (EM series, in progress): `WannierTB`, graphene
-  TB toy model, single Fourier routine `fourier`, velocity operator with Berry connection. Tests in
-  `tests/test_velocity_operator.py` (pytest). Plan and conventions: `memoire/EM/EM.md`.
+- **electron_photon/** — electron-photon coupling (EM series, in progress), conventions in its
+  `__init__.py`: `tb_model` (`WannierTB`, graphene toy model), `kgrid` (reciprocal lattice, k grids),
+  `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection), `ring`
+  (resonant k points around K), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`). Tests (pytest) in
+  `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo}.py`, shared fixtures in `tests/conftest.py`.
+  Plan and conventions: `memoire/EM/EM.md`.
 
 Index convention everywhere: `M[bra_band, k', ket_band, k]`, shape `(nband, nk, nband, nk)`.
 
@@ -270,7 +273,8 @@ Scripts versionnés ici : `scripts/epw_pp_save.py`, `scripts/epw_validate.py`, `
 ħv = V†(∂H + i[H, A])V, décisions verrouillées, format du `_tb.dat`, conventions du module, plan M0–M4
 (fonctions F1–F19, vérifications, critères de sortie avec les valeurs de référence σ/σ₀) et statut. EM.md est
 un guide, pas un cadre : en cas d'écart le code fait foi, et on réaligne EM.md (ne pas « corriger » le code vers le plan). Le code
-est `src/electron_defect_interaction/optics/` ; les campagnes de calcul EM vont sous `memoire/EM/<campagne>/`.
+est `src/electron_defect_interaction/electron_photon/` (un module par responsabilité : les fonctions de M1–M4 vont
+dans le module de leur rôle, pas dans un module par étape ; la lecture de fichiers reste dans `io/`) ; les campagnes de calcul EM vont sous `memoire/EM/<campagne>/`.
 Les étapes M0–M4 sont codées par Greg lui-même en mode technicien (skill `technicien`) : n'écrire ni ne
 modifier son code sans « écris-le » ou demande explicite.
 

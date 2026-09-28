@@ -1,6 +1,6 @@
 # Pièges NumPy et pytest rencontrés en M0
 
-Aide-mémoire tiré de l'écriture de F1–F6 (2026-09-25 au 2026-09-28). Il reprend les explications qui se trouvaient dans les docstrings de `velocity_operator.py` et de ses tests.
+Aide-mémoire tiré de l'écriture de F1–F6 (2026-09-25 au 2026-09-28). Il reprend les explications qui se trouvaient dans les docstrings du module de M0 (aujourd'hui le paquet `electron_photon/`) et de ses tests.
 
 ## Les fonctions à deux arguments qui n'en prennent qu'un
 
@@ -48,6 +48,7 @@ Les fonctions NumPy élément par élément (`sqrt`, `arctan`, `exp`, `cos`…) 
 
 ## pytest
 
+- **`tests/conftest.py`** est chargé automatiquement par pytest : les fixtures qui y sont définies servent à tous les fichiers de tests, sans import.
 - **Un argument d'une fonction `test_…` est une fixture**, sauf s'il est paramétré. Une constante comme `N` ou `t` se met au niveau du module, pas en argument.
 - **Fixture** : une fonction décorée `@pytest.fixture` ; pytest l'appelle et passe son résultat aux tests qui la nomment. Une fixture peut dépendre d'une autre, comme `grid(tb)`.
 - **Paramétrisation indirecte** : `@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)` envoie chaque valeur à la **fixture** `tb`, dans `request.param`. La fixture lit `getattr(request, "param", défaut)`, pour les tests non paramétrés.
@@ -56,4 +57,4 @@ Les fonctions NumPy élément par élément (`sqrt`, `arctan`, `exp`, `cos`…) 
 - **Plusieurs noms à la fois** : `@pytest.mark.parametrize("hw, ratio", [(0.1, 1.0), (2.33, 0.98909)])` passe les couples ensemble.
 - **Ne pas tester une fonction avec elle-même** : pour vérifier `ring`, on recalcule le gap par `velocity_from_tb`, pas par `_gap`.
 - **Tester le test** : réintroduire le bug (par exemple retirer `.copy()` ou le terme de Berry) et vérifier que le test échoue.
-- **Commandes** : `.venv/bin/python -m pytest tests/test_velocity_operator.py -v`, avec `-k mot` pour filtrer par nom.
+- **Commandes** : `.venv/bin/python -m pytest tests -v` (ou un seul fichier, `tests/test_ring.py`), avec `-k mot` pour filtrer par nom.

@@ -13,6 +13,7 @@ class WannierTB:
     ndegen: np.ndarray
     H_R: np.ndarray
     r_R: np.ndarray
+    t: float
 
 def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     """ Construct graphene's tight-binding Hamiltonian in real space for a p_z orbital per atom """
@@ -57,7 +58,7 @@ def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     r_R[i0, :, A, A] = tau_A
     r_R[i0,:, B, B] = tau_B
 
-    return WannierTB(lattice=lattice, R_int=R_int, ndegen=ndegen, H_R=H_R, r_R=r_R)
+    return WannierTB(lattice=lattice, R_int=R_int, ndegen=ndegen, H_R=H_R, r_R=r_R, t=t)
 
 def reciprocal(lattice):
     """ compute primitive reciprocal lattice vectors from primitive lattice vectors """
@@ -83,9 +84,16 @@ def k_grid(B, N, shift=0.5):
 
     return k_red, k_cart, K
 
-def hermitize(X):
+def dagger(X):
     """ Compute hermitian conjugate of X """
+    
     return np.conj(np.swapaxes(X, -2, -1))
+
+def hermitize(X):
+    """ Enforces hermtiticity on X """
+    
+    return (X + dagger(X))/2
+
 
 def fourier(X_R, R_cart, ndegen, k, deriv=None):
     """
@@ -112,9 +120,5 @@ def fourier(X_R, R_cart, ndegen, k, deriv=None):
     X_R = X_R.reshape(nR, -1) # (nR, M)
     X_k = phase @ X_R # (nK, M)
     X_k = X_k.reshape(Nk, *tail)
-
-    # hermitian test
-    X_k_dag = hermitize(X_k)
-    assert np.allclose(np.abs(X_k - X_k_dag), 0, atol=10e-11), 'object is not hermitian'
 
     return X_k

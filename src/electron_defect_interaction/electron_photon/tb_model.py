@@ -1,16 +1,16 @@
 """
 Tight-binding model in the Wannier basis (`WannierTB`) and the analytic graphene model of M0.
 
-M1: `make_wannier_tb` builds it from Wannier90's `_tb.dat` (read in io/wannier_io.py); the
-transformations of a model (centres_only, pz_block, shift_home_cell) will follow. Conventions:
-package docstring (electron_photon/__init__.py).
+M1: `make_wannier_tb` builds it from Wannier90's `_tb.dat` (read in io/wannier_io.py), and
+`centres_only` is the first transformation of a model (pz_block, shift_home_cell will follow).
+Conventions: package docstring (electron_photon/__init__.py).
 """
 
 import numpy as np
-from dataclasses import dataclass
+import dataclasses
 from electron_defect_interaction.io.wannier_io import read_w90_tb
 
-@dataclass
+@dataclasses.dataclass
 class WannierTB:
     """
     Tight-binding model in the Wannier basis (layout of Wannier90's `_tb.dat`).
@@ -126,3 +126,27 @@ def make_wannier_tb(path):
     minus = np.array([index[tuple(-R)] for R in R_int]) # KeyError if some -R is missing
     
     return WannierTB(lattice=lattice, R_int=R_int, R_cart=R_cart, ndegen=ndegen, H_R=H_R, r_R=r_R, index=index, minus=minus, t=2.7, a_cc=1.42)
+
+def centres_only(tb):
+    """
+    Copy of `tb` whose position operator keeps only the Wannier centres: r_R vanishes except on the
+    diagonal of r(0), tau_n = <0n| r |0n>. Then A(k) = diag(tau_n) at every k (ndegen(0) = 1),
+    Hermitian without `hermitize`, and the Berry term only turns dH/dk into its atomic-gauge form
+    (EM.md, implementation notes): the usual tight-binding (Peierls) approximation, each Wannier
+    function a point at its centre. It drops the other r_mn(R), up to 3e-2 Angstrom in the p_z block
+    of the 27 x 27 data. Identity on the M0 model, which has only centres.
+
+    Used as compute_velocity(centres_only(tb), k, 'berry'). `tb` is not modified; the other fields
+    are shared with it, not copied (dataclasses.replace).
+
+    Inputs:
+        tb : WannierTB
+    Returns:
+        WannierTB, same fields as tb except r_R (nR, 3, nW, nW), zero outside the diagonal of r(0)
+    """
+    r_R_centres = np.zeros_like(tb.r_R) # (nR, 3, nW, nW)
+    iR0 = tb.index[(0,0,0)]
+    r_0 = tb.r_R[iR0] # (3, nW, nW)
+    r_0_diag = r_0 * np.eye(r_0.shape[-1]) # (3, nW, nW), diagonal
+    r_R_centres[iR0] = r_0_diag
+    return dataclasses.replace(tb, r_R=r_R_centres)

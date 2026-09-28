@@ -130,7 +130,8 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   tri-linear / cubic-spline).
 - **defects/many_body/single_defect.py** — orphan / work-in-progress (not imported anywhere).
 - **electron_photon/** — electron-photon coupling (EM series, in progress), conventions in its
-  `__init__.py`: `tb_model` (`WannierTB`, graphene toy model, `make_wannier_tb(path)` from a real `_tb.dat`), `kgrid` (reciprocal lattice, k grids),
+  `__init__.py`: `tb_model` (`WannierTB`, graphene toy model, `make_wannier_tb(path)` from a real `_tb.dat`, `centres_only(tb)` for the tight-binding
+  approximation of r), `kgrid` (reciprocal lattice, k grids),
   `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
   `compute_velocity(tb, k, mode)`), `ring`
   (resonant k points around K), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`). Tests (pytest) in

@@ -1,13 +1,14 @@
 """
 Tests of the tight-binding model (tb_model): R-space Hermiticity, bonds, relabelling shift_B of the
-M0 graphene model; construction of the real 27 x 27 model by make_wannier_tb (M1, fixtures tb_w90 and
-eig_w90 of conftest.py).
+M0 graphene model; construction of the real 27 x 27 model by make_wannier_tb and its centres-only
+version centres_only (M1, fixtures tb_w90 and eig_w90 of conftest.py).
 """
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import (compute_velocity, dagger, fourier, hermitize,
-                                                         make_graphene_tb, make_grid_tb, reciprocal, ring)
+from electron_defect_interaction.electron_photon import (centres_only, compute_velocity, dagger, fourier,
+                                                         hermitize, make_graphene_tb, make_grid_tb,
+                                                         reciprocal, ring)
 
 E_D = -4.238895  # eV, Dirac point of the 27 x 27 data at K
 FROZ_MAX = -1.74 # eV, top of the frozen window of the 27 x 27 wannierisation
@@ -153,3 +154,100 @@ def test_wannier_tb_ring(tb_w90):
     assert np.all(np.sum(eps < E_D, axis=1) == 4) # c = band 4, v = band 3 (0-based) everywhere
     assert np.allclose(eps[:, 4] - eps[:, 3], HW, rtol=0, atol=1e-9)
     assert 0.9 < q.min()/q0 and q.max()/q0 < 1.35
+
+
+def random_k(tb, n, seed=0):
+    """
+    n Cartesian k points drawn uniformly in the in-plane Brillouin zone of tb, (n, 3), 1/Angstrom.
+    """
+    k_red = np.random.default_rng(seed).random((n, 3)) * [1, 1, 0]
+    return k_red @ reciprocal(tb.lattice).T
+
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_centres_only_graphene(tb):
+    """
+    The M0 model has only centres: centres_only changes nothing, in both gauges.
+    """
+    assert np.array_equal(centres_only(tb).r_R, tb.r_R)
+
+
+def test_centres_only_structure(tb_w90):
+    """
+    Only the diagonal of r(0) survives, unchanged; tb itself is not modified (tb_w90 is shared by
+    the whole session) and the other fields are the same objects.
+    """
+    r_before = tb_w90.r_R.copy()
+    tb_c = centres_only(tb_w90)
+    i0 = tb_w90.index[(0, 0, 0)]
+    nW = tb_w90.r_R.shape[-1]
+
+    assert tb_c.r_R.shape == tb_w90.r_R.shape
+    assert np.count_nonzero(tb_c.r_R) == 3 * nW
+    diag = np.diagonal(tb_c.r_R[i0], axis1=-2, axis2=-1)
+    assert np.array_equal(diag, np.diagonal(tb_w90.r_R[i0], axis1=-2, axis2=-1))
+
+    assert np.array_equal(tb_w90.r_R, r_before), 'centres_only modified its input'
+    assert tb_c.H_R is tb_w90.H_R and tb_c.R_cart is tb_w90.R_cart and tb_c.ndegen is tb_w90.ndegen
+
+
+def test_centres_only_berry_connection(tb_w90):
+    """
+    A(k) = diag(tau_n) at every k: constant, and Hermitian without hermitize.
+    """
+    tb_c = centres_only(tb_w90)
+    i0 = tb_w90.index[(0, 0, 0)]
+    k = random_k(tb_w90, 200)
+
+    A = fourier(tb_c.r_R, tb_c.R_cart, tb_c.ndegen, k) # (Nk, 3, nW, nW)
+
+    assert np.allclose(A, tb_c.r_R[i0][None], rtol=0, atol=1e-14)
+    assert np.abs(A - dagger(A)).max() < 1e-14
+
+
+def test_centres_only_diagonal_unchanged(tb_w90):
+    """
+    The Berry term vanishes on the band diagonal: eps and hbar v_nn = d eps_n / dk are the same with
+    the full r and with the centres only.
+    """
+    k = random_k(tb_w90, 200)
+
+    _, eps, _, hv = compute_velocity(tb_w90, k, mode='berry')
+    _, eps_c, _, hv_c = compute_velocity(centres_only(tb_w90), k, mode='berry')
+
+    assert np.allclose(eps_c, eps, rtol=0, atol=1e-12)
+    diag = lambda X: np.diagonal(X, axis1=-2, axis2=-1)
+    assert np.allclose(diag(hv_c), diag(hv), rtol=0, atol=1e-12)
+
+
+def velocity_atomic_gauge(tb, k):
+    """
+    hbar v from dH_at/dk alone, with H in the atomic gauge,
+    H_at,mn(k) = sum_R e^{ik.(R + tau_n - tau_m)} H_mn(R) / ndegen(R), tau from the diagonal of r(0):
+    no Berry term, no `fourier`, no commutator. Returns hv (Nk, 3, nW, nW), eV*Angstrom.
+    """
+    tau = np.diagonal(tb.r_R[tb.index[(0, 0, 0)]].real, axis1=-2, axis2=-1).T # (nW, 3)
+    d = tb.R_cart[:, None, None, :] + tau[None, None, :, :] - tau[None, :, None, :] # (nR, m, n, 3)
+    phase = np.exp(1j * np.einsum("kc,rmnc->krmn", k, d)) / tb.ndegen[None, :, None, None]
+
+    H_at = np.einsum("krmn,rmn->kmn", phase, tb.H_R)
+    dH_at = np.einsum("krmn,rmnc,rmn->kcmn", phase, 1j*d, tb.H_R)
+    _, V = np.linalg.eigh(H_at)
+    return dagger(V)[:, None] @ dH_at @ V[:, None]
+
+
+def test_centres_only_atomic_gauge(tb_w90):
+    """
+    With the centres only, the Berry term turns dH/dk into its atomic-gauge form (EM.md,
+    implementation notes): |hbar v_mn|^2 equals that of velocity_atomic_gauge (measured 2e-12
+    eV^2 Angstrom^2), while the full r differs by up to ~30 eV^2 Angstrom^2. Moduli only: the phases
+    of the two sets of eigenvectors are unrelated.
+    """
+    k = random_k(tb_w90, 200)
+
+    _, _, _, hv_c = compute_velocity(centres_only(tb_w90), k, mode='berry')
+    _, _, _, hv = compute_velocity(tb_w90, k, mode='berry')
+    hv_at = velocity_atomic_gauge(tb_w90, k)
+
+    assert np.allclose(np.abs(hv_c)**2, np.abs(hv_at)**2, rtol=0, atol=1e-9)
+    assert np.abs(np.abs(hv)**2 - np.abs(hv_at)**2).max() > 1

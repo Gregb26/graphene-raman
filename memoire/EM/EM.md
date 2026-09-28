@@ -181,7 +181,7 @@ Construite par `make_grid_tb(tb, N)` (F2 + F3), pour les appelants seulement.
 
 **F5 — `velocity(H_k, dH_k, A_k=None)`** → ε (Nk, nW), V (Nk, nW, nW), ħv (Nk, 3, nW, nW) ; **`compute_velocity(tb, k, mode='berry')`** → H_k, ε, V, ħv (la chaîne complète pour une liste de k)
 - **Calcul :** `eigh`, puis ħv = V†(dH + i[H, A])V. `A_k=None` donne la version sans Berry.
-- **Mode « centres seuls » :** A_k d'un `centres_only(tb)` (F9, reporté à M1). En M0, il est identique au mode complet.
+- **Mode « centres seuls » :** A_k d'un `centres_only(tb)` (F9, fait en M1). En M0, il est identique au mode complet.
 - **Vérifications :**
   - ħv hermitien à ~10⁻¹³ ;
   - ħv_nn = ∇ε_n par différences finies, loin de K ;
@@ -202,7 +202,7 @@ Construite par `make_grid_tb(tb, N)` (F2 + F3), pour les appelants seulement.
 - **Calcul :** S est la somme de la formule de Kubo sur un bloc de k, et la normalisation se fait une seule fois à la fin (§3). Les transitions sont choisies par l'énergie et mises à plat en une liste, et la somme sur elles est un seul produit matriciel. `hw` peut être un scalaire.
 
 **Pilote — `sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', chunk=10⁵)`**
-- Boucle sur les blocs : `compute_velocity` (F4 → F5) → `kubo_accumulate`, puis normalisation avec N_k = N². `mode` vaut `'berry'` ou `'no_berry'` (`'centres'` viendra en M1).
+- Boucle sur les blocs : `compute_velocity` (F4 → F5) → `kubo_accumulate`, puis normalisation avec N_k = N². `mode` vaut `'berry'` ou `'no_berry'`. Il n'y a pas de mode `'centres'` (décidé le 2026-09-28) : « centres seuls » est une propriété du modèle, pas de la chaîne, et on passe `centres_only(tb)` avec `'berry'`.
 - Environ 3 s par appel à N = 1800 en M0. N = 300 est déjà à 3×10⁻⁴ près.
 - C'est **la** fonction de M4.
 
@@ -338,10 +338,33 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   - Tests de mutation du lecteur : indices permutés (1 échec, l'ordre ligne/colonne), Re/Im mal entrelacés (2), r hermitisé dans le lecteur (1), ndegen ignoré (3), réseau en lignes (2).
   - **Abandonné** : la comparaison avec un `_hr.dat`, dont il n'existe aucun exemplaire dans le dépôt. L'identité avec l'ancien lecteur et le test `.eig` la remplacent.
 
-**F9 — `centres_only(tb)`** → copie avec r_R réduit à la diagonale de R = 0.
+**F9 — `centres_only(tb)`** → copie avec r_R réduit à la diagonale de R = 0. **Fait (Greg, 2026-09-28)**, dans `tb_model.py`.
+- `dataclasses.replace(tb, r_R=…)` : `tb` n'est pas modifié, et les autres champs sont partagés, pas copiés.
+- A(k) = diag(τ_n), constant en k et hermitien sans `hermitize` : c'est l'approximation de liaisons fortes (Peierls). Elle jette les autres r_mn(R) : jusqu'à 3.4×10⁻² Å dans le bloc p_z, 0.1 Å dans le bloc σ, et 0.22 Å entre σ et p_z, mais en z seulement.
+- On l'utilise sous la forme `compute_velocity(centres_only(tb), k, 'berry')`, sans mode dédié.
+- Tests (`tests/test_tb_model.py`) :
+  - identité en M0, dans les deux jauges ;
+  - seule la diagonale de r(0) survit, l'entrée est intacte, les autres champs sont partagés ;
+  - A(k) constant et hermitien ;
+  - ε et ħv_nn inchangés ;
+  - |ħv_mn|² égal à celui de la **jauge atomique**, calculé indépendamment (dérivée de H_at, sans terme de Berry), à 2×10⁻¹² eV²·Å² ; le mode complet en diffère jusqu'à ~30 eV²·Å².
+  - Mutations : entrée modifiée sur place (3 échecs), `np.eye` oublié (2), diagonale placée dans la mauvaise ligne R (5).
+- **Premier coup d'œil (2026-09-28)** sur les anneaux résonants, à consolider en M2 et M3 : ⟨|ħv_cv|²⟩ centres seuls / complet = 0.9976 à 0.5 eV, 0.9904 à 1 eV et **0.951 à 2.33 eV**. L'écart croît à peu près comme (ħω)² ; à l'énergie du laser, l'approximation de liaisons fortes coûte ~5 % sur |v_cv|².
 
-**F10 — `hermiticity_report(tb, blocks)`** → normes anti-hermitiennes de r par bloc : σ (WF 1–3), p_z (WF 4–5), croisé σ/p_z.
-- **À établir :** le défaut dans le bloc p_z seul. C'est le seul qui compte pour π→π*. On l'attendait bien plus petit que 2.5×10⁻³ Å, mais un premier coup d'œil en k (2026-09-28, §2) dit le contraire : le plus grand défaut de A(k), 1.5×10⁻² Å, est dans le bloc p_z. À mesurer aussi en R, et à traduire en budget d'erreur sur ħv_cv (de l'ordre de 2.33 eV × 1.5×10⁻² Å ≈ 0.03 eV·Å, soit ~0.6 % de ħv_F, au lieu des 0.2 % du §2).
+**F10 — `hermiticity_report(tb, blocks, k)`** → défaut d'hermiticité de r par bloc, en R et en k. Plan du 2026-09-28 (Greg code) :
+- `blocks` : dict nom → (lignes, colonnes), par exemple σ = WF 1–3, p_z = WF 4–5, croisé = (σ, p_z) ; `k` : points cartésiens (grille de `make_grid_tb`) ; retour : dict nom → `max_R` (3,), `frob_R`, `max_k` (3,).
+- Défaut en R : D = r(R) − r(−R)† (= 2 × partie anti-hermitienne), avec `minus` et `dagger`. Défaut en k : A(k) − A(k)† sur A **brut** (sans `hermitize`).
+- **Normalisation sans les centres** : la partie hermitienne contient les centres τ_n, qui dépendent de l'origine choisie ; un rapport de Frobenius qui les inclut est arbitraire. EM1 donne 1.21×10⁻³ avec les centres, **6.1×10⁻³** sans. On normalise par r − r_centres (`centres_only`).
+- **Valeurs cibles (mesures du 2026-09-28, grille 60²)** :
+
+  | Bloc | max_R x, y (Å) | frob_R (sans centres) | max_k x, y (Å) |
+  |---|---|---|---|
+  | σ | 2.54×10⁻³, 1.65×10⁻³ | 1.2×10⁻² | 6.9×10⁻³, 5.8×10⁻³ |
+  | p_z | 1.22×10⁻³, 1.37×10⁻³ | 2.6×10⁻² | 1.28×10⁻², 1.42×10⁻² |
+  | croisé | ~10⁻¹¹ | ~3×10⁻¹¹ | ~10⁻¹¹ |
+
+  Composante z : ~10⁻¹⁴ partout. En R, le bloc p_z est **moins** défectueux que σ en absolu, mais plus en relatif ; en k, c'est lui qui domine (somme cohérente sur R, maximum loin de K, en k_red ≈ (0.51, 0.89)).
+- **Budget sur ħv_cv (pour M2)** : ce que `hermitize` jette vaut δħv_cv = i(ε_c − ε_v)(V†A_anti V)_cv. Sur l'anneau de 2.33 eV : max |δħv_cv| = **7.2×10⁻³ eV·Å, soit 0.13 % de ħv_F** (2.4×10⁻³ eV·Å à 1 eV). Le budget de §2 (≲ 0.2 %) tient ; l'estimation de 0.6 % notée plus tôt prenait le maximum sur toute la zone et oubliait le facteur ½ de la partie anti-hermitienne.
 
 **F11 — `symmetry_report(tb)`** → max |H_{σ,pz}(R)| et max |r^{x,y}_{σ,pz}(R)|.
 - **Attendu :** du bruit numérique, par la symétrie miroir σ_h. Le 0.220 Å de EM1 entre σ et p_z doit être en z uniquement.
@@ -386,7 +409,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 - **Vérifications :**
   - mode complet : nœud à q ∥ e ;
   - mode complet : moyennes x et y égales (C₃) ;
-  - l'écart centres seuls − complet est petit (valeur à consigner : c'est l'approximation de liaisons fortes) ;
+  - l'écart centres seuls − complet est petit (valeur à consigner : c'est l'approximation de liaisons fortes). Premier coup d'œil (F9) : −5 % sur ⟨|v_cv|²⟩ à 2.33 eV, pas si petit ;
   - le mode sans Berry déplace le nœud.
 
 **F16 — `shift_home_cell(tb, j, L)`**, optionnel : test de jauge sur les données réelles. Pour la WF j déplacée de L (|R j′⟩ = |R+L, j⟩) :
@@ -491,7 +514,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
 | M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (78 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
-| M1 — lecteur et diagnostics | en cours : F8 fait (lecteur `read_w90_tb`, 9 tests ; `make_wannier_tb`, 5 tests) ; F9–F11 à faire | 2026-09-28 |
+| M1 — lecteur et diagnostics | en cours : F8 fait (lecteur `read_w90_tb`, 9 tests ; `make_wannier_tb`, 5 tests), F9 fait (`centres_only`, 6 tests) ; F10–F11 à faire | 2026-09-28 |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |
 | EM2 — DFT directe et postw90 | après M3 | |

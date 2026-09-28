@@ -1,12 +1,14 @@
 """
-Wannier-interpolated velocity operator (M0: tight-binding toy model and Fourier machinery).
+Wannier-interpolated velocity operator (M0: tight-binding toy model, Fourier machinery, velocity).
 
 Goal of the module: build, from a Wannier tight-binding description (H(R), r(R)) as written by
 Wannier90 in `_tb.dat`, the interband velocity matrix
 
     hbar v(k) = V(k)^dagger [ dH(k)/dk + i [H(k), A(k)] ] V(k),
 
-where V(k) diagonalizes H(k) and A(k) is the Berry connection in the Wannier gauge. In the M0
+where V(k) diagonalizes H(k) and A(k) is the Berry connection in the Wannier gauge. The chain is
+fourier (H, dH, A) -> hermitize (A) -> velocity (eps, V, hbar v), applied block by block on the k
+points; the plan and the reference values are in memoire/EM/EM.md. In the M0
 phase the tight-binding data come from an analytic graphene model (`make_graphene_tb`) that has
 exactly the same layout as what the M1 reader of the real `_tb.dat` will return, so every
 downstream function is first validated on a model with known answers.
@@ -24,6 +26,9 @@ Conventions (fixed once for all, shared with the M1 reader):
       (lattice[:, i] = a_i, B[:, j] = b_j). Lists of vectors (R, k, bond vectors) are stored in
       ROWS, shape (N, 3). Hence a single vector converts as x_cart = lattice @ n_red, while a list
       of vectors converts as X_cart = N_red @ lattice.T.
+    - Bands come out of `velocity` in ascending energy at every k. Occupations must be decided by
+      energy (eps < mu), never by band index: in M0 the index happens to work (v = 0, c = 1 around
+      mu = 0), with the real 5-band data (mu = E_D) it does not.
 """
 
 import numpy as np
@@ -38,8 +43,11 @@ class WannierTB:
         lattice : (3, 3) float, Angstrom
             Primitive lattice vectors stored in columns, lattice[:, i] = a_i.
         R_int : (nR, 3) int
-            Lattice vectors R in reduced (integer) coordinates, one per row; R_cart = R_int @ lattice.T.
+            Lattice vectors R in reduced (integer) coordinates, one per row.
             The list must be closed under R -> -R, otherwise H(k) cannot be Hermitian.
+        R_cart : (nR, 3) float, Angstrom
+            The same R vectors in Cartesian coordinates, one per row: R_cart = R_int @ lattice.T.
+            This is what `fourier` needs for the phases e^{ik.R}.
         ndegen : (nR,) int
             Wigner-Seitz degeneracy of each R. Every Fourier sum divides by it:
             X(k) = sum_R e^{ik.R} X(R) / ndegen(R). Equal to 1 for the analytic model.
@@ -48,6 +56,11 @@ class WannierTB:
         r_R : (nR, 3, nW, nW) complex, Angstrom
             Position matrix elements r_mn,alpha(R) = <0m| r_alpha |Rn>; axis 1 is the Cartesian
             component alpha. Its diagonal at R = 0 holds the Wannier centres.
+        index : dict
+            Integer triplet tuple(R) -> row of R in R_int.
+        minus : (nR,) int
+            minus[iR] = row of -R_int[iR], so that X_R[minus] lists X(-R) in the order of R_int
+            (used for the R-space Hermiticity X_mn(R) = X_nm(-R)*).
         t : float, eV
             Nearest-neighbour hopping of the toy model. Not a Wannier90 quantity: the M1 reader
             will need a default value for it.
@@ -56,11 +69,35 @@ class WannierTB:
     """
     lattice: np.ndarray
     R_int: np.ndarray
+    R_cart: np.ndarray
     ndegen: np.ndarray
     H_R: np.ndarray
     r_R: np.ndarray
+    index: dict
+    minus: np.ndarray
     t: float
     a_cc: float
+
+@dataclass
+class GridTB:
+    """
+    Reciprocal-space quantities of a regular k grid, built by `make_grid_tb`.
+
+    A convenience container for the callers (tests, driver). The computing functions (`fourier`,
+    `velocity`, ...) keep taking plain k arrays, because they are also called on k lists that are
+    not this grid: chunks of it, k +/- h e_mu, rings around K, k paths.
+
+    Fields:
+        B      : (3, 3) float, 1/Angstrom, reciprocal vectors in columns, B[:, j] = b_j
+        k_red  : (N^2, 3) float, reduced k points, one per row
+        k_cart : (N^2, 3) float, 1/Angstrom, Cartesian k points, one per row
+        K      : (3,) float, 1/Angstrom, Dirac point K = (2 b1 + b2)/3
+    """
+    B: np.ndarray
+    k_red: np.ndarray
+    k_cart: np.ndarray
+    K: np.ndarray
+
 
 def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     """
@@ -138,7 +175,10 @@ def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     # np.unique(axis=0) removes duplicated rows (R = 0 appears several times when shift_B = 0) and
     # sorts them; the order of the R list is irrelevant for the Fourier sums.
     R_int = np.unique(np.array(hops + [-R for R in hops]+[np.zeros(3, int)]), axis=0)
+    R_cart = R_int @ lattice.T
     index = {tuple(R): iR for iR, R in enumerate(R_int)} # integer triplet R -> row of R in R_int
+    minus = np.array([index[tuple(-R)] for R in R_int]) # KeyError if some -R is missing
+
     nR = len(R_int)
     nW = 2 # two p_z orbitals in a unit cell
 
@@ -157,7 +197,7 @@ def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     r_R[i0, :, A, A] = tau_A
     r_R[i0,:, B, B] = tau_B
 
-    return WannierTB(lattice=lattice, R_int=R_int, ndegen=ndegen, H_R=H_R, r_R=r_R, t=t, a_cc=a_cc)
+    return WannierTB(lattice=lattice, R_int=R_int, R_cart=R_cart, ndegen=ndegen, H_R=H_R, r_R=r_R, t=t, a_cc=a_cc, index=index, minus=minus)
 
 def reciprocal(lattice):
     """
@@ -175,10 +215,6 @@ def reciprocal(lattice):
     """
 
     B = 2*np.pi*np.linalg.inv(lattice.T) # B[:,i] = b_i
-
-    # consistency check written in the completeness form sum_i a_i b_i^T = A B^T = 2 pi I, which is
-    # equivalent to A^T B = 2 pi I for square matrices (a left inverse is also a right inverse)
-    assert np.allclose(lattice @ B.T, 2*np.pi*np.eye(3)), 'not lattice vectors'
 
     return B
 
@@ -225,6 +261,23 @@ def k_grid(B, N, shift=0.5):
     K = (2*B[:,0] + B[:,1])/3 # Dirac point
 
     return k_red, k_cart, K
+
+def make_grid_tb(tb, N):
+    """
+    Reciprocal lattice, shifted N x N k grid and Dirac point of `tb`, bundled in a GridTB.
+
+    Inputs:
+        tb : WannierTB
+            Only its lattice is used.
+        N : int
+            Number of k points along b1 and along b2 (N^2 in total), see `k_grid`.
+    Returns:
+        GridTB
+    """
+    B = reciprocal(tb.lattice)
+    k_red, k_cart, K = k_grid(B,N)
+
+    return GridTB(B=B, k_red=k_red, k_cart=k_cart, K=K)
 
 def dagger(X):
     """
@@ -312,3 +365,79 @@ def fourier(X_R, R_cart, ndegen, k, deriv=None):
     X_k = X_k.reshape(Nk, *tail)
 
     return X_k
+
+def velocity(H_k, dH_k, A_k=None):
+    """
+    Band energies, eigenvectors and velocity matrix elements hbar v_mn(k) in the band basis.
+
+        hbar v^mu(k) = V(k)^dagger [ dH(k)/dk_mu + i [H(k), A_mu(k)] ] V(k),    mu = x, y, z
+
+    (Wang, Yates, Souza, Vanderbilt, PRB 74, 195118 (2006); Yates et al., PRB 75, 195121 (2007)).
+    The bracket is the velocity operator hbar v = i [H, r] written in the Wannier basis. dH/dk alone
+    treats every Wannier function as a point sitting at its lattice vector R; the Berry term
+    i [H, A] adds where the Wannier functions really are: their centres (diagonal of r(0)) and, in
+    real Wannier90 data, the off-diagonal position elements. Rotated to the band basis,
+
+        hbar v_mn = Hbar_mn + i (eps_m - eps_n) Abar_mn,    Hbar = V^dag dH V,   Abar = V^dag A V,
+
+    so the Berry term vanishes on the diagonal: hbar v_nn = d eps_n/dk with or without it, and only
+    the interband elements, the optical matrix elements, depend on it. It is what makes them
+    independent of the cell in which each Wannier function is labelled (shift_B in
+    `make_graphene_tb`, test_velocity_gauge). When A only holds the centres tau_j (M0, or the
+    "centres only" mode), dH + i[H, A] = U^dag (dH_at/dk) U with U = diag(e^{-ik.tau_j}) and H_at
+    the atomic-gauge Hamiltonian (phases e^{ik.(R + tau_j - tau_i)}): the Berry term then just
+    turns the derivative into the one of the atomic gauge.
+
+    Works on any list of k points (grid block, ring, path, k +/- h e_mu) and does no consistency
+    check itself: those cost a diagonalization per call and live in the tests. At a degenerate k
+    (the Dirac point K) the eigenbasis is not unique and the interband elements between the
+    degenerate bands are ill-defined; the k grids and rings avoid K.
+
+    Inputs:
+        H_k : (Nk, nW, nW) complex, eV
+            H(k) in the Wannier gauge, fourier(H_R, ...).
+        dH_k : (Nk, 3, nW, nW) complex, eV*Angstrom
+            Cartesian gradient dH/dk, fourier(H_R, ..., deriv=True). Not modified.
+        A_k : (Nk, 3, nW, nW) complex, Angstrom, or None
+            Berry connection in the Wannier gauge, hermitize(fourier(r_R, ...)). It must be
+            Hermitian, otherwise i[H, A], hence hbar v, is not. None drops the Berry term: the
+            "without Berry" mode, eq. (2.5.7) of the thesis as currently written.
+    Returns:
+        eps : (Nk, nW) float, eV
+            Band energies eps_n(k) interpolated from the tight-binding model (in M1 they reproduce
+            DFT inside the frozen window), in ascending order at every k (guaranteed by eigh).
+        V : (Nk, nW, nW) complex
+            Eigenvectors in COLUMNS: V[k, :, n] is band n expressed in the Wannier basis, i.e. the
+            unitary rotation from the Wannier gauge to the band gauge. The phase of each column is
+            arbitrary, chosen by eigh independently at every k, so only phase-invariant quantities
+            such as |hbar v_mn|^2 can be compared between two calls.
+        hv : (Nk, 3, nW, nW) complex, eV*Angstrom
+            hbar v^mu_mn(k) = <u_mk| hbar v_mu |u_nk> in the band basis, Cartesian mu on axis 1.
+            Hermitian, with the group velocity d eps_n/dk_mu on its diagonal. Divide by
+            hbar = 6.582e-16 eV s for a velocity: hbar v_F = 5.751 eV*Angstrom is v_F = 8.7e5 m/s.
+    """
+    nk, nW, _ = H_k.shape
+
+    # Diagonalize H(k) at every k at once (eigh works on stacks of matrices): eps in ascending order,
+    # eigenvectors in the columns of V
+    eps, V = np.linalg.eigh(H_k) # (nk, nW) floats, (nk, nW, nW) complex
+
+    # Velocity operator (times hbar) in the Wannier basis, W = dH + i [H, A].
+    # copy(): with W = dH_k both names would point to the caller's array, and the += below would
+    # silently overwrite dH_k (checked by test_velocity_inputs_unchanged).
+    W = dH_k.copy() # (nk, 3, nW, nW) complex
+    if A_k is not None:
+        assert A_k.shape == (nk, 3, nW, nW), 'wrong shape for A_k'
+        # H_k[:, None] adds a length-1 Cartesian axis, (nk, 1, nW, nW), so that the same H(k)
+        # multiplies the three components A_mu: (nk, 1, nW, nW) @ (nk, 3, nW, nW) -> (nk, 3, nW, nW).
+        # The commutator of two Hermitian matrices is anti-Hermitian; the factor i makes it Hermitian.
+        W += 1j*(H_k[:, None, ...] @ A_k - A_k @ H_k[:, None, ...]) # add berry connection term
+
+    assert W.shape == (nk, 3, nW, nW), 'wrong shape for W'
+
+    # Rotation to the band basis, hbar v = V^dag W V, with the same V(k) for the three components mu
+    # (length-1 axis inserted again, as for H above)
+    hv = dagger(V)[:, None, ...] @ W @ V[:, None, ...] # (nk, 3, nW, nW) complex
+    assert hv.shape == (nk, 3, nW, nW), 'wrong shape for hv'
+
+    return eps, V, hv

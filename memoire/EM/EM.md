@@ -6,6 +6,8 @@ Contexte pour le dépôt `graphene-raman`. Rédigé le 2026-09-28.
 - **EM1, EM2, …** : prompts de calcul exécutés par Code (cluster, QE, Wannier90).
 - **P28** : modifications du texte du mémoire. Aucune n'est faite avant que tous les résultats EM soient validés.
 
+**Ce plan est un guide, pas un cadre strict.** En implémentant, Greg ajuste les signatures et les structures quand ça aide. En cas d'écart, le code (`src/electron_defect_interaction/optics/velocity_operator.py` et `tests/test_velocity_operator.py`) fait foi, et EM.md est réaligné ensuite. Dernier alignement : 2026-09-28.
+
 ---
 
 ## 0. But
@@ -26,7 +28,7 @@ avec
 - A_μ(k) = Σ_R e^{ik·R} r_μ(R) / ndegen(R) ;
 - r_μ,ij(R) = ⟨0i|r̂_μ|Rj⟩.
 
-Forme équivalente : ħv_mn = H̄_mn − i(ε_m − ε_n)Ā_mn. Le terme de Berry est nul sur la diagonale et vaut ε_L en préfacteur sur l'anneau résonant. Le signe a été vérifié numériquement pour la convention e^{+ik·R} de Wannier90.
+Forme équivalente, avec H̄ = V†∂_μH V et Ā = V†A_μV : ħv_mn = H̄_mn **+** i(ε_m − ε_n)Ā_mn (m = ligne ; vérifié numériquement le 2026-09-28 : écart 10⁻¹⁴ avec +, 60 eV·Å avec −). Wang et al. (2006) écrivent la même relation avec les indices dans l'autre ordre, v_nm = H̄_nm − i(ε_m − ε_n)Ā_nm ; recopiée avec mn, elle change de signe. Le terme de Berry est nul sur la diagonale et vaut ε_L en préfacteur sur l'anneau résonant. Le signe a été vérifié numériquement pour la convention e^{+ik·R} de Wannier90.
 
 ### Pourquoi on ne peut pas négliger le terme de Berry
 
@@ -98,7 +100,8 @@ Avec des pseudo-potentiels NC, p̂ ≠ m_e v̂. Le couplage minimal passe par v�
 - **Vecteurs en 3D partout** (z = 0), comme dans le `_tb.dat`.
 - **X_mn(R) = ⟨0m|X̂|Rn⟩ ; X(k) = Σ_R e^{+ik·R} X(R)/ndegen(R)**, en jauge du réseau (pas de τ dans les phases).
 - **Appariement** : jauge du réseau pour H ⇔ r(R) complet, **centres compris**. En jauge atomique (phases e^{ik·(R+τ_j−τ_i)}), il faudrait d'abord retirer les centres de r(0), sinon ils sont comptés deux fois.
-- **Une seule routine de Fourier** pour H, iR_μH et r. On généralise `Hwr_to_Hwk` plutôt que d'en écrire une deuxième.
+- **Une seule routine de Fourier** pour H, iR_μH et r : `fourier` (F4). Faire ou non de `Hwr_to_Hwk` (chaîne du ch. 4 : coordonnées réduites, `eigh` systématique, une vingtaine d'appelants) un emballage autour de `fourier` : décision en attente.
+- **Conteneurs aux frontières, tableaux dans les calculs** : `WannierTB` (produit par le modèle et le lecteur) et `GridTB` (grille k) servent aux appelants ; les fonctions de calcul (`fourier`, `velocity`, Kubo) ne prennent que des tableaux, parce qu'elles servent aussi sur des blocs de la grille, sur k ± h e_μ, sur des anneaux et sur des chemins.
 - **Occupations par l'énergie** (ε < μ), jamais par l'indice de bande : μ = 0 en M0, μ = E_D en M1+.
 - **Dégénérescence à K** : n'évaluer aucun élément interbande exactement à K. On utilise des grilles décalées, et les anneaux ne passent pas par K.
 - **Kubo**, partie absorptive, T = 0, spin inclus :
@@ -115,11 +118,30 @@ C'est ce que produit le modèle de M0 **et** le lecteur de M1.
 
 | Champ | Forme | Unité |
 |---|---|---|
-| `lattice` | (3, 3), lignes a₁, a₂, a₃ | Å |
+| `lattice` | (3, 3), **colonnes** a₁, a₂, a₃ (`lattice[:, i]` = aᵢ, comme `B[:, i]` = bᵢ ; les listes de vecteurs k, R_cart sont en lignes) | Å |
 | `R_int` | (nR, 3) entiers | — |
+| `R_cart` | (nR, 3), `R_int @ lattice.T` | Å |
 | `ndegen` | (nR,) | — |
 | `H_R` | (nR, nW, nW) complexe | eV |
 | `r_R` | (nR, 3, nW, nW) complexe | Å |
+| `index` | dict, `tuple(R)` → ligne de R dans `R_int` | — |
+| `minus` | (nR,) entiers, ligne de −R : `X_R[minus]` = X(−R) dans l'ordre de `R_int` | — |
+| `t` | float, saut du modèle jouet | eV |
+| `a_cc` | float, longueur de liaison du modèle jouet | Å |
+
+- `R_cart`, `index` et `minus` se déduisent de `R_int` et `lattice` : ce sont des champs stockés, que chaque constructeur doit remplir (le lecteur F8 compris). Alternative envisagée : des `@property`, recalculées à la lecture.
+- `t` et `a_cc` n'existent pas dans Wannier90 : le lecteur F8 leur donnera des valeurs par défaut.
+
+### Structure `GridTB` (côté k)
+
+Construite par `make_grid_tb(tb, N)` (F2 + F3), pour les appelants seulement.
+
+| Champ | Forme | Unité |
+|---|---|---|
+| `B` | (3, 3), colonnes b₁, b₂, b₃ | Å⁻¹ |
+| `k_red` | (N², 3), coordonnées réduites | — |
+| `k_cart` | (N², 3), `k_red @ B.T` | Å⁻¹ |
+| `K` | (3,), (2b₁ + b₂)/3 | Å⁻¹ |
 
 ---
 
@@ -140,24 +162,26 @@ C'est ce que produit le modèle de M0 **et** le lecteur de M1.
   - H_ij(R) = H_ji(−R)* ;
   - |R + τ_B − τ_A| = a_cc pour chaque saut, avec ou sans déplacement.
 
-**F2 — `reciprocal(lattice)`** → B (3, 3), avec a_i·b_j = 2πδ_ij.
+**F2 — `reciprocal(lattice)`** → B (3, 3), colonnes b_j, avec a_i·b_j = 2πδ_ij (vérifié par `test_reciprocal`, plus d'`assert` dans la fonction).
 
-**F3 — `kgrid(B, N, shift=0.5)`** → k (N², 3) cartésien, k = ((i+s)/N) b₁ + ((j+s)/N) b₂. Définis aussi K = (2b₁ + b₂)/3.
-- **Vérification :** H_AB(K) = 0.
+**F3 — `k_grid(B, N, shift=0.5)`** → `(k_red, k_cart, K)`
+- k_red (N², 3) réduit et k_cart = k_red @ Bᵀ (N², 3) cartésien, avec k = ((i+s)/N) b₁ + ((j+s)/N) b₂ (ordre `'ij'` : j varie le plus vite) ; K = (2b₁ + b₂)/3.
+- **`make_grid_tb(tb, N)`** emballe F2 et F3 dans un `GridTB`.
+- **Vérification :** H(K) = 0.
 
 **F4 — `fourier(X_R, R_cart, ndegen, k, deriv=None)`** → X_k (Nk, …)
-- **Calcul :** X(k) = Σ_R e^{ik·R} X(R)/ndegen, avec le facteur iR_μ quand `deriv = μ`. La fonction accepte des dimensions supplémentaires en fin de tableau.
+- **Calcul :** X(k) = Σ_R e^{ik·R} X(R)/ndegen. Quand `deriv` est vrai, le facteur iR_μ est appliqué pour les trois μ à la fois : X_R doit être (nR, nW, nW) et la sortie est (Nk, 3, nW, nW). La fonction accepte des dimensions supplémentaires en fin de tableau (aplaties en (nR, M), un seul produit matriciel).
 - **Usages :** H_k (Nk, nW, nW), dH_k (Nk, 3, nW, nW), A_k (Nk, 3, nW, nW).
-- **`hermitize(A_k)`** = ½(A + A†) sur les deux derniers axes : sans effet en M0, mais testé.
+- **`dagger(X)`** = X† et **`hermitize(A_k)`** = ½(A + A†), sur les deux derniers axes. `hermitize` est appliquée par l'appelant après `fourier` : sans effet en M0, mais testée.
 - **Découpage :** traiter la grille par **blocs de k**, à l'extérieur de la fonction. La matrice de phases (Nk, nR) fait environ 38 Go pour 1800² points et 741 R. Prévoir des blocs de 1–2×10⁴ k en M1+ (environ 240 Mo).
 - **Vérifications :**
   - H_k hermitien ;
   - H_AB(k) = −t Σ_{R∈S} e^{ik·R} analytique ;
-  - dH_k égal à la différence finie centrée de H_k (h ≈ 10⁻⁵ Å⁻¹), à 10⁻⁸ près en relatif.
+  - dH_k égal à la différence finie centrée de H_k (h = 10⁻⁵ Å⁻¹), à 10⁻⁶ eV·Å près (absolu).
 
 **F5 — `velocity(H_k, dH_k, A_k=None)`** → ε (Nk, nW), V (Nk, nW, nW), ħv (Nk, 3, nW, nW)
 - **Calcul :** `eigh`, puis ħv = V†(dH + i[H, A])V. `A_k=None` donne la version sans Berry.
-- **Mode « centres seuls » :** A_k d'un `centres_only(tb)` (F9). En M0, il est identique au mode complet.
+- **Mode « centres seuls » :** A_k d'un `centres_only(tb)` (F9, reporté à M1). En M0, il est identique au mode complet.
 - **Vérifications :**
   - ħv hermitien à ~10⁻¹³ ;
   - ħv_nn = ∇ε_n par différences finies, loin de K ;
@@ -196,9 +220,22 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 - σ_yy sans Berry est inchangé par le déplacement : L = a₁ est purement selon x. C'est un contrôle de plus.
 - Ces valeurs ont été obtenues par deux implémentations indépendantes, en jauge du réseau et en jauge atomique.
 
-### Tests pytest (`tests/`)
+### Tests pytest (`tests/test_velocity_operator.py`)
 
-- `test_fourier` : hermiticité, expression analytique, différences finies.
+Lancer avec `.venv/bin/python -m pytest tests/test_velocity_operator.py -v`. Fixtures : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
+
+**Faits (F1–F4, 14 tests) :**
+- `test_tb_hermitian` (deux jauges) : liste de R fermée sous R → −R, H_ij(R) = H_ji(−R)*, idem pour r, ndegen(−R) = ndegen(R).
+- `test_tb_bond_length` (deux jauges) : trois sauts A → B, |δ| = a_cc.
+- `test_tb_shift_same_bonds` : nR = 5 et 7, mêmes δ à l'ordre près.
+- `test_reciprocal`.
+- `test_fourier_analytic` : H_AB(k) = −t(1 + e^{−ik·a₁} + e^{−ik·a₂}).
+- `test_dirac_point` (deux jauges) : H(K) = 0.
+- `test_fourier_hermitian` (deux jauges) : H_k, A_k et dH_k hermitiens.
+- `test_hermitize` : symétrise, idempotente, laisse A_k inchangé.
+- `test_fourier_finite_difference` (deux jauges) : dH_k contre la différence finie centrée.
+
+**À faire :**
 - `test_velocity` : hermiticité, diagonale contre ∇ε, ħv_F.
 - `test_node` : nœud à q ∥ e avec Berry.
 - `test_kubo_reference` : les huit valeurs du tableau, à 10⁻⁴ près.
@@ -323,7 +360,7 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 | Découpage et performance, échafaudage pytest, F16–F19, figures | Code |
 | EM2, EM3 (cluster, QE, Wannier90) | Code |
 
-Mode technicien : skill `technicien`, avec les mots-clés « indice » (par défaut), « explique », « montre », « écris-le » et « fin technicien ».
+Mode technicien : skill `technicien`, avec les mots-clés « explique » (par défaut), « indice », « montre », « écris-le » et « fin technicien ».
 
 ---
 
@@ -373,7 +410,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « indice » (par déf
 | Étape | Statut | Date |
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
-| M0 — modèle de liaisons fortes | à faire | |
+| M0 — modèle de liaisons fortes | en cours : F1–F4 faits et testés, F5 commencé | 2026-09-28 |
 | M1 — lecteur et diagnostics | à faire | |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |

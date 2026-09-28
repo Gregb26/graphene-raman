@@ -127,6 +127,9 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   `fft_utils` (`map_G_to_fft_grid`, `fft_grid_from_G_red`), `interpolation` (periodic
   tri-linear / cubic-spline).
 - **defects/many_body/single_defect.py** — orphan / work-in-progress (not imported anywhere).
+- **optics/velocity_operator.py** — electron-photon (EM series, in progress): `WannierTB`, graphene
+  TB toy model, single Fourier routine `fourier`, velocity operator with Berry connection. Tests in
+  `tests/test_velocity_operator.py` (pytest). Plan and conventions: `memoire/EM/EM.md`.
 
 Index convention everywhere: `M[bra_band, k', ket_band, k]`, shape `(nband, nk, nband, nk)`.
 
@@ -260,6 +263,16 @@ degauss 0.002 et 0.02 Ry, décisions arbitrées, conventions Γ^ep = 2 Im Σ, ch
 sélection A1'/E2g par caractère jamais par index. Le volet t/Γ (chapitre 4) a son pendant dans `NOTES_TGAMMA.md`.
 Scripts versionnés ici : `scripts/epw_pp_save.py`, `scripts/epw_validate.py`, `scripts/epw_extract_gkk.py`,
 `scripts/submit_epw_p1_post.sh` ; résultats dans `results/epw/` (npz de validation commis, logs non).
+
+## Couplage électron-photon (série EM, mémoire §2.5)
+
+**Pour tout ce qui touche au couplage électron-photon, lire d'abord `memoire/EM/EM.md`** : but, formule
+ħv = V†(∂H + i[H, A])V, décisions verrouillées, format du `_tb.dat`, conventions du module, plan M0–M4
+(fonctions F1–F19, vérifications, critères de sortie avec les valeurs de référence σ/σ₀) et statut. EM.md est
+un guide, pas un cadre : en cas d'écart le code fait foi, et on réaligne EM.md (ne pas « corriger » le code vers le plan). Le code
+est `src/electron_defect_interaction/optics/` ; les campagnes de calcul EM vont sous `memoire/EM/<campagne>/`.
+Les étapes M0–M4 sont codées par Greg lui-même en mode technicien (skill `technicien`) : n'écrire ni ne
+modifier son code sans « écris-le » ou demande explicite.
 
 ## Campagnes de calcul (règle du 2026-09-17, CLEANUP.md ; précisée le 2026-09-23)
 

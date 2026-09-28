@@ -7,7 +7,10 @@ Everything is checked on the analytic graphene tight-binding model, whose answer
     - the reciprocal lattice;
     - the Fourier transform: closed-form H_AB(k), Dirac point, Hermiticity of H(k), dH(k) and A(k),
       and dH(k) against centred finite differences;
-    - dagger / hermitize.
+    - dagger / hermitize;
+    - the velocity operator (F5): diagonalization, Hermiticity of hbar v, inputs left untouched,
+      diagonal = gradient of the bands, Fermi velocity 3 t a_cc / 2 at the Dirac cone, and gauge
+      invariance of |hbar v_mn|^2 under shift_B with the Berry term (broken without it).
 
 Most tests run in two gauges, shift_B = (0,0,0) and (1,0,0), through an indirect parametrization of
 the `tb` fixture (see `tb`): every property that does not depend on how the B orbital is labelled
@@ -19,7 +22,7 @@ Run with:  .venv/bin/python -m pytest tests/test_velocity_operator.py -v
 import pytest
 import numpy as np
 from electron_defect_interaction.optics.velocity_operator import *
-from types import SimpleNamespace
+
 
 N = 100    # the k grid has N x N = 1e4 points: fast, yet covers the whole Brillouin zone
 DK = 1e-5  # finite-difference step (1/Angstrom); truncation ~DK^2 and round-off ~eps/DK balance here
@@ -44,28 +47,11 @@ def tb(request):
 @pytest.fixture
 def grid(tb):
     """
-    Quantities derived from `tb` that the tests reuse, bundled in a SimpleNamespace.
+    k grid of `tb` (GridTB: B, k_red, k_cart, K) with N x N points.
 
-    It depends on the `tb` fixture, so pytest rebuilds it for every gauge of a parametrized test
-    (the shifted model has 7 R vectors instead of 5).
-
-    Fields:
-        B      : (3, 3) reciprocal vectors in columns, 1/Angstrom
-        k_red  : (N^2, 3) reduced k points
-        k_cart : (N^2, 3) Cartesian k points, 1/Angstrom
-        K      : (3,) Dirac point, 1/Angstrom
-        R_cart : (nR, 3) Cartesian R vectors in rows, Angstrom
-        index  : dict, integer triplet tuple(R) -> row of R in tb.R_int
-        minus  : (nR,) int, minus[iR] = row of -R_int[iR], so that X_R[minus] lists X(-R)
+    It depends on the `tb` fixture, so pytest rebuilds it for every gauge of a parametrized test.
     """
-    B = reciprocal(tb.lattice)
-    k_red, k_cart, K = k_grid(B,N)
-    R_cart = tb.R_int @ tb.lattice.T # rows of integers -> rows of cartesian vectors
-    index = {tuple(R): iR for iR, R in enumerate(tb.R_int)}
-    minus = np.array([index[tuple(-R)] for R in tb.R_int]) # KeyError if some -R is missing
-
-    return SimpleNamespace(B=B, k_red=k_red, k_cart=k_cart, K=K, R_cart=R_cart, index=index, minus=minus)
-
+    return make_grid_tb(tb, N)
 
 def make_graphene_tb_analytic(tb, grid):
     """
@@ -80,7 +66,7 @@ def make_graphene_tb_analytic(tb, grid):
     Inputs:
         tb : WannierTB
             Provides t (eV) and the lattice (a_i in columns, Angstrom).
-        grid : SimpleNamespace from the `grid` fixture
+        grid : dataclass from the `grid` fixture
             Provides k_cart, (Nk, 3), 1/Angstrom.
     Returns:
         H_AB : (Nk,) complex, eV
@@ -100,7 +86,7 @@ def test_fourier_analytic(tb, grid):
     """
 
     H_tb = make_graphene_tb_analytic(tb, grid)
-    H_k = fourier(tb.H_R, grid.R_cart, tb.ndegen, grid.k_cart)
+    H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, grid.k_cart)
 
     assert np.allclose(H_tb, H_k[:,0,1], atol=1e-12), 'tight binding model not correct'
 
@@ -113,7 +99,7 @@ def test_dirac_point(tb, grid):
     because `fourier` expects a list of k points.
     """
 
-    H_K = fourier(tb.H_R, grid.R_cart, tb.ndegen, grid.K[None, :])
+    H_K = fourier(tb.H_R, tb.R_cart, tb.ndegen, grid.K[None, :])
 
     assert np.allclose(H_K, 0, atol=1e-12), 'Hamiltonian not zero at Dirac point'
 
@@ -134,10 +120,10 @@ def test_tb_hermitian(tb, grid):
         - ndegen(-R) = ndegen(R): otherwise H(k) would not be Hermitian even with Hermitian H(R).
     """
 
-    assert np.allclose(grid.minus[grid.minus], np.arange(len(tb.R_int))), 'R list not closed under R -> -R'
-    assert np.allclose(tb.H_R, tb.H_R[grid.minus].swapaxes(-1, -2).conj(), atol=1e-12), 'TB Hamiltonian not hermitian'
-    assert np.allclose(tb.r_R, tb.r_R[grid.minus].swapaxes(-1, -2).conj(), atol=1e-12), 'positian operator not hermitian'
-    assert np.allclose(tb.ndegen, tb.ndegen[grid.minus], atol=1e-12), 'R and -R dont have the same weight'
+    assert np.allclose(tb.minus[tb.minus], np.arange(len(tb.R_int))), 'R list not closed under R -> -R'
+    assert np.allclose(tb.H_R, tb.H_R[tb.minus].swapaxes(-1, -2).conj(), atol=1e-12), 'TB Hamiltonian not hermitian'
+    assert np.allclose(tb.r_R, tb.r_R[tb.minus].swapaxes(-1, -2).conj(), atol=1e-12), 'positian operator not hermitian'
+    assert np.allclose(tb.ndegen, tb.ndegen[tb.minus], atol=1e-12), 'R and -R dont have the same weight'
 
 def test_reciprocal(tb, grid):
     """
@@ -156,9 +142,9 @@ def test_fourier_hermitian(tb, grid):
     Hermitian (and k-independent): r(R) only has the real Wannier centres on the diagonal of r(0).
     """
 
-    H_k = fourier(tb.H_R, grid.R_cart, tb.ndegen, grid.k_cart)
-    A_k = fourier(tb.r_R, grid.R_cart, tb.ndegen, grid.k_cart)
-    dH_k = fourier(tb.H_R, grid.R_cart, tb.ndegen, grid.k_cart, deriv=True)
+    H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, grid.k_cart)
+    A_k = fourier(tb.r_R, tb.R_cart, tb.ndegen, grid.k_cart)
+    dH_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, grid.k_cart, deriv=True)
 
     assert np.allclose(H_k, dagger(H_k), atol=1e-12), 'H_k not hermitian'
     assert np.allclose(A_k, dagger(A_k), atol=1e-12), 'A_k not hermitian'
@@ -176,7 +162,7 @@ def test_hermitize(tb, grid):
     """
 
     rng = np.random.default_rng(0)
-    A_k = fourier(tb.r_R, grid.R_cart, tb.ndegen, grid.k_cart)
+    A_k = fourier(tb.r_R, tb.R_cart, tb.ndegen, grid.k_cart)
 
     A = rng.random(A_k.shape) + 1j*rng.random(A_k.shape)
 
@@ -206,8 +192,8 @@ def finite_difference_hamiltonian(tb, grid):
 
     Nk = grid.k_cart.shape[0]
 
-    H_plus = fourier(tb.H_R, grid.R_cart, tb.ndegen, k_plus.reshape(3*Nk, 3))
-    H_minus = fourier(tb.H_R, grid.R_cart, tb.ndegen, k_minus.reshape(3*Nk, 3))
+    H_plus = fourier(tb.H_R, tb.R_cart, tb.ndegen, k_plus.reshape(3*Nk, 3))
+    H_minus = fourier(tb.H_R, tb.R_cart, tb.ndegen, k_minus.reshape(3*Nk, 3))
 
     dH_k_fd = (H_plus - H_minus) / (2*DK)
 
@@ -222,7 +208,7 @@ def test_fourier_finite_difference(tb, grid):
     """
 
     dH_k_df = finite_difference_hamiltonian(tb, grid)
-    dH_k = fourier(tb.H_R, grid.R_cart  , tb.ndegen, grid.k_cart, deriv=True)
+    dH_k = fourier(tb.H_R, tb.R_cart  , tb.ndegen, grid.k_cart, deriv=True)
 
     assert np.allclose(dH_k_df.reshape(dH_k.shape), dH_k, atol=1e-6), 'analytical and numerical dH dont match'
 
@@ -306,3 +292,246 @@ def test_tb_shift_same_bonds():
     deltas_shifted = bond_vectors(tb_shifted)
 
     assert np.allclose(sort_by_angle(deltas), sort_by_angle(deltas_shifted), atol=1e-12)
+
+# ---------------------------------------------------------------------------------------------
+# Velocity operator (F5)
+# ---------------------------------------------------------------------------------------------
+
+def velocity_from_tb(tb, k, berry=True):
+    """
+    Whole chain from the tight-binding model to hbar v at the k points `k`.
+
+    Three Fourier transforms (H, dH/dk, A) followed by `velocity`, with or without the Berry term.
+    This is what the driver will do on every block of k points.
+
+    Inputs:
+        tb : WannierTB
+        k : (Nk, 3) float, 1/Angstrom, Cartesian k points in rows (any list, not only the grid)
+        berry : bool
+            True: hbar v = V^dag (dH + i[H, A]) V. False: the Berry term is dropped.
+    Returns:
+        H_k : (Nk, nW, nW) complex, eV, H(k) in the Wannier gauge (needed by test_velocity_diagonalizes)
+        eps, V, hv : as returned by `velocity`
+    """
+
+    H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k) # (nk, nW, nW)
+    dH_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k, deriv=True) # (nk, 3, nW, nW)
+    A_k = fourier(tb.r_R, tb.R_cart, tb.ndegen, k) # (nk, 3, nW, nW)
+    A_k = hermitize(A_k)
+
+    if berry:
+        eps, V, hv = velocity(H_k, dH_k, A_k)
+    else:
+        eps, V, hv = velocity(H_k, dH_k)
+
+    return H_k, eps, V, hv
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_velocity_diagonalizes(tb, grid):
+    """
+    The eigh step inside `velocity`, in both gauges: V is unitary, V^dag H V = diag(eps), and the
+    bands are sorted in ascending energy.
+
+    These are the checks that would cost a diagonalization per block if they sat inside `velocity`.
+    diag(eps) is built as a stack of diagonal matrices by broadcasting, (Nk, nW, 1) * (nW, nW) ->
+    [k, m, n] = eps_m(k) delta_mn (np.diag only handles a single matrix). The sorting is what the
+    other tests rely on: in M0, v = band 0 and c = band 1 around mu = 0, and the gap is
+    eps[:, 1] - eps[:, 0].
+    """
+    H_k, eps, V, hv = velocity_from_tb(tb, grid.k_cart)
+    _, nW = eps.shape
+
+    assert np.allclose(dagger(V) @ V, np.eye(nW), atol=1e-12), 'V not unitary'
+    assert np.allclose(dagger(V) @ H_k @ V, eps[..., None] * np.eye(nW), atol=1e-12), 'some other problem with V'
+    assert np.all(np.diff(eps, axis=1) >= 0), 'eigenvalues must be increasing (why?)'
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+@pytest.mark.parametrize("berry", [True, False])
+def test_velocity_hermitian(tb, grid, berry):
+    """
+    hbar v is Hermitian, for the 4 combinations gauge x (with, without Berry).
+
+    Two stacked parametrize decorators give the Cartesian product of their values: `tb` is indirect
+    (the shift goes through the fixture), `berry` is direct (True/False arrives as is in the
+    argument). This is the test that catches a missing factor i in the Berry term: [H, A] alone is
+    anti-Hermitian, and the diagonal test cannot see it since the Berry term vanishes on the
+    diagonal. Observed defect ~4e-15 eV*Angstrom.
+    """
+
+    hv = velocity_from_tb(tb, grid.k_cart, berry)[-1] # last returned value; the others are not needed
+
+    assert np.allclose(dagger(hv), hv, atol=1e-12), 'velocity operator not hermitian'
+
+def test_velocity_inputs_unchanged(tb, grid):
+    """
+    `velocity` does not modify its input arrays (regression test).
+
+    With W = dH_k instead of dH_k.copy(), W and dH_k are two names for the same array, and
+    W += i[H, A] silently overwrites the caller's dH_k: any later use of it (the "without Berry"
+    comparison, a finite difference) would then be wrong. The references are taken with .copy()
+    before the call (a plain `=` would alias them too and the test could never fail), and compared
+    with np.array_equal: nothing may change, not even at 1e-16. Only the Berry branch can overwrite
+    dH_k, so the test calls `velocity` with A_k, in the default gauge.
+    """
+
+    H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, grid.k_cart) # (nk, nW, nW)
+    dH_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, grid.k_cart, deriv=True) # (nk, 3, nW, nW)
+    A_k = fourier(tb.r_R, tb.R_cart, tb.ndegen, grid.k_cart) # (nk, 3, nW, nW)
+
+    H_k_ref = H_k.copy(); dH_k_ref = dH_k.copy(); A_k_ref = A_k.copy()
+    _ = velocity(H_k, dH_k, A_k)
+
+    assert np.array_equal(H_k, H_k_ref)
+    assert np.array_equal(dH_k, dH_k_ref)
+    assert np.array_equal(A_k, A_k_ref)
+
+def finite_difference_eps(tb, grid):
+    """
+    Centred finite-difference gradient of the band energies, reference for the diagonal of hbar v.
+
+        d eps_n/dk_mu (k) ~ [eps_n(k + DK e_mu) - eps_n(k - DK e_mu)] / (2 DK)
+
+    Same displaced k points as finite_difference_hamiltonian, (Nk, 3, 3) flattened to (3 Nk, 3),
+    but only the eigenvalues are needed, hence eigvalsh (cheaper than eigh). Both eigvalsh calls
+    return the bands in ascending order, so band n is subtracted from band n: fine as long as the
+    two bands do not cross, i.e. away from K. The result is reshaped back to (Nk, 3, nW), the shape
+    of the diagonal of hbar v.
+
+    Returns:
+        (Nk, 3, nW) float, eV*Angstrom
+    """
+    nk, d = grid.k_cart.shape
+    dk = DK*np.eye(d) # (3,3)
+
+    k_plus  = grid.k_cart[:, None, :] + dk[None, ...] # (nk, 3, 3)
+    k_minus = grid.k_cart[:, None, :] - dk[None, ...]  # (nk, 3, 3)
+
+    H_k_plus = fourier(tb.H_R, tb.R_cart, tb.ndegen, k_plus.reshape(d*nk, d))
+    H_k_minus = fourier(tb.H_R, tb.R_cart, tb.ndegen, k_minus.reshape(d*nk, d))
+
+    eps_plus = np.linalg.eigvalsh(H_k_plus)
+    eps_minus = np.linalg.eigvalsh(H_k_minus)
+
+    eps_fd = (eps_plus - eps_minus) / (2*DK)
+
+    return eps_fd.reshape(nk, d, -1) # (nk, 3, nW)
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+@pytest.mark.parametrize("berry", [True, False])
+def test_velocity_diagonal_gradient(tb, grid, berry):
+    """
+    Diagonal of hbar v = group velocity d eps_n/dk (Hellmann-Feynman), with and without Berry, in
+    both gauges.
+
+    Passing without Berry too is expected: the Berry term i(eps_m - eps_n) Abar_mn vanishes for
+    m = n, so this test checks dH/dk and the rotation V^dag ... V, not the Berry term (see
+    test_velocity_hermitian and test_velocity_gauge for that). The diagonal of a Hermitian matrix is
+    real, which is checked first.
+
+    Tolerance: atol = 1e-7 eV*Angstrom with rtol = 0 (np.allclose tests |a - b| <= atol + rtol |b|,
+    and the default rtol = 1e-5 would silently loosen it to ~6e-5 here). Observed error 1.7e-8 on
+    the masked points. Near K the cone eps = +-hbar v_F |q| curves like 1/q and the truncation error
+    of the centred difference grows like DK^2 v_F / q^2: 1.5e-6 at the two grid points closest to K
+    and K' (gap 0.098 eV, q ~ 8.5e-3 1/Angstrom). The mask gap > 1 eV removes them, in both valleys
+    at once, without any geometry.
+    """
+
+    eps_fd = finite_difference_eps(tb, grid) # (nk, 3, nW)
+    _, eps, _, hv = velocity_from_tb(tb, grid.k_cart, berry) # (nk, nW), (nk, 3, nW, nW)
+
+    # "far from K": gap above 1 eV. Boolean (nk,) mask, applied on the k axis of (nk, 3, nW) arrays
+    mask = eps[:,1] - eps[:,0] > 1
+    hv_diag = np.diagonal(hv, axis1=-2, axis2=-1) # (nk, 3, nW): the diagonal axis goes last
+
+    assert np.allclose(np.imag(hv_diag), 0, atol=1e-12), 'intraband velocity operator eigenvalues must be real !'
+    assert np.allclose(np.real(hv_diag[mask]), eps_fd[mask], atol=1e-7, rtol=0), ' diagonal of velocity operator does not match finite differenced eigenvalues'
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_fermi_velocity(tb, grid):
+    """
+    Fermi velocity of the Dirac cone, hbar v_F = 3 t a_cc / 2 = 5.751 eV*Angstrom, in both gauges.
+
+    On a circle of radius q = 1e-3 1/Angstrom around K (12 equally spaced angles, never K itself,
+    where c and v are degenerate), two independent quantities must equal hbar v_F:
+        - interband: sqrt(|hbar v^x_cv|^2 + |hbar v^y_cv|^2), element [c, v] = [1, 0]. For the
+          Dirac Hamiltonian hbar v_F (sigma . q) this is exactly hbar v_F at every angle, while each
+          component alone varies like sin or cos of theta (the node of test_node, F6);
+        - intraband: |grad eps_c| = |(Re hbar v^x_cc, Re hbar v^y_cc)|, the group velocity.
+    With Berry, both are gauge invariant, hence the two gauges.
+
+    Tolerances are relative (rtol, atol = 0) because the deviation is proportional to the quantity:
+        - point by point, rtol = 2e-3: trigonal warping gives a correction ~ q a_cc cos(3 theta),
+          observed 7.1e-4 at worst;
+        - averaged over theta, rtol = 1e-5: the cos(3 theta) term cancels exactly on 12 equally
+          spaced angles and only the O(q^2) term remains, observed 3.8e-7. This is the real test of
+          hbar v_F; the point-by-point one catches an aberrant angle.
+    """
+
+    ntheta = 12
+    q = 1e-3 # 1/Angstrom
+
+    # k = K + q (cos theta, sin theta, 0): column_stack puts the three (ntheta,) arrays in columns,
+    # one k point per row; the z component must be an array of zeros, not the scalar 0
+    theta = np.linspace(0, 2*np.pi, ntheta, endpoint=False) # (ntheta,)
+    k = grid.K[None, :] + q*np.column_stack((np.cos(theta), np.sin(theta), np.zeros_like(theta))) # (ntheta, 3)
+
+    hv = velocity_from_tb(tb, k, berry=True)[-1] # (ntheta, 3, nW, nW)
+    # in M0 bands are sorted and mu = 0 lies between them: v = 0, c = 1
+    interband_norm = np.sqrt(np.abs(hv[:, 0, 1, 0])**2 + np.abs(hv[:, 1, 1, 0])**2) # (ntheta,)
+    group_velocity = np.sqrt(np.abs(np.real(hv[:, 0, 1, 1]))**2 + np.abs(np.real(hv[:, 1, 1, 1]))**2) # (ntheta, )
+
+    vF = 3 *tb.t *tb.a_cc / 2 # hbar v_F, eV*Angstrom, read from the model rather than hard-coded
+
+    assert np.allclose(interband_norm, vF, rtol=2e-3, atol=0)
+    assert np.allclose(group_velocity, vF, rtol=2e-3, atol=0)
+    assert np.isclose(interband_norm.mean(), vF, rtol=1e-5, atol=0)
+    assert np.isclose(group_velocity.mean(), vF, rtol=1e-5, atol=0)
+
+def test_velocity_gauge(grid):
+    """
+    Gauge invariance of the velocity under the relabelling shift_B = L = a1: exact with the Berry
+    term, broken without it. It is the only test that checks the VALUE of i[H, A], not just its
+    form (the F5 counterpart of test_gauge_shift, without the Kubo sum).
+
+    Why it is exact: moving B by L gives H'(k) = U H(k) U^dag with U = diag(1, e^{ik.L}). The
+    derivative of U adds i L_mu [P, H] to dH' (P = projector on B), and the shifted centre
+    tau_B + L adds exactly the opposite i L_mu [H, P] to i[H', A']. So dH' + i[H', A'] =
+    U (dH + i[H, A]) U^dag, V' = U V, and hbar v' = hbar v up to the arbitrary phase eigh gives each
+    eigenvector: hbar v_mn may change phase, |hbar v_mn|^2 may not, hence the comparison of squared
+    moduli. Observed difference 3.7e-13 eV^2*Angstrom^2 for |hbar v|^2 up to ~59.
+
+    Without Berry the extra term i L_mu [P, H] stays: the x component changes (by up to ~800
+    eV^2*Angstrom^2), the y component does not, because L = a1 has no y component. The `not
+    allclose` makes sure the shift really reaches the velocity (a shift_B ignored somewhere would
+    pass the Berry part and fail here).
+
+    The test needs both models at once, so it builds them itself. The `grid` fixture is built from
+    the default `tb` fixture (shift 0), unrelated to the local `tb`; that is fine because the grid
+    only depends on the lattice, identical in both models.
+    """
+    tb = make_graphene_tb()
+    tb_shifted = make_graphene_tb(shift_B=(1,0,0))
+
+    k = grid.k_cart
+
+    # with Berry: same bands, same |hbar v_mn|^2 for every (k, mu, m, n)
+    _, eps, _, hv = velocity_from_tb(tb, k, berry=True)
+    _, eps_shifted, _, hv_shifted = velocity_from_tb(tb_shifted, k, berry=True)
+
+    assert np.allclose(eps, eps_shifted, atol=1e-10)
+    assert np.allclose(np.abs(hv)**2, np.abs(hv_shifted)**2, atol=1e-10)
+
+    # without Berry: x (mu = 0) must differ, y (mu = 1) must not
+    _, eps, _, hv = velocity_from_tb(tb, k, berry=False)
+    _, eps_shifted, _, hv_shifted = velocity_from_tb(tb_shifted, k, berry=False)
+
+    assert not np.allclose(np.abs(hv[:, 0, ...])**2, np.abs(hv_shifted[:, 0, ...])**2, atol=1e-10)
+    assert np.allclose(np.abs(hv[:, 1, ...])**2, np.abs(hv_shifted[:, 1, ...])**2, atol=1e-10)
+
+
+
+    
+
+
+
+

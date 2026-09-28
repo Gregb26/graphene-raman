@@ -13,6 +13,8 @@ supercell_fold.py
     "cell-major" layout as local_tmatrix (L*nw + w). Real-space weights of eigenvectors:
         sc_planewave_index        -- supercell FFT index of each unit-cell plane wave k + G
         folded_density_2d         -- |Psi(r)|^2 summed over z for Psi = sum_nk d_nk psi_nk (unit-cell Bloch states)
+    Local DOS of a finite (folded) Hamiltonian from its eigenpairs (R9, 2026-09-28):
+        ldos_from_eigenpairs      -- rho_i(E) = sum_n |<i|n>|^2 L_eta(E - eps_n), Lorentzian of half-width eta
 """
 import numpy as np
 
@@ -149,3 +151,26 @@ def folded_density_2d(d_nk, C_nkg, nG, flat_idx, ngfft_sc, workers=8):
     psi = sfft.ifftn(A.reshape(n1, n2, n3), workers=workers)
     r2 = (psi.real ** 2 + psi.imag ** 2).sum(axis=2)
     return r2 / r2.sum()
+
+
+def ldos_from_eigenpairs(e, v, idx, egrid, eta):
+    """
+    Local density of states of a finite Hermitian Hamiltonian (e.g. a folded Gamma-point supercell) on chosen orbitals (R9).
+
+        rho_i(E) = sum_n |<i|n>|^2 L_eta(E - eps_n),     L_eta(x) = (eta/pi) / (x^2 + eta^2),
+
+    i.e. -(1/pi) Im G^R_ii(E + i eta) with G^R = (E + i eta - H)^-1 written on the eigenpairs (eps_n, |n>); the Lorentzian is the
+    one of scripts/resonance_metrics.py (half-width eta, unit area), so each state carries weight |<i|n>|^2.
+    Inputs:
+        e: (n,) eigenvalues eps_n.
+        v: (n_basis, n) eigenvectors as columns (v[:, j] = |j>), e.g. numpy.linalg.eigh; only the rows idx are used.
+        idx: sequence of basis indices i (e.g. c*nw + w in the cell-major layout).
+        egrid: (nE,) energies E (same unit as e).
+        eta: half-width of the Lorentzian (same unit).
+    Returns:
+        rho: (nE, len(idx)) floats, states per unit energy per orbital (per spin for a spinless H).
+    """
+    e = np.asarray(e, float); egrid = np.asarray(egrid, float)
+    w = np.abs(np.asarray(v)[np.asarray(idx, int), :]) ** 2                   # (len(idx), n)  |<i|n>|^2
+    L = (eta / np.pi) / ((egrid[:, None] - e[None, :]) ** 2 + eta * eta)       # (nE, n)       L_eta(E - eps_n)
+    return L @ w.T

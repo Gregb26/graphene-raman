@@ -12,6 +12,8 @@ local_tmatrix.py
         Gamma_perdef_nk = -2 Im < nk | t(eps_nk) | nk >,  with
                   <wR|nk> = U(k)_{wn} e^{2pi i k.R}  (phi_nk),  a gauge-invariant diagonal element.
 
+    Local DOS on cluster orbitals (cluster_ldos, R9): rho_i = -(1/pi) Im [g0 + g0 t g0]_ii.
+
     The internal grid Nk_int (for g0) is DECOUPLED from the output grid k_out and should be dense.
     Gamma_perdef is the per-defect (concentration-normalized) rate; multiply by 1/Nk for a given
     array concentration.
@@ -160,6 +162,37 @@ def local_t(V_loc, g0):
     """t = V_loc [1 - g0 V_loc]^{-1}."""
     n = V_loc.shape[0]
     return V_loc @ np.linalg.solve(np.eye(n) - g0 @ V_loc, np.eye(n))
+
+
+def cluster_ldos(g0, V_loc, idx):
+    """
+    Local density of states of the defective lattice on chosen orbitals of the cluster (R9, 2026-09-28; dilute limit, one defect).
+
+        rho_i(e) = -(1/pi) Im G^R_ii(e + i eta),     G = g0 + g0 T g0,     T = V_loc [1 - g0 V_loc]^{-1}   (local_t),
+        rho0_i(e) = -(1/pi) Im g0_ii(e + i eta)      (pristine lattice, same orbitals),
+
+    for i in idx (cluster index L*nw + w). With X = [1 - g0 V]^{-1} one has X = 1 + g0 V X, hence g0 + g0 V X g0 = X g0 and
+    G = [1 - g0 V]^{-1} g0 is evaluated by one linear solve per energy. Exact for orbitals of the cluster: T is supported on the
+    cluster, so G_ij for i, j in the cluster only needs the cluster block of g0.
+
+    Inputs:
+        g0: (nE, n, n) or (n, n) complex, cluster block of the lattice Green's function (local_green / local_green_batch) at e + i eta.
+        V_loc: (n, n) complex Hermitian, defect potential on the cluster (extract_V_loc), same units as 1/g0 (eV).
+        idx: sequence of cluster indices i = L*nw + w.
+    Returns:
+        rho, rho0: (nE, len(idx)) floats (or (len(idx),) for a single energy), states / eV / orbital / spin.
+    """
+    g0 = np.asarray(g0)
+    single = g0.ndim == 2
+    if single:
+        g0 = g0[None]
+    idx = np.asarray(idx, int)
+    n = V_loc.shape[0]
+    A = np.eye(n)[None] - g0 @ V_loc                                   # (nE, n, n): 1 - g0 V
+    G = np.linalg.solve(A, g0)                                         # (nE, n, n): [1 - g0 V]^{-1} g0 = g0 + g0 T g0
+    rho = -np.diagonal(G, axis1=1, axis2=2)[:, idx].imag / np.pi
+    rho0 = -np.diagonal(g0, axis1=1, axis2=2)[:, idx].imag / np.pi
+    return (rho[0], rho0[0]) if single else (rho, rho0)
 
 
 def scattering_rate(Hwr, Rw, ndegen, V_loc, R_local, k_out, eta,

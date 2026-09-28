@@ -112,6 +112,30 @@ def Mwr_to_Mwk(Mwr, R, k):
 
     return Mwk
 
+def Mwr_to_Mwk_pairs(Mwr, R, k_bra, k_ket):
+    """
+    Rectangular version of Mwr_to_Mwk (R9, 2026-09-28): the bra and ket k-points are two independent lists, so a few fixed k
+    against a large map of k' costs O(n' + n) phases instead of the (nw*nk)^2 square array.
+
+        Mwk[w, k', W, k] = sum_{R, R'} exp(-2 pi i k'.R) Mwr[w, R, W, R'] exp(+2 pi i k.R')
+
+    (same convention as Mwr_to_Mwk, which is recovered for k_bra = k_ket = k).
+    Inputs:
+        Mwr: (nw, nr, nw, nr) complex, Wannier-gauge object in real space (Mwk_to_Mwr).
+        R: (nr, 3) ints, the R vectors of Mwr (reduced coordinates).
+        k_bra: (nk', 3) floats, bra k-points k' (reduced coordinates).
+        k_ket: (nk, 3) floats, ket k-points k (reduced coordinates).
+    Returns:
+        Mwk: (nw, nk', nw, nk) complex, Wannier gauge, index [w, k', W, k] = [bra WF, k', ket WF, k].
+    """
+
+    R = np.asarray(R, dtype=float)
+    phase_bra = np.exp(-2j*np.pi * (np.asarray(k_bra, dtype=float) @ R.T)) # (nk', nr)
+    phase_ket = np.exp(+2j*np.pi * (np.asarray(k_ket, dtype=float) @ R.T)) # (nk, nr)
+
+    # sum over R (bra side) and R' (ket side)
+    return np.einsum("kr, wrWR, KR -> wkWK", phase_bra, Mwr, phase_ket, optimize=True)
+
 def Mwk_to_Mbk(Mwk, Hwr, Rw, k, ndegen=None):
     """
     Transforms the object Mwk in reciprocal space in Wannier gauge to Bloch gauge using the Wannier Hamiltonian.

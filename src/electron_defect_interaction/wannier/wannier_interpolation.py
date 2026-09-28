@@ -6,7 +6,7 @@ wannier_interpolation.py
 
 import numpy as np
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 
 def Mbk_to_Mwk(Mbk, U, U_dis=None):
     """
@@ -240,7 +240,7 @@ def wannier_interpolate(M, k_coarse, k_fine, wannier_tb, u_path, u_dis_path=None
         U_dis = U_dis[_match_kpoint_order(k_Ud, k_coarse)]
 
     # 2. tight-binding Hamiltonian H(R) + Wigner-Seitz degeneracies
-    Hwr, Rw, ndegen = read_w90_HR(wannier_tb)
+    Hwr, Rw, ndegen, _, _ = read_w90_tb(wannier_tb)
 
     # 3. coarse Bloch -> Wannier gauge -> real space -> fine grid -> smooth Bloch gauge
     MP_grid = _infer_mp_grid(k_coarse)

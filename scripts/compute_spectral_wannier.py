@@ -19,7 +19,7 @@ import numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
 from electron_defect_interaction.config import load_production, dense_paths, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order)
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
@@ -73,7 +73,7 @@ def main():
     if paths.get("u_dis"):
         U_dis, k_Ud = read_w90_mat(paths["u_dis"])
         U_dis = U_dis[_match_kpoint_order(k_Ud, k_coarse)]
-    Hwr, Rw, ndegen = read_w90_HR(paths["tb"])
+    Hwr, Rw, ndegen, _, _ = read_w90_tb(paths["tb"])
 
     # interpolate coarse M -> Wannier real space once; locality guardrail (hard)
     Mwk = Mbk_to_Mwk(M, U, U_dis)

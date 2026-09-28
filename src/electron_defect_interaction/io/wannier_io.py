@@ -120,31 +120,61 @@ def read_w90_hr(w90_path):
     check_hermicity_HR(HR, R)
     return HR, R, ndegen
 
-def read_w90_HR(w90_path):
+def _read_tb_blocks(f, nrpts, nw, ncomp):
     """
-    Read a Wannier90 `seedname_tb.dat` file and extract the tight-binding Hamiltonian H(R).
+    Read one section of a Wannier90 `_tb.dat` (H: ncomp = 1, r: ncomp = 3) from the open file `f`.
 
-    Format: header (date), three lattice-vector lines (Angstrom), nw, nrpts, the Wigner-Seitz
-    degeneracy list (nrpts ints, 15 per line), then nrpts blocks -- each a blank line, the R
-    vector "Rx Ry Rz", and nw*nw lines "m n Re Im". (A second set of blocks holding the position
-    operator <0m|r|Rn> follows in the file but is not read here.)
+    For each R: a blank line, the line "R1 R2 R3", then nw*nw lines
+    "m n Re(X_1) Im(X_1) ... Re(X_ncomp) Im(X_ncomp)" holding <0m|X|Rn>. The first index m is the
+    ROW (it varies fastest in the file). H and r share this routine, hence the same index convention.
 
     Returns
     -------
-        HR: (nrpts, nw, nw) array of complex   -- H(R) in the Wannier basis
-        R:  (nrpts, 3) array of ints           -- R vectors (reduced coords)
-        ndegen: (nrpts,) array of ints         -- Wigner-Seitz degeneracies; H(k)=sum_R e^{ik.R} H(R)/ndegen(R)
+        X_R: (nrpts, ncomp, nw, nw) array of complex
+        R:   (nrpts, 3) array of ints           -- R vectors (reduced coords), in file order
+    """
+    X_R = np.zeros((nrpts, ncomp, nw, nw), dtype=complex)
+    R = np.zeros((nrpts, 3), dtype=int)
+    for ir in range(nrpts):
+        f.readline()                       # blank line
+        R[ir] = [int(n) for n in f.readline().split()]
+        for _ in range(nw * nw):
+            t = f.readline().split()
+            m, n = int(t[0]) - 1, int(t[1]) - 1
+            v = np.array(t[2:], dtype=float)                # Re, Im of each component, interleaved
+            X_R[ir, :, m, n] = v[0::2] + 1j * v[1::2]       # shape error if not 2*ncomp values
+    return X_R, R
+
+def read_w90_tb(w90_path):
+    """
+    Read a Wannier90 `seedname_tb.dat` file: lattice, R vectors and Wigner-Seitz degeneracies, the
+    Hamiltonian H(R) and the position operator r(R) in the Wannier basis.
+
+    Format (Wannier90 3.1): header (date), three lattice-vector lines (Angstrom), nw, nrpts, the
+    Wigner-Seitz degeneracy list (nrpts ints, 15 per line), then two sections over the same R list,
+    H with lines "m n Re Im" and r with lines "m n Re(x) Im(x) Re(y) Im(y) Re(z) Im(z)" (see
+    `_read_tb_blocks`). No value in the file is divided by ndegen: for both,
+    X(k) = sum_R e^{ik.R} X(R) / ndegen(R).
+
+    Returns
+    -------
+        HR: (nrpts, nw, nw) array of complex     -- H_mn(R) = <0m|H|Rn> in eV, Hermiticity checked
+        R:  (nrpts, 3) array of ints             -- R vectors (reduced coords)
+        ndegen: (nrpts,) array of ints           -- Wigner-Seitz degeneracies
+        rR: (nrpts, 3, nw, nw) array of complex  -- <0m|r_alpha|Rn> in Angstrom, alpha = x, y, z; the
+                                                    diagonal of r(0) holds the Wannier centres. Not
+                                                    Hermitian (~1e-3 Angstrom, finite differences):
+                                                    no check here.
+        lattice: (3, 3) array of floats          -- Angstrom, lattice[:, i] = a_i
     """
     from pathlib import Path
     with Path(w90_path).open() as f:
 
         f.readline()                       # header (date)
 
-        # Lattice vectors in angstrom (read but unused here)
-        a1 = np.fromstring(f.readline(), sep=' ')
-        a2 = np.fromstring(f.readline(), sep=' ')
-        a3 = np.fromstring(f.readline(), sep=' ')
-        A = np.column_stack((a1, a2, a3)) # A[:,i] = a_i
+        # lattice vectors in Angstrom, one per line, stored in columns
+        a = [[float(x) for x in f.readline().split()] for _ in range(3)]
+        lattice = np.column_stack(a) # lattice[:,i] = a_i
 
         nw = int(f.readline())             # number of wannier functions
         nrpts = int(f.readline())          # number of inequivalent R points used by Wannier90
@@ -154,14 +184,19 @@ def read_w90_HR(w90_path):
             ndeg += [int(x) for x in f.readline().split()]
         ndegen = np.array(ndeg[:nrpts], dtype=int)
 
-        HR = np.zeros((nrpts, nw, nw), dtype=complex)
-        R = np.zeros((nrpts, 3), dtype=int)
-        for ir in range(nrpts):
-            f.readline()                   # blank line
-            R[ir] = [int(n) for n in f.readline().split()]
-            for _ in range(nw * nw):
-                m_str, n_str, Re_str, Im_str = f.readline().split()
-                HR[ir, int(m_str) - 1, int(n_str) - 1] = float(Re_str) + 1j * float(Im_str)
+        HR, R = _read_tb_blocks(f, nrpts, nw, ncomp=1)
+        rR, R_r = _read_tb_blocks(f, nrpts, nw, ncomp=3)
 
+    assert np.array_equal(R_r, R), 'H and r sections of the _tb.dat have different R lists'
+    HR = HR[:, 0]                          # (nrpts, nw, nw)
     check_hermicity_HR(HR, R)
+    return HR, R, ndegen, rR, lattice
+
+def read_w90_HR(w90_path):
+    """
+    Former name of `read_w90_tb`, returning only (HR, R, ndegen). Kept for the frozen campaign
+    drivers (article/R4_quasi_lie, article/R9_controles), their working directories on the cluster and
+    the notebooks; new code calls `read_w90_tb`.
+    """
+    HR, R, ndegen, _, _ = read_w90_tb(w90_path)
     return HR, R, ndegen

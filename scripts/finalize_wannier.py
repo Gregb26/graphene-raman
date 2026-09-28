@@ -15,7 +15,7 @@ import sys
 
 import numpy as np
 
-from electron_defect_interaction.io.wannier_io import read_w90_HR, read_w90_mat
+from electron_defect_interaction.io.wannier_io import read_w90_tb, read_w90_mat
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from electron_defect_interaction.io.wannier_provenance import write_wannier_manifest
 
@@ -53,7 +53,7 @@ def finalize(N):
 
     # interpolated bands vs DFT (wannier.eig), on the u.mat k-grid (same win order)
     if os.path.exists(eig):
-        Hwr, Rw, nd = read_w90_HR(tb)
+        Hwr, Rw, nd, _, _ = read_w90_tb(tb)
         _, kU = read_w90_mat(u)
         _, Ew, _ = Hwr_to_Hwk(Hwr, Rw, kU, ndegen=nd)      # (nk, nw) eV
         Edft = read_eig(eig)                               # (nk, nb) eV

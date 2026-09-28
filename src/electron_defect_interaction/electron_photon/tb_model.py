@@ -1,13 +1,14 @@
 """
 Tight-binding model in the Wannier basis (`WannierTB`) and the analytic graphene model of M0.
 
-M1 adds the construction from Wannier90's `_tb.dat` (read in io/wannier_io.py) and the
-transformations of a model (centres_only, pz_block, shift_home_cell). Conventions: package
-docstring (electron_photon/__init__.py).
+M1: `make_wannier_tb` builds it from Wannier90's `_tb.dat` (read in io/wannier_io.py); the
+transformations of a model (centres_only, pz_block, shift_home_cell) will follow. Conventions:
+package docstring (electron_photon/__init__.py).
 """
 
 import numpy as np
 from dataclasses import dataclass
+from electron_defect_interaction.io.wannier_io import read_w90_tb
 
 @dataclass
 class WannierTB:
@@ -24,7 +25,7 @@ class WannierTB:
         index   : dict, tuple(R) -> row of R in R_int
         minus   : (nR,) int, row of -R, so that X_R[minus] = X(-R)
         t, a_cc : float, eV and Angstrom, hopping and bond length of the toy model (not Wannier90
-                  quantities: the M1 reader will need defaults)
+                  quantities: make_wannier_tb sets the M0 values; only `ring` uses them, for q0)
     """
     lattice: np.ndarray
     R_int: np.ndarray
@@ -104,3 +105,24 @@ def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     r_R[i0,:, B, B] = tau_B
 
     return WannierTB(lattice=lattice, R_int=R_int, R_cart=R_cart, ndegen=ndegen, H_R=H_R, r_R=r_R, t=t, a_cc=a_cc, index=index, minus=minus)
+
+def make_wannier_tb(path):
+    """
+    WannierTB of a real Wannier90 model, from its `_tb.dat` (read by io/wannier_io.read_w90_tb).
+
+    H_R and r_R are kept raw: no division by ndegen (done in `fourier`), r not hermitized (the
+    caller applies `hermitize` to A(k)). R_cart, index and minus are filled as in make_graphene_tb.
+    t and a_cc are not Wannier90 quantities: they take the M0 values, which only set the q0 of
+    `ring` (bracket [0, 2 q0]; the 27 x 27 data give q/q0 = 0.95-1.29 at 2.33 eV).
+
+    Inputs:
+        path : str or Path, Wannier90 `seedname_tb.dat`
+    Returns:
+        WannierTB, lattice and R_cart in Angstrom, H_R in eV, r_R in Angstrom
+    """
+    H_R, R_int, ndegen, r_R, lattice = read_w90_tb(path)
+    R_cart = R_int @ lattice.T
+    index = {tuple(R): iR for iR, R in enumerate(R_int)} # integer triplet R -> row of R in R_int
+    minus = np.array([index[tuple(-R)] for R in R_int]) # KeyError if some -R is missing
+    
+    return WannierTB(lattice=lattice, R_int=R_int, R_cart=R_cart, ndegen=ndegen, H_R=H_R, r_R=r_R, index=index, minus=minus, t=2.7, a_cc=1.42)

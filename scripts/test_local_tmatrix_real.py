@@ -8,7 +8,7 @@ same coarse internal grid. Also reports the on-site V_loc and positivity. Usage:
 import sys
 import numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order)
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
@@ -30,7 +30,7 @@ else:
 k = qe_io.get_k_red(uc); Nc = len(k); MP = _infer_mp_grid(k)
 U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
 Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
-Hwr, Rw, nd = read_w90_HR(f"{W}/wannier_tb.dat")
+Hwr, Rw, nd, _, _ = read_w90_tb(f"{W}/wannier_tb.dat")
 M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)   # eV (Wannier H is in eV)
 
 # Wannier-gauge M (intensive), real space, recentered; 5-band smooth-Bloch projection on the coarse grid

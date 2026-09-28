@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 
 import _paths
 from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order
 
@@ -58,7 +58,7 @@ def build_kpath(corners, n_per_seg=200):
 
 def main():
     # --- inputs ---
-    Hwr, Rw, ndegen = read_w90_HR(TB_PATH)                 # H(R) in eV
+    Hwr, Rw, ndegen, _, _ = read_w90_tb(TB_PATH)           # H(R) in eV
     U, k_U = read_w90_mat(U_PATH)
     Ud, k_Ud = read_w90_mat(UDIS_PATH)
 

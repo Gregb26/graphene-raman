@@ -12,7 +12,7 @@ and <results_dir>/M_tests_summary.csv, read by scripts/make_figures.py (fig_M_ma
 import csv, json, numpy as np
 from scipy.ndimage import map_coordinates
 from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, Mwr_to_Mwk, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
@@ -154,7 +154,7 @@ for S in SIZES:
             print(f"[pad] {S}: real-space dense kernel at p=1 vs coarse M^L: rel {rel:.2e}", flush=True)
             tests.append((f"padding : noyau dense à p=1 vs noyau N×N, {S}", r"max|M^L_dense - M^L| / max|M^L|", f"{rel:.1e}", "1e-10", "OK" if rel < 1e-10 else "ÉCHEC", "analyze_M.py"))
         # Wannier closure Bloch -> Wannier -> Bloch (5-band subspace) and Fourier round trip
-        Hwr, Rw, nd = read_w90_HR(f"{dp['wdir']}/wannier_tb.dat"); MP = _infer_mp_grid(kd)
+        Hwr, Rw, nd, _, _ = read_w90_tb(f"{dp['wdir']}/wannier_tb.dat"); MP = _infer_mp_grid(kd)
         kd_mp = np.round(kd * np.asarray(MP)) / np.asarray(MP)                                      # k reconstruits des indices MP (le XML de QE arrondit à ~1e-7)
         print(f"[closure] k(XML) vs k(MP): max |dk| = {np.abs(kd - kd_mp).max():.2e}", flush=True)
         Mwk = Mbk_to_Mwk(np.array(Md) * HA2EV, U9, Ud9); Mwr, R = Mwk_to_Mwr(Mwk, kd_mp, MP); Mwk2 = Mwr_to_Mwk(Mwr, R, kd_mp)

@@ -78,7 +78,7 @@ Avec des pseudo-potentiels NC, p̂ ≠ m_e v̂. Le couplage minimal passe par v�
   - H hermitien à 10⁻¹⁵ eV ;
   - r **n'est pas hermitien** : max |r_ij(R) − r_ji(−R)*| = 2.5×10⁻³ Å (x) et 1.7×10⁻³ Å (y), maximum dans le bloc σ (R = (−1,0,0), i = 1, j = 3) ;
   - rapport de Frobenius anti-hermitien/hermitien : 1.2×10⁻³ ;
-  - en k : max |r(k) − r(k)†| = 4.9×10⁻³ Å à K.
+  - en k : max |r(k) − r(k)†| = 4.9×10⁻³ Å à K, mais **1.5×10⁻² Å** sur 20 000 k tirés au hasard, et ce maximum est dans le bloc **p_z** (σ : 7×10⁻³ Å ; croisé : 10⁻¹⁰ Å). Mesure du 2026-09-28, à consolider par F10.
   - C'est l'erreur des différences finies de l'éq. (44) de WYSV06. Budget d'erreur sur ħv_cv à 2.33 eV : environ 0.01 eV·Å, soit ≲ 0.2 % de ħv_F.
 - **Décroissance** : r hors diagonale décroît jusqu'à 4×10⁻⁵ Å au bord de la cellule de Wigner-Seitz, soit 2×10⁻⁴ du maximum.
 
@@ -310,21 +310,38 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 **But** : remplacer la source des données sans toucher au reste de la chaîne.
 
 **F8 — lecture du `_tb.dat`** → `WannierTB`
-- **Répartition (décidée le 2026-09-28)** : la lecture du fichier reste dans `io/wannier_io.py`, qui lit déjà le bloc H (`read_w90_HR`) ; on y ajoute la lecture du bloc r, qui retourne des tableaux. Le `WannierTB` est construit dans `electron_photon/tb_model.py`.
-- Lecture selon le format du §2.
-- **Attention à l'ordre des indices** : dans une ligne `j i …`, la valeur va dans `X_R[iR, j−1, i−1]` (ligne = j).
-- On garde les valeurs brutes, avec la division par ndegen au même endroit que pour H dans `Hwr_to_Hwk`.
-- **Vérifications :**
-  - le bloc H coïncide avec `read_w90_HR` du `_hr.dat` (liste de R, ndegen, |ΔH| ≤ 5×10⁻⁷ eV, soit l'arrondi F12.6) ;
-  - Σ 1/ndegen = 729 ;
-  - diag r(0) = centres du .wout (4×10⁻⁷ Å) ;
-  - **ε interpolées aux 729 points grossiers = `.eig`** pour les bandes de la fenêtre gelée (à ~10⁻⁶ eV près). C'est le test de la transformée avec ndegen ;
-  - dégénérescence à K à E_D = −4.238895 eV.
+- **Répartition (décidée le 2026-09-28)** : la lecture du fichier reste dans `io/wannier_io.py` ; le `WannierTB` est construit dans `electron_photon/tb_model.py`.
+- **Lecteur (fait, 2026-09-28)** : `read_w90_tb(path)` → `(HR, R, ndegen, rR, lattice)`, soit H(R) (nR, nW, nW) en eV, R entiers (nR, 3), ndegen (nR,), r(R) (nR, 3, nW, nW) en Å et `lattice` (3, 3) en colonnes.
+  - Il remplace `read_w90_HR`, qui ne lisait que le bloc H. Tous les appelants de `src/` et `scripts/` sont passés à `read_w90_tb`.
+  - `read_w90_HR` reste un emballage qui retourne `(HR, R, ndegen)`, pour les pilotes de campagne figés (`article/R4_quasi_lie`, `article/R9_controles`), leurs répertoires de travail sur rorqual et les notebooks.
+  - Un seul analyseur (`_read_tb_blocks`) lit les sections H et r : même convention d'indices pour les deux. Dans une ligne `j i …`, la valeur va dans `X_R[iR, j−1, i−1]` (ligne = j).
+  - Valeurs brutes : aucune division par ndegen, r non hermitisé, H vérifié hermitien (`check_hermicity_HR`).
+  - Les 13 `_tb.dat` du dépôt ont leur bloc r ; sur les 13, H, R et ndegen sont exactement identiques (`np.array_equal`) à ceux de l'ancien `read_w90_HR`. Lecture du 27×27 : 0.07 s.
+- **Construction (fait, Greg, 2026-09-28)** : `make_wannier_tb(path)` dans `tb_model.py` appelle `read_w90_tb` et remplit `R_cart`, `index` et `minus` comme `make_graphene_tb`. `t` = 2.7 eV et `a_cc` = 1.42 Å gardent les valeurs de M0.
+  - Seul `ring` s'en sert, pour q₀ et l'intervalle [0, 2q₀]. Sur les données réelles à 2.33 eV : q/q₀ = 0.95–1.29, car le vrai ħv_F vaut **5.47 eV·Å** (v_F = 8.3×10⁵ m/s), contre 5.75 pour les valeurs par défaut.
+  - Tests (`tests/test_tb_model.py`, fixtures `tb_w90` et `eig_w90` de `conftest.py`) :
+    - champs dérivés cohérents ;
+    - la chaîne cartésienne (`reciprocal` puis `compute_velocity`) reproduit le `.eig` à 1.3×10⁻⁵ eV, comme la transformée en coordonnées réduites ;
+    - le `K` de `GridTB` est bien le point de Dirac du réseau réel, à E_D ;
+    - A(K) brut non hermitien (2.3×10⁻³ Å en x, 4.9×10⁻³ en y), hermitien après `hermitize` ;
+    - `ring` sur les données réelles, μ = E_D : sur la couche à 10⁻⁹ eV, entre les bandes p_z.
+  - Tests de mutation : `R_cart` sans `.T` (5 échecs), `minus` = identité (1), t = 10 eV (1, l'anneau), r hermitisé en R (1).
+- **Vérifications du lecteur** (`tests/test_wannier_io.py`, 9 tests, sur `wannier/27x27/` suivi par git) :
+  - formes, réseau en colonnes (valeurs du §2) ;
+  - Σ 1/ndegen = 729, 717 × 1 et 24 × 2, ndegen(−R) = ndegen(R) ;
+  - H hermitien à 10⁻¹⁵ eV ; r **non** hermitien, 2.54×10⁻³ Å (x) et 1.65×10⁻³ Å (y), signe que le lecteur ne l'hermitise pas ;
+  - diag r(0) = centres du `.wout` à 4×10⁻⁷ Å, partie imaginaire nulle : vérifie aussi l'entrelacement Re(x) Im(x) Re(y)… ;
+  - **ordre ligne/colonne** : les valeurs propres n'y sont pas sensibles (H(R)ᵀ donne H(k)*, même spectre ; mesuré 4×10⁻¹⁴ eV). D'où un test géométrique : les trois plus grands |H_{45}(R)| = 2.909 eV sont en R = 0, −a₁, −a₂, à la distance a_cc = 1.42366 Å entre les centres ; avec les indices transposés, on aurait R = 0, +a₁, +a₂ à 3.77 Å ;
+  - **ε interpolées aux 729 points grossiers = `.eig`** dans la fenêtre gelée (4 ou 5 bandes sous −1.74 eV) : écart mesuré **1.3×10⁻⁵ eV**, et non ~10⁻⁶. C'est le résidu de `use_ws_distance`, que Wannier90 applique et pas nous. Sans ndegen, l'écart monte à 7.7×10⁻⁵ eV seulement : à 27×27, ndegen = 2 ne touche que 24 R au bord, où H ~ 10⁻⁵ eV. Ce test ne distingue donc ndegen que d'un facteur ~6 ; c'est Σ 1/ndegen qui le teste vraiment ;
+  - dégénérescence à K : 6×10⁻⁸ eV, à E_D à 1.3×10⁻⁶ eV près ;
+  - `read_w90_HR` retourne exactement les trois premières sorties.
+  - Tests de mutation du lecteur : indices permutés (1 échec, l'ordre ligne/colonne), Re/Im mal entrelacés (2), r hermitisé dans le lecteur (1), ndegen ignoré (3), réseau en lignes (2).
+  - **Abandonné** : la comparaison avec un `_hr.dat`, dont il n'existe aucun exemplaire dans le dépôt. L'identité avec l'ancien lecteur et le test `.eig` la remplacent.
 
 **F9 — `centres_only(tb)`** → copie avec r_R réduit à la diagonale de R = 0.
 
 **F10 — `hermiticity_report(tb, blocks)`** → normes anti-hermitiennes de r par bloc : σ (WF 1–3), p_z (WF 4–5), croisé σ/p_z.
-- **À établir :** le défaut dans le bloc p_z seul. C'est le seul qui compte pour π→π*, et il est probablement bien plus petit que 2.5×10⁻³ Å.
+- **À établir :** le défaut dans le bloc p_z seul. C'est le seul qui compte pour π→π*. On l'attendait bien plus petit que 2.5×10⁻³ Å, mais un premier coup d'œil en k (2026-09-28, §2) dit le contraire : le plus grand défaut de A(k), 1.5×10⁻² Å, est dans le bloc p_z. À mesurer aussi en R, et à traduire en budget d'erreur sur ħv_cv (de l'ordre de 2.33 eV × 1.5×10⁻² Å ≈ 0.03 eV·Å, soit ~0.6 % de ħv_F, au lieu des 0.2 % du §2).
 
 **F11 — `symmetry_report(tb)`** → max |H_{σ,pz}(R)| et max |r^{x,y}_{σ,pz}(R)|.
 - **Attendu :** du bruit numérique, par la symétrie miroir σ_h. Le 0.220 Å de EM1 entre σ et p_z doit être en z uniquement.
@@ -419,7 +436,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 |---|---|
 | F1, F4, F5, F7 (modèle, transformée, vitesse, Kubo) | **Greg** |
 | F6, F13–F15 (anneau, v_F, statistiques) | Greg |
-| F8 (lecteur `_tb.dat`), validé par son test contre `read_w90_HR` | Code (« écris-le ») ou Greg |
+| F8 : lecteur `read_w90_tb` dans `io/wannier_io.py` (fait, à la demande de Greg) ; construction du `WannierTB` | Code ; Greg |
 | Découpage et performance, échafaudage pytest, F16–F19, figures | Code |
 | EM2, EM3 (cluster, QE, Wannier90) | Code |
 
@@ -474,7 +491,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
 | M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (78 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
-| M1 — lecteur et diagnostics | à faire | |
+| M1 — lecteur et diagnostics | en cours : F8 fait (lecteur `read_w90_tb`, 9 tests ; `make_wannier_tb`, 5 tests) ; F9–F11 à faire | 2026-09-28 |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |
 | EM2 — DFT directe et postw90 | après M3 | |

@@ -10,9 +10,9 @@ test_wannier.py
           - read_w90_mat(u_dis.mat) : U_dis is an isometry    U_dis^dag U_dis = I_nw, and
                                        P = U_dis U_dis^dag is a rank-nw projector (P^2=P, P^dag=P, trP=nw)
           - V = U_dis @ U is an isometry (V^dag V = I_nw)
-          - read_w90_HR(tb.dat)     : Hermiticity H(R)=H(-R)^dag (reader asserts it), ndegen>0,
+          - read_w90_tb(tb.dat)     : Hermiticity H(R)=H(-R)^dag (reader asserts it), ndegen>0,
                                        R contains the origin; H(k) Hermitian with real eigenvalues
-          - read_w90_hr(hr.dat) agrees with read_w90_HR(tb.dat) on H(R) and ndegen
+          - read_w90_hr(hr.dat) agrees with read_w90_tb(tb.dat) on H(R) and ndegen
       (2) ROUND-TRIP (Wannier-gauge Fourier identity, EXACT)
           - M_wk -> Mwk_to_Mwr -> Mwr_to_Mwk == M_wk to machine precision
       (3) FULL PIPELINE (gauge invariant, EXACT on coarse->coarse)
@@ -25,7 +25,7 @@ test_wannier.py
 import numpy as np
 
 import _paths
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR, read_w90_hr
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb, read_w90_hr
 from electron_defect_interaction.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, Mwr_to_Mwk, wannier_interpolate,
 )
@@ -91,7 +91,7 @@ def test_parsers():
     print(f"  V=Udis@U          : max|V^dV-I|={viso:.1e}  -> {'PASS' if okV else 'FAIL'}")
 
     # --- H(R) tight-binding from tb.dat ---
-    Hwr, Rw, ndegen = read_w90_HR(TB_PATH)              # reader asserts H(R)=H(-R)^dag
+    Hwr, Rw, ndegen, _, _ = read_w90_tb(TB_PATH)        # reader asserts H(R)=H(-R)^dag
     nrpts = Hwr.shape[0]
     has_origin = np.any(np.all(Rw == 0, axis=1))
     okH = (ndegen.min() > 0) and has_origin and (len(ndegen) == nrpts == len(Rw))

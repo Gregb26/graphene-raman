@@ -103,8 +103,10 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   transform of the radial projectors), and `read_psp8` (legacy ABINIT `.psp8` reader, kept but
   unused by default — safe to delete if ABINIT is fully dropped).
 - **io/wannier_io.py** — Wannier90 readers: `read_w90_mat` (U / U_dis `.mat`, asserts
-  unitarity/isometry), `read_w90_HR` (`_tb.dat`, returns `(HR, R, ndegen)`), `read_w90_hr`
-  (`_hr.dat`, same return), `check_hermicity_HR`.
+  unitarity/isometry), `read_w90_tb` (`_tb.dat`, returns `(HR, R, ndegen, rR, lattice)`: H(R) in eV,
+  position operator r(R) (nR, 3, nw, nw) in Angstrom, lattice in columns), `read_w90_HR` (former name, kept as a
+  wrapper returning `(HR, R, ndegen)` for frozen campaign drivers), `read_w90_hr` (`_hr.dat`, returns
+  `(HR, R, ndegen)`), `check_hermicity_HR`. Tests: `tests/test_wannier_io.py` on `wannier/27x27/`.
 - **defects/local_R.py** — M^L in **real space**: `compute_ML_R` (serial, dense BLAS, fast for
   moderate supercells but O(D³)), `prep_realspace_inputs` + `compute_ML_R_mpi` (grid-distributed,
   Allreduce). Builds folded unit-cell Bloch parts via `wavefunctions/fold_wfk_to_sc`.
@@ -128,11 +130,12 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   tri-linear / cubic-spline).
 - **defects/many_body/single_defect.py** — orphan / work-in-progress (not imported anywhere).
 - **electron_photon/** — electron-photon coupling (EM series, in progress), conventions in its
-  `__init__.py`: `tb_model` (`WannierTB`, graphene toy model), `kgrid` (reciprocal lattice, k grids),
+  `__init__.py`: `tb_model` (`WannierTB`, graphene toy model, `make_wannier_tb(path)` from a real `_tb.dat`), `kgrid` (reciprocal lattice, k grids),
   `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
   `compute_velocity(tb, k, mode)`), `ring`
   (resonant k points around K), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`). Tests (pytest) in
-  `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo}.py`, shared fixtures in `tests/conftest.py`.
+  `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo}.py`, shared fixtures in `tests/conftest.py` (real data:
+  `tb_w90`, `eig_w90` on the tracked `wannier/27x27/`).
   Plan and conventions: `memoire/EM/EM.md`.
 
 Index convention everywhere: `M[bra_band, k', ket_band, k]`, shape `(nband, nk, nband, nk)`.

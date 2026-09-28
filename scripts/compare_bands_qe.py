@@ -1,7 +1,7 @@
 """
 compare_bands_qe.py
     Compare Quantum ESPRESSO DFT bands (bands.x 'bands.dat') with the Wannier90-interpolated bands along
-    the same k-path, using read_w90_HR WITH the Wigner-Seitz degeneracies (ndegen) and Hwr_to_Hwk.
+    the same k-path, using read_w90_tb WITH the Wigner-Seitz degeneracies (ndegen) and Hwr_to_Hwk.
 
     bands.dat (bands.x raw format): header line '&plot nbnd=.., nks=.. /', then for each k-point a line
     with the cartesian k (units 2*pi/alat) followed by nbnd eigenvalues in eV. We convert k to reduced
@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import _paths
 from _bands import SYM_POINTS, path_corners, label_corner, nearest_index
 from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.io.wannier_io import read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_tb
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
 
 HA_TO_EV = 27.211386245988
@@ -34,7 +34,7 @@ def main():
     kcart, dft = qe_io.get_qe_bands(BANDS_DAT)            # (nks,3), (nks,nbnd) eV (absolute)
     kred = qe_io.kcart_to_kred(kcart, DATA)
 
-    Hwr, Rw, ndegen = read_w90_HR(TB_PATH)
+    Hwr, Rw, ndegen, _, _ = read_w90_tb(TB_PATH)
     wann = Hwr_to_Hwk(Hwr, Rw, kred, ndegen=ndegen)[1]    # (nks, nw) eV (absolute)
     nks, nbnd = dft.shape
     nw = wann.shape[1]

@@ -10,7 +10,7 @@ Usage: rcut_resigma.py --size 9x9 --rcut 0,1,2,3 [--grid 240 --eta 0.02] --out <
 """
 import argparse, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 from electron_defect_interaction.config import load_production, dense_paths, results_dir
@@ -26,7 +26,7 @@ M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL
 k_coarse = qe_io.get_k_red(dp["uc"])
 U, k_U = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(k_U, k_coarse)]
 U_dis, k_Ud = read_w90_mat(paths["u_dis"]); U_dis = U_dis[_match_kpoint_order(k_Ud, k_coarse)]
-Hwr, Rw, ndegen = read_w90_HR(paths["tb"])
+Hwr, Rw, ndegen, _, _ = read_w90_tb(paths["tb"])
 Mwk = Mbk_to_Mwk(M, U, U_dis); MP = _infer_mp_grid(k_coarse); Mwr, R_mwr = Mwk_to_Mwr(Mwk, k_coarse, MP)
 R_mwr, R_d = lt.recenter_mwr(Mwr, R_mwr, MP); lt.mwr_locality(Mwr, R_mwr); del M, Mwk
 print(f"[recenter] R_d={R_d.tolist()}; MP={MP}", flush=True)

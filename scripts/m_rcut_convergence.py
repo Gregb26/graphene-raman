@@ -10,7 +10,7 @@ Usage: python scripts/m_rcut_convergence.py --size 9x9 [--nf 60] [--rcuts 0,1,2,
 """
 import argparse, csv, os, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
@@ -21,7 +21,7 @@ cfg = load_production(); dp = dense_paths(cfg, a.size); S = a.size
 M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
 k = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k); k = np.round(k * np.asarray(MP)) / np.asarray(MP)   # exact MP k (XML rounding)
 U, kU = read_w90_mat(f"{dp['wdir']}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]; Ud, kUd = read_w90_mat(f"{dp['wdir']}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
-Hwr, Rw, nd = read_w90_HR(f"{dp['wdir']}/wannier_tb.dat")
+Hwr, Rw, nd, _, _ = read_w90_tb(f"{dp['wdir']}/wannier_tb.dat")
 Mwr, R = Mwk_to_Mwr(Mbk_to_Mwk(M, U, Ud), k, MP); del M; Rn, Rd = lt.recenter_mwr(Mwr, R, MP); lt.mwr_locality(Mwr, Rn)
 nw, nR = Mwr.shape[0], Mwr.shape[1]; print(f"[{S}] Mwr {Mwr.shape}, R grid {MP}, defect at R_d={Rd.tolist()} (recentred)", flush=True)
 kf = lt.mp_grid(a.nf, a.nf, 1); nk = len(kf)

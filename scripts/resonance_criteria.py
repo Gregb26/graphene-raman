@@ -11,7 +11,7 @@ Output: <results_dir>/resonance_criteria_<size>.npz
 """
 import argparse, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 from electron_defect_interaction.config import load_production, dense_paths, results_dir
@@ -29,7 +29,7 @@ M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL
 k_coarse = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k_coarse)
 U, kU = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(kU, k_coarse)]
 Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k_coarse)]
-Hwr, Rw, nd = read_w90_HR(paths["tb"])
+Hwr, Rw, nd, _, _ = read_w90_tb(paths["tb"])
 Mwr, R = Mwk_to_Mwr(Mbk_to_Mwk(M, U, Ud), k_coarse, MP); Rn, Rd = lt.recenter_mwr(Mwr, R, MP); lt.mwr_locality(Mwr, Rn); del M
 Rloc = Rn[np.linalg.norm(Rn, axis=1) <= rc + 1e-9]; V, _ = lt.extract_V_loc(Mwr, Rn, Rloc); dim = V.shape[0]
 k_int = lt.mp_grid(nk_int, nk_int, 1); Hwk_int, E_int, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)

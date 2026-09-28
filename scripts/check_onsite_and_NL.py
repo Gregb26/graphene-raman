@@ -2,7 +2,7 @@
 plus max|M_L|, max|M_NL|, max|M| per size to explain 0.26 (5x5) vs 8.8e-3 (9x9)."""
 import numpy as np, json
 from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
 from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 from electron_defect_interaction.config import load_production, results_dir

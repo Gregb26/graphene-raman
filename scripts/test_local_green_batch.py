@@ -1,8 +1,8 @@
 """local_green_batch must equal local_green to roundoff (exact restructuring), on real Wannier data."""
 import numpy as np, time
-from electron_defect_interaction.io.wannier_io import read_w90_HR
+from electron_defect_interaction.io.wannier_io import read_w90_tb
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-Hwr, Rw, nd = read_w90_HR("wannier/27x27/wannier_tb.dat")
+Hwr, Rw, nd, _, _ = read_w90_tb("wannier/27x27/wannier_tb.dat")
 k_int = lt.mp_grid(90, 90, 1)
 Hwk, _, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)
 R_all = np.array([(i, j, 0) for i in range(-3, 4) for j in range(-3, 4)])

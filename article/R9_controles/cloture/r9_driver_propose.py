@@ -632,10 +632,6 @@ VAR_LABEL = {"brut": "M2 tel quel", "aligne": "aligné (i)", "exact": "aligné e
              "aligne_plateau": "aligné (i), C_N plateau", "exact_plateau": "aligné exact (F_W), C_N plateau"}
 
 
-FIG_LABEL = {"aligne": r"aligné", "exact": r"aligné exact", "aligne_lu": r"aligné, $C_N$ Lu", "exact_lu": r"exact, $C_N$ Lu",
-             "aligne_plateau": r"aligné, $C_N$ plateau", "exact_plateau": r"exact, $C_N$ plateau"}
-
-
 def b_tables(res):
     L = ["# R9 — B : position de la résonance contre N_k^int (tables générées par r9_driver.py)", ""]
     if "gate_B0" in res:
@@ -688,21 +684,19 @@ def savefig(fig, name):
 
 def b_figure(res):
     plt, pal = fig_style()
-    sizes = [S for S in ("9x9", "12x12") if S in res and any(v in res[S] for v in VAR_LABEL)]     # clôture : fichiers --cn sans « brut »
-    fig, axes = plt.subplots(1, len(sizes), figsize=(6.5, 3.5), sharey=True, squeeze=False)
+    sizes = [S for S in ("9x9", "12x12") if S in res and "brut" in res[S]]
+    fig, axes = plt.subplots(1, len(sizes), figsize=(6.5, 3.0), sharey=True, squeeze=False)
     for ax, S, lab in zip(axes[0], sizes, "ab"):
         for var, ls, mk in [(v, l_, m_) for v, l_, m_ in (("brut", "-", "o"), ("aligne", "--", "s"), ("exact", ":", "^"), ("aligne_lu", "--", "s"),
                                                           ("exact_lu", ":", "^"), ("aligne_plateau", "-.", "D"), ("exact_plateau", ":", "v")) if v in res[S]]:
             rr = sorted(res[S][var].items(), key=lambda kv: int(kv[0])); x = [1.0 / int(nk) for nk, _ in rr]
-            suf = "" if var == "brut" else " (" + FIG_LABEL.get(var, var) + ")"
+            suf = "" if var == "brut" else f" ({VAR_LABEL[var]})"
             ax.plot(x, [r["peak_GT_fine"] for _, r in rr], ls, marker=mk, ms=3, color=pal.NAVY, label=r"pic de $\Gamma_T$" + suf)
             ax.plot(x, [r["peak_ImTbar"] for _, r in rr], ls, marker=mk, ms=3, color=pal.ORANGE, label=r"pic de $-\mathrm{Im}\,\bar T(K)$" + suf)
             ax.plot(x, [r["E_res"] for _, r in rr], ls, marker=mk, ms=3, color=pal.GREEN, label=r"$E_\mathrm{res}$ (états $240^2$)" + suf)
         ax.set_xlabel(r"$1/N_k^\mathrm{int}$"); ax.set_title(f"({lab}) {S.replace('x', '×')}", fontsize=9)
-    axes[0][0].set_ylabel(r"Énergie $\varepsilon - E_D$ (eV)")
-    h, l_ = axes[0][0].get_legend_handles_labels()                               # légende commune sous les panneaux (ne couvre aucune courbe)
-    fig.legend(h, l_, loc="lower center", ncol=3, fontsize=5, frameon=False)
-    fig.tight_layout(rect=(0, 0.035 * ((len(l_) + 2) // 3) + 0.03, 1, 1)); savefig(fig, "resonance_vs_nkint" + cn_suffix()); plt.close(fig)
+    axes[0][0].set_ylabel(r"Énergie $\varepsilon - E_D$ (eV)"); axes[0][-1].legend(fontsize=5, loc="lower left")
+    fig.tight_layout(); savefig(fig, "resonance_vs_nkint" + cn_suffix()); plt.close(fig)
 
 
 # ----------------------------------------------------------------------------------------------- A.0 et A.1
@@ -898,18 +892,16 @@ def offdiag_intensive(cfg):
     for S in ["5x5", "7x7", "8x8", "9x9"]:
         M = matrix_io.load_M_checked(f"{res}/M_ed_{S}.npy", require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
         m = off_max(M); del M
-        rows[f"grossier {S}"] = dict(set="grossiers 5, 7, 8, 9", S=S, brut=m, lu=m, plateau=m,
-                                    mode="identique par construction (a) : identité exacte, M^L[C] ∝ δ_kk'")
+        rows[f"grossier {S}"] = dict(set="grossiers 5, 7, 8, 9", S=S, brut=m, lu=m, plateau=m, mode="k ≠ k' inchangés (N_cells C_N 𝕀)")
     for S in SIZES_A:
         dp = dense_paths(cfg, S); matrix_io.check_manifest(dp["mfile"], require_normalization=matrix_io.M_NORM_V2)
         Mm = np.load(dp["mfile"], mmap_mode="r"); M = np.array(Mm[:16, :, :16, :]) * HA2EV; del Mm
         m = off_max(M)
         if has_exact(S):
             Mb = np.array(np.load(os.path.join(WORK, "cache", f"ML_box_{S}.npy"), mmap_mode="r")[:16, :, :16, :])
-            lu = off_max(M - a1[S]["C_retenu_eV"] * Mb); pl = off_max(M - a1[S]["C_i_eV"] * Mb); del Mb
-            mode = "exact (M2 − C_N M^L[1_boîte]) : effet de l'alignement hors diagonale mesuré"
+            lu = off_max(M - a1[S]["C_retenu_eV"] * Mb); pl = off_max(M - a1[S]["C_i_eV"] * Mb); mode = "exact (M2 − C_N M^L[1_boîte])"; del Mb
         else:
-            lu = pl = m; mode = "identique par construction (b) : alignement approché sur les blocs k = k' seulement"
+            lu = pl = m; mode = "k ≠ k' inchangés (blocs k = k' seulement)"
         rows[f"dense {S}"] = dict(set="denses six tailles", S=S, brut=m, lu=lu, plateau=pl, mode=mode); del M
     spreads = {}
     for setname, keys in (("grossiers 5, 7, 8, 9", [f"grossier {S}" for S in ["5x5", "7x7", "8x8", "9x9"]]), ("denses six tailles", [f"dense {S}" for S in SIZES_A])):
@@ -1050,11 +1042,6 @@ def cmd_a3pole(a):
     save_json(f, out); a3_tables(out)
 
 
-def cmd_a3tables(a):
-    """Tables d'A.3 depuis a3_results<suffixe>.json (sans calcul)."""
-    a3_tables(json.load(open(os.path.join(WORK, "a", f"a3_results{cn_suffix()}.json"))))
-
-
 def a3_tables(out):
     L = ["# R9 — A.3 : variantes alignées (tables générées par r9_driver.py a3)", ""]
     if "C14_R6" in out:
@@ -1095,7 +1082,7 @@ def a3_tables(out):
             for b, r in bl.items():
                 L.append(f"| {VAR_LABEL[var]} | {b} | {r['min_absdet_rel']:.3e} ({r['at_eV']:+.3f}) | {r['min_abs_lambda']:.4f} ({r['lambda_at_eV']:+.3f}) ; {r['lambda_min'][0]:+.4f}{r['lambda_min'][1]:+.4f}i |")
         L += [f"R6 (M2 tel quel) : π 2,33e-2 (−0,172), |λ| 0,397 (−0,170) ; complet 1,32e-4 (−0,812), |λ| 0,0019 (−0,812).", ""]
-    with open(os.path.join(WORK, "a", f"A3_tables{cn_suffix()}.md"), "w") as f:            # clôture : A3_tables_plateau.md (R9 : A3_tables.md)
+    with open(os.path.join(WORK, "a", "A3_tables.md"), "w") as f:
         f.write("\n".join(L) + "\n")
 
 
@@ -1645,10 +1632,7 @@ def cmd_synth(a):
     for setname in ("grossiers 5, 7, 8, 9", "denses six tailles", "denses 5, 7, 8, 9"):
         L.append(f"| {setname} | {c9['spreads'][setname + ' | brut']:.3e} | {c9['spreads'][setname + ' | aligne']:.3e} | {cp['spreads'][setname + ' | aligne_plateau']:.3e} |")
     oi = AP["offdiag_intensive"]
-    L += ["", "## R.2 test intensif hors k = k' (max|M| sur k ≠ k', bandes 1–16, eV)", "",
-          "Lignes « identique par construction » : (a) grossiers, identité exacte (M^L[C] ∝ δ_kk') ; (b) denses 6, 7, 8, 12, alignement approché sur les seuls blocs "
-          "k = k'. Seuls les denses 5×5 et 9×9 (alignement exact) mesurent un effet de l'alignement hors diagonale.", "",
-          "| ensemble | taille | tel quel | Lu | plateau | mode |", "|---|---|---|---|---|---|"]
+    L += ["", "## R.2 test intensif hors k = k' (max|M| sur k ≠ k', bandes 1–16, eV)", "", "| ensemble | taille | tel quel | Lu | plateau | mode |", "|---|---|---|---|---|---|"]
     for k, r in oi["rows"].items():
         L.append(f"| {r['set']} | {r['S']} | {r['brut']:.3f} | {r['lu']:.3f} | {r['plateau']:.3f} | {r['mode']} |")
     L += ["", "| ensemble | tel quel | Lu | plateau |", "|---|---|---|---|"]
@@ -1717,7 +1701,6 @@ def main():
     p = sub.add_parser("b"); p.add_argument("--sizes", default="9x9,12x12"); p.add_argument("--nk", default="300,450,600,900")
     p.add_argument("--variants", default="brut"); p.add_argument("--cn", choices=["lu", "plateau"], default=None)
     p = sub.add_parser("btables"); p.add_argument("--cn", choices=["lu", "plateau"], default=None)
-    p = sub.add_parser("a3tables"); p.add_argument("--cn", choices=["lu", "plateau"], default=None)
     sub.add_parser("r0")
     sub.add_parser("synth")
     p = sub.add_parser("c"); p.add_argument("--redo", action="store_true")
@@ -1727,7 +1710,7 @@ def main():
     a = ap.parse_args()
     global CN
     CN = getattr(a, "cn", None)                                                  # clôture : C_N Lu ou plateau (a3, a3pole, b, btables)
-    {"r0": cmd_r0, "synth": cmd_synth, "a3tables": cmd_a3tables, "a2c": cmd_a2c, "a2d": cmd_a2d, "a2dpost": cmd_a2dpost, "a0": cmd_a0, "a1": cmd_a1, "a3": cmd_a3, "a3pole": cmd_a3pole, "b": cmd_b,
+    {"r0": cmd_r0, "synth": cmd_synth, "a2c": cmd_a2c, "a2d": cmd_a2d, "a2dpost": cmd_a2dpost, "a0": cmd_a0, "a1": cmd_a1, "a3": cmd_a3, "a3pole": cmd_a3pole, "b": cmd_b,
      "btables": cmd_btables, "c": cmd_c, "d": cmd_d, "dfig": cmd_dfig, "cfig": cmd_cfig}[a.cmd](a)
 
 

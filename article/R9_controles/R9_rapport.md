@@ -588,3 +588,191 @@ aligné −0,1750 / −0,1750 ; C.2 à N = 81 : max LDOS −0,1500 (tel quel), �
 
 **STOP — R9 terminé le 2026-09-28.** Chiffres bruts ; le choix « sans plateau » (seuil 5 meV sur max|écart|) fait utiliser Lu pour les six tailles ; un rejeu avec la
 moyenne du plateau comme C_N ne demande que les caches (A.3, B, C, D).
+
+## Clôture — rejeu C_N = plateau (2026-09-28)
+
+C_N = moyenne du plateau (i) : estimateur choisi après lecture de A.1, avant tout résultat aligné avec cet estimateur.
+
+Prompt « R9 — Clôture » (Greg, 2026-09-28). Statut TEST (inchangé). Ordre : phase 0 → STOP → (GO) R → rapport → README → manifeste → STOP. Aucune suppression.
+Cadre de R9 ; lecture seule de `results/`, `config/`, `scripts/`, `src/` (P1–P4 compris) ; caches de `cache/` réutilisés, aucun recalcul de M ni de M^L[1_boîte].
+
+### Phase 0 (rien n'est calculé ; le pilote n'est pas modifié)
+
+**0.1 Valeurs de C_N** (`a/a1_results.json` : `C_i_eV` = moyenne (i), 1,0 Å, atomes à ≥ 0,75 r_max ; `C_retenu_eV` = Lu, utilisé en R9). meV ; arithmétique :
+N_cells·(plateau − Lu), terme extensif ajouté à la diagonale de M.
+
+| N | plateau (i) | Lu (R9) | plateau − Lu | N_cells·(plateau − Lu) |
+|---|---|---|---|---|
+| 5×5 | −57,56 | −122,33 | +64,77 | +1,619 eV |
+| 6×6 | −50,51 | −98,62 | +48,11 | +1,732 eV |
+| 7×7 | −26,91 | −38,54 | +11,62 | +0,570 eV |
+| 8×8 | −14,41 | −22,97 | +8,56 | +0,548 eV |
+| 9×9 | −25,14 | −24,65 | −0,49 | −0,040 eV |
+| 12×12 | −18,69 | −29,24 | +10,55 | +1,519 eV |
+
+Valeurs attendues du prompt retrouvées (−57,56 / −50,51 / −26,91 / −14,41 / −25,14 / −18,69).
+
+**0.2 Changement du pilote** (proposé, non appliqué : `cloture/phase0_r9_driver.diff`, 492 lignes de diff dont 269 changées ; version complète `cloture/r9_driver_propose.py` ;
+lanceur `cloture/phase0_submit_r9.diff`, `cloture/submit_r9_propose.sh`) :
+- option `--cn lu | plateau` sur `a3`, `a3pole`, `b`, `btables` ; `C_of(S)` renvoie `C_i_eV` (« plateau (i) ») ou `C_retenu_eV` (« Lu (1,0 Å) », avec assertion que
+  c'est bien Lu) ; sans `--cn`, comportement de R9 inchangé ;
+- étiquette dans toutes les sorties : fichiers suffixés (`a3_results_plateau.json`, `A3_tables_plateau.md`, `b_results_plateau.json`, `B_tables_plateau.md`,
+  `b_curves_<S>_plateau.npz`, figure intermédiaire `resonance_vs_nkint_plateau`) et clés de variantes `aligne_plateau`, `exact_plateau` (`aligne_lu`, … pour `--cn lu`) ;
+  `V_variant` lit la base de la clé (`aligne_plateau` → `aligne`) ; les R9 existants (`a3_results.json`, `b_results.json`) ne sont ni lus en écriture ni réécrits ;
+- avec `--cn`, `a3` et `a3pole` ne recalculent pas le « tel quel » (déjà dans R9) ; E_res de niveau 1 porte désormais l'état et sa couronne 240² (`level1_stats` renvoie
+  aussi l'indice de l'état ; couronnes π sur [−1,5 ; 0] eV stockées par taille) ; familles calculées pour toutes les variantes présentes ;
+- sous-commande `r0` (porte R.0) et sous-commande `synth` (R.4, aucune donnée recalculée) ; lanceur : tâche `r0`, `--cn` transmis à `a3pole`.
+- Aucune autre modification de logique (formules, grilles, caches, seuils inchangés).
+
+Note d'exécution : le `r9_driver.py` actuel (md5 f2ba6adb9a44) diffère déjà de la dernière soumission (`submitted/last`, afce56ad675b) par les post-traitements
+sans calcul ajoutés après les jobs de R9 (`dfig`, `cfig`, coins de zone, légende) ; le diff de la prochaine soumission les montrera.
+
+**0.3 Test intensif hors k = k′** (nouveau) : fonction `offdiag_intensive(cfg)` appelée par `a3` quand `--cn` est donné ; elle lit les deux C_N dans `a1_results.json`
+(indépendamment de `--cn`) et calcule max|M| sur les éléments k ≠ k′ (bandes 1–16, eV) pour tel quel, Lu, plateau :
+- grossiers 5, 7, 8, 9 : paires k ≠ k′ ; l'alignement exact (N_cells C_N 𝕀) ne touche que k = k′ : trois valeurs égales par construction ;
+- denses six tailles : hors blocs k = k′ ; 5×5 et 9×9 alignés exactement (M2 − C_N M^L[1_boîte], qui a des éléments k ≠ k′ par le facteur de forme de la boîte) ;
+  6×6, 7×7, 8×8, 12×12 : alignement des seuls blocs k = k′ → trois valeurs égales par construction (colonne « mode » dans le tableau).
+Sortie : `offdiag_intensive` dans `a3_results_plateau.json`, tableau N × variante et (max − min)/moyenne par ensemble.
+
+**0.4 Jobs** (rrg-cotemich-ac ; mêmes ressources que R9) :
+
+| job | tâche | contenu | ressources | durée estimée | précédent |
+|---|---|---|---|---|---|
+| J1 `r9r0` | `r0` | R.0 : --cn lu, 9×9 et 12×12, R_cut 3 : médiane alignée (i) et tab:rcut_M contre `a3_results.json` (1e-9 relatif) | 16 cœurs, 96 Go, 1 h | ≈ 15 min | — |
+| J2 `r9a3` | `a3 --cn plateau` puis `a3pole --cn plateau` | R.1, R.2 | 16 cœurs, 160 Go, 5 h | ≈ 2 h (caches g₀ et M_W : niveau 1 R_cut 3 ≈ 2,5 min et R_cut 4 ≈ 11 min par variante, 8 + 8 variantes) | A.3 de R9 : 4 h 42 dont ≈ 1 h 20 de g₀ |
+| J3 `r9b` | `b --cn plateau --variants aligne,exact` | R.3 (+ porte B.0 rejouée) | 16 cœurs, 96 Go, 2 h | ≈ 15 min | 21955646 : 15 min 07 |
+| — | `synth` (nœud de connexion) | R.4, figures | lecture de json | < 1 min | — |
+
+J2 et J3 en afterok de J1.
+
+**0.5 Parties non rejouées (C, D)** : lecture du pilote — `cmd_c` (l. 1083) et `cmd_d` (l. 1350) prennent `C9, tag9 = C_of("9x9")` et n'utilisent que C_9
+(`c/c_results.json` et `d/d_results.json` : C9 = −24,6514 meV, Lu). Plateau − Lu = −0,49 meV à 9×9, soit 2,0 % de C_9. Ordre de grandeur attendu (arithmétique : les
+écarts aligné − tel quel de R9 × 0,0200 ; pas de calcul) :
+- C : V_loc,aligné(plateau) − V_loc,aligné(Lu) = +0,49 meV sur les 145 éléments diagonaux ; π quasi-lié : N = 9 : 16,7 meV × 0,02 = 0,33 meV ; N = 27 : 0,24 ; N = 54 : 0,18 ;
+  N = 81 : 0,12 meV ; pair σ (−0,813 → −0,788) : 0,5 meV ; maximum de LDOS de C.3 (15 meV de décalage aligné − tel quel) : 0,3 meV, sous le pas de 2,5 meV ;
+- D : ½ Tr du bloc (K, K) aligné exact, linéaire en C : 81 × A_cell × 0,49 meV = +0,21 eV Å² (86,38 → 86,59) ; moyennes des disques autour de K (écart exact − tel quel
+  +4,55 eV Å²) : ≈ +0,09 eV Å² ; autour de K′ : < 0,01.
+
+**STOP — phase 0 de la clôture terminée le 2026-09-28.** Rien n'est calculé ni appliqué ; attente du GO.
+
+### GO (2026-09-28) et exécution
+
+GO de Greg : appliquer le diff proposé, r0 → (afterok) `a3 --cn plateau` + `a3pole` et `b --cn plateau --variants aligne,exact` → `synth`. Précision R.2 appliquée
+avant soumission (étiquettes (a)/(b) des lignes « identique par construction », note en tête du tableau). Diff de soumission archivé (`submitted/21976369/diff.txt`).
+
+| job | tâche | état | durée |
+|---|---|---|---|
+| 21976369 `r9r0` | porte R.0 | COMPLETED | 5 min 11 |
+| 21976370 `r9a3` | `a3 --cn plateau` puis `a3pole --cn plateau` | COMPLETED | 2 h 49 min 51 (niveau 1 à R_cut 4 ≈ 17 min par variante) |
+| 21976371 `r9b` | `b --cn plateau --variants aligne,exact` | FAILED à la toute fin (voir ci-dessous) ; résultats complets écrits | 22 min 41 |
+
+Erreur d'exécution (corrigée) : la figure intermédiaire de `b` ne retenait que les tailles ayant une variante « brut » ; le fichier `b_results_plateau.json` n'en contient
+pas → `ValueError` de matplotlib après l'écriture du json et des tables. Sélection des tailles corrigée (`b_figure`), figure régénérée par `btables --cn plateau`
+(sans calcul). Présentation de `resonance_vs_nkint` corrigée ensuite (légende commune sous les panneaux, « C_N » en LaTeX). `synth` exécuté sur le nœud de connexion
+(lecture des json ; `cloture/synthese.md`, 220 lignes ; version R9 de la figure gardée sous `fig/resonance_vs_nkint_R9`).
+
+### R.0 — porte (job 21976369)
+
+`--cn lu` redonne R9 à toutes les décimales : 9×9, R_cut 3, C_N −24,6514 meV, médiane alignée (i) **3 185,0251 meV** (R9 3 185,0251), tab:rcut_M R_cut 3
+**2,476216e-2** (R9 2,476216e-2) ; 12×12 : C_N −29,2351 meV, **3 332,7408 meV** (R9 3 332,7408), **7,308052e-2** (R9 7,308052e-2) → **OK**.
+
+### R.1 — A.3 avec C_N = plateau (job 21976370 ; `a/a3_results_plateau.json`, `a/A3_tables_plateau.md`, `cloture/synthese.md`)
+
+Niveau 1 (240², η 0,02, N_k^int 300), R_cut 3 ; tel quel / aligné (i) Lu / aligné (i) plateau (E_res avec sa couronne x de la grille 240² ; toutes les grandeurs et
+R_cut 4 : `cloture/synthese.md`) :
+
+| taille | médiane Γ·N_cells (meV) | E_res (eV ; couronne) | pic Γ_T (2,5 meV) | pic −Im T̄(K) | Re Σ médian (meV) | Re T̄(E_D) (eV) |
+|---|---|---|---|---|---|---|
+| 5×5 | 3 288,90 / 3 140,34 / 2 997,14 | −0,2843 (19) / −0,1748 (7) / −0,2268 (12) | −0,3025 / −0,1800 / −0,2425 | −0,2700 / −0,1775 / −0,2250 | −1 429,90 / +1 174,43 / −226,16 | +6,519 / +12,025 / +8,940 |
+| 6×6 | 3 155,98 / 3 439,97 / 3 149,15 | −0,2270 (12) / −0,1345 (4) / −0,1749 (7) | −0,2375 / −0,1775 / −0,1800 | −0,2200 / −0,1675 / −0,1775 | −695,92 / +1 560,98 / +474,13 | +9,218 / +14,805 / +11,884 |
+| 7×7 | 3 052,03 / 2 927,30 / 2 942,85 | −0,2694 (16) / −0,2270 (12) / −0,2694 (16) | −0,3000 / −0,2425 / −0,2450 | −0,2675 / −0,2625 / −0,2625 | −1 033,37 / −62,97 / −356,03 | +7,165 / +8,961 / +8,407 |
+| 8×8 | 3 020,42 / 2 958,71 / 2 974,18 | −0,2695 (16) / −0,2270 (12) / −0,2270 (12) | −0,2450 / −0,2425 / −0,2425 | −0,2650 / −0,2250 / −0,2625 | −796,51 / −216,25 / −435,27 | +7,930 / +9,036 / +8,618 |
+| 9×9 | 3 132,60 / 3 185,03 / 3 189,01 | −0,1748 (7) ×3 | −0,1800 / −0,1775 / −0,1775 | −0,1775 / −0,1725 / −0,1725 | −26,65 / +592,62 / +605,08 | +11,122 / +12,594 / +12,624 |
+| 12×12 | 3 162,78 / 3 332,74 / 3 264,51 | −0,1749 (7) / −0,1345 (4) / −0,1749 (7) | −0,1775 / −0,1775 / −0,1775 | −0,1750 / −0,1675 / −0,1700 | +448,29 / +1 166,10 / +913,84 | +12,429 / +14,323 / +13,619 |
+
+Exact (F_W), R_cut 3 : 5×5 plateau 2 999,20 meV, E_res −0,2268 (12) ; 9×9 plateau 3 189,00, −0,1748 (7). Médianes R_cut 4 (tel quel / Lu / plateau) : 5×5 3 302,74 / 3 143,55 /
+2 997,07 ; 6×6 3 206,64 / 3 556,00 / 3 161,15 ; 7×7 3 146,18 / 2 944,65 / 2 953,28 ; 8×8 3 084,43 / 2 970,15 / 2 991,24 ; 9×9 3 147,47 / 3 196,41 / 3 200,00 ;
+12×12 3 161,49 / 3 395,10 / 3 283,17.
+
+Familles (médianes Γ·N_cells ; moyenne, (max − min)/moyenne) :
+
+| R_cut | famille | tel quel | Lu | plateau |
+|---|---|---|---|---|
+| 3 | 3m (6, 9, 12) | 3 150,5 ; 0,96 % | 3 319,2 ; 7,68 % | 3 200,9 ; 3,60 % |
+| 3 | non-3m (5, 7, 8) | 3 120,4 ; 8,60 % | 3 008,8 ; 7,08 % | 2 971,4 ; 1,83 % |
+| 4 | 3m | 3 171,9 ; 1,87 % | 3 382,5 ; 10,63 % | 3 214,8 ; 3,80 % |
+| 4 | non-3m | 3 177,8 ; 6,87 % | 3 019,4 ; 6,59 % | 2 980,5 ; 1,47 % |
+
+tab:rcut_M (max|ΔM|/max|M| de la paire π, grille fine 60² ; `fig/rcut_aligned`) :
+
+| R_cut | 9×9 tel quel | 9×9 Lu | 9×9 plateau | 9×9 exact Lu | 9×9 exact plateau | 12×12 tel quel | 12×12 Lu | 12×12 plateau |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 3,157e-1 | 3,160e-1 | 3,171e-1 | 3,160e-1 | 3,171e-1 | 8,673e-1 | 8,747e-1 | 8,678e-1 |
+| 1 | 2,129e-1 | 1,632e-1 | 1,630e-1 | 1,624e-1 | 1,621e-1 | 2,172e-1 | 2,318e-1 | 1,892e-1 |
+| 2 | 1,139e-1 | 5,583e-2 | 5,568e-2 | 5,576e-2 | 5,562e-2 | 1,249e-1 | 1,681e-1 | 1,250e-1 |
+| **3** | 6,679e-2 | 2,476e-2 | **2,470e-2** | 2,496e-2 | 2,495e-2 | 9,021e-2 | 7,308e-2 | **3,097e-2** |
+| 4 | 4,419e-2 | 1,713e-2 | 1,718e-2 | 1,722e-2 | 1,726e-2 | 7,570e-2 | 5,198e-2 | 1,840e-2 |
+| 5 | 1,749e-2 | 1,367e-2 | 1,358e-2 | 1,398e-2 | 1,389e-2 | 5,356e-2 | 3,260e-2 | 1,286e-2 |
+| 6 | 1,207e-2 | 1,201e-2 | 1,199e-2 | 1,210e-2 | 1,209e-2 | 3,288e-2 | 2,168e-2 | 1,272e-2 |
+
+Convention intensive (max|M|, bandes 1–16, eV ; tel quel / Lu / plateau) : grossiers 5 25,198 / 26,625 / 25,198 ; 7 23,250 / 24,498 / 23,928 ; 8 24,311 / 24,444 / 24,311 ;
+9 24,801 / 25,561 / 25,601 ; denses (5, 9 exacts ; 6, 7, 8, 12 blocs k = k′) : 5 23,850 / 25,717 / 24,097 ; 6 25,148 / 27,454 / 25,722 ; 7 23,818 / 24,498 / 23,928 ;
+8 24,311 / 24,444 / 24,311 ; 9 25,348 / 25,677 / 25,717 ; 12 25,721 / 27,939 / 26,420. (max − min)/moyenne : grossiers 5, 7, 8, 9 **7,98e-2 / 8,63e-2 / 6,76e-2** ;
+denses six tailles **7,71e-2 / 1,347e-1 / 9,96e-2** ; denses 5, 7, 8, 9 6,29e-2 / 5,07e-2 / 7,30e-2.
+
+Résonance 9×9 (R_cut 3, 300² ; tel quel / Lu / plateau ; exact = (i) aux décimales imprimées, sauf max de la courbe Γ_T exact Lu 40,557) : Born/T médian 46,49 / 45,84 / 45,85 ; max de la courbe Γ_T
+37,835 / 40,558 / 40,598 eV ; max de −Im T̄(K) 24,45 / 26,87 / 26,91 eV ; |Re Σ|/Γ médian 0,125 / 0,215 / 0,217. Critère de pôle : bloc π min|det|/max 2,330e-2 (−0,172) /
+1,717e-2 (−0,170) / 1,706e-2 (−0,170) ; min|λ| 0,3967 (−0,170) / 0,3450 (−0,127) / 0,3440 (−0,127) ; complet 1,318e-4 (−0,812) / 1,260e-4 (−0,787) / 1,261e-4 (−0,785),
+|λ| 0,0019 (−0,812 / −0,787 / −0,787).
+
+### R.2 — test intensif hors k = k′ (job 21976370 ; `offdiag_intensive`)
+
+Lignes « identique par construction » : (a) grossiers, identité exacte (M^L[C] ∝ δ_kk′) ; (b) denses 6, 7, 8, 12, alignement approché sur les seuls blocs k = k′.
+Seuls les denses 5×5 et 9×9 (alignement exact) mesurent un effet de l'alignement hors diagonale.
+
+| ensemble | taille | tel quel | Lu | plateau | mode |
+|---|---|---|---|---|---|
+| grossiers | 5×5 / 7×7 / 8×8 / 9×9 | 25,198 / 23,250 / 24,311 / 24,801 | idem | idem | identique par construction (a) |
+| denses | 5×5 | 23,850 | 25,546 | 24,038 | exact : effet mesuré |
+| denses | 6×6 / 7×7 / 8×8 / 12×12 | 25,148 / 23,818 / 24,311 / 25,721 | idem | idem | identique par construction (b) |
+| denses | 9×9 | 25,348 | 25,506 | 25,534 | exact : effet mesuré |
+
+(max − min)/moyenne : grossiers 7,98e-2 (trois variantes) ; denses six tailles 7,71e-2 / 7,61e-2 / 7,69e-2.
+
+### R.3 — B avec C_N = plateau (job 21976371 ; `b/b_results_plateau.json`, `b/B_tables_plateau.md`, `fig/resonance_vs_nkint`)
+
+Porte B.0 rejouée : OK (écart 0,0 à `resonance_9x9.npz`). N_k^int 300 / 450 / 600 / 900 ; tel quel / Lu / plateau (exact plateau 9×9 = aligné plateau aux décimales imprimées,
+sauf Γ_T(E_D) 450² : 4 065,5 contre 4 065,6) :
+
+| taille | grandeur | tel quel | Lu | plateau |
+|---|---|---|---|---|
+| 9×9 | pic Γ_T | −0,1800 / −0,1825 / −0,1825 / −0,1825 | −0,1775 / −0,1800 / −0,1800 / −0,1800 | −0,1775 / −0,1800 / −0,1800 / −0,1800 |
+| 9×9 | pic −Im T̄(K) | −0,1775 / −0,1825 / −0,1900 / −0,1925 | −0,1725 / −0,1750 / −0,1750 / −0,1750 | −0,1725 / −0,1750 / −0,1750 / −0,1725 |
+| 9×9 | Γ_T(E_D) (meV) | 3 592,7 / 3 446,4 / 3 419,2 / 3 412,0 | 4 224,8 / 4 052,1 / 4 019,9 / 4 011,4 | 4 238,8 / 4 065,6 / 4 033,2 / 4 024,7 |
+| 9×9 | E_res (couronne) | −0,1748 (7) / −0,2018 (9) / −0,2018 (9) / −0,2018 (9) | −0,1748 (7) ×4 | −0,1748 (7) ×4 |
+| 12×12 | pic Γ_T | −0,1775 / −0,1800 / −0,1800 / −0,1800 | −0,1775 ×4 | −0,1775 ×4 |
+| 12×12 | pic −Im T̄(K) | −0,1750 / −0,1750 / −0,1775 / −0,1750 | −0,1675 / −0,1500 / −0,1550 / −0,1550 | −0,1700 / −0,1525 / −0,1600 / −0,1625 |
+| 12×12 | Γ_T(E_D) (meV) | 4 206,5 / 4 034,6 / 4 002,5 / 3 994,0 | 5 149,8 / 4 939,4 / 4 900,1 / 4 889,7 | 4 780,6 / 4 585,1 / 4 548,6 / 4 539,0 |
+| 12×12 | E_res (couronne) | −0,1749 (7) ×4 | −0,1749 (7) ×4 | −0,1749 (7) ×4 |
+
+### R.4 — synthèse
+
+`cloture/synthese.md` (220 lignes) : chaque chiffre de R.1–R.3 en trois colonnes (tel quel, Lu, plateau) plus les deux colonnes exactes (9×9, 5×5) ; porte R.0 ; C_N par taille.
+Figures : `fig/resonance_vs_nkint` (trois variantes ; version R9 gardée sous `fig/resonance_vs_nkint_R9`), `fig/rcut_aligned` (tab:rcut_M, 9×9 et 12×12, R_cut 0…6, trois
+variantes + exactes pour la 9×9) ; `fig/offset_profiles` inchangée. C et D non rejoués (0.5).
+
+Écart d'exécution relevé après coup (corrigé) : `a3_tables` écrivait toujours `a/A3_tables.md`, sans suffixe, contrairement à la phase 0 de la clôture ; le rejeu
+`--cn plateau` avait remplacé la table de R9 par celle du plateau (les json n'étaient pas touchés). Nom de sortie corrigé (`A3_tables{suffixe}.md`), sous-commande
+`a3tables [--cn]` ajoutée (tables depuis le json, sans calcul) ; `a/A3_tables.md` régénéré depuis `a3_results.json` est identique au bit à la version commitée
+(5a4bc94) ; la table du plateau est `a/A3_tables_plateau.md`. Les autres sorties du rejeu étaient suffixées (json, courbes, tables et figure de B).
+
+### README, manifeste, git
+
+- `README.md` (répertoire de travail et copie) : format du CLAUDE.md, ligne « Lecture : » laissée vide.
+- `manifeste_R9.md` (répertoire de travail et copie) : versionné (copie `article/R9_controles/`, P1–P4, tests : état git par fichier), gardé dans le répertoire de travail
+  (npz, slurm, `submitted/`, `JOBID`, `r9_log.txt` ; ≈ 9,7 Mo), supprimable (`cache/`, 72 fichiers, 50,0 Go en taille apparente, 12 Go sur le disque ; rôle, commande et
+  durée de reconstruction par fichier). Aucun fichier n'est promu en production. Aucune suppression faite.
+- git (lecture) : `src/` (P1–P4) et `tests/test_r9_functions.py` sont dans le commit 5a4bc94 (« R9 checkpoint », poussé : `main...origin/main`), inchangés depuis ;
+  restent à commiter par Greg les fichiers de `article/R9_controles/` listés à la fin du manifeste.
+
+**STOP — clôture de R9 terminée le 2026-09-28.** La suppression de `cache/` attend un GO séparé sur `manifeste_R9.md`.

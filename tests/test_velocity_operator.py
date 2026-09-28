@@ -5,8 +5,7 @@ dagger/hermitize, and `velocity` (F5).
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import dagger, fourier, hermitize, make_graphene_tb, velocity
-from conftest import velocity_from_tb  # temporary: will be replaced by the src chain function
+from electron_defect_interaction.electron_photon import compute_velocity, dagger, fourier, hermitize, make_graphene_tb, velocity
 
 DK = 1e-5  # finite-difference step (1/Angstrom); truncation ~DK^2 and round-off ~eps/DK balance here
 
@@ -117,7 +116,7 @@ def test_velocity_diagonalizes(tb, grid):
     V unitary, V^dag H V = diag(eps) and bands in ascending order, in both gauges (the checks kept
     out of `velocity`).
     """
-    H_k, eps, V, hv = velocity_from_tb(tb, grid.k_cart)
+    H_k, eps, V, hv = compute_velocity(tb, grid.k_cart)
     _, nW = eps.shape
 
     assert np.allclose(dagger(V) @ V, np.eye(nW), atol=1e-12), 'V not unitary'
@@ -126,17 +125,37 @@ def test_velocity_diagonalizes(tb, grid):
 
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
-@pytest.mark.parametrize("berry", [True, False])
-def test_velocity_hermitian(tb, grid, berry):
+@pytest.mark.parametrize("mode", ["berry", "no_berry"])
+def test_velocity_hermitian(tb, grid, mode):
     """
     hbar v Hermitian for each gauge, with and without Berry. Catches a missing i in the Berry term,
     which the diagonal test cannot see. Observed 4e-15.
     """
 
-    hv = velocity_from_tb(tb, grid.k_cart, berry)[-1]
+    hv = compute_velocity(tb, grid.k_cart, mode)[-1]
 
     assert np.allclose(dagger(hv), hv, atol=1e-12), 'velocity operator not hermitian'
 
+
+def test_compute_velocity_modes(tb, grid):
+    """
+    `compute_velocity` is the chain fourier -> hermitize -> velocity: 'berry' passes the hermitized
+    A(k), 'no_berry' passes None, and any other mode raises ValueError.
+    """
+    k = grid.k_cart
+    H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k)
+    dH_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k, deriv=True)
+    A_k = hermitize(fourier(tb.r_R, tb.R_cart, tb.ndegen, k))
+
+    H_c, eps, V, hv = compute_velocity(tb, k, mode='berry')
+    assert np.array_equal(H_c, H_k)
+    assert np.array_equal(hv, velocity(H_k, dH_k, A_k)[2])
+
+    hv_nb = compute_velocity(tb, k, mode='no_berry')[-1]
+    assert np.array_equal(hv_nb, velocity(H_k, dH_k)[2])
+
+    with pytest.raises(ValueError):
+        compute_velocity(tb, k, mode='centres')
 
 def test_velocity_inputs_unchanged(tb, grid):
     """
@@ -179,8 +198,8 @@ def finite_difference_eps(tb, grid):
 
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
-@pytest.mark.parametrize("berry", [True, False])
-def test_velocity_diagonal_gradient(tb, grid, berry):
+@pytest.mark.parametrize("mode", ["berry", "no_berry"])
+def test_velocity_diagonal_gradient(tb, grid, mode):
     """
     Diagonal of hbar v = d eps_n/dk, with and without Berry (the Berry term vanishes on the
     diagonal), in both gauges. Points with a gap below 1 eV are masked: near K the finite-difference
@@ -189,7 +208,7 @@ def test_velocity_diagonal_gradient(tb, grid, berry):
     """
 
     eps_fd = finite_difference_eps(tb, grid) # (nk, 3, nW)
-    _, eps, _, hv = velocity_from_tb(tb, grid.k_cart, berry) # (nk, nW), (nk, 3, nW, nW)
+    _, eps, _, hv = compute_velocity(tb, grid.k_cart, mode) # (nk, nW), (nk, 3, nW, nW)
 
     mask = eps[:,1] - eps[:,0] > 1 # far from K and K'
     hv_diag = np.diagonal(hv, axis1=-2, axis2=-1) # (nk, 3, nW)
@@ -212,7 +231,7 @@ def test_fermi_velocity(tb, grid):
     theta = np.linspace(0, 2*np.pi, ntheta, endpoint=False) # (ntheta,)
     k = grid.K[None, :] + q*np.column_stack((np.cos(theta), np.sin(theta), np.zeros_like(theta))) # (ntheta, 3)
 
-    hv = velocity_from_tb(tb, k, berry=True)[-1] # (ntheta, 3, nW, nW)
+    hv = compute_velocity(tb, k, mode='berry')[-1] # (ntheta, 3, nW, nW)
     # v = band 0, c = band 1 in M0
     interband_norm = np.sqrt(np.abs(hv[:, 0, 1, 0])**2 + np.abs(hv[:, 1, 1, 0])**2) # (ntheta,)
     group_velocity = np.sqrt(np.abs(np.real(hv[:, 0, 1, 1]))**2 + np.abs(np.real(hv[:, 1, 1, 1]))**2) # (ntheta, )
@@ -238,15 +257,15 @@ def test_velocity_gauge(grid):
     k = grid.k_cart
 
     # with Berry: same bands, same |hbar v_mn|^2 for every (k, mu, m, n)
-    _, eps, _, hv = velocity_from_tb(tb, k, berry=True)
-    _, eps_shifted, _, hv_shifted = velocity_from_tb(tb_shifted, k, berry=True)
+    _, eps, _, hv = compute_velocity(tb, k, mode='berry')
+    _, eps_shifted, _, hv_shifted = compute_velocity(tb_shifted, k, mode='berry')
 
     assert np.allclose(eps, eps_shifted, atol=1e-10)
     assert np.allclose(np.abs(hv)**2, np.abs(hv_shifted)**2, atol=1e-10)
 
     # without Berry: x (mu = 0) must differ, y (mu = 1) must not
-    _, eps, _, hv = velocity_from_tb(tb, k, berry=False)
-    _, eps_shifted, _, hv_shifted = velocity_from_tb(tb_shifted, k, berry=False)
+    _, eps, _, hv = compute_velocity(tb, k, mode='no_berry')
+    _, eps_shifted, _, hv_shifted = compute_velocity(tb_shifted, k, mode='no_berry')
 
     assert not np.allclose(np.abs(hv[:, 0, ...])**2, np.abs(hv_shifted[:, 0, ...])**2, atol=1e-10)
     assert np.allclose(np.abs(hv[:, 1, ...])**2, np.abs(hv_shifted[:, 1, ...])**2, atol=1e-10)

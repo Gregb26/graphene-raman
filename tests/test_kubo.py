@@ -127,5 +127,5 @@ def test_sigma_on_grid_blocks_and_inputs():
 
     assert np.allclose(sigma_on_grid(tb, 300, hw, chunk=7000), sigma_on_grid(tb, 300, hw, chunk=90000), rtol=0, atol=1e-12)
     assert np.allclose(sigma_on_grid(tb, 300, 2.33), sigma_on_grid(tb, 300, np.array([2.33])), rtol=0, atol=0)
-    with pytest.raises((ValueError, TypeError)):
+    with pytest.raises(ValueError):
         sigma_on_grid(tb, 30, hw, mode='centres')

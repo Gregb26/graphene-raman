@@ -9,7 +9,7 @@ with V(k) diagonalizing H(k) and A(k) the Berry connection in the Wannier gauge.
 of dependence:
     tb_model           WannierTB, analytic graphene model (M0)
     kgrid              reciprocal lattice, k grids, GridTB
-    velocity_operator  fourier (H, dH, A) -> hermitize (A) -> velocity
+    velocity_operator  fourier (H, dH, A) -> hermitize (A) -> velocity, chained by compute_velocity
     ring               resonant k points around K (eps_c - eps_v = hbar omega)
     kubo               sigma(omega)/sigma_0, block by block, driver `sigma_on_grid`
 Plan, derivations and reference values: memoire/EM/EM.md.
@@ -26,14 +26,14 @@ Conventions:
 
 from .tb_model import WannierTB, make_graphene_tb
 from .kgrid import GridTB, reciprocal, k_grid, make_grid_tb
-from .velocity_operator import dagger, hermitize, fourier, velocity
+from .velocity_operator import dagger, hermitize, fourier, velocity, compute_velocity
 from .ring import ring
 from .kubo import gaussian_eta, kubo_accumulate, kubo_normalize, sigma_on_grid
 
 __all__ = [
     "WannierTB", "make_graphene_tb",
     "GridTB", "reciprocal", "k_grid", "make_grid_tb",
-    "dagger", "hermitize", "fourier", "velocity",
+    "dagger", "hermitize", "fourier", "velocity", "compute_velocity",
     "ring",
     "gaussian_eta", "kubo_accumulate", "kubo_normalize", "sigma_on_grid",
 ]

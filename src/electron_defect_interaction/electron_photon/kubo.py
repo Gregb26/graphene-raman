@@ -6,7 +6,7 @@ block (`kubo_accumulate`, `kubo_normalize`), and the driver `sigma_on_grid`.
 import numpy as np
 
 from .kgrid import make_grid_tb
-from .velocity_operator import fourier, hermitize, velocity
+from .velocity_operator import compute_velocity
 
 def gaussian_eta(x, eta):
     """
@@ -78,10 +78,10 @@ def sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', chunk=int(1e5)):
     """
     Optical conductivity sigma(omega)/sigma_0 on the shifted N x N grid: the driver of M0 and M4.
 
-    Block by block: fourier (H, dH, A) -> hermitize (A) -> velocity -> kubo_accumulate, then one
-    kubo_normalize with N_k = N^2. The result does not depend on `chunk`. Resolving the resonant
-    ring needs a grid step below ~eta / (2 hbar v_F), i.e. N >~ 800 for eta = 0.04 eV (N = 300
-    is already within 3e-4 in M0). Cost in M0: ~3 s per call at N = 1800.
+    Block by block: compute_velocity -> kubo_accumulate, then one kubo_normalize with N_k = N^2.
+    The result does not depend on `chunk`. Resolving the resonant ring needs a grid step below
+    ~eta / (2 hbar v_F), i.e. N >~ 800 for eta = 0.04 eV (N = 300 is already within 3e-4 in M0).
+    Cost in M0: ~3 s per call at N = 1800.
 
     Inputs:
         tb    : WannierTB
@@ -89,8 +89,7 @@ def sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', chunk=int(1e5)):
         hw    : (nw,) float or scalar, eV, photon energies
         mu    : float, eV, chemical potential (0 in M0, E_D in M1)
         eta   : float, eV, Gaussian broadening (standard deviation)
-        mode  : 'berry' (full velocity) or 'no_berry' (dH/dk only, eq. (2.5.7) of the thesis as
-                written); 'centres' will come with centres_only in M1
+        mode  : 'berry' or 'no_berry', passed to `compute_velocity`
         chunk : int, number of k points per block (memory: see `fourier`)
     Returns:
         (nw, 3, 3) float, sigma_ab / sigma_0
@@ -106,17 +105,7 @@ def sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', chunk=int(1e5)):
 
         k = grid.k_cart[block:block+chunk] # only keep kpoints in this block (the last one may be shorter)
 
-        # computing velocity operator
-        H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k)
-        dH_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k, deriv=True)
-
-        if mode == 'berry':
-            A_k = hermitize(fourier(tb.r_R, tb.R_cart, tb.ndegen, k))
-            eps, _, hv = velocity(H_k, dH_k, A_k=A_k)
-        elif mode == 'no_berry':
-            eps, _, hv = velocity(H_k, dH_k, A_k=None)
-        else:
-            raise TypeError("Incorrect mode. Supported values are 'berry' and 'no_berry'")
+        _, eps, _, hv = compute_velocity(tb, k, mode) # ValueError for an unknown mode
 
         S += kubo_accumulate(eps, hv, hw, mu, eta) # (nw, 3, 3)
 

@@ -113,3 +113,31 @@ def velocity(H_k, dH_k, A_k=None):
     assert hv.shape == (nk, 3, nW, nW), 'wrong shape for hv'
 
     return eps, V, hv
+
+def compute_velocity(tb, k, mode='berry'):
+    """
+    Whole chain from a tight-binding model to hbar v at the k points `k`:
+    fourier (H, dH/dk, A) -> hermitize (A) -> velocity. Used on each block by `sigma_on_grid`, on
+    rings and paths, and by the tests.
+
+    Inputs:
+        tb   : WannierTB
+        k    : (Nk, 3) float, 1/Angstrom, any list of Cartesian k points
+        mode : 'berry' (full velocity) or 'no_berry' (dH/dk only, eq. (2.5.7) of the thesis as
+               written); anything else raises ValueError ('centres' will come in M1)
+    Returns:
+        H_k : (Nk, nW, nW) complex, eV, H(k) in the Wannier gauge
+        eps, V, hv : as returned by `velocity`
+    """
+    H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k)
+    dH_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k, deriv=True)
+
+    if mode == 'berry':
+        A_k = hermitize(fourier(tb.r_R, tb.R_cart, tb.ndegen, k))
+        eps, V, hv = velocity(H_k, dH_k, A_k)
+    elif mode == 'no_berry':
+        eps, V, hv = velocity(H_k, dH_k, A_k=None)
+    else:
+        raise ValueError('Unsupported mode. Supported modes are "berry" and "no_berry"') 
+
+    return H_k, eps, V, hv

@@ -179,7 +179,7 @@ Construite par `make_grid_tb(tb, N)` (F2 + F3), pour les appelants seulement.
   - H_AB(k) = −t Σ_{R∈S} e^{ik·R} analytique ;
   - dH_k égal à la différence finie centrée de H_k (h = 10⁻⁵ Å⁻¹), à 10⁻⁶ eV·Å près (absolu).
 
-**F5 — `velocity(H_k, dH_k, A_k=None)`** → ε (Nk, nW), V (Nk, nW, nW), ħv (Nk, 3, nW, nW)
+**F5 — `velocity(H_k, dH_k, A_k=None)`** → ε (Nk, nW), V (Nk, nW, nW), ħv (Nk, 3, nW, nW) ; **`compute_velocity(tb, k, mode='berry')`** → H_k, ε, V, ħv (la chaîne complète pour une liste de k)
 - **Calcul :** `eigh`, puis ħv = V†(dH + i[H, A])V. `A_k=None` donne la version sans Berry.
 - **Mode « centres seuls » :** A_k d'un `centres_only(tb)` (F9, reporté à M1). En M0, il est identique au mode complet.
 - **Vérifications :**
@@ -202,7 +202,7 @@ Construite par `make_grid_tb(tb, N)` (F2 + F3), pour les appelants seulement.
 - **Calcul :** S est la somme de la formule de Kubo sur un bloc de k, et la normalisation se fait une seule fois à la fin (§3). Les transitions sont choisies par l'énergie et mises à plat en une liste, et la somme sur elles est un seul produit matriciel. `hw` peut être un scalaire.
 
 **Pilote — `sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', chunk=10⁵)`**
-- Boucle sur les blocs : F4 → F5 → F7, puis normalisation avec N_k = N². `mode` vaut `'berry'` ou `'no_berry'` (`'centres'` viendra en M1).
+- Boucle sur les blocs : `compute_velocity` (F4 → F5) → `kubo_accumulate`, puis normalisation avec N_k = N². `mode` vaut `'berry'` ou `'no_berry'` (`'centres'` viendra en M1).
 - Environ 3 s par appel à N = 1800 en M0. N = 300 est déjà à 3×10⁻⁴ près.
 - C'est **la** fonction de M4.
 
@@ -225,7 +225,7 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 
 Lancer avec `.venv/bin/python -m pytest tests -v`. Fixtures partagées dans `tests/conftest.py` : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
-**Faits (F1–F7 et pilote, 77 exécutions ; à partir de F6, les tests sont écrits par Code) :**
+**Faits (F1–F7 et pilote, 78 exécutions ; à partir de F6, les tests sont écrits par Code) :**
 
 F1–F4 :
 - `test_tb_hermitian` (deux jauges) : liste de R fermée sous R → −R, H_ij(R) = H_ji(−R)*, idem pour r, ndegen(−R) = ndegen(R).
@@ -238,9 +238,10 @@ F1–F4 :
 - `test_hermitize` : symétrise, idempotente, laisse A_k inchangé.
 - `test_fourier_finite_difference` (deux jauges) : dH_k contre la différence finie centrée.
 
-F5 (`velocity_from_tb` = fourier → hermitize → velocity) :
+F5 (`compute_velocity` = fourier → hermitize → velocity, écrit par Greg ; utilisé aussi par `sigma_on_grid`) :
 - `test_velocity_diagonalizes` (deux jauges) : V unitaire, V†HV = diag(ε), bandes croissantes.
 - `test_velocity_hermitian` (deux jauges × avec/sans Berry) : ħv hermitien (4×10⁻¹⁵).
+- `test_compute_velocity_modes` : la chaîne, modes `'berry'` et `'no_berry'`, `ValueError` sinon.
 - `test_velocity_inputs_unchanged` : `velocity` ne modifie pas ses entrées.
 - `test_velocity_diagonal_gradient` (deux jauges × avec/sans Berry) : diagonale = ∇ε par différences finies, gap > 1 eV.
 - `test_fermi_velocity` (deux jauges) : ħv_F = 3ta_cc/2 à q = 10⁻³ Å⁻¹, interbande et vitesse de groupe.
@@ -262,11 +263,11 @@ F7 et pilote :
 - `test_sigma_dirac_limit` : σ/σ₀ = 1 à 0.3 eV (1.00145), isotrope, nul hors du plan.
 - `test_kubo_reference` (4 cas : avec/sans Berry × deux jauges) : les 16 valeurs du tableau sur la grille 1800², à 10⁻⁴ près (écart mesuré 4.8×10⁻⁵ ; ~13 s en tout).
 - `test_kubo_gauge_shift` (N = 300) : avec Berry, σ inchangé à 5×10⁻¹⁵ ; sans Berry, σ_xx change et σ_yy non.
-- `test_sigma_on_grid_blocks_and_inputs` : indépendance vis-à-vis de `chunk`, `hw` scalaire, mode inconnu refusé.
+- `test_sigma_on_grid_blocks_and_inputs` : indépendance vis-à-vis de `chunk`, `hw` scalaire, mode inconnu refusé (`ValueError`).
 
 Les tests de F7 détectent trois bugs injectés dans une copie du code : normalisation par la taille du dernier bloc, gaussienne en largeur à mi-hauteur, paires (c, v) inversées.
 
-Au total : 77 exécutions, ~16 s. Pour sauter le tableau à 1800² : `-k "not kubo_reference"`.
+Au total : 78 exécutions, ~16 s. Pour sauter le tableau à 1800² : `-k "not kubo_reference"`.
 
 ### Notes d'implémentation (M0)
 
@@ -472,7 +473,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | Étape | Statut | Date |
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
-| M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (77 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
+| M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (78 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
 | M1 — lecteur et diagnostics | à faire | |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |

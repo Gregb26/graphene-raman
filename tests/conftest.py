@@ -1,5 +1,5 @@
 """
-Shared fixtures and helpers of the electron_photon tests (loaded by pytest for every test file).
+Shared fixtures of the electron_photon tests (loaded by pytest for every test file).
 
 Most tests run in two gauges, shift_B = (0,0,0) and (1,0,0), through an indirect parametrization of
 the `tb` fixture: gauge-independent properties must hold in both. Reference values and the
@@ -9,7 +9,7 @@ Run with:  .venv/bin/python -m pytest tests -v
 """
 
 import pytest
-from electron_defect_interaction.electron_photon import fourier, hermitize, make_graphene_tb, make_grid_tb, velocity
+from electron_defect_interaction.electron_photon import make_graphene_tb, make_grid_tb
 
 N = 100    # the k grid has N x N = 1e4 points: fast, yet covers the whole Brillouin zone
 
@@ -31,22 +31,3 @@ def grid(tb):
     N x N GridTB of `tb`, rebuilt for every gauge of a parametrized test.
     """
     return make_grid_tb(tb, N)
-
-
-def velocity_from_tb(tb, k, berry=True):
-    """
-    fourier (H, dH, A) -> hermitize (A) -> velocity at the k points `k`, with or without the Berry
-    term: what the driver will do on each block. Returns H_k and the (eps, V, hv) of `velocity`.
-    """
-
-    H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k) # (nk, nW, nW)
-    dH_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k, deriv=True) # (nk, 3, nW, nW)
-    A_k = fourier(tb.r_R, tb.R_cart, tb.ndegen, k) # (nk, 3, nW, nW)
-    A_k = hermitize(A_k)
-
-    if berry:
-        eps, V, hv = velocity(H_k, dH_k, A_k)
-    else:
-        eps, V, hv = velocity(H_k, dH_k)
-
-    return H_k, eps, V, hv

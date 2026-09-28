@@ -129,7 +129,8 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
 - **defects/many_body/single_defect.py** — orphan / work-in-progress (not imported anywhere).
 - **electron_photon/** — electron-photon coupling (EM series, in progress), conventions in its
   `__init__.py`: `tb_model` (`WannierTB`, graphene toy model), `kgrid` (reciprocal lattice, k grids),
-  `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection), `ring`
+  `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
+  `compute_velocity(tb, k, mode)`), `ring`
   (resonant k points around K), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`). Tests (pytest) in
   `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo}.py`, shared fixtures in `tests/conftest.py`.
   Plan and conventions: `memoire/EM/EM.md`.

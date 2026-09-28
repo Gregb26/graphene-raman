@@ -5,22 +5,21 @@ node with Berry, isotropy, ring averages, and the effect of dropping the Berry t
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import ring
-from conftest import velocity_from_tb  # temporary: will be replaced by the src chain function
+from electron_defect_interaction.electron_photon import compute_velocity, ring
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
 @pytest.mark.parametrize("hw", [0.1, 1.0, 2.33, 2.54])
 def test_ring_on_shell(tb, grid, hw):
     """
     `ring` lies on the resonance: |k - K| = q, and eps_c - eps_v = hw recomputed through
-    `velocity_from_tb`, not `_gap` (observed 5e-12 eV).
+    `compute_velocity`, not `_gap` (observed 5e-12 eV).
     """
 
     k, theta, q, q0 = ring(tb, grid.K, hw)
 
     assert np.allclose(q, np.linalg.norm(k-grid.K[None, :], axis=1), atol=1e-12)
 
-    eps = velocity_from_tb(tb, k)[1]
+    eps = compute_velocity(tb, k)[1]
     gap = eps[:, 1] - eps[:, 0]
 
     assert np.allclose(gap, hw, atol=1e-10, rtol=0)
@@ -62,7 +61,7 @@ def test_ring_node(tb, grid, hw):
     """
     k = ring(tb, grid.K, hw)[0]
     ntheta = k.shape[0]
-    hv = velocity_from_tb(tb, k)[-1]
+    hv = compute_velocity(tb, k)[-1]
     assert np.allclose(np.abs(hv[0, 0, 1, 0])**2, 0, atol=1e-12) and np.allclose(np.abs(hv[ntheta // 2, 0, 1, 0])**2, 0, atol=1e-12)
 
 
@@ -74,7 +73,7 @@ def test_ring_isotropy(tb, grid, hw):
     sigma_xx = sigma_yy and sigma_xy = 0 in F7. |.|^2 is taken before the mean over theta.
     """
     k = ring(tb, grid.K, hw)[0]
-    hv_cv = velocity_from_tb(tb, k)[-1][:, :, 1, 0] # (ntheta, 3): element [c, v] = [1, 0]
+    hv_cv = compute_velocity(tb, k)[-1][:, :, 1, 0] # (ntheta, 3): element [c, v] = [1, 0]
 
     vx2 = np.mean(np.abs(hv_cv[:, 0])**2) # eV^2 Angstrom^2
     vy2 = np.mean(np.abs(hv_cv[:, 1])**2)
@@ -92,7 +91,7 @@ def test_ring_average(tb, grid, hw, ratio):
     Dirac limit (0.1 eV), 0.989 at 2.33 eV (EM.md, trigonal warping). No reference at 1.0 or 2.54 eV.
     """
     k = ring(tb, grid.K, hw)[0]
-    hv = velocity_from_tb(tb, k)[-1] # (ntheta, 3, nW, nW)
+    hv = compute_velocity(tb, k)[-1] # (ntheta, 3, nW, nW)
     hv_F = 3*tb.t*tb.a_cc/2 # eV Angstrom
 
     vx2 = np.mean(np.abs(hv[:, 0, 1, 0])**2) # |.|^2 first, then the mean over theta
@@ -108,8 +107,8 @@ def test_ring_without_berry(tb, grid):
     """
     k, theta = ring(tb, grid.K, 2.33)[:2]
     ntheta = len(theta)
-    hv = velocity_from_tb(tb, k, berry=True)[-1][:, :2, 1, 0] # (ntheta, 2): x, y of [c, v]
-    hv_nb = velocity_from_tb(tb, k, berry=False)[-1][:, :2, 1, 0]
+    hv = compute_velocity(tb, k, mode='berry')[-1][:, :2, 1, 0] # (ntheta, 2): x, y of [c, v]
+    hv_nb = compute_velocity(tb, k, mode='no_berry')[-1][:, :2, 1, 0]
 
     vx2_nb = np.abs(hv_nb[:, 0])**2 # (ntheta,)
 

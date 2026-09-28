@@ -55,6 +55,6 @@ Les fonctions NumPy élément par élément (`sqrt`, `arctan`, `exp`, `cos`…) 
 - **Paramétrisation directe** : sans `indirect`, la valeur arrive telle quelle dans l'argument du test.
 - **Deux décorateurs empilés** donnent le produit cartésien de leurs valeurs, avec des identifiants comme `[2.33-tb1]`.
 - **Plusieurs noms à la fois** : `@pytest.mark.parametrize("hw, ratio", [(0.1, 1.0), (2.33, 0.98909)])` passe les couples ensemble.
-- **Ne pas tester une fonction avec elle-même** : pour vérifier `ring`, on recalcule le gap par `velocity_from_tb`, pas par `_gap`.
+- **Ne pas tester une fonction avec elle-même** : pour vérifier `ring`, on recalcule le gap par `compute_velocity`, pas par `_gap`.
 - **Tester le test** : réintroduire le bug (par exemple retirer `.copy()` ou le terme de Berry) et vérifier que le test échoue.
 - **Commandes** : `.venv/bin/python -m pytest tests -v` (ou un seul fichier, `tests/test_ring.py`), avec `-k mot` pour filtrer par nom.

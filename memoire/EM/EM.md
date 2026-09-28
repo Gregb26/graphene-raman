@@ -187,15 +187,15 @@ Construite par `make_grid_tb(tb, N)` (F2 + F3), pour les appelants seulement.
   - ħv_nn = ∇ε_n par différences finies, loin de K ;
   - à q = 10⁻³ Å⁻¹ de K : |ħv^x_cv|² + |ħv^y_cv|² → (ħv_F)² et |ħ∇ε| → ħv_F, avec **ħv_F = 3ta_cc/2 = 5.751 eV·Å**.
 
-**F6 — `ring(tb, ħω, K, n_theta=720, mu)`** → k (nθ, 3), θ (nθ,)
-- **Calcul :** bissection le long de rayons issus de K jusqu'à ε_c − ε_v = ħω, avec c et v les bandes qui encadrent μ.
+**F6 — `ring(tb, K, hw, mu=0.0, ntheta=720, tol=1e-12, maxsteps=100)`** → k (nθ, 3), θ (nθ,), q (nθ,), q₀
+- **Calcul :** bissection vectorisée le long des nθ rayons issus de K jusqu'à ε_c − ε_v = ħω (fonction `_gap`), avec c et v les bandes qui encadrent μ, choisies par l'énergie. nθ multiple de 6.
 - **Réutilisation :** M3, panneau (a) de la figure, et liste de k d'EM2.
 - **Vérifications à 2.33 eV, avec Berry :**
   - |ħv^x_cv|² s'annule à θ = 0 et π, c'est-à-dire q = k − K ∥ x ;
   - ⟨|ħv^x_cv|²⟩_θ / ((ħv_F)²/2) = **0.989** (déformation trigonale).
 - **Vérifications sans Berry**, B en maille 0 :
-  - nœud vers 164° ;
-  - |v_cv| sans/avec ∈ [0.66, 1.27] ;
+  - plus de nœud à 0 ni à π (|ħv^x_cv|² = 2.05 eV²·Å²) ; deux nœuds à 193.6° et 343.4°, qui ne sont plus à 180° l'un de l'autre (le « vers 164° » d'origine est 343.4° − 180°) ;
+  - |v_cv| sans/avec ∈ [0.664, 1.271] ;
   - ⟨|v_x|²⟩ sans/avec = 1.125.
 
 **F7 — `kubo_accumulate(ε, ħv, ω, mu, eta)` → S (nω, 3, 3) ; `kubo_normalize(S, ω, N_k, A_cell)` → σ/σ₀**
@@ -224,7 +224,9 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 
 Lancer avec `.venv/bin/python -m pytest tests/test_velocity_operator.py -v`. Fixtures : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
-**Faits (F1–F4, 14 tests) :**
+**Faits (F1–F6, 67 exécutions ; à partir de F6, les tests sont écrits par Code) :**
+
+F1–F4 :
 - `test_tb_hermitian` (deux jauges) : liste de R fermée sous R → −R, H_ij(R) = H_ji(−R)*, idem pour r, ndegen(−R) = ndegen(R).
 - `test_tb_bond_length` (deux jauges) : trois sauts A → B, |δ| = a_cc.
 - `test_tb_shift_same_bonds` : nR = 5 et 7, mêmes δ à l'ordre près.
@@ -235,11 +237,54 @@ Lancer avec `.venv/bin/python -m pytest tests/test_velocity_operator.py -v`. Fix
 - `test_hermitize` : symétrise, idempotente, laisse A_k inchangé.
 - `test_fourier_finite_difference` (deux jauges) : dH_k contre la différence finie centrée.
 
+F5 (`velocity_from_tb` = fourier → hermitize → velocity) :
+- `test_velocity_diagonalizes` (deux jauges) : V unitaire, V†HV = diag(ε), bandes croissantes.
+- `test_velocity_hermitian` (deux jauges × avec/sans Berry) : ħv hermitien (4×10⁻¹⁵).
+- `test_velocity_inputs_unchanged` : `velocity` ne modifie pas ses entrées.
+- `test_velocity_diagonal_gradient` (deux jauges × avec/sans Berry) : diagonale = ∇ε par différences finies, gap > 1 eV.
+- `test_fermi_velocity` (deux jauges) : ħv_F = 3ta_cc/2 à q = 10⁻³ Å⁻¹, interbande et vitesse de groupe.
+- `test_velocity_gauge` : |ħv|² invariant sous shift_B avec Berry ; sans Berry, x change, y non.
+
+F6 :
+- `test_ring_on_shell` (deux jauges × 4 énergies) : |k − K| = q et ε_c − ε_v = ħω, recalculé sans `_gap`.
+- `test_ring_dirac_limit` (deux jauges) : q = q₀ à 0.1 eV.
+- `test_ring_symmetry` (deux jauges × 4 énergies) : C₃ et miroir θ → −θ.
+- `test_ring_node` (deux jauges × 4 énergies) : |ħv^x_cv|² = 0 à θ = 0 et π avec Berry.
+- `test_ring_isotropy` (deux jauges × 4 énergies) : ⟨|v^x_cv|²⟩ = ⟨|v^y_cv|²⟩, ⟨Re(v^x* v^y)⟩ = 0.
+- `test_ring_average` (deux jauges) : rapport 1 à 0.1 eV (limite de Dirac) et 0.98909 à 2.33 eV.
+- `test_ring_without_berry` : les chiffres « sans Berry » ci-dessus.
+
 **À faire :**
-- `test_velocity` : hermiticité, diagonale contre ∇ε, ħv_F.
-- `test_node` : nœud à q ∥ e avec Berry.
 - `test_kubo_reference` : les huit valeurs du tableau, à 10⁻⁴ près.
 - `test_gauge_shift` : avec Berry inchangé ; sans Berry, σ_xx = 2.2896 à 2.33 eV.
+
+### Notes d'implémentation (M0)
+
+Les démonstrations et ordres de grandeur derrière le code et les tolérances des tests. Les docstrings y renvoient.
+
+**Modèle et `shift_B`.** Le saut A(0) → B le long de la liaison δ aboutit à l'orbitale B de la maille R = τ_A + δ − τ_B, qui doit être un vecteur du réseau (vérifié). `shift_B` = L déclare que l'orbitale B de la maille 0 est l'atome situé en τ_B + L. Les liaisons ne changent pas, seules les étiquettes bougent : H_AB vit sur S − L et H_BA sur L − S, avec S = {(0,0,0), (−1,0,0), (0,−1,0)}. C'est le choix que fait Wannier90 quand il place un centre dans une maille voisine.
+
+**Terme de Berry.** ħv̂ = i[Ĥ, r̂] écrit dans la base de Wannier donne ∂H + i[H, A]. ∂H seul traite chaque fonction de Wannier comme un point situé en R ; i[H, A] ajoute où elles se trouvent vraiment (centres, et éléments de position hors diagonale dans les données réelles). Dans la base des bandes, le terme vaut i(ε_m − ε_n)Ā_mn (§0) : il est nul sur la diagonale. Quand A ne contient que les centres τ_j (M0, ou mode « centres seuls »), ∂H + i[H, A] = U†(∂H_at)U avec U = diag(e^{−ik·τ_j}) et H_at le hamiltonien en jauge atomique (phases e^{ik·(R+τ_j−τ_i)}) : le terme de Berry transforme alors simplement la dérivée en celle de la jauge atomique. Vérifié numériquement à 10⁻⁹ près, soit la précision de la différence finie.
+
+**Invariance de jauge (test_velocity_gauge).** Déplacer B de L donne H′(k) = U H(k) U† avec U = diag(1, e^{ik·L}). La dérivée de U ajoute iL_μ[P, H] à ∂H′ (P, projecteur sur B), et le centre déplacé τ_B + L ajoute exactement −iL_μ[P, H] à i[H′, A′]. Donc ∂H′ + i[H′, A′] = U(∂H + i[H, A])U†, V′ = UV, et ħv′ = ħv à la phase arbitraire d'`eigh` près : on compare les |ħv_mn|². Sans Berry, iL_μ[P, H] reste. Avec L = a₁, seule la composante x change.
+
+**Anneau (F6).** Pour un cône parfait, l'anneau est un cercle de rayon q₀ = ħω/(2ħv_F). La déformation trigonale en fait un triangle arrondi : à 2.33 eV, q/q₀ = 1.10 vers les points M (θ = 0°, 120°, 240°) et 0.945 à 60°, 180° et 300°. Le long de chaque rayon, le gap croît de façon monotone de 0 (en K) jusqu'à 2t = 5.4 eV au point M (|KM| = 0.85 Å⁻¹). L'intervalle [0, 2q₀] contient donc exactement un croisement tant que ħω ≪ 2t (vérifié jusqu'à 2.54 eV sur 720 rayons). Au-delà de ~2t, l'anneau rejoint ses voisins : c'est la singularité de van Hove. Il faut environ 39 itérations pour descendre de 2q₀ ≈ 0.4 Å⁻¹ à tol = 10⁻¹² Å⁻¹, ce qui fixe le gap à ~2ħv_F·tol ≈ 10⁻¹¹ eV (mesuré : 5×10⁻¹²). On n'évalue jamais le gap en K même : les deux bandes y sont dégénérées à μ, et le décompte des bandes sous μ dépendrait de l'arrondi.
+
+**Écarts mesurés et tolérances des tests (grille 100², décalée de ½) :**
+
+| Grandeur | Écart mesuré | Tolérance |
+|---|---|---|
+| dH/dk contre différences finies | 10⁻⁹ à 10⁻⁸ eV·Å | atol 10⁻⁶ |
+| ħv hermitien | 4×10⁻¹⁵ eV·Å | atol 10⁻¹² |
+| diag ħv contre ∇ε, gap > 1 eV | 1.7×10⁻⁸ eV·Å | atol 10⁻⁷, rtol 0 |
+| idem, deux points les plus proches de K et K′ (gap 0.098 eV) | 1.5×10⁻⁶ (erreur ∝ h²v_F/q²) | masqués |
+| ħv_F à q = 10⁻³ Å⁻¹, point par point | 7.1×10⁻⁴ relatif (cos 3θ) | rtol 2×10⁻³ |
+| ħv_F, moyenne sur 12 θ | 3.8×10⁻⁷ relatif | rtol 10⁻⁵ |
+| \|ħv\|² sous shift_B, avec Berry | 3.7×10⁻¹³ eV²·Å² | atol 10⁻¹⁰ |
+| anneau : ε_c − ε_v − ħω | 5×10⁻¹² eV | atol 10⁻¹⁰ |
+| anneau à 0.1 eV : q/q₀ − 1 | ±3×10⁻³ | rtol 5×10⁻³ |
+
+Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 
 ---
 
@@ -410,7 +455,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | Étape | Statut | Date |
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
-| M0 — modèle de liaisons fortes | en cours : F1–F4 faits et testés, F5 commencé | 2026-09-28 |
+| M0 — modèle de liaisons fortes | en cours : F1–F6 faits et testés (67 exécutions), F7 (Kubo) et pilote à faire | 2026-09-28 |
 | M1 — lecteur et diagnostics | à faire | |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |

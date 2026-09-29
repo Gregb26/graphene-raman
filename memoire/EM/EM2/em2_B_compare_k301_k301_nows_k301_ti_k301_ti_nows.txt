@@ -1,0 +1,64 @@
+EM2 B — postw90 kubo vs M4 (full, N = 1200 shifted, eta = 0.04 eV); sigma_0 = e^2/4hbar = 6.085337e-05 S (postw90 constants), c = 15.8753163 A, g_s = 2 applied to postw90
+
+[k301]
+  sigma_xx/sigma_0 at 0.2 eV: postw90 0.99104, M4 1.00265  (postw90 raw, no spin: 0.49552)
+  hw (eV) | xx postw90  M4       diff      | yy postw90  M4       diff      | xy postw90  M4
+   1.96   | 1.24844  1.26367  -1.52e-02 | 1.24932  1.26360  -1.43e-02 | -5.8e-10  +6.9e-12
+   2.33   | 1.41681  1.40555  +1.13e-02 | 1.41815  1.40536  +1.28e-02 | -7.5e-10  +8.9e-12
+   2.54   | 1.51295  1.51148  +1.47e-03 | 1.51459  1.51135  +3.24e-03 | -5.7e-10  +9.4e-12
+  van Hove peak (xx): postw90 4.05 eV, 6.8869; M4 4.05 eV, 6.8992
+  whole curve xx: max |diff| 5.94e-02 at 3.29 eV, mean |diff| 1.05e-02, max rel 2.72e-02 at 3.29 eV
+  whole curve yy: max |diff| 5.62e-02 at 3.29 eV, mean |diff| 9.54e-03, max rel 2.57e-02 at 3.29 eV
+  whole curve xy: max |diff| 2.73e-08 at 4.00 eV, mean |diff| 2.37e-09
+  postw90 |yy - xx| max 1.2e-02 (M4 2.7e-03); |xy| max 2.7e-08; zz max 5.9e-22
+
+[k301_nows]
+  sigma_xx/sigma_0 at 0.2 eV: postw90 0.99111, M4 1.00265  (postw90 raw, no spin: 0.49556)
+  hw (eV) | xx postw90  M4       diff      | yy postw90  M4       diff      | xy postw90  M4
+   1.96   | 1.24845  1.26367  -1.52e-02 | 1.24927  1.26360  -1.43e-02 | -5.8e-10  +6.9e-12
+   2.33   | 1.41695  1.40555  +1.14e-02 | 1.41807  1.40536  +1.27e-02 | -7.5e-10  +8.9e-12
+   2.54   | 1.51304  1.51148  +1.56e-03 | 1.51454  1.51135  +3.19e-03 | -5.7e-10  +9.4e-12
+  van Hove peak (xx): postw90 4.05 eV, 6.8881; M4 4.05 eV, 6.8992
+  whole curve xx: max |diff| 5.94e-02 at 3.29 eV, mean |diff| 1.05e-02, max rel 2.72e-02 at 3.29 eV
+  whole curve yy: max |diff| 5.61e-02 at 3.29 eV, mean |diff| 9.55e-03, max rel 2.57e-02 at 3.29 eV
+  whole curve xy: max |diff| 2.73e-08 at 4.00 eV, mean |diff| 2.37e-09
+  postw90 |yy - xx| max 1.3e-02 (M4 2.7e-03); |xy| max 2.7e-08; zz max 6.1e-22
+
+[k301_ti]
+  sigma_xx/sigma_0 at 0.2 eV: postw90 0.99105, M4 1.00265  (postw90 raw, no spin: 0.49552)
+  hw (eV) | xx postw90  M4       diff      | yy postw90  M4       diff      | xy postw90  M4
+   1.96   | 1.24958  1.26367  -1.41e-02 | 1.24958  1.26360  -1.40e-02 | -5.8e-10  +6.9e-12
+   2.33   | 1.41858  1.40555  +1.30e-02 | 1.41857  1.40536  +1.32e-02 | -7.6e-10  +8.9e-12
+   2.54   | 1.51513  1.51148  +3.65e-03 | 1.51513  1.51135  +3.78e-03 | -5.8e-10  +9.4e-12
+  van Hove peak (xx): postw90 4.05 eV, 6.9055; M4 4.05 eV, 6.8992
+  whole curve xx: max |diff| 5.48e-02 at 3.29 eV, mean |diff| 9.51e-03, max rel 2.51e-02 at 3.29 eV
+  whole curve yy: max |diff| 5.50e-02 at 3.29 eV, mean |diff| 9.48e-03, max rel 2.51e-02 at 3.29 eV
+  whole curve xy: max |diff| 2.77e-08 at 4.00 eV, mean |diff| 2.41e-09
+  postw90 |yy - xx| max 2.6e-05 (M4 2.7e-03); |xy| max 2.7e-08; zz max 6.0e-22
+
+[k301_ti_nows]
+  sigma_xx/sigma_0 at 0.2 eV: postw90 0.99112, M4 1.00265  (postw90 raw, no spin: 0.49556)
+  hw (eV) | xx postw90  M4       diff      | yy postw90  M4       diff      | xy postw90  M4
+   1.96   | 1.24960  1.26367  -1.41e-02 | 1.24952  1.26360  -1.41e-02 | -5.8e-10  +6.9e-12
+   2.33   | 1.41871  1.40555  +1.32e-02 | 1.41849  1.40536  +1.31e-02 | -7.6e-10  +8.9e-12
+   2.54   | 1.51523  1.51148  +3.75e-03 | 1.51508  1.51135  +3.73e-03 | -5.8e-10  +9.4e-12
+  van Hove peak (xx): postw90 4.05 eV, 6.9066; M4 4.05 eV, 6.8992
+  whole curve xx: max |diff| 5.48e-02 at 3.29 eV, mean |diff| 9.49e-03, max rel 2.51e-02 at 3.29 eV
+  whole curve yy: max |diff| 5.49e-02 at 3.29 eV, mean |diff| 9.49e-03, max rel 2.51e-02 at 3.29 eV
+  whole curve xy: max |diff| 2.77e-08 at 4.00 eV, mean |diff| 2.41e-09
+  postw90 |yy - xx| max 2.7e-03 (M4 2.7e-03); |xy| max 2.7e-08; zz max 6.2e-22
+
+Against our sigma with the postw90 conventions (em2_B_ours.py: prefactor 1/Delta, Gamma-centred N x N grid;
+left: use_ws_distance and r(R) rebuilt by postw90 from the .mmn):
+  k301 - ours[gam301]: max |diff| xx 1.98e-02 at 4.04 eV, yy 6.34e-03, xy 2.7e-08; mean |diff| xx 4.1e-03; at 0.2 eV and lasers xx -1.1e-04, -1.1e-03, -1.9e-03, -2.3e-03
+  k301 - ours[shift_delta]: max |diff| xx 5.87e-02 at 3.29 eV, yy 5.55e-02, xy 2.7e-08; mean |diff| xx 1.1e-02; at 0.2 eV and lasers xx -1.1e-02, -1.5e-02, +1.2e-02, +1.8e-03
+  k301_nows - ours[gam301]: max |diff| xx 1.86e-02 at 4.06 eV, yy 6.27e-03, xy 2.7e-08; mean |diff| xx 4.1e-03; at 0.2 eV and lasers xx -3.5e-05, -1.1e-03, -1.8e-03, -2.2e-03
+  k301_nows - ours[shift_delta]: max |diff| xx 5.87e-02 at 3.29 eV, yy 5.54e-02, xy 2.7e-08; mean |diff| xx 1.1e-02; at 0.2 eV and lasers xx -1.1e-02, -1.5e-02, +1.2e-02, +1.9e-03
+  k301_ti - ours[gam301]: max |diff| xx 1.77e-03 at 4.02 eV, yy 9.25e-04, xy 2.8e-08; mean |diff| xx 1.6e-04; at 0.2 eV and lasers xx -1.0e-04, +1.7e-05, -1.3e-04, -1.5e-04
+  k301_ti - ours[shift_delta]: max |diff| xx 5.47e-02 at 3.34 eV, yy 5.46e-02, xy 2.8e-08; mean |diff| xx 9.4e-03; at 0.2 eV and lasers xx -1.1e-02, -1.4e-02, +1.3e-02, +4.0e-03
+  k301_ti_nows - ours[gam301]: max |diff| xx 2.17e-04 at 3.88 eV, yy 1.28e-04, xy 2.8e-08; mean |diff| xx 4.3e-05; at 0.2 eV and lasers xx -2.5e-05, +3.7e-05, +8.2e-06, -5.1e-05
+  k301_ti_nows - ours[shift_delta]: max |diff| xx 5.47e-02 at 3.34 eV, yy 5.47e-02, xy 2.8e-08; mean |diff| xx 9.4e-03; at 0.2 eV and lasers xx -1.1e-02, -1.4e-02, +1.3e-02, +4.1e-03
+
+[k301_nows - k301] max |diff| xx 1.75e-03, yy 9.35e-04, xy 2.75e-11; at the lasers xx +1.9e-05, +1.4e-04, +9.6e-05
+[k301_ti - k301] max |diff| xx 1.86e-02, yy 6.21e-03, xy 4.26e-10; at the lasers xx +1.1e-03, +1.8e-03, +2.2e-03
+[k301_ti_nows - k301] max |diff| xx 1.98e-02, yy 6.25e-03, xy 4.19e-10; at the lasers xx +1.2e-03, +1.9e-03, +2.3e-03

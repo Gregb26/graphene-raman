@@ -1,0 +1,7 @@
+N = 1200 shifted: 300 s
+N = 1201 Gamma: 240 s
+m4_check - M4 npz                xx max |d| 2.75e-14 at 4.11 eV; yy 2.75e-14; xy 7.0e-15; at lasers xx +1.78e-15, -4.44e-16, +4.44e-16; at 0.2 eV +4.0e-15
+shift_delta - M4 (prefactor)     xx max |d| 1.09e-02 at 4.11 eV; yy 1.09e-02; xy 6.9e-12; at lasers xx -2.63e-04, -3.12e-04, -3.53e-04; at 0.2 eV -1.8e-04
+gam1201 - shift_delta (grid)     xx max |d| 8.15e-07 at 0.20 eV; yy 8.50e-07; xy 1.3e-14; at lasers xx +1.33e-15, +1.33e-15, -4.44e-16; at 0.2 eV +8.1e-07
+gam301 - gam1201 (N)             xx max |d| 5.46e-02 at 3.34 eV; yy 5.46e-02; xy 3.2e-11; at lasers xx -1.38e-02, +1.35e-02, +4.15e-03; at 0.2 eV -1.1e-02
+DONE

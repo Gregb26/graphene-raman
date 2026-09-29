@@ -485,7 +485,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 - **Pilote fait (2026-09-29, en local, ~13 min)** : 5×5 complet, μ = E_D, ħω = 0.20–6.00 eV par pas de 0.01, les trois η partageant chaque diagonalisation (boucle identique à `sigma_on_grid` à 2×10⁻¹⁴ ; script et npz dans le scratchpad de la séance, non versionnés).
   - **Convergence en N très rapide** (grille décalée, intégrande lisse) : à η = 0.04, N = 900 et 1800 diffèrent de 10⁻¹¹ ; à η = 0.02, N = 900 est à 1.3×10⁻⁴ et N = 1200 à 1.5×10⁻⁶ de N = 1800. Le critère « pas ≲ η/(2ħv_F) » est largement pessimiste.
   - **Biais en η quadratique**, σ(η) ≈ σ(0) + 0.42 η² à 2.33 eV (mêmes coefficients de 0.02 à 0.08) : 1.7×10⁻⁴ à η = 0.02, **6.7×10⁻⁴ à η = 0.04**, 2.7×10⁻³ à η = 0.08.
-  - **Couple retenu : N = 1200, η = 0.04 eV** (convergé en N à 10⁻¹⁴, biais < 10⁻³, 65 s par variante) ; η = 0.04 est aussi l'élargissement prévu pour postw90.
+  - **Couple retenu : N = 1200, η = 0.04 eV** (convergé en N à 10⁻¹⁴, biais < 10⁻³, 65 s par variante) ; η = 0.04 est aussi l'élargissement prévu pour postw90. Biais du mode complet à η = 0.04 : 5.0, 6.6, 8.2×10⁻⁴ aux trois lasers (sans Berry : jusqu'à 1.0×10⁻³ à 2.54 eV). Tableau complet : `memoire/EM/M4_sigma/pilote/convergence.txt`.
   - σ_xx/σ₀ à η = 0.04 (1.96, 2.33, 2.54 eV) : complet **1.2637, 1.4056, 1.5115** ; centres seuls 1.2190, 1.3372, 1.4258 (rapport 0.965, 0.951, 0.943, comme ⟨|v_cv|²⟩ sur les anneaux, F15) ; sans Berry 1.3648, 1.5548, 1.6944 en xx, et yy/xx = 0.89, 0.86, 0.84.
   - Vérifications : σ/σ₀ = 1.0026 à 0.2 eV ; pic de van Hove à **4.05 eV** (σ/σ₀ = 6.9 ; transition en M à 4.056 eV) ; complet : |σ_yy − σ_xx| = 1.9×10⁻⁴ (C₃ des données, comme les moyennes de F15), |σ_xy| = 9×10⁻¹² ; sans Berry : isotropie brisée (yy/xx = 0.86 à 2.33 eV), σ_xy toujours nul (miroir).
 
@@ -544,6 +544,8 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 
 ### EM3 — figure et chiffres (Code)
 
+- **Première version (2026-09-29)** : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` (6.5 × 3.45 po), données de `memoire/EM/M4_sigma/`. (a) |ħv^x_cv|²/(ħv_F)² du mode complet autour de K (h = 0.35 Å⁻¹), anneaux à 1.96, 2.33, 2.54 eV, axe q ∥ x en pointillé (le nœud est à +7°) ; (b) σ_xx/σ₀ complet, centres seuls, sans Berry (xx), médaillon 1.8–2.7 eV avec les trois lasers, ligne ħω_froz. σ_yy sans Berry = σ_yy centres seuls à 10⁻¹⁴ sur toute la courbe (τ_B − τ_A selon x, comme en F15) : une seule courbe verte. La courbe postw90 s'ajoute d'elle-même quand `memoire/EM/EM2/em2_postw90_sigma.npz` existe. Reste : postw90 (EM2), le tableau, la légende du mémoire.
+
 - Figure à deux panneaux :
   - (a) carte de |e_x·v_cv|² autour de K avec les anneaux à 1.96, 2.33 et 2.54 eV ;
   - (b) σ(ω)/σ₀ : mode complet, postw90, sans Berry en pointillé, ligne ħω_froz.
@@ -581,7 +583,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | M3 — symétries et anneaux | **fait** : F14 (`pz_block`), F15 (`ring_stats`), F17 (`ring_kpoints_crystal`) ; F16 reportée ; 160 tests en tout | 2026-09-29 |
 | EM2 — DFT directe et postw90 | à préparer (liste de k prête) | |
 | M4 — σ(ω) et données de figure | en cours : pilote et production faits (`memoire/EM/M4_sigma/`, N = 1200, η = 0.04 eV), F18, F19 faits ; 174 tests ; reste la concordance postw90 (EM2) | 2026-09-29 |
-| EM3 — figure et chiffres | après M4 | |
+| EM3 — figure et chiffres | première version faite (`figures/fig_em_coupling`), postw90 à ajouter après EM2 | 2026-09-29 |
 | P28 — texte | après validation complète | |
 
 ---

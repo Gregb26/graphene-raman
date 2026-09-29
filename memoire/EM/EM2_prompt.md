@@ -45,12 +45,19 @@ Lis d'abord `CLAUDE.md` puis `memoire/EM/EM.md` (§2 données, §8 M4, §10 EM2)
 3. **`bands.x`** avec `lp = .true.` et `filp`. Lis `PP/src/write_p_avg.f90` de QE 7.5 et consigne : format du fichier, unités de p,
    moyenne sur les états dégénérés, et surtout **si le commutateur [V_NL, r] est inclus**. Sans lui, v = p/m diffère de la vraie
    vitesse de quelques pour cent : c'est à chiffrer, pas à corriger.
+   Si lp refuse un calcul avec smearing, ou si valence/conduction y sont ambiguës, relance le run
+   bands avec occupations = 'fixed' (nelec inchangé) et dis-le.
 4. **Comparaison, k par k** : π, π* choisis par l'énergie autour de E_D (π = bande 4 de QE près de K, à vérifier).
    - ε_π, ε_π* de QE contre `compute_velocity(tb, k, 'berry')` aux mêmes k : écart attendu de l'ordre du meV ;
    - **|ħv_cv| dans le plan** (√(|ħv^x_cv|² + |ħv^y_cv|²), invariant de jauge et sans nœud ; 4.20 à 7.24 eV·Å sur l'anneau de
      2.33 eV) : QE contre les trois variantes du dépôt (complet, `centres_only(tb)`, `no_berry`). Attendu : complet à quelques pour
      cent au plus ; l'écart des deux autres est ce qu'on veut montrer.
    - Contrôle d'unités : près de K, |ħv_cv| doit tendre vers ħv_F = 5.469 eV·Å.
+      - Contrôle d'unités, indépendant de Wannier : ajoute à la liste 12 k sur un cercle de rayon
+     q = 0.005 Å⁻¹ autour de K. Sur ce cercle, ħv_F^DFT = ⟨Δε/(2q)⟩_θ (pentes des valeurs propres QE),
+     et |ħv_cv| → ħv_F (limite de Dirac). Convertis p avec les unités lues dans write_p_avg.f90 et
+     compare à ħv_F^DFT : accord à 10⁻³ près = p = m_e v, commutateur non local inclus ; sinon, l'écart
+     chiffre [V_NL, r], et on le rapporte sans corriger. Compare aussi ħv_F^DFT à 5.469 eV·Å (Wannier).
 
 ## B. postw90 `kubo`
 
@@ -59,8 +66,12 @@ Lis d'abord `CLAUDE.md` puis `memoire/EM/EM.md` (§2 données, §8 M4, §10 EM2)
    `kubo_freq_min = 0.2`, `kubo_freq_max = 6.0`, `kubo_freq_step = 0.01`, élargissement gaussien fixe (`kubo_adpt_smr = false`).
    **Largeur** : notre η = 0.04 eV est l'**écart-type** de la gaussienne. Wannier90 utilise, je crois, exp(−x²)/√π avec
    x = ΔE/largeur, donc largeur = √2 η = 0.05657 eV : **vérifie dans le code** (`utility_w0gauss`) avant de fixer la valeur.
-3. `berry_kmesh = 1200 1200 1` (couple retenu en M4). Fais d'abord un essai à 300 × 300 pour le temps et la mémoire, puis
-   propose-moi les ressources du vrai calcul.
+      kubo_eigval_max au-dessus de toutes les bandes : vérifie son défaut dans la doc 3.1.0 ; s'il
+   dépend de dis_froz_max, il couperait des transitions que notre calcul garde.
+3. berry_kmesh = 1201 1201 1 (pas un multiple de 3 : K hors grille, comme notre grille décalée ;
+   la convergence en N de M4 rend l'écart avec 1200 négligeable). Essai à 301 × 301 pour le temps
+   et la mémoire, puis propose-moi les ressources du vrai calcul.
+   
 4. Conversion : postw90 donne σ en S/cm pour la cellule 3D ; σ_2D = σ_3D × 100 × c, c = 15.875316×10⁻¹⁰ m, puis σ/σ₀ avec
    σ₀ = e²/(4ħ) = 6.0853×10⁻⁵ S. Contrôle : σ/σ₀ → 1 à 0.2 eV.
 5. Comparaison avec `memoire/EM/M4_sigma/em_sigma_full_N1200_eta0.04.npz` (même grille de ħω) : σ_xx, σ_yy, σ_xy sur toute la

@@ -2,7 +2,7 @@
 
 Date : 2026-09-25. Série EM (couplage électron-photon, §2.5 du mémoire), distincte des P (mémoire) et des R (article).
 Statut : **PRODUCTION**. Répertoire de travail : `graphene/qe/electron_photon/EM1_tb/` (hors dépôt).
-Copie versionnée : `memoire/EM1_tb/` dans le dépôt (créée le 2026-09-25 sur GO de Greg ; règle 5 et tableau de CLAUDE.md complétés). Commit fait, non poussé.
+Copie versionnée : `memoire/EM/EM1_tb/` dans le dépôt (créée le 2026-09-25 sur GO de Greg ; règle 5 et tableau de CLAUDE.md complétés). Commit `a5afdd4`, poussé ; copie déplacée par Greg le 2026-09-28 depuis `memoire/EM1_tb/` (commit `780ad41`, fichiers inchangés, poussé).
 Référence (LECTURE SEULE, rien écrit) : `graphene/qe/defects/unit_cell/27x27/`. Aucun push (Greg pousse lui-même).
 
 Chemins abrégés : `$P` = `/home/gregb26/links/projects/rrg-cotemich-ac/gregb26`, `$S` = `/home/gregb26/links/scratch`.
@@ -300,18 +300,18 @@ Unités : Å (réseau, r) et eV (H). 40 070 lignes = 56 lignes d'en-tête + 741 
   un nouveau volet du mémoire, comme EPW ; il contient tout (inputs, `.chk`/`.eig` copiés, sorties, script, rapport, md5).
 - **Copie versionnée** : CLAUDE.md règle 5 prévoit `article/<campagne>/` (article) ou « le répertoire du chapitre (mémoire) », mais aucun
   répertoire de chapitre n'existe dans le dépôt (ch. 4 = `results/M`, `wannier/`, `NOTES_TGAMMA.md` ; ch. 5 = `results/epw`, `scripts/epw_*`,
-  `NOTES_EPW*.md`). **Proposition** : `memoire/EM1_tb/` (symétrique de `article/`), avec `README.md`, `EM1_rapport.md`, `em1_check.py`,
+  `NOTES_EPW*.md`). **Proposition** : `memoire/EM/EM1_tb/` (symétrique de `article/`), avec `README.md`, `EM1_rapport.md`, `em1_check.py`,
   `em1_check_*.txt`, `wannier.win` + `wannier.win.diff`, `run.log`, `MD5SUMS_EM1_2026-09-25.txt`, `wannier_wsvec.dat` (0,9 Mo, pas encore
   versionné ailleurs) ; sans `wannier_tb.dat` (déjà suivi, identique, sous `wannier/27x27/`), sans `_hr.dat` (redondant), sans `.chk`, `.eig`
   (suivi), `.wout`, `.bvec`, `_u*.mat` (suivis). **Fait le 2026-09-25** (GO de Greg) : répertoire créé, règle 5 de CLAUDE.md complétée (« `memoire/<campagne>/` (mémoire) ») et ligne EM1 ajoutée au tableau des campagnes.
-- **Commit** (fait le 2026-09-25, non poussé) :
+- **Commit** (fait le 2026-09-25, `a5afdd4`, poussé) :
   ```
   EM1 : éléments de position r(R) de la wannierisation de référence 27×27 (restart = plot) — inventaire, vérifications a–e, format du _tb.dat, rapport
   ```
-  (`memoire/EM1_tb/` + CLAUDE.md ; copie faite par `cp -p` depuis le répertoire de travail, `wannier.win.diff` = `diff -u` référence → copie).
+  (`memoire/EM/EM1_tb/` + CLAUDE.md ; copie faite par `cp -p` depuis le répertoire de travail, `wannier.win.diff` = `diff -u` référence → copie).
 - **Statut PRODUCTION** : aucun `.save` produit, rien sur le scratch ; toutes les sorties (≤ 3,9 Mo) sont dans le répertoire de travail sur
   `/project`. Le `.save` du nscf d'origine est déjà miroité (`qe_tmp_backup/defect_uc_dense_27/`, md5 2026-09-17, 5 fichiers revérifiés).
-- Dépôt `graphene-raman` : propre avant EM1 (HEAD `112617d`, R4 terminé) ; seul ajout = `memoire/EM1_tb/` + CLAUDE.md ; rien du mémoire (ch. 4/5) touché.
+- Dépôt `graphene-raman` : propre avant EM1 (HEAD `112617d`, R4 terminé) ; seul ajout = `memoire/EM/EM1_tb/` + CLAUDE.md ; rien du mémoire (ch. 4/5) touché.
 
 ## Fichiers du répertoire de travail
 

@@ -11,6 +11,6 @@
   la référence), sorties `wannier_tb.dat`, `wannier_hr.dat`, `wannier_wsvec.dat`, `wannier_u*.mat`,
   `wannier.bvec`, `wannier.wout`, `run.log`, `em1_check.py` + sorties `.txt`, `MD5SUMS_EM1_2026-09-25.txt`,
   rapport `EM1_rapport.md`.
-- Copie versionnée : `memoire/EM1_tb/` dans le dépôt (créée le 2026-09-25, filtrée : sans `_tb.dat` (déjà suivi sous
+- Copie versionnée : `memoire/EM/EM1_tb/` dans le dépôt (créée le 2026-09-25, filtrée : sans `_tb.dat` (déjà suivi sous
   `wannier/27x27/`), `_hr.dat`, `.chk`, `.eig`, `.wout`, `.bvec`, `_u*.mat`).
 - Suite : EM2 (nscf / bands.x, interpolation v_mn^(μ)(k) par Greg). Rien du mémoire touché.

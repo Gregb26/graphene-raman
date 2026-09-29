@@ -576,7 +576,18 @@ Lancée sur rorqual le 2026-09-29 avec `memoire/EM/EM2_prompt.md`, qui précise 
 
 ---
 
-## 11. Statut
+## 11. Perspectives (au-delà du plan, notées le 2026-09-29)
+
+Pistes « équation → code » proposées pendant qu'EM2 tourne ; aucune n'est dans le mémoire tant que Greg ne le décide pas.
+
+- **A. Kubo à température finie et dopé (Pauli blocking)** — *choisie par Greg (2026-09-29)*. Poids de Fermi-Dirac f(ε_v) − f(ε_c) au lieu du masque « v occupé, c vide », paramètres T et μ. L'absorption s'effondre sous ħω = 2|μ − E_D|. Test analytique (cône de Dirac) : σ/σ₀ = ½[tanh((ħω + 2μ)/4k_BT) + tanh((ħω − 2μ)/4k_BT)], μ compté depuis le point de Dirac. Petite extension de `kubo.py`.
+- **B. σ(ω) complet, partie imaginaire comprise** : Kramers-Kronig (valeur principale) ou Kubo complexe avec élargissement lorentzien ; test analytique du cône dopé, Im σ ∝ ln|(ħω − 2μ)/(ħω + 2μ)|. Taille moyenne, plus numérique que physique.
+- **C. Conductivité optique du graphène avec défauts** : Kubo-Greenwood avec les fonctions de Green moyennées de la matrice T (`defects/many_body/disorder_average.green_k`), σ(ω) ∝ (1/ω)∫dε [f(ε) − f(ε + ħω)] Σ_k Tr[v_x A(k, ε) v_x A(k, ε + ħω)] dans la base de Wannier (sans vertex). Relie les chapitres électron-défaut et électron-photon ; la résonance de la lacune près de E_D devrait ouvrir une absorption à basse énergie. Plus gros ; plutôt perspective du mémoire ou de l'article.
+- **D. Amplitude Raman de la bande D (double résonance)** sur M0 : perturbation d'ordre 4 réunissant les couplages électron-photon, électron-phonon et électron-défaut. Vrai projet de recherche.
+
+---
+
+## 12. Statut
 
 | Étape | Statut | Date |
 |---|---|---|

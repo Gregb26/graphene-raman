@@ -31,10 +31,7 @@ def fourier(X_R, R_cart, ndegen, k, deriv=None):
         X(k)        = sum_R e^{+ik.R} X(R) / ndegen(R)
         dX(k)/dk_mu = sum_R i R_mu e^{+ik.R} X(R) / ndegen(R)      (deriv=True)
 
-    Used for H(k) (Nk, nW, nW) in eV, dH/dk (Nk, 3, nW, nW) in eV*Angstrom and A(k) (Nk, 3, nW, nW)
-    in Angstrom. Same phase as Hwr_to_Hwk (k_cart . R_cart = 2 pi k_red . R_int). The phase matrix
-    takes 16 Nk nR bytes (38 GB for 1800^2 k and 741 R): large grids go through in blocks of
-    1e4-1e5 k points.
+    The phase matrix takes 16 Nk nR bytes (38 GB for 1800^2 k and 741 R): large grids go in blocks.
 
     Inputs:
         X_R    : (nR, ...) complex; only (nR, nW, nW) can be differentiated
@@ -71,27 +68,21 @@ def fourier(X_R, R_cart, ndegen, k, deriv=None):
 
 def velocity(H_k, dH_k, A_k=None):
     """
-    Band energies, eigenvectors and hbar v_mn(k) in the band basis,
+    Band energies, eigenvectors and hbar v_mn(k) in the band basis (Wang et al., PRB 74, 195118 (2006)),
 
-        hbar v^mu = V^dagger [ dH/dk_mu + i [H, A_mu] ] V      (Wang et al., PRB 74, 195118 (2006)).
+        hbar v^mu = V^dagger [ dH/dk_mu + i [H, A_mu] ] V.
 
-    The Berry term i[H, A] accounts for where the Wannier functions actually are. It vanishes on the
-    diagonal (hbar v_nn = d eps_n/dk either way) and makes the interband elements independent of the
-    home cell of each Wannier function. No consistency check inside (they would cost a
-    diagonalization per block; they live in the tests). Interband elements between degenerate bands
-    (at K) are ill-defined: grids and rings avoid K.
+    The Berry term vanishes on the diagonal and makes the interband elements independent of the home
+    cells of the Wannier functions. Interband elements between degenerate bands (at K) are ill-defined.
 
     Inputs:
         H_k  : (Nk, nW, nW) complex, eV
         dH_k : (Nk, 3, nW, nW) complex, eV*Angstrom (not modified)
-        A_k  : (Nk, 3, nW, nW) complex, Angstrom, Hermitian; None drops the Berry term
-               (eq. (2.5.7) of the thesis as written)
+        A_k  : (Nk, 3, nW, nW) complex, Angstrom, Hermitian; None drops the Berry term (eq. (2.5.7))
     Returns:
         eps : (Nk, nW) float, eV, ascending at every k
-        V   : (Nk, nW, nW) complex, eigenvectors in columns (Wannier -> band rotation); the phase of
-              each column is arbitrary at every k, so only |hbar v_mn|^2 is comparable between calls
+        V   : (Nk, nW, nW) complex, eigenvectors in columns (arbitrary phase: compare |hbar v_mn|^2)
         hv  : (Nk, 3, nW, nW) complex, eV*Angstrom, Hermitian, mu on axis 1
-              (hbar v_F = 5.751 eV*Angstrom <-> v_F = 8.7e5 m/s)
     """
     nk, nW, _ = H_k.shape
 
@@ -117,8 +108,7 @@ def velocity(H_k, dH_k, A_k=None):
 def compute_velocity(tb, k, mode='berry'):
     """
     Whole chain from a tight-binding model to hbar v at the k points `k`:
-    fourier (H, dH/dk, A) -> hermitize (A) -> velocity. Used on each block by `sigma_on_grid`, on
-    rings and paths, and by the tests.
+    fourier (H, dH/dk, A) -> hermitize (A) -> velocity.
 
     Inputs:
         tb   : WannierTB

@@ -40,14 +40,10 @@ class WannierTB:
 
 def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
     """
-    Nearest-neighbour tight-binding model of graphene, one p_z orbital per atom (A = 0, B = 1).
-
-    Built geometrically: the hop from A(0) along the bond delta lands on the B orbital of cell
-    R = tau_A + delta - tau_B (checked to be a lattice vector), with H_AB(R) = H_BA(-R) = -t and
-    zero on-site energies (Dirac point at 0 eV). shift_B = L relabels which B atom belongs to cell 0,
-    a gauge choice like the one Wannier90 makes when it puts a centre in a neighbouring cell: the
-    bonds are unchanged, the hop labels move to R - L, and only the Berry term keeps hbar v_cv
-    invariant (EM.md, implementation notes).
+    Nearest-neighbour tight-binding model of graphene, one p_z orbital per atom (A = 0, B = 1), zero
+    on-site energies (Dirac point at 0 eV) and H_AB(R) = -t on the three bonds. shift_B = L moves the B
+    centre of cell 0 by a lattice vector, the gauge choice Wannier90 makes: the bonds are unchanged, the
+    hop labels move to R - L, and only the Berry term keeps hbar v_cv invariant (EM.md, M0 notes).
 
     Inputs:
         t       : float, eV, hopping (matrix element -t)
@@ -55,8 +51,7 @@ def make_graphene_tb(t=2.7, a_cc=1.42, c=15.0, shift_B=(0,0,0)):
         c       : float, Angstrom, length of a3 (keeps the vectors 3D)
         shift_B : 3 ints, reduced lattice vector L; (0,0,0) gives nR = 5, (1,0,0) gives nR = 7
     Returns:
-        WannierTB with ndegen = 1 and r(0) = diag(tau_A, tau_B + L): centres only, so the full and
-        "centres only" Berry connections coincide in M0.
+        WannierTB with ndegen = 1 and r(0) = diag(tau_A, tau_B + L): centres only
     """
 
     # lattice vectors (Angstrom): a1 = a (1, 0, 0), a2 = a (1/2, sqrt(3)/2, 0), a3 = (0, 0, c)

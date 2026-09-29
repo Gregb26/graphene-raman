@@ -41,11 +41,8 @@ def reciprocal(lattice):
 
 def k_grid(B, N, shift=0.5):
     """
-    Shifted N x N grid over one reciprocal cell, k = ((i + s)/N) b1 + ((j + s)/N) b2.
-
-    Any complete cell is equivalent for Brillouin-zone sums (H(k + G) = H(k) in the lattice gauge).
-    The half-step shift keeps K and K' off the grid when N is a multiple of 3: the bands are
-    degenerate there and the occupation would be ambiguous.
+    Shifted N x N grid over one reciprocal cell, k = ((i + s)/N) b1 + ((j + s)/N) b2. The half-step
+    shift keeps K and K' off the grid when N is a multiple of 3 (degenerate there, occupation ambiguous).
 
     Inputs:
         B     : (3, 3) float, 1/Angstrom, B[:, j] = b_j

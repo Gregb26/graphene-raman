@@ -12,10 +12,8 @@ from .tb_model import centres_only
 
 def _gap(tb, K, q, e, mu):
     """
-    Gap eps_c - eps_v at k = K + q e along each ray, for trial distances q: the function whose
-    root `ring` looks for. c and v are the bands just above and below mu, found by energy (fixed
-    indices would fail with the 5-band data). Never called at q = 0, where the bands are degenerate
-    at mu.
+    Gap eps_c - eps_v at k = K + q e along each ray (c, v on either side of mu, found by energy): the
+    function whose root `ring` looks for. Never called at q = 0, where the bands are degenerate.
 
     Inputs:
         tb : WannierTB
@@ -47,19 +45,16 @@ def ring(tb, K, hw, mu=0.0, ntheta=720, tol=1e-12, maxsteps=100):
     """
     Resonant ring around K: one point per direction theta where eps_c - eps_v = hw,
 
-        k(theta) = K + q(theta) (cos theta, sin theta, 0).
+        k(theta) = K + q(theta) (cos theta, sin theta, 0),
 
-    These states absorb light of energy hw exactly (no broadening); they serve for the angular
-    checks of the Berry term, the ring averages of M3, the figure of section 2.5 and the k list of
-    EM2. A circle of radius q0 = hw / (2 hbar v_F) for a perfect cone, a rounded triangle with
-    trigonal warping. Vectorized bisection on [0, 2 q0], valid while hw stays well below the gap 2t
-    at M (checked by the bracket assert): ~39 steps, gap exact to ~1e-11 eV.
+    a circle of radius q0 = hw / (2 hbar v_F) for a perfect cone, a rounded triangle with trigonal
+    warping. Vectorized bisection on [0, 2 q0] (bracket asserted): gap exact to ~1e-11 eV.
 
     Inputs:
         tb       : WannierTB (t and a_cc only set q0)
         K        : (3,) float, 1/Angstrom, centre of the ring (Dirac point)
         hw       : float, eV, photon energy
-        mu       : float, eV, chemical potential (0 in M0, E_D in M1)
+        mu       : float, eV, chemical potential (E_D for the real data)
         ntheta   : int, multiple of 6 (theta + pi and theta + 120 degrees stay on the grid)
         tol      : float, 1/Angstrom, final bisection width
         maxsteps : int, cap on the number of bisection steps

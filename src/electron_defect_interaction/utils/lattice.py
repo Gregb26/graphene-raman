@@ -64,37 +64,49 @@ def monkhorst_pack_grid(ngkpt, signed=True):
 
     return k_grid
 
-def build_k_path(high_sym_points, nk):
+def build_k_path(high_sym_points, nk, B):
     """
-    Builds a path in kspace joining the points specified in high_sym_points
+    Builds a path in k-space through the high-symmetry points, with a number of points on each segment proportional to its
+    Cartesian length (R8, 2026-09-28; the former version ignored nk and forced 100 points per segment whatever its length).
+
+    The nk - 1 intervals are shared between the segments in proportion to their lengths |B (k_{i+1} - k_i)| (largest-remainder
+    rounding, at least one interval per segment); every corner appears exactly once, at the index returned in idx.
+
     Inputs:
-        high_sym_points: list of np (label, k) arrays, list of high symmetry points in kspace. The path joins this points.
-        nk: int, number of kpoints to use between the high symmetry points
-    Ouputs:
-        kpath: (np*nk, 3), path in kspace
+        high_sym_points: list of (label, k) pairs, k (3,) in reduced coordinates; the path joins them in order.
+        nk: int, total number of k-points on the path (corners included), nk >= number of corners.
+        B: (3, 3) array, reciprocal primitive vectors as columns (B[:, i] = b_i, the red_to_cart convention), any length unit.
+    Returns:
+        k: (nk, 3) floats, path in reduced coordinates.
+        labels: list of the corner labels.
+        idx: list of ints, index in k of each corner (idx[0] = 0, idx[-1] = nk - 1).
+        s: (nk,) floats, cumulative Cartesian distance along the path (unit of B).
     """
-
     labels = [lab for lab, _ in high_sym_points]
-    points = [pts for _, pts in high_sym_points]
+    points = [np.asarray(p, dtype=np.float64) for _, p in high_sym_points]
+    nseg = len(points) - 1
+    if nk < nseg + 1:
+        raise ValueError(f"nk = {nk} < number of corners ({nseg + 1})")
 
-    nk=100
-    ks = []
-    idx = []
-    count=0
-    t = np.linspace(0, 1, nk)
-    for i in range(len(points)-1):
-        seg = (1 -t)[:, None]*points[i] + t[:, None]*points[i+1]
-        if i > 0:
-            seg=seg[1:] # avoid duplicate at junction
-            count-= 1
-        ks.append(seg)
-        idx.append(count)
-        count+=len(seg)
-        
+    lengths = np.array([np.linalg.norm(red_to_cart(points[i + 1] - points[i], B)) for i in range(nseg)])
+    share = (nk - 1) * lengths / lengths.sum()
+    n = np.maximum(np.floor(share).astype(int), 1)            # intervals per segment
+    while n.sum() < nk - 1:                                   # largest remainders first
+        n[np.argmax(share - n)] += 1
+    while n.sum() > nk - 1:                                   # only if the minimum of one interval overshot
+        n[np.argmax(np.where(n > 1, n - share, -np.inf))] -= 1
+
+    ks, idx = [points[0][None]], [0]
+    for i in range(nseg):
+        t = np.arange(1, n[i] + 1) / n[i]                    # excludes the start corner, ends exactly on the next one
+        ks.append((1 - t)[:, None] * points[i] + t[:, None] * points[i + 1])
+        idx.append(idx[-1] + int(n[i]))
     k = np.vstack(ks)
-    idx.append(len(k)-1)
+    for i, j in enumerate(idx):                               # corners exactly as given (no rounding from the interpolation)
+        k[j] = points[i]
+    s = np.concatenate([[0.0], np.cumsum(np.linalg.norm(red_to_cart(np.diff(k, axis=0), B), axis=1))])
 
-    return k, labels, idx
+    return k, labels, idx, s
 
 import numpy as np
 

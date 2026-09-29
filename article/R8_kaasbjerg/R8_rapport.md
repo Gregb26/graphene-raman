@@ -260,3 +260,289 @@ Total (bornes hautes) ≈ 3 h de tâches ; attendu < 30 min de calcul effectif. 
 
 **STOP — phase 0 terminée le 2026-09-27.** Rien n'est calculé ; rien n'est écrit dans `src/`, `scripts/` ni `results/` ; attente des fonctions
 (Greg) puis du GO, après R9.
+
+## Phase 0 — mise à jour du 28 sept. (amendement après R9 ; rien n'est calculé)
+
+Amendement « R8 — 28 septembre, après R9 » + ajout (pic de la courbe Γ_T en 2 bis). En cas de conflit il l'emporte sur le prompt et sur l'ajout du 27 ;
+la phase 0 ci-dessus n'est pas réécrite, cette section la complète et la remplace là où elle le dit. Le GO attend en plus l'audit de l'image minimale
+(session séparée). Opérations faites : lectures de `article/R9_controles/R9_rapport.md` (A, B, C, D, Clôture), du code de P2 (`Mwr_to_Mwk_pairs`,
+`wannier_interpolation.py` l. 115–137) et de P3 (`cluster_ldos`, `local_tmatrix.py` l. 167–195), de `tests/test_r9_functions.py`, de
+`R9_controles/a/a1_results.json` et de lignes de `r9_driver.py` (grille « res », `NN_CELLS`, C.3). Dépôt : HEAD ab2d884 (« R9 finished ») ; P1–P4 et leurs tests
+sont commités (5a4bc94) ; `article/R8_kaasbjerg/` commité dans b257e7b. **Le PDF est sur Rorqual depuis le 2026-09-28 14 h 47** :
+`article/R8_kaasbjerg/ref/kaasbjerg_2020_prb101_045433.pdf` (25 pages, md5 25e169d573441ffac17bd380cd77379c, commité dans b257e7b ; il n'est pas dans le
+répertoire de travail, où la phase 0 le cherchait). Lu en texte (`pdftotext`, dans le scratchpad de la session) et inspecté (`pdfimages -list`, `mutool trace`
+pages 14–15 : comptes de balises seulement) ; aucune courbe extraite, aucune position lue sur une figure. Aucune écriture hors de `R8_kaasbjerg/` et de sa copie.
+
+### M.0 Ce que dit l'article (texte, légendes, équations ; corrige 0.2–0.5 là où indiqué)
+
+- **Σ et c_i** (éq. 22–24) : Dyson G_k = G⁰_k + G⁰_k Σ_k G_k, G⁰_nk = (ε − ε_nk + iη)⁻¹ ; Σ^T_k = N_i T̂_kk ≡ c_i T̄_kk ≡ n_i T_kk, c_i = N_i/N (défauts par maille),
+  T = A_cell T̄ (eV Å²) ; « c_i = 1 % ⇔ n_i ∼ 2 × 10¹³ cm⁻² » (A_cell = 5,24 Å²). Conforme à 0.2.
+- **DOS** (éq. 34) : ρ(ε) = −(1/(Nπ)) Im Tr Ĝ(ε), « définie par maille ». Conforme à 0.2.
+- **A_k** (éq. 28) : A_nk(ε) = **−2 Im G^{nn}_{kk}(ε)**, A_k = Σ_n A_nk, ∫dε/(2π) A_nk = 1. Tranche la décision 4 de 0.5 (normalisation) : Q5 suit l'éq. 28.
+- **Un seul η** : G⁰ (éq. 18) porte iη et entre à la fois dans T (éq. 19) et dans G (éq. 22) ; légendes : η = 50 meV (Fig. 13 ; 15 meV pour la DOS parfaite),
+  25 meV (Fig. 14). R8 garde η_t = 20 meV gelé dans t et η_G selon la figure dans G_k : **différence de protocole**, rapportée (décision 2).
+- **Grilles** (Fig. 13) : « 99 × 99* points k (300 × 300 pour la DOS parfaite), 2 bandes » ; l'astérisque = grille **non uniforme**, densifiée autour des points de
+  haute symétrie (Fig. 6, seule la densité fine est donnée). Fig. 14 : mêmes paramètres, η = 25 meV. R8 : grilles uniformes (300², 600² ; N_k^int 900 pour g₀) —
+  différence rapportée.
+- **Protocole de la DOS** (texte, paragraphe « In the calculation of the DOS in Eq. (34) ») : δρ = ρ_dis − ρ₀ calculé sur la grille grossière, puis ajouté à ρ₀ calculée sur une grille fine « pour éviter les
+  artefacts en pointes ». La répartition de η entre les deux termes n'est pas écrite. La courbe de R8 comparable à la Fig. 13 est donc
+  ρ₀(300², η 15 meV) + [ρ(c_i) − ρ₀](grille, η 50 meV) ; ρ(c_i) direct à η 50 meV est rapporté à côté.
+- **Fig. 14** : lacunes (gauche) et N (droite), c_i = 0,1 % (haut) et 1 % (bas) ; tirets rouges = pristine ; points blancs = maxima de A_k. Texte : « ouverture de
+  gap … à c_i = 1 % ∼100 meV » (phrase générale, VA et NA), et « dédoublement de la bande de conduction à l'énergie de résonance ».
+- **Fig. 15** = **N substitutionnels** (A seul, A + B), c_i = 1 %, DFT contre analytique (éq. 49–50) avec V₀ = −10 eV, A_cell = 5,25 Å², v_F = 10⁶ m/s,
+  **Λ = 10⁴ eV** ; Λ y est ajusté sur la self-énergie DFT. L'étape 4 de R8 en est l'analogue lacune (pas de figure lacune dans l'article).
+- **Éq. 44–45** : G^{nn}_k = 1/(ε − ε_nk − Σ^eff_nk), Σ^eff_nk = Σ_nn + Σ_nn̄ Σ_n̄n/(ε − ε_n̄k − Σ_n̄n̄) : la forme supposée pour Q7 est la bonne.
+- **Éq. 46–48** : T̂(ε) = (T₀/2)(σ₀ ± σ_z) (pseudospin), T₀ = V₀/(1 − V₀ Ḡ₀), Ḡ₀ = ½ Tr Ĝ₀ = ½ Σ_nk G⁰_nk ;
+  **Ḡ₀(ε) = A_cell (ρ̄₀/2) [ε ln|ε²/(ε² − Λ²)| − iπ|ε| θ(Λ − |ε|)]**, ρ̄₀ = g_v/(2π(ħv_F)²), g_v = 2 ; pôle à 1/V₀ = Re Ḡ₀, sous E_D pour V₀ > 0. **Λ est une
+  énergie** (coupure ultraviolette) : le domaine 10³ … 10⁵ eV du prompt encadre la valeur 10⁴ eV de l'article (décision 6 de 0.5 close).
+  Éq. 49–50 : Σ̂^T = Σ₀ [[1, ±1], [±1, 1]], Σ₀ = c_i T₀/2 ; Σ^eff = Σ₀ + Σ₀²/(ε − ε_n̄k − Σ₀) ; pôle du second terme à K en ε₀ = c_i V₀/2.
+- **V₀ de la lacune** (Sec. II C 2) : « ∼70 eV Å² [éléments intra- et intervallée, Fig. 3, k = K + δx̂] … V₀ ≈ +27 eV (A_cell = 5,24 Å²) » par l'éq. 13, soit
+  V₀ = 2Ṽ/A_cell : c'est le « V₀ = 2 M̄ » du prompt avec M̄ = élément intrabande près de K (même construction que R9 D.1).
+- **Vectorielles** : pages 14 (Fig. 13) et 15 (Fig. 14, 15) sans aucune image matricielle (`pdfimages -list` vide). Page 14 : 60 `stroke_path`, 202
+  `fill_path`, 1 971 `lineto`, couleurs de trait gris foncé, bleu (0 0 1), vert (0 0,50 0), tirets ; page 15 : ≈ 31 000 `fill_path` (cartes de couleur en
+  polygones), 363 `stroke_path`. Extraction de 7a par `mutool trace` (proposé en 0.4) : faisable sans installation.
+
+### M.1 Ce que R9 fixe pour R8
+
+- **E_res n'est utilisé nulle part** dans R8. Aucun observable de R8 n'est un argmax sur les états d'une grille k : les maxima de ρ − ρ₀ et de la LDOS sont
+  pris sur l'axe d'énergie (pas 2,5 meV), ceux de A_k sur l'axe d'énergie à k fixé.
+- **Références du défaut isolé** (R9 B et R.3 ; courbe Γ_T et −Im T̄(K) au pas de 2,5 meV, grille « res » de `resonance_metrics.py`, 240² ; eV relatifs à E_D).
+  Elles servent de porte de régression à R8 (P4, M.4) :
+
+| taille, variante | N_k^int | pic de la courbe Γ_T | pic de −Im T̄(K) |
+|---|---|---|---|
+| 9×9 tel quel | 300 / 600 / 900 | −0,1800 / −0,1825 / −0,1825 | −0,1775 / −0,1900 / −0,1925 |
+| 9×9 aligné plateau | 300 / 600 / 900 | −0,1775 / −0,1800 / −0,1800 | −0,1725 / −0,1750 / −0,1725 |
+| 12×12 tel quel | 300 / 600 / 900 | −0,1775 / −0,1800 / −0,1800 | −0,1750 / −0,1775 / −0,1750 |
+| 12×12 aligné plateau | 300 / 600 / 900 | −0,1775 / −0,1775 / −0,1775 | −0,1700 / −0,1600 / −0,1625 |
+
+  Le pic de la courbe Γ_T va de −0,1775 à −0,1825 eV selon la taille, la variante et N_k^int (le −0,1825 est 9×9 tel quel à 600 et 900). LDOS des trois p_z(B)
+  voisins (R9 C.3, 9×9, `cluster_ldos`, somme des trois) : tel quel **−0,1925 eV** (0,747 états/eV à 600², 0,748 à 900²) ; la variante plateau n'a pas été
+  calculée en R9 (C non rejoué).
+- **C_N = moyenne du plateau (i)** (`a1_results.json`, clé `C_i_eV` ; md5 du fichier 6e69fc13e59e1e5dd69154106c11cde0) : 9×9 **−25,1437 meV**, 12×12 **−18,6896 meV**.
+  Variante « aligné » = V_loc − C_N·P_boîte (approximation (i)).
+- **Boîte** : à R_cut 3, aucun site de l'amas n'est hors de la boîte ni sur sa dernière maille (9×9 et 12×12) ; 9×9 : écart (i)/exact ≤ 0,06 meV (R9 A.2,
+  max|F − P_boîte| = 2,58e-3). À **R_cut 4 (étape 5)**, la 9×9 inclut les mailles (±4, 0), (0, ±4) = dernière maille de la boîte, où F_W(R, R) descend à 0,925 (p_z(A))
+  et 0,900 (p_z(B)) (R9 A.2) : arithmétique, écart de (i) sur la diagonale π de ces mailles ≤ 0,100 × 25,14 = 2,5 meV, plus des termes hors site ≤ 4,76e-2 × 25,14 =
+  1,2 meV. 12×12, R_cut 4 : mailles à ≥ 1 du bord (F ≥ 0,9972) → ≤ 0,07 meV. Rapporté dans les sorties de l'étape 5, rien de corrigé.
+
+### M.2 Paramètres (remplacent ceux du cadre et de 0.5 là où ils diffèrent)
+
+- **g₀ à N_k^int 900** pour les calculs principaux ; 300 et 600 en sensibilité (étape 5) et pour les portes. g₀ est **recalculé** ; aucun cache n'est lu (ni
+  `R9_controles/cache/`, ni ceux de R4/R6 cités en 0.1).
+- **Un seul chemin pour g₀** : `local_green_batch` sur H_W(k) à 5 WF (comme la production et R9), amas R_cut 3, grille d'énergie de production (pas η/8 = 2,5 meV,
+  E_D ± 3,02 eV, 2 417 énergies ; E_D et E_D ± 1,2 eV tombent sur la grille). Le bloc π est une **sélection d'indices** (L·5 + 3, L·5 + 4) de ce g₀ ; R_cut 2 est
+  un sous-bloc de R_cut 3 (même grille k, même η : sélection exacte) ; R_cut 4 (9×9, étape 5) : un `local_green_batch` à part sur E_D ± 1,2 eV (961 énergies).
+  g₀ ne dépend pas de V : les deux variantes partagent le même g₀. t = `local_t_cache` ; t_π = `local_t_cache(V_π, g₀_π)` ; ‖t_π − t[π, π]‖ imprimé.
+- DOS, A_k, Σ : sous-grille E_D ± 1,2 eV (961 énergies, pas 2,5 meV). η_t = 0,02 eV (gelé, inchangé) ; η_G selon l'étape (15 / 25 / 50 meV).
+- **Variantes** dans toutes les étapes de calcul : `tel_quel` (V_loc de M2) et `aligne_plateau` (V_loc − C_N·P_boîte). Pas de variante Lu. Chaque sortie porte :
+  `variant`, `C_N_eV`, source et md5 de `a1_results.json`, `N_k_int`, `R_cut`, `eta_t`, `eta_G`, grilles, `c_i` (convention de 0.2), sous-réseau, md5 de M2, run_id
+  Wannier, HEAD et sha256 des modules utilisés.
+
+### M.3 Fonctions : partagé avec P2/P3 et nouveau (Code écrit après l'accord de Greg sur les signatures)
+
+Réutilisé tel quel, sans modification (aucune fonction de R8 ne recalcule g₀, t ou G sur l'amas par un autre chemin) :
+
+| objet | fonction existante | usage dans R8 |
+|---|---|---|
+| g₀ sur l'amas | `local_tmatrix.local_green_batch` (et `deriv=True`) | toutes les étapes ; porte P3 |
+| t(ε) | `pole_criterion.local_t_cache` | toutes les étapes |
+| G = g₀ + g₀ T g₀ sur l'amas, LDOS | **P3** `local_tmatrix.cluster_ldos` | étape 2 bis (trois p_z voisins) |
+| M_W(k′, k) | **P2** `wannier_interpolation.Mwr_to_Mwk_pairs` | porte P1 (Born, k′ = k) ; remplace `Mwr_to_Mwk` cité en 0.2 |
+| V_loc | `recenter_mwr`, `mwr_locality`, `extract_V_loc` | prep |
+| H_W(k) | `wannier_hamiltonian.Hwr_to_Hwk` | toutes les étapes |
+| changements de signe | `pole_criterion.sign_changes` | étape 4 (article) |
+
+Nouveau, dans le fichier nouveau `src/electron_defect_interaction/defects/many_body/disorder_average.py` (espace k, moyenne sur le désordre ; rien de ceci
+n'existe) — signatures de 0.3 inchangées sauf : **Q2b (FFT) abandonnée** (la somme réduite suffit : 1,45e11 cMAC à 600²) ; **Q7, Q8 écrites seulement au GO des
+étapes 4 et 6** (formes confirmées par l'article, M.0 : éq. 45 pour Q7, éq. 47–48 pour Q8) :
+
+| # | signature | équation (docstring) |
+|---|---|---|
+| Q1 | `tbar_reduce(t, R_local, nw, wfs=None) -> (Du, tau)` | τ_{ab}(D; ε) = Σ_{R_L − R_L′ = D} t_{(L,wfs[a]),(L′,wfs[b])}(ε) |
+| Q2 | `tbar_k(tau, Du, k, U=None, k_chunk=65536) -> Tbar` | T̄^{(W)}_k(ε) = Σ_D e^{−2πik·D} τ(D; ε) ; U donné → U† T̄^{(W)} U (base de bandes, hors diagonale compris) |
+| Q3 | `green_k(Hk, Sigma, e, eta) -> G` | G_k = [(e + iη)𝟙 − H_k − Σ_k]⁻¹ (2 × 2 : forme fermée) |
+| Q4 | `dos_average(Hk, tau, Du, k, c_cell, egrid, eta, linear=False, e_chunk=16) -> dict` | ρ = −(1/(πN_k)) Σ_k Im Tr G_k, Σ = c_cell T̄ ; ρ₀ ; `linear` : −(1/(πN_k)) Σ_k Im Tr[g₀_k T̄_k g₀_k] |
+| Q5 | `spectral_path(Hk, Tbar, c_cell, egrid, eta) -> A` ; `spectral_maxima(A, egrid, prominence, refine=True)` | A_k(ε) = −2 Im Tr G_k(ε) (éq. 28 de Kaasbjerg) ; maxima en ε à k fixé, raffinement parabolique |
+| Q6 | `kpath(corners_red, n_total, B) -> (k, s, idx)` | points ∝ longueur cartésienne des segments, coins une fois |
+
+Tests (`tests/test_r8_functions.py`, format de `tests/test_r9_functions.py`, `PYTHONPATH=src pytest`, 1e-12) : (1) Q1 + Q2 contre N⟨k|T|k⟩ d'une **résolvante
+directe** : réseau p_z (`tb_models.graphene_pz_tb`) de 6 × 6 mailles en conditions périodiques, T = V[1 − G₀V]⁻¹ par inversion de la matrice réelle 72 × 72,
+g₀ de `local_green_batch` sur la même grille 6 × 6 (exact pour ce réseau fini) ; (2) Q3/Q4 contre −(1/(πN_k)) Σ_k Im Tr inv(z − H_k − cT̄_k) calculé par
+`np.linalg.inv` ; (3) terme `linear` de Q4 contre (1/π) Im Tr[t ∂_ε g₀] ; (4) Q5 contre (2) à k donné ; (5) Q6 : coins exacts, K = (2/3, 1/3) atteint,
+proportions des segments.
+
+Reste dans le pilote `r8_driver.py` (pas destiné à `src/`), chaque reprise vérifiée par P4 : la courbe Γ_T de `resonance_metrics.py` (l. 84–92 : Γ sur couche
+des états 240² à l'indice d'énergie le plus proche, moyenne lorentzienne), comme la grille « res » de R9 ; la variante V_loc − C_N·P_boîte ; les indices des
+trois voisins (9×9 : p_z(B), WF 4, mailles (0,0,0), (−1,0,0), (0,−1,0), `NN_CELLS` de R4/R9 ; 12×12 : lacune B, voisins p_z(A), WF 3, attendus en (0,0,0),
+(1,0,0), (0,1,0) : déterminés par la géométrie et imprimés).
+
+### M.4 Portes de l'étape 1 (mise à jour)
+
+- P1 Born (1e-10) : T̄ par Q1 + Q2 avec t ← V_loc contre **P2** `Mwr_to_Mwk_pairs` sur M_W restreint à l'amas (k′ = k : Γ, K, M, K + δ, 4 k aléatoires) ; deux variantes.
+- P2 Γ (1e-10) : −2 Im T̄^{nn}_k contre `G_T` de `results/M2/resonance_9x9.npz` (N_k^int 300, 240², même indice d'énergie).
+- P3 terme linéaire (1e-10) : `linear` de Q4 contre (1/π) Im Tr[t ∂_ε g₀] (même g₀, grille de sortie = grille interne, η_G = η_t).
+- **P4 (nouvelle) régression sur R9** : pics de la courbe Γ_T et de −Im T̄(K) (M.1, 9×9 et 12×12, deux variantes, N_k^int 300 / 600 / 900) **égaux au point de
+  grille près** (même pas 2,5 meV) aux valeurs de `R9_controles/b/b_results.json` (md5 a8c9cd30…) et `b_results_plateau.json` (1b2f1198…) ; LDOS C.3 tel quel
+  9×9 (`c/c_results.json`, bda4a4a8…) : −0,1925 eV, 0,747 (600²) / 0,748 (900²). Lecture des json de R9, jamais de `cache/`.
+
+### M.5 Plan au GO (ordre)
+
+GO (R9 fait ; audit de l'image minimale fait) → **7a** → J1 → J2, J3, J4 → **7b** → rapport → STOP.
+
+- **7a (avant tout calcul de nos DOS)** : extraction des courbes de la Fig. 13, panneau du haut (lacunes), par `mutool trace` (PDF vectoriel, M.0) et lecture
+  des positions de Kaasbjerg : maximum de la bosse de ρ − ρ_pristine (ou de ρ, selon ce que montre la figure) à c_i = 0,1 % et 1 % (position, hauteur, largeur à
+  mi-hauteur), gap à K de sa Fig. 14 (écart entre les deux maxima de A_K encadrant E_D, lu sur les « points blancs » s'ils sont des marqueurs vectoriels — la carte
+  de couleur est faite de polygones, M.0 —, sinon lu à la main par Greg) ; phrase du texte citée à côté (« ∼100 meV à c_i = 1 % »). Consigné dans le rapport
+  (section 7a) avec l'étalonnage des axes et ses résidus, avant la soumission de J2.
+- **1** portes P1–P4 (M.4) ; ‖T̄ − T̄†‖ pour information.
+- **2** DOS 9×9, deux variantes, c_i = 0 (η_G 15 meV), 0,1 % et 1 % (η_G 50 meV), grilles de sortie 300² et 600², N_k^int 900 ; pour **c_i = 0,1 % et 1 %** :
+  position, hauteur et largeur à mi-hauteur du maximum de ρ − ρ₀ sur [−1, 0] eV (ρ₀ au même η_G et à la même grille) ; ρ(E_D).
+- **2 bis** limite c_i → 0, mêmes grilles (N_k^int 900 ; grille « res » 240² pour Γ_T), deux variantes, 9×9 et 12×12 : maximum de la LDOS des trois p_z voisins
+  (`cluster_ldos`, sur [−1, 0] eV), pic de −Im T̄(K), **pic de la courbe Γ_T** ; tableau en regard des maxima de ρ − ρ₀ à 0,1 % et 1 % (9×9) et à 1 % (12×12, étape 5).
+- **3** A_k Γ–K–M (600 points), c_i = 0,1 % et 1 %, η_G 25 meV, deux variantes, N_k^int 900 ; maxima par k ; à K : écart entre les deux maxima encadrant E_D ;
+  position du dédoublement à la résonance.
+- **5** DOS c_i = 1 %, position (et hauteur, largeur) du maximum de ρ − ρ₀, 600², deux variantes : N_k^int 300 / 600 / 900 ; R_cut 2 / 3 / 4 (N_k^int 900) ;
+  12×12 (lacune B, `wannier/24x24`, N_k^int 900) contre 9×9 ; η_G 25 / 50 meV.
+- **7b** superposition sur les axes de la Fig. 13 (haut) de la courbe au protocole de l'article, ρ₀(300², η 15 meV) + [ρ(c_i) − ρ₀](grille, η 50 meV) (M.0), et de
+  ρ(c_i) direct : écart de position du maximum, rms de ρ − ρ_K sur [−1, +1] eV, pour chaque variante.
+- **4, 6** (article) : planifiés comme en 0.5, avec les deux variantes ; non lancés au premier GO. Étape 6 : Ḡ₀ de l'éq. 48 telle qu'écrite, pôle 1/V₀ = Re Ḡ₀
+  pour Λ = 10³ … 10⁵ eV, V₀ = 2Ṽ/A_cell (décisions 4 et 5).
+
+**Écarts avec Kaasbjerg** : rapportés en chiffres (positions, hauteurs, largeurs, rms, gap), jamais investigués dans R8 : aucune variante, aucun paramètre ni
+aucune étape ajoutés pour les réduire.
+
+### M.6 Jobs et coûts (remplacent le tableau de 0.5)
+
+Coût de g₀ à 5 WF, R_cut 3 (n_E n_k n_w n_D n_w² = 2 417 × N² × 13 125 cMAC ; étalon R4 ≈ 2,5e10 cMAC/s ; R9 B mesuré : 42 min pour 9×9 + 12×12 à
+300/450/600/900) : 300² 2,9e12 (≈ 2 min), 600² 1,1e13 (≈ 8 min), 900² 2,6e13 (≈ 17 min). R_cut 4 sur 961 énergies à 900² : 1,8e13 (≈ 12 min). Mémoire de g₀ :
+0,81 Go (R_cut 3, 2 417 énergies), 0,92 Go (R_cut 4, 961). Le reste (t, T̄, Dyson, A_k, LDOS, Γ_T) : minutes (0.3).
+
+| job | sous-commandes | contenu | ressources, borne haute | dépend de |
+|---|---|---|---|---|
+| 7a (nœud de connexion) | `extract` | extraction et lecture de Kaasbjerg (PDF présent, vectoriel), section 7a du rapport | secondes | GO |
+| J1 `r8g0` | `prep`, `g0`, `gate` | M2 9×9 et 12×12 (portes v2, md5), V_loc deux variantes, g₀ 9×9 R_cut 3 à 300/600/900, 12×12 R_cut 3 à 300/600/900, 9×9 R_cut 4 à 900 (±1,2 eV) : ≈ 1 h 10 à 16 fils BLAS ; t (1 fil BLAS, fils Python) ; P1–P4 | 16 cœurs, 96 Go, 3 h | GO |
+| J2 `r8dos` | `dos`, `dos0` | étapes 2 et 2 bis | 16 cœurs, 64 Go, 1 h | afterok J1, après 7a |
+| J3 `r8spec` | `spec` | étape 3 | 8 cœurs, 32 Go, 30 min | afterok J1 |
+| J4 `r8sens` | `sens` | étape 5 | 16 cœurs, 64 Go, 1 h | afterok J1 |
+| J5 `r8fig` | `super`, `fig` | 7b, figures, npz vers `results/M2/R8/` | 4 cœurs, 16 Go, 30 min | afterok J2–J4 |
+| J6 `r8art` | `sigeff`, `dirac` | étapes 4 et 6 — pas au premier GO | 4 cœurs, 16 Go, 30 min | GO séparé |
+
+Total (bornes hautes) ≈ 6 h de tâches ; attendu ≈ 1 h 30. Disque : `R8_kaasbjerg/cache/` ≈ 6 Go (7 g₀ ; t du bloc π seulement, 52 Mo par (variante, R_cut, N_k^int) ; t à 5 WF recalculé à la volée), TEST, supprimable après consignation (manifeste en
+fin de campagne, comme R9) ; `results/M2/R8/` < 50 Mo. Lanceur `submit_r8.sh` : diff du pilote et du lanceur archivé à chaque soumission (`submitted/<jobid>/`).
+
+### M.7 Décisions attendues (remplacent la liste de 0.5)
+
+1. **Signatures Q1–Q6** (M.3) et fichier nouveau `disorder_average.py` : accord pour que Code les écrive, avec `tests/test_r8_functions.py` (Greg relit et commit).
+2. **η** : l'article a un seul η (dans G⁰, donc dans T et dans G ; 50 meV Fig. 13, 25 meV Fig. 14). Proposé : η_t = 20 meV gelé dans t (cadre R8, config v2) et
+   η_G = 15 / 25 / 50 meV dans G_k, la différence étant rapportée ; confirmer.
+3. Courbe parfaite à η_G 15 meV : 300² comme l'article (première couronne à 53,5 meV ; 26,8 à 600²) + 1 200² en complément ?
+4. Ṽ pour V₀ = 2Ṽ/A_cell (étape 6, article) : élément intrabande près de K comme l'article (R9 D.1, disque K, tel quel : 76,96 eV Å² π / 78,16 π* → V₀ = 29,23 /
+   29,69 eV), ½ Re Tr à (K, K) (75,87 → 28,82 eV) ou norme de ligne (107,22 → 40,72 eV) ; en variante alignée, sur M2 exact ou sur V_loc − C_N·P_boîte.
+   (Kaasbjerg : ∼70 eV Å² → V₀ ≈ +27 eV.)
+5. Constantes de Ḡ₀ (éq. 48, étape 6) : nos bandes (ħv_F = 5,459 eV Å, A_cell = 5,266 Å², proposé) ou celles de l'article (v_F = 10⁶ m/s soit ħv_F = 6,582 eV Å,
+   A_cell = 5,24–5,25 Å²).
+6. Outil de 7a : `mutool trace` (proposé, aucune installation) ou PyMuPDF (installation dans le `.venv`).
+7. `.gitignore` : exception pour `results/M2/R8/`.
+8. `utils/lattice.build_k_path` (`nk=100` en dur) : corriger ou laisser.
+9. Statut TEST au GO.
+
+**STOP — mise à jour de la phase 0 terminée le 2026-09-28.** Rien n'est calculé ; rien n'est écrit dans `src/`, `tests/`, `scripts/` ni `results/` ; attente de
+l'accord sur les signatures, de l'audit de l'image minimale, puis du GO.
+
+## Réponses de Greg à M.7 (2026-09-28) — autorisés : 7a et écriture des fonctions ; pas de GO de calcul
+
+Décisions (J1 et suivants attendent l'audit de l'image minimale puis le GO) :
+1. Signatures Q1–Q5 acceptées, avec Q3 = inversion générale par lots seulement (pas de forme fermée 2 × 2) et Q6 = correction sur place de
+   `utils/lattice.build_k_path` (même nom, points ∝ longueur cartésienne, coins une fois, argument `nk` respecté) au lieu d'un `kpath` dans
+   `disorder_average.py`. **Code écrit tout** (Q1–Q5, `build_k_path`, `tests/test_r8_functions.py`) ; Greg relit et commit.
+2. η : principal comme proposé (η_t = 20 meV gelé, η_G selon l'étape) + variante **`eta_unique`** (η_t = η_G : 50 meV pour la DOS, 25 meV pour A_k), 9×9 tel quel
+   seulement, N_k^int 600 (deux g₀ de plus) ; elle entre en 2, 3 et 7b à côté de la principale (différence de protocole, pas d'ingrédient).
+3. DOS parfaite : 300² (protocole de l'article) + 1 200² en complément.
+4. V₀ = 2Ṽ/A_cell, Ṽ = élément intrabande près de K de R9 D.1 (π : 29,23 eV ; π* : 29,69 eV ; les deux rapportés) ; ½ Re Tr (28,82 eV) en second ;
+   norme de ligne abandonnée ; variante alignée : valeur de R9 D si elle existe, sinon approximation (i), étiquetée.
+5. Ḡ₀ (éq. 48) : nos constantes en principal (ħv_F = 5,459 eV Å, A_cell = 5,266 Å²), celles de l'article en sensibilité ; ajouter à l'étape 6 le pôle sans Λ,
+   1/V₀ = Re Ḡ₀^W(ε) avec Ḡ₀^W = g₀ sur site p_z(A) de J1, et le Λ de l'éq. 48 qui reproduit Re Ḡ₀^W au pôle.
+6. `mutool trace`.
+7. Pas d'exception au `.gitignore` : statut TEST, **rien dans `results/`** ; sorties dans `R8_kaasbjerg/out/`, copie dans `article/R8_kaasbjerg/` (rapport, tables,
+   figures, npz < 5 Mo). (Remplace « `results/M2/R8/` » partout plus haut.)
+8. `build_k_path` corrigé sur place (voir 1).
+9. Statut TEST.
+- Rétablis à l'étape 1 (information, deux variantes) : ‖T̄^{(W)}_{AB}(K)‖, ‖T̄(K) − T̄(C₃K)‖, ‖T̄(K) − T̄(K′)‖.
+
+## 7a — Kaasbjerg, Fig. 13 (haut, V_A) et Fig. 14 (colonne V_A) : extraction et lecture (2026-09-28 ; aucune de nos DOS n'est calculée)
+
+`r8_driver.py extract` sur le nœud de connexion (quelques secondes) ; PDF `article/R8_kaasbjerg/ref/kaasbjerg_2020_prb101_045433.pdf` (md5
+25e169d573441ffac17bd380cd77379c), `mutool trace` (MuPDF 1.22.0) des pages 14 et 15 ; sorties `out/7a/` (`7a_results.json`, `extract_log.txt`, courbes csv,
+points blancs csv, profils de la colonne K npz) ; figure de contrôle `fig/7a_controle.{pdf,png}` (points extraits sur le rendu `pdftoppm` à 400 dpi :
+superposition exacte des trois courbes et des 56 points à l'œil).
+
+**Méthode.** Chemins en coordonnées de page (pt, y vers le bas). Cadre = fond blanc des axes ; graduations = traits d'encre de 0,216 pt posés sur les bords du
+cadre ; valeurs des graduations lues sur le rendu et **vérifiées sur la forme des glyphes** du fichier vectoriel (chiffres dessinés en chemins, classés par
+signature : 0, 1, 2, 5, point, moins) : les 20 étiquettes des trois panneaux concordent ; ordre de la légende de la Fig. 13 (tirets = pristine, bleu = « 0.1 », vert
+= « 1.0 ») vérifié de même. Étalonnage affine par moindres carrés sur les cinq graduations de chaque axe :
+
+| panneau | axe | échelle | résidu max des graduations |
+|---|---|---|---|
+| Fig. 13 haut | énergie | 0,016599 eV/pt | 6e-15 eV |
+| Fig. 13 haut | DOS | 1,82584e-3 eV⁻¹/pt | 7,3e-7 eV⁻¹ |
+| Fig. 14, V_A, 0,1 % | énergie | 0,025295 eV/pt | 2,0e-5 eV |
+| Fig. 14, V_A, 1 % | énergie | 0,025295 eV/pt | 1,0e-5 eV |
+
+**Fig. 13 (haut, V_A).** Trois polylignes (pristine 141 sommets, 0,1 % 148, 1 % 154) sur [−1,2 ; +1,2] eV ; sommets sur une grille de **10 meV** (plus petit pas
+0,0100 eV ; pas jusqu'à 0,13 eV là où la courbe est droite : points alignés omis par le logiciel de tracé) ; épaisseur des traits 0,697 pt = 1,27e-3 eV⁻¹ (11,6 meV).
+Interpolation linéaire au pas de 1 meV (`fig13_VA_interp_1meV.csv`). Δρ = ρ(c_i) − ρ_pristine **tel que tracé** (légende : pristine à η 15 meV sur 300², c_i à η 50 meV).
+
+| grandeur (eV, eV⁻¹) | c_i = 0,1 % | c_i = 1 % |
+|---|---|---|
+| maximum de Δρ sur [−1, 0] : position | **−0,200** | **−0,210** |
+| hauteur | 0,00126 | 0,0307 |
+| largeur à mi-hauteur [bornes] | 0,163 [−0,293 ; −0,130] | 0,306 [−0,373 ; −0,067] |
+| maximum local de ρ sur [−1, 0] | aucun | −0,27 (0,0602) |
+| ρ(0) ; minimum de ρ (position) | 0,00546 ; 0,00546 (0,00) | 0,0128 ; 0,00987 (+0,05) |
+| rms de Δρ sur [−1, +1] | 0,00184 | 0,0107 |
+
+Pristine : minimum 0,00684 à 0,00 ; ρ(−1) = 0,1178, ρ(+1) = 0,1366 ; ajustement ρ = α|ε| + β : α = 0,1074 eV⁻² sur [−0,5 ; −0,1], 0,1147 sur [0,1 ; 0,5].
+Pour l'alignement des unités avant 7b (arithmétique) : A_cell/(π(ħv_F)²) = 0,05625 eV⁻² par maille et par spin avec nos constantes (0,1125 en comptant le spin) ;
+0,0385 (0,0770) avec v_F = 10⁶ m/s et A_cell = 5,24 Å² ; rapports des pentes mesurées à 0,05625 : 1,91 et 2,04. L'étiquette « DOS (eV⁻¹) » ne dit pas si le spin est
+compté (décision avant 7b). Les positions sont sur la grille de 10 meV de l'article ; la hauteur à 0,1 % vaut l'épaisseur d'un trait.
+
+**Fig. 14 (colonne V_A).**
+- Axe k : une seule graduation (K, x = 114,018 pt), aucune valeur de k ; carte de couleur en polygones : 47,0 largeurs de colonne de 1,9004 pt (48 points k, K au
+  24ᵉ depuis la gauche) × 240 lignes de 10,00 meV sur [−1,2 ; +1,2] eV. L'étendue en k (« Γ ← K → M ») n'est pas lisible sans hypothèse ; le chemin Γ–K–M
+  complet n'est pas tracé. Tirets rouges (dispersion parfaite) : 2 branches, 67 points.
+- **c_i = 1 %** : 56 points blancs (maxima de A_k), deux par colonne de −11 à +14 (un seul aux colonnes −12, 15, 16, 17), énergies sur la grille de 10 meV.
+  **Colonne K : +0,010 et +0,110 eV → écart 0,100 eV** (texte : « ∼100 meV »). Branche inférieure : **saut de −0,45 à −0,16 eV** entre les colonnes −4 et −3
+  (côté Γ) et **de −0,21 à −0,50 eV** entre les colonnes 4 et 5 (côté M) : aucun maximum dans ]−0,45 ; −0,16[ côté Γ ni dans ]−0,50 ; −0,21[ côté M ; branche
+  supérieure sans saut > 0,15 eV. Pas des maxima de la branche inférieure entre colonnes voisines, hors sauts : médiane 0,100 eV côté Γ, 0,070 eV côté M. (Le
+  texte de l'article parle d'un dédoublement de la bande de conduction ; les sauts relevés ici pour V_A sont sur la branche inférieure.)
+- **c_i = 0,1 %** : aucun point blanc ; la colonne K est au gris le plus foncé (0,128, saturé) sur [−0,035 ; +0,065] eV (11 lignes) : **gap à 0,1 % non lisible**.
+  À 1 % la saturation couvre [−0,035 ; +0,165] eV et contient les deux points blancs.
+
+Rien d'autre n'est lu sur les figures. Positions de référence pour 7b : Δρ max −0,200 / −0,210 eV, hauteurs 0,00126 / 0,0307 eV⁻¹, largeurs 0,163 / 0,306 eV ;
+gap à K (1 %) 0,100 eV ; sauts de la branche inférieure (1 %) ]−0,45 ; −0,16[ (Γ) et ]−0,50 ; −0,21[ (M).
+
+## Fonctions écrites (2026-09-28, décision 1 : Code écrit tout ; non commité, Greg relit et commit)
+
+| # | fichier | fonction | contenu |
+|---|---|---|---|
+| Q1 | `src/…/defects/many_body/disorder_average.py` (nouveau, 230 lignes) | `tbar_reduce(t, R_local, nw, wfs=None) -> (Du, tau)` | τ_{ab}(D; ε) = Σ_{R_L − R_L′ = D} t_{(L,wfs[a]),(L′,wfs[b])}(ε) ; table des différences de `local_tmatrix._diff_table` |
+| Q2 | idem | `tbar_k(tau, Du, k, U=None, k_chunk=65536)` | T̄^{(W)}_k = Σ_D e^{−2πik·D} τ(D) ; U donné → U†T̄U (hors diagonale compris) |
+| Q3 | idem | `green_k(Hk, Sigma, e, eta)` | G_k = [(e + iη)𝟙 − H_k − Σ_k]⁻¹, `np.linalg.inv` par lots (pas de forme fermée) |
+| Q4 | idem | `dos_average(Hk, tau, Du, k, c_cell, egrid, eta, linear=False, e_chunk=16, k_chunk=32768)` | ρ = −(1/(πN_k)) Σ_k Im Tr G_k, Σ = c_cell T̄ (c_cell scalaire ou tableau : T̄ partagé entre concentrations) ; ρ₀ ; `linear` : −(1/(πN_k)) Σ_k Im Tr[g₀_k T̄_k g₀_k] ; boucles par paquets de k et d'énergies (mémoire) — `k_chunk` ajouté à la signature acceptée |
+| Q5 | idem | `spectral_path(Hk, Tbar, c_cell, egrid, eta)`, `spectral_maxima(A, egrid, prominence=0.0, refine=True)` | A_k = −2 Im Tr G_k (éq. 28) ; maxima en ε à k fixé (`find_peaks`), sommet de la parabole par trois points |
+| Q6 | `src/…/utils/lattice.py` | `build_k_path(high_sym_points, nk, B) -> (k, labels, idx, s)` | corrigé sur place : `nk` = nombre total de points (respecté), intervalles ∝ longueur cartésienne (plus grands restes, ≥ 1 par segment), coins une fois et exacts, s = abscisse cumulée ; **signature changée** (argument `B` ajouté, `s` renvoyé) — aucun appelant dans `src/`, `scripts/`, `tests/`, `notebooks/`, `memoire/`, `article/` |
+
+Aucune autre ligne de `src/` modifiée ; `local_tmatrix`, `pole_criterion` (g₀, t, `cluster_ldos`) importés sans modification. Tests `tests/test_r8_functions.py`
+(176 lignes, format de `tests/test_r9_functions.py`) : référence = résolvante directe d'un réseau p_z périodique de 6 × 6 mailles (`tb_models.graphene_pz_tb`,
+bloc π), potentiel hermitien aléatoire sur 5 mailles, T = V[1 − G₀V]⁻¹ par inversion des matrices réelles 72 × 72 : (1) t local = bloc de T ; Q1 + Q2 = N⟨k|T|k⟩ en
+13 k (dont K et hors grille) ; énergie seule ; base de bandes ; (2) `wfs=(3, 4)` sur la disposition à 5 WF = bloc π seul ; (3) Q3, Q4 (trois concentrations,
+paquets de 2 énergies et 7 k) = inversion directe ; c = 0 ⇒ ρ = ρ₀ ; (4) terme `linear` = (1/π) Im Tr[t ∂_ε g₀] ; (5) Q5 = inversion directe sur un chemin Γ–K–M ;
+sommet exact de pics paraboliques ; (6) `build_k_path` : Γ–K–M à 601 points → coins aux indices 0, 400, 600 (|ΓK| : |KM| = 2 : 1), |ΓK| = 4π/(3a), pas constant
+par segment, `nk` = 7 → 0, 4, 6, erreur si `nk` < nombre de coins. Tolérance 1e-12 relative (1e-14 pour les identités exactes). `PYTHONPATH=src pytest
+tests/test_r8_functions.py` : **6 passés** (1,5 s). md5 : `disorder_average.py` aa5c3fe2…, `test_r8_functions.py` f4ca6071…, `lattice.py` 0eb72093… ; pilote
+`r8_driver.py` 08862e45… (sous-commande `extract` seule).
+
+**STOP — 7a et fonctions faites le 2026-09-28.** Aucune de nos DOS n'est calculée ; rien dans `results/` ; J1 et suivants attendent l'audit de l'image minimale
+puis le GO. Pour 7b, décision attendue : l'axe « DOS (eV⁻¹) » de la Fig. 13 compte-t-il le spin (pentes mesurées 0,107 / 0,115 eV⁻² contre 0,0563 par maille et
+par spin avec nos constantes) ?

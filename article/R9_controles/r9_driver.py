@@ -26,6 +26,10 @@ Clôture (2026-09-28) : option --cn lu | plateau (a3, a3pole, b) — C_N = Lu (1
   variantes « aligne_<cn> », « exact_<cn> » ; sans --cn, comportement de R9 inchangé.
   r0       porte R.0 : --cn lu redonne R9 (9x9, 12x12, R_cut 3 : médiane de niveau 1 alignée (i), tab:rcut_M).
   synth    synthèse (tel quel, Lu, plateau), figures resonance_vs_nkint (trois variantes ; version R9 gardée sous _R9) et rcut_aligned.
+Audit (2026-09-28) :
+  audit    image minimale dans la cellule à 60° : réduction axe par axe (recopiée) contre vraie image (9 images), sur les géométries réelles
+           5…27 non relaxées et 9x9 relaxée R1, les étiquettes R de Wannier, les grilles k ; géométrie seule, nœud de connexion ;
+           sortie audit/audit_results.json (rapport audit_image_minimale.md).
 Données de production en lecture seule (results/M2, caches Wannier, .save, Vks, config/production.json) ; sorties dans ce répertoire
 (a/, a2/, b/, c/, d/, cache/, fig/) ; journal r9_log.txt. Paramètres de production (config v2) sauf N_k^int en B.
 """
@@ -1702,6 +1706,485 @@ def cmd_synth(a):
     fig.tight_layout(); savefig(fig, "rcut_aligned"); plt.close(fig)
 
 
+# ----------------------------------------------------------------------------------------------- audit : image minimale (2026-09-28)
+# Géométrie seule (nœud de connexion) : positions et grilles FFT lues dans les XML, étiquettes R, grilles k. Lectures en plus : a/a1_profiles_*.npz
+# et cache/{Mwr,Fw}_*.npz (R9), results/M2/{ved_analysis,mwr_locality}.npz, relax.out R2 12x12, json de R4/R5/R7. Aucune routine de production
+# appelée hors lecture : la réduction axe par axe est recopiée ici à l'identique ; la vraie image minimale est une recherche sur 9 images.
+AUD_SIZES = [5, 6, 7, 8, 9, 10, 11, 12, 15, 18, 21, 24, 27]
+QE_TMP = "/home/gregb26/links/scratch/qe_tmp"
+IMG = np.array([(i, j, 0) for i in (-1, 0, 1) for j in (-1, 0, 1)], float)                 # images dans le plan (a3 ⟂ plan)
+A_UNIT = np.array([[4.0354919061, -2.3298923383], [4.0354919061, 2.3298923383]]) / 4.6597846766   # lignes a1, a2 en unités de a (mwr_locality)
+TIE = 1e-6
+
+
+def red_axis(d):
+    """Réduction axe par axe (min_image_dist, sphere_average, inplane_disc_mask, analyze_Ved, analyze_M) : d -> (d + 1/2) mod 1 − 1/2."""
+    return (np.asarray(d, float) + 0.5) % 1.0 - 0.5
+
+
+def cart_axis(d, A):
+    """Vecteur cartésien de la réduction axe par axe (A : colonnes a_i)."""
+    return red_axis(d) @ np.asarray(A).T
+
+
+def cart_true(d, A):
+    """
+    Vraie image minimale : réduction axe par axe, puis la plus courte des 9 images d + s, s ∈ {−1, 0, 1}² dans le plan (a3 ⟂ plan).
+    Suffisant pour a1, a2 à 60° : la cellule de Wigner-Seitz a ses coordonnées réduites dans [−2/3, 2/3], donc s = v* − d ∈ (−7/6, 7/6].
+    Retourne (vecteur (n, 3), distance (n,), nombre d'images à égalité à TIE près (n,)).
+    """
+    dd = red_axis(np.atleast_2d(d))
+    r = (dd[:, None, :] + IMG[None]) @ np.asarray(A).T
+    L = np.linalg.norm(r, axis=2); m = L.min(1)
+    return r[np.arange(len(dd)), L.argmin(1)], m, (L <= m[:, None] + TIE).sum(1)
+
+
+def aud_geom(N):
+    t = f"{N}x{N}"; sd = f"{QE_TMP}/defect_{t}_d/defect_{t}_d.save"; sp_ = f"{QE_TMP}/defect_{t}_p/defect_{t}_p.save"
+    A_b, _ = qe_io.get_A_volume(sd); A_bp, _ = qe_io.get_A_volume(sp_)
+    assert np.allclose(A_b, A_bp) and abs(A_b[0, 2]) + abs(A_b[1, 2]) + abs(A_b[2, 0]) + abs(A_b[2, 1]) < 1e-10, t
+    return dict(N=N, A_b=A_b, A=A_b * BOHR, x_d=qe_io.get_x_red(sd), x_p=qe_io.get_x_red(sp_), ng=tuple(int(v) for v in qe_io.get_ngfft(sd)))
+
+
+def aud_vacancy(x_p, x_d, A):
+    """vacancy_site (axe par axe, cartésien) contre vraie image ; variante d'analyze_M / analyze_Ved / tag_vacancy_sublattice (norme réduite)."""
+    dax = np.array([np.linalg.norm(cart_axis(x_d - p, A), axis=1).min() for p in x_p])
+    dtr = np.array([cart_true(x_d - p, A)[1].min() for p in x_p])
+    dred = np.array([np.linalg.norm(red_axis(np.mod(x_d, 1.0) - np.mod(p, 1.0)), axis=1).min() for p in x_p])
+    ia, it, ir = int(np.argmax(dax)), int(np.argmax(dtr)), int(np.argmax(dred))
+    out = dict(i_axis_1based=ia + 1, i_true_1based=it + 1, i_rednorm_1based=ir + 1, dmin_axis_A=float(dax[ia]), dmin_true_A=float(dtr[it]),
+               next_axis_A=float(np.sort(dax)[-2]), next_true_A=float(np.sort(dtr)[-2]), same=bool(ia == it == ir and abs(dax[ia] - dtr[it]) < 1e-9))
+    return out, np.mod(x_p[ia], 1.0)
+
+
+def aud_far(x_d, x_p, s_vac, A):
+    """far_atom (axe par axe) contre l'ensemble des atomes vraiment les plus loin ; partenaire de la parfaite (far_atom_alignment)."""
+    dax = np.linalg.norm(cart_axis(x_d - s_vac, A), axis=1); _, dtr, _ = cart_true(x_d - s_vac, A)
+    ia = int(np.argmax(dax)); rmax = float(dtr.max()); far = np.where(dtr >= rmax - TIE)[0]
+    diff = np.abs(dax - dtr) > TIE
+
+    def partner(i):
+        c = np.mod(x_d[i], 1.0)
+        pa = int(np.argmin(np.linalg.norm(cart_axis(x_p - c, A), axis=1))); pt = int(np.argmin(cart_true(x_p - c, A)[1]))
+        return dict(axis_1based=pa + 1, true_1based=pt + 1, displacement_A=float(cart_true(x_p[pt] - c, A)[1][0]))
+    out = dict(n_atoms=len(x_d), i_axis_1based=ia + 1, d_axis_A=float(dax[ia]), d_true_of_axis_atom_A=float(dtr[ia]),
+               rank_true_of_axis_atom=int((dtr > dtr[ia] + TIE).sum()) + 1, frac_rmax_of_axis_atom=float(dtr[ia] / rmax),
+               r_max_true_A=rmax, far_true_1based=[int(i) + 1 for i in far], a_sc_over_sqrt3_A=float(np.linalg.norm(A[:, 0]) / np.sqrt(3)),
+               axis_atom_in_far_true=bool(ia in far), n_atoms_dist_axis_ne_true=int(diff.sum()),
+               min_true_dist_where_differs_A=float(dtr[diff].min()) if diff.any() else None,
+               min_axis_dist_where_differs_A=float(dax[diff].min()) if diff.any() else None,
+               partner_axis_atom=partner(ia), partner_far_true=[partner(i) for i in far])
+    return out, dax, dtr, far
+
+
+def aud_shells(dax, dtr, shells):
+    out = {}
+    for lab, lo, hi in shells:
+        a = np.where((dax > lo) & (dax < hi))[0]; t = np.where((dtr > lo) & (dtr < hi))[0]
+        out[lab] = dict(n_axis=int(len(a)), n_true=int(len(t)), same=bool(np.array_equal(a, t)))
+    return out
+
+
+def aud_sphere(c, A, ng, rho):
+    """Points de grille dans la sphère (3D) de rayon rho autour de c : critère axe par axe (sphere_average) contre vraie image."""
+    n = np.asarray(ng); reach = rho * np.linalg.norm(np.linalg.inv(A), axis=1); ax_ = []
+    for i in range(3):
+        h = int(np.ceil(reach[i] * n[i])) + 2; ic = int(np.rint(c[i] * n[i]))
+        ax_.append(np.arange(n[i]) if 2 * h + 1 >= n[i] else np.mod(np.arange(ic - h, ic + h + 1), n[i]))
+    I = np.meshgrid(*ax_, indexing="ij"); d = np.stack([I[k].ravel() / n[k] for k in range(3)], -1) - c
+    rax = np.linalg.norm(cart_axis(d, A), axis=1); rtr = cart_true(d, A)[1]
+    ma, mt = rax < rho, rtr < rho
+    return dict(n_axis=int(ma.sum()), n_true=int(mt.sum()), same=bool(np.array_equal(ma, mt)), n_within_1e9_of_rho=int((np.abs(rax - rho) < 1e-9).sum()))
+
+
+def aud_disc(c, A, ng, rho):
+    """Disque dans le plan (inplane_disc_mask) de rayon rho autour de c : axe par axe contre vraie image, grille n1 × n2."""
+    n1, n2 = int(ng[0]), int(ng[1])
+    D1, D2 = np.meshgrid(np.arange(n1) / n1, np.arange(n2) / n2, indexing="ij")
+    d = np.stack([D1.ravel() - c[0], D2.ravel() - c[1], np.zeros(n1 * n2)], -1)
+    dd = red_axis(d); x = dd[:, 0] * A[0, 0] + dd[:, 1] * A[0, 1]; y = dd[:, 0] * A[1, 0] + dd[:, 1] * A[1, 1]
+    ma = (x * x + y * y) < rho * rho; mt = cart_true(d, A)[1] < rho
+    return dict(n_axis=int(ma.sum()), n_true=int(mt.sum()), same=bool(np.array_equal(ma, mt)))
+
+
+def aud_radial(S, V, x_d, A_b):
+    """
+    Profil radial d'analyze_Ved.py (plan z = z_C, moyenne par anneaux de 0,05 Å jusqu'à |a1|/2 ; masqué : r >= 0,5 Å de chaque atome de la
+    cellule avec lacune), refait sur le plan stocké dans ved_analysis.npz (carte recentrée, roulée en sens inverse) : axe par axe (porte :
+    redonne {S}_rad et {S}_rad_masked) contre vraie image.
+    """
+    s_vac = np.asarray(V[f"{S}_s_vac"], float); M = np.asarray(V[f"{S}_map"]); n0, n1 = M.shape
+    i0 = int(np.round(s_vac[0] * n0)); j0 = int(np.round(s_vac[1] * n1)); plane = np.roll(M, (-(n0 // 2 - i0), -(n1 // 2 - j0)), axis=(0, 1))
+    i = np.arange(n0); j = np.arange(n1)
+    S1, S2 = np.meshgrid((i / n0 - s_vac[0] + 0.5) % 1 - 0.5, (j / n1 - s_vac[1] + 0.5) % 1 - 0.5, indexing="ij")
+    X = (S1 * A_b[0, 0] + S2 * A_b[0, 1]) * BOHR; Y = (S1 * A_b[1, 0] + S2 * A_b[1, 1]) * BOHR; R_ax = np.sqrt(X ** 2 + Y ** 2)
+    d = np.stack([S1.ravel(), S2.ravel(), np.zeros(S1.size)], -1); R_tr = cart_true(d, A_b * BOHR)[1].reshape(S1.shape)
+    xd = np.mod(x_d, 1.0); mask_ax = np.ones(plane.shape, bool); mask_tr = np.ones(plane.shape, bool)
+    for s_at in xd:
+        d1 = (i / n0 - s_at[0] + 0.5) % 1 - 0.5; d2 = (j / n1 - s_at[1] + 0.5) % 1 - 0.5; D1, D2 = np.meshgrid(d1, d2, indexing="ij")
+        mask_ax &= np.sqrt(((D1 * A_b[0, 0] + D2 * A_b[0, 1]) * BOHR) ** 2 + ((D1 * A_b[1, 0] + D2 * A_b[1, 1]) * BOHR) ** 2) >= 0.5
+        e = np.stack([D1.ravel(), D2.ravel(), np.zeros(D1.size)], -1); mask_tr &= (cart_true(e, A_b * BOHR)[1] >= 0.5).reshape(D1.shape)
+    rmax = 0.5 * np.linalg.norm(A_b[:, 0]) * BOHR; edges = np.arange(0, rmax + 0.05, 0.05); rc = 0.5 * (edges[1:] + edges[:-1])
+
+    def prof(R, m):
+        cnt, _ = np.histogram(R[m], edges); sm, _ = np.histogram(R[m], edges, weights=plane[m]); return np.where(cnt > 0, sm / np.maximum(cnt, 1), np.nan), cnt
+    out = dict(n_grid=[n0, n1], half_box_A=rmax, inscribed_parallelogram_A=float(rmax * np.sqrt(3) / 2), core_mask_same=bool(np.array_equal(mask_ax, mask_tr)))
+    for lab, key, ma, mt in (("sans masque", "rad", R_ax < rmax, R_tr < rmax), ("masqué", "rad_masked", (R_ax < rmax) & mask_ax, (R_tr < rmax) & mask_tr)):
+        pa, ca = prof(R_ax, ma); pt, ct = prof(R_tr, mt); ref = np.asarray(V[f"{S}_{key}"], float)
+        gate = float(np.nanmax(np.abs(pa - ref))) if np.array_equal(np.isnan(pa), np.isnan(ref)) else float("inf")
+        ch = np.where(ca != ct)[0]; dv = np.abs(pt - pa)
+        out[lab] = dict(gate_vs_ved_analysis_max_abs_eV=gate, n_bins=int(len(rc)), n_bins_count_differs=int(len(ch)),
+                        r_first_bin_differs_A=float(rc[ch[0]]) if len(ch) else None, n_points_axis=int(ma.sum()), n_points_true=int(mt.sum()),
+                        max_abs_diff_meV=float(np.nanmax(dv) * 1e3) if len(ch) else 0.0, r_at_max_diff_A=float(rc[int(np.nanargmax(dv))]) if len(ch) else None,
+                        bins=[dict(r_A=float(rc[b]), n_axis=int(ca[b]), n_true=int(ct[b]), axis_meV=float(pa[b] * 1e3), true_meV=float(pt[b] * 1e3)) for b in ch])
+    return out
+
+
+def aud_rgrid(D):
+    """Étiquettes R de Mwk_to_Mwr / recenter_mwr (boîte MP D×D, réduction axe par axe) : distance cartésienne (unités de a) axe par axe contre vraie."""
+    c = np.arange(D) - D // 2; R = np.array([(i, j) for i in c for j in c], float)
+    imgs = np.array([(i, j) for i in (-1, 0, 1) for j in (-1, 0, 1)], float) * D
+    dax = np.linalg.norm(R @ A_UNIT, axis=1); L = np.linalg.norm((R[:, None, :] + imgs[None]) @ A_UNIT, axis=2); dtr = L.min(1)
+    ties = (L <= dtr[:, None] + TIE).sum(1); rtr = np.linalg.norm(R[:, None, :] + imgs[None], axis=2).min(1); rax = np.linalg.norm(R, axis=1)
+    diff = np.abs(dax - dtr) > TIE
+    cl = {}
+    for rc in range(5):
+        a = rax <= rc + 1e-9; t = rtr <= rc + 1e-9; cart = dtr <= rc + 1e-9
+        cl[str(rc)] = dict(n_axis_rednorm=int(a.sum()), n_true_rednorm=int(t.sum()), same=bool(np.array_equal(a, t)), n_cartesian_true=int(cart.sum()),
+                          only_rednorm=[R[i].astype(int).tolist() for i in np.where(a & ~cart)[0]], only_cartesian=[R[i].astype(int).tolist() for i in np.where(cart & ~a)[0]])
+    return dict(D=D, n_R=int(len(R)), n_dist_differs=int(diff.sum()), n_ties_true=int((ties > 1).sum()),
+                min_axis_dist_where_differs_a=float(dax[diff].min()) if diff.any() else None, min_true_dist_where_differs_a=float(dtr[diff].min()) if diff.any() else None,
+                max_axis_dist_a=float(dax.max()), max_true_dist_a=float(dtr.max()), max_shift_a=float((dax - dtr).max()), clusters=cl), R, dax, dtr
+
+
+def aud_locality(S, L, D):
+    """fig_locality_final / mwr_locality.npz : abscisse |R| (unités de a) axe par axe contre vraie ; porte : redonne dist et w de mwr_locality.npz."""
+    out = {}
+    if os.path.exists(os.path.join(WORK, "cache", f"Mwr_{S}.npz")):
+        Z = np.load(os.path.join(WORK, "cache", f"Mwr_{S}.npz")); Rn = Z["Rn"][:, :2].astype(float); Mw = Z["Mwr"]
+        i0 = int(np.where((Rn == 0).all(1))[0][0]); w = np.array([np.linalg.norm(Mw[:, i, :, i0]) for i in range(len(Rn))]); del Mw, Z
+        da = np.linalg.norm(Rn @ A_UNIT, axis=1); o = np.argsort(da)
+        imgs = np.array([(i, j) for i in (-1, 0, 1) for j in (-1, 0, 1)], float) * D
+        dt = np.linalg.norm((Rn[:, None, :] + imgs[None]) @ A_UNIT, axis=2).min(1)
+        ref_d, ref_w = L[f"{S}_dense_dist"], L[f"{S}_dense_w"]
+        gate = dict(max_abs_dist=float(np.abs(da[o] - ref_d).max()), max_rel_w=float(np.abs(w[o] - ref_w).max() / ref_w.max()))
+        ch = np.abs(da - dt) > TIE; shown = (w >= 2e-5) & (w <= 60)
+        out["dense"] = dict(D=D, gate_vs_mwr_locality=gate, n_points=int(len(Rn)), n_x_changes=int(ch.sum()), n_x_changes_shown=int((ch & shown).sum()),
+                            min_x_axis_changed_a=float(da[ch].min()) if ch.any() else None, max_w_changed_eV=float(w[ch].max()) if ch.any() else None,
+                            max_x_shift_a=float((da - dt)[ch].max()) if ch.any() else 0.0, max_x_axis_a=float(da.max()), max_x_true_a=float(dt.max()))
+    return out
+
+
+def aud_locality_coarse(S, L, N):
+    """Grille grossière N×N de mwr_locality.npz : abscisse axe par axe -> vraie, par groupe d'égale distance axe par axe (w lus dans le npz)."""
+    g, R, dax, dtr = aud_rgrid(N)
+    ref_d, ref_w = L[f"{S}_coarse_dist"], L[f"{S}_coarse_w"]
+    key = np.round(dax, 9); groups = {}
+    for kx, t in zip(key, dtr):
+        groups.setdefault(kx, set()).add(round(float(t), 9))
+    ok_map = all(len(v) == 1 for v in groups.values())
+    new = np.array([next(iter(groups[round(float(x), 9)])) for x in ref_d]) if ok_map else None
+    gate = float(np.abs(np.sort(dax) - ref_d).max())
+    ch = np.abs(new - ref_d) > TIE if new is not None else None
+    return dict(N=N, gate_vs_mwr_locality_dist=gate, map_well_defined=ok_map, n_points=int(len(ref_d)),
+                n_x_changes=int(ch.sum()) if ch is not None else None, n_x_changes_shown=int((ch & (ref_w >= 2e-5)).sum()) if ch is not None else None,
+                changes=[dict(x_axis_a=float(ref_d[i]), x_true_a=float(new[i]), w_eV=float(ref_w[i])) for i in np.where(ch)[0]] if ch is not None else None)
+
+
+def aud_interp_bound(C9):
+    """
+    D.1 (P2, M_W de production 9x9, étiquettes R brutes de Mwk_to_Mwr) : paires (R, R') dont l'étiquette diffère de la vraie image minimale
+    autour du défaut R_d (égalités comprises) ; borne |ΔM(k', k)|_F <= 2 Σ ||M(R, R')||_F sur ces paires (hors grille k, la phase change).
+    """
+    Z = np.load(os.path.join(WORK, "cache", "Mwr_9x9.npz")); R = Z["R"][:, :2].astype(int); Rd = Z["R_d"][:2].astype(int); D = int(Z["MP"][0])
+    W = np.sqrt((np.abs(Z["Mwr"]) ** 2).sum(axis=(0, 2))); del Z
+    rel_ax = ((R - Rd + D // 2) % D) - D // 2
+    imgs = np.array([(i, j) for i in (-1, 0, 1) for j in (-1, 0, 1)]) * D
+    Lr = np.linalg.norm((rel_ax[:, None, :] + imgs[None]).astype(float) @ A_UNIT, axis=2); m = Lr.min(1); ties = (Lr <= m[:, None] + TIE).sum(1)
+    R_true = Rd + rel_ax + imgs[Lr.argmin(1)]
+    out = dict(D=D, R_d=Rd.tolist(), n_R=int(len(R)), onsite_norm_eV=float(W.max()))
+
+    def bound(c, Wm):
+        return float(2 * (Wm[c].sum() + Wm[~c][:, c].sum()))
+    for lab, c in (("brut_vs_vraie", (R != R_true).any(1) | (ties > 1)), ("axe_autour_Rd_vs_vraie", (Rd + rel_ax != R_true).any(1) | (ties > 1))):
+        out[lab] = dict(n_R_changed=int(c.sum()), n_ties=int(((ties > 1) & c).sum()), bound_eV=bound(c, W), max_block_eV=float(max(W[c].max(), W[:, c].max())) if c.any() else 0.0,
+                        min_true_dist_changed_a=float(m[c].min()) if c.any() else None)
+    f = os.path.join(WORK, "cache", "Fw_9x9.npz")
+    if os.path.exists(f):
+        F = np.load(f); Wf = np.sqrt((np.abs(F["Fw"]) ** 2).sum(axis=(0, 2))); assert np.array_equal(F["R"][:, :2].astype(int), R); del F
+        for lab in ("brut_vs_vraie", "axe_autour_Rd_vs_vraie"):
+            c = (R != R_true).any(1) | (ties > 1) if lab == "brut_vs_vraie" else (Rd + rel_ax != R_true).any(1) | (ties > 1)
+            out[lab]["bound_C_Fw_eV"] = abs(C9) * bound(c, Wf)
+    return out
+
+
+def aud_interp_D1(C9, cfg):
+    """
+    Carte D.1 refaite (sommes de Fourier recopiées, aucune routine de production) avec trois conventions d'étiquettes R, bra et ket :
+      brut    étiquettes de Mwk_to_Mwr (boîte centrée sur l'origine) = convention du pilote D.1 (porte : redonne les moyennes de d_results.json) ;
+      axe_Rd  réduction axe par axe autour du défaut R_d (étiquettes de recenter_mwr + R_d) ;
+      vraie   vraie image minimale autour de R_d, poids 1/n sur les n images à égalité (comme les dégénérescences de Wigner-Seitz).
+    M_W(k', k) = Σ_{R,R'} e^{−2πi k'·R} M_W(R, R') e^{2πi k·R'} ; bandes π par le poids p_z des vecteurs propres de H(k) = Σ e^{2πi k·R} H(R)/ndeg.
+    """
+    Z = np.load(os.path.join(WORK, "cache", "Mwr_9x9.npz")); R = Z["R"].astype(float); Rd = Z["R_d"].astype(float); D = int(Z["MP"][0]); Mw = Z["Mwr"]; del Z
+    F = np.load(os.path.join(WORK, "cache", "Fw_9x9.npz"))["Fw"]
+    dd = json.load(open(os.path.join(WORK, "d", "d_results.json"))); meta = dd["D1_meta"]; k = np.array(meta["k_red"], float)
+    dp = dense_paths(cfg, "9x9"); A_uc, _ = qe_io.get_A_volume(dp["uc"]); A_A = A_uc * BOHR; A_cell = float(np.linalg.norm(np.cross(A_A[:, 0], A_A[:, 1])))
+    Bc = 2 * np.pi * np.linalg.inv(A_A).T; b1 = float(np.linalg.norm(Bc[:, 0]))
+    paths = wannier_provenance.load_wannier_checked(dp["manifest"]); Hwr, Rw, nd = read_w90_HR(paths["tb"]); Rw = np.asarray(Rw, float)
+
+    def eig(kk):
+        Hk = np.einsum("kr,rwv->kwv", np.exp(2j * np.pi * (kk @ Rw.T)), Hwr / np.asarray(nd)[:, None, None], optimize=True)
+        return np.linalg.eigh(Hk)
+    n = 240; i, j = np.meshgrid(np.arange(n), np.arange(n), indexing="ij"); kp = np.stack([i.ravel() / n, j.ravel() / n, np.zeros(n * n)], -1)
+    Ep, Up = eig(kp); Ek, Uk = eig(k[None])
+    wz = lambda U: np.abs(U[..., WF_PZ_A, :]) ** 2 + np.abs(U[..., WF_PZ_B, :]) ** 2
+    top = np.sort(np.argsort(-wz(Up), axis=-1)[..., :2], axis=-1); pv, pc = top[:, 0], top[:, 1]
+    tk = np.sort(np.argsort(-wz(Uk), axis=-1)[..., :2], axis=-1)[0]
+    kd = lambda kk, k0: np.linalg.norm(red_axis(kk - k0), axis=1)
+    exK, exKp = kd(kp, K_RED) < 1e-9, kd(kp, KP_RED) < 1e-9
+    kc = (Bc[:2, :2] @ kp[:, :2].T).T; imgs_k = np.array([[a, b] for a in (-1, 0, 1) for b in (-1, 0, 1)]) @ Bc[:2, :2].T
+    disk = lambda K0: np.min(np.linalg.norm(kc[:, None, :] - (Bc[:2, :2] @ K0[:2])[None, None, :] + imgs_k[None], axis=2), axis=1) <= 0.05 * b1
+    dK, dKp = disk(K_RED) & ~exK, disk(KP_RED) & ~exKp
+    # étiquettes : liste d'images (et poids) par R
+    rel_ax = ((R[:, :2] - Rd[:2] + D // 2) % D) - D // 2
+    im = np.array([(a, b) for a in (-1, 0, 1) for b in (-1, 0, 1)], float) * D
+    Lr = np.linalg.norm((rel_ax[:, None, :] + im[None]) @ A_UNIT, axis=2); mn = Lr.min(1)
+    conv = {"brut": [(R[:, :2], np.ones(len(R)))], "axe_Rd": [(Rd[:2] + rel_ax, np.ones(len(R)))]}
+    tied = Lr <= mn[:, None] + TIE; nt = tied.sum(1)
+    conv["vraie"] = [(Rd[:2] + rel_ax + im[s], tied[:, s] / nt) for s in range(len(im))]
+
+    def phases(kk, labels, sign):
+        return sum(w[None, :] * np.exp(sign * 2j * np.pi * (kk[:, :2] @ Rl.T)) for Rl, w in labels)
+    res = {}; maps = {}
+    for cname, labels in conv.items():
+        Pk = phases(k[None], labels, +1)[0]                                                     # (nR,)
+        for var, M in (("brut", Mw), ("exact", None)):
+            X = np.einsum("wrWR,R->wrW", Mw, Pk, optimize=True)
+            if var == "exact":
+                X = X - C9 * np.einsum("wrWR,R->wrW", F, Pk, optimize=True)
+            Mk = np.zeros((len(kp), NW, NW), complex)
+            for s in range(0, len(kp), 9600):
+                Pb = phases(kp[s:s + 9600], labels, -1); Mk[s:s + 9600] = np.einsum("kr,wrW->kwW", Pb, X, optimize=True)
+            Mb = np.einsum("kwb,kwW,WB->kbB", Up.conj(), Mk, Uk[0], optimize=True)
+            Vv = A_cell * np.abs(Mb[np.arange(len(kp)), pv, tk[0]]); Vc = A_cell * np.abs(Mb[np.arange(len(kp)), pc, tk[1]])
+            Vv[exK | exKp] = np.nan; Vc[exK | exKp] = np.nan
+            maps[(cname, var)] = (Vv, Vc)
+            res[f"{cname} | {var}"] = {f"{b} | {lab}": dict(mean=float(np.nanmean(V[m])), min=float(np.nanmin(V[m])), max=float(np.nanmax(V[m])))
+                                       for lab, m in (("K", dK), ("K'", dKp)) for b, V in (("valence", Vv), ("conduction", Vc))}
+    gate = max(abs(res[f"brut | {var}"][key]["mean"] - dd["D1"][var][key]["mean"]) for var in ("brut", "exact") for key in dd["D1"][var])
+    diffs = {}
+    for a_, b_ in (("brut", "vraie"), ("axe_Rd", "vraie"), ("brut", "axe_Rd")):
+        for var in ("brut", "exact"):
+            dv = np.nanmax(np.abs(np.r_[maps[(a_, var)][0] - maps[(b_, var)][0], maps[(a_, var)][1] - maps[(b_, var)][1]]))
+            dm = max(abs(res[f"{a_} | {var}"][key]["mean"] - res[f"{b_} | {var}"][key]["mean"]) for key in res[f"{a_} | {var}"])
+            dd_ = max(np.nanmax(np.abs((maps[(a_, var)][t] - maps[(b_, var)][t])[m])) for t in (0, 1) for m in (dK, dKp))
+            diffs[f"{a_} -> {b_} | {var}"] = dict(max_abs_map_eVA2=float(dv), max_abs_in_disks_eVA2=float(dd_), max_abs_disk_mean_eVA2=float(dm))
+    return dict(gate_vs_d_results_max_abs_mean_eVA2=float(gate), n_ties_R=int((nt > 1).sum()), A_cell_A2=A_cell, disk_means=res, differences=diffs)
+
+
+def aud_kgrids(B2):
+    """Point de grille le plus proche de K, K', Γ : argmin de la norme réduite axe par axe (kindex, kdist) contre vraie distance cartésienne."""
+    grids = dict(coarse=[5, 6, 7, 8, 9, 10, 11, 12], dense=[24, 25, 27, 28, 32], sortie=[240], interne=[300, 450, 600, 900], epw_q=[24])
+    out = {}
+    for fam, ns in grids.items():
+        for n in ns:
+            i, j = np.meshgrid(np.arange(n), np.arange(n), indexing="ij"); k = np.stack([i.ravel() / n, j.ravel() / n], -1)
+            for lab, tg in (("K", K_RED[:2]), ("K'", KP_RED[:2]), ("Γ", np.zeros(2))):
+                d = red_axis(k - tg); coded = np.linalg.norm(d, axis=1); ic = int(np.argmin(coded))
+                imgs = np.array([(a, b) for a in (-1, 0, 1) for b in (-1, 0, 1)], float)
+                Lc = np.linalg.norm((d[:, None, :] + imgs[None]) @ B2.T, axis=2).min(1); tset = np.where(Lc <= Lc.min() + 1e-12)[0]
+                out[f"{fam} {n} {lab}"] = dict(n=n, coded_ij=[int(round(v * n)) for v in k[ic]], n_coded_ties=int((coded <= coded.min() + 1e-12).sum()),
+                                               on_grid=bool(Lc.min() < 1e-9), dist_coded_Ainv=float(Lc[ic]), dist_true_min_Ainv=float(Lc.min()),
+                                               n_true_nearest=int(len(tset)), coded_in_true_set=bool(ic in tset),
+                                               true_set_ij=[[int(round(v * n)) for v in k[t]] for t in tset])
+    return out
+
+
+def aud_crowns(B2, n=240, xmax=400):
+    """Couronnes de crown_table (R9) : décalage axe par axe à K, K', puis norme de Löschian, contre la vraie image (9 images)."""
+    i, j = np.meshgrid(np.arange(n), np.arange(n), indexing="ij"); k = np.stack([i.ravel() / n, j.ravel() / n], -1); b1 = B2[:, 0]
+    xa = np.full(len(k), np.inf); xt = np.full(len(k), np.inf); imgs = np.array([(a, b) for a in (-1, 0, 1) for b in (-1, 0, 1)], float)
+    for Kv in (K_RED[:2], KP_RED[:2]):
+        dk = red_axis(k - Kv); ij = np.rint(dk * n); q = ij @ B2.T; xa = np.minimum(xa, (q * q).sum(1) / (b1 @ b1))
+        qt = (np.rint(dk * n)[:, None, :] + n * imgs[None]) @ B2.T; xt = np.minimum(xt, ((qt * qt).sum(2) / (b1 @ b1)).min(1))
+    m = xt <= xmax
+    return dict(n=n, x_max=xmax, n_k=int(m.sum()), n_differs=int((np.abs(xa[m] - xt[m]) > 1e-6).sum()))
+
+
+def aud_transplant():
+    """R7c (make_inputs_r7_relax.py) : sites 12x12 transplantés, |r| < R_CUT = 14,5 Å avec r = d − rint(d) (axe par axe), contre la vraie image."""
+    import re
+    scf = os.path.join(GQ, "defects", "super_cell", "12x12", "defective", "scf.in")
+    rel = os.path.join(GQ, "defects", "super_cell_relaxed", "series", "12x12", "nspin1", "relax.out")
+    txt = open(scf).read(); _, rest = txt.split("CELL_PARAMETERS bohr"); cell_txt, pos_txt = rest.split("ATOMIC_POSITIONS crystal"); pos_txt = pos_txt.split("K_POINTS")[0]
+    A_rows = np.array([[float(v) for v in l.split()] for l in cell_txt.strip().splitlines()]) * BOHR
+    X0 = np.array([[float(v) for v in l.split()[1:4]] for l in pos_txt.strip().splitlines()])
+    blk = re.search(r"Begin final coordinates(.*?)End final coordinates", open(rel, errors="ignore").read(), re.S).group(1).split("ATOMIC_POSITIONS (crystal)")[1]
+    Xf = np.array([[float(v) for v in l.split()[1:4]] for l in blk.strip().splitlines() if re.match(r"\s*C\b", l)])
+    s12 = np.array([(5 + 2 / 3) / 12, (5 + 2 / 3) / 12, 0.0]); R_CUT = 14.5
+    d = X0 - s12; r_ax = np.linalg.norm((d - np.rint(d)) @ A_rows, axis=1); r_tr = cart_true(d, A_rows.T)[1]
+    u = Xf - X0; un = np.linalg.norm((u - np.rint(u)) @ A_rows, axis=1)
+    sa, st = r_ax < R_CUT, r_tr < R_CUT; miss = st & ~sa
+    L12 = float(np.linalg.norm(A_rows[0]))
+    out = dict(n_atoms=len(X0), L12_A=L12, R_CUT_A=R_CUT, inscribed_parallelogram_A=L12 * np.sqrt(3) / 4, n_sel_axis=int(sa.sum()), n_sel_true=int(st.sum()),
+               n_missed=int(miss.sum()), n_extra=int((sa & ~st).sum()), missed=[dict(atom_1based=int(i) + 1, r_true_A=float(r_tr[i]), r_axis_A=float(r_ax[i]), u_A=float(un[i]))
+                                                                                  for i in np.where(miss)[0]],
+               u_max_missed_A=float(un[miss].max()) if miss.any() else 0.0, u_max_selected_12_14p5_A=float(un[sa & (r_ax >= 12.0)].max()))
+    return out
+
+
+def aud_zone():
+    """
+    Écart 3 : coins d'analyze_M.py §1 (map_corners de M_analysis.npz, formule de la l. 56) contre les points K de la cellule QE (a1, a2 à 60°,
+    b1, b2 à 120°), K = (2/3, 1/3) de production.json et ses images. Un coin de la zone est un sommet de Wigner-Seitz : |p| = |p − G| pour
+    exactement deux G ≠ 0, et |p| <= |p − G| pour tous.
+    """
+    Z = np.load(os.path.join(PROJ, "results", "M2", "M_analysis.npz"), allow_pickle=True)
+    B = np.asarray(Z["map_B"])[:2, :2]; C = np.asarray(Z["map_corners"]); Kf = np.asarray(Z["map_K"])
+    red_now = [(1 / 3, 1 / 3), (1 / 3, -2 / 3), (-2 / 3, 1 / 3), (-1 / 3, -1 / 3), (-1 / 3, 2 / 3), (2 / 3, -1 / 3)]        # analyze_M.py l. 56
+    red_new = [(2 / 3, 1 / 3), (1 / 3, 2 / 3), (-1 / 3, 1 / 3), (-2 / 3, -1 / 3), (-1 / 3, -2 / 3), (1 / 3, -1 / 3)]       # K, K' et images
+    G = np.array([B @ np.array([i, j]) for i in range(-2, 3) for j in range(-2, 3) if (i, j) != (0, 0)])
+
+    def info(red):
+        rows = []
+        for c in red:
+            p = B @ np.array(c); dG = np.linalg.norm(p - G, axis=1); d0 = float(np.linalg.norm(p)); neq = int((np.abs(dG - d0) < 1e-9).sum())
+            rows.append(dict(red=[float(v) for v in c], cart_Ainv=[float(v) for v in p], norm_Ainv=d0, n_G_equidistant=neq,
+                             is_WS_vertex=bool(neq == 2 and d0 <= dG.min() + 1e-9)))
+        return rows
+    now, new = info(red_now), info(red_new)
+    P_now = np.array([r["cart_Ainv"] for r in now]); P_now = P_now[np.argsort(np.arctan2(P_now[:, 1], P_now[:, 0]))]
+    K_cfg = B @ np.array(load_production(verbose=False)["K_red"][:2])
+    # même vérification pour les images de K de scripts/_bands.py (SYM_POINTS, étiquettes des chemins de bandes) : norme de la vraie image
+    import _bands
+    im = np.array([(i, j) for i in (-1, 0, 1) for j in (-1, 0, 1)], float)
+    bands_K = [dict(red=[float(v) for v in s[:2]], norm_true_image_Ainv=float(np.linalg.norm((red_axis(np.array(s[:2], float))[None] + im) @ B.T, axis=1).min()))
+               for s in _bands.SYM_POINTS["K"]]
+    return dict(stored_equals_formula=bool(np.allclose(P_now, C, atol=1e-12)), K_cfg_cart_Ainv=[float(v) for v in K_cfg], K_norm_Ainv=float(np.linalg.norm(K_cfg)),
+                map_K_folded_Ainv=[float(v) for v in Kf], b_norm_Ainv=float(np.linalg.norm(B[:, 0])), b1_dot_b2_over_b2=float(B[:, 0] @ B[:, 1] / (B[:, 0] @ B[:, 0])),
+                corners_now=now, corners_proposed=new, bands_SYM_POINTS_K=bands_K)
+
+
+def aud_label():
+    """Écart 1 : ligne « convention intensive » d'analyze_M.py (texte lu), ligne de M_tests_summary.csv, étendue recalculée (M_analysis.npz) sur les
+    tailles du libellé (5, 7, 8, 9) et sur les tailles effectivement traitées par analyze_M (SIZES : M_dense et M_ed présents)."""
+    import csv
+    src = open(os.path.join(PROJ, "scripts", "analyze_M.py")).read().splitlines()
+    ln = [i + 1 for i, l in enumerate(src) if "convention intensive (cellule unitaire)" in l]
+    Z = np.load(os.path.join(PROJ, "results", "M2", "M_analysis.npz"), allow_pickle=True)
+    sc = {S: float(Z[f"scale_{S}_dense"]) for S in ("5x5", "6x6", "7x7", "8x8", "9x9", "12x12") if f"scale_{S}_dense" in Z.files}
+    spread = lambda v: float((max(v) - min(v)) / np.mean(v))
+    row = [r for r in csv.reader(open(os.path.join(PROJ, "results", "M2", "M_tests_summary.csv"))) if "convention intensive" in r[0]]
+    return dict(lines=ln, text=[src[i - 1].strip() for i in ln], scale_dense_eV=sc, spread_label_sizes_5789=spread([sc[S] for S in ("5x5", "7x7", "8x8", "9x9")]),
+                spread_all_sizes=spread(list(sc.values())), csv_rows=row)
+
+
+AUD_PARTS = ["atoms", "r1", "rgrids", "d1", "kgrids", "transplant", "zone", "label"]
+
+
+def cmd_audit(a):
+    """Audit : réduction axe par axe contre vraie image minimale sur les géométries réelles (voir audit_image_minimale.md)."""
+    t0 = time.time(); d = ensure("audit"); f_out = os.path.join(d, "audit_results.json")
+    parts = AUD_PARTS if a.parts == "all" else a.parts.split(",")
+    out = json.load(open(f_out)) if (a.parts != "all" and os.path.exists(f_out)) else dict(sizes={})          # partie rejouée : fusion
+    out.setdefault("runs", []).append(dict(head=git_head(), date=time.strftime("%Y-%m-%d %H:%M"), parts=parts))
+    cfg = load_production(verbose=False); G9 = aud_geom(9)
+    V = np.load(os.path.join(PROJ, "results", "M2", "ved_analysis.npz"), allow_pickle=True)
+    r7 = json.load(open(os.path.join(GQ, "defects", "R7_tailles_3m", "d1_8pts", "d1_results.json")))["sizes"]
+    r5 = json.load(open(os.path.join(GQ, "defects", "R5_base_vs_M", "c", "c_results.json")))["sizes"]
+    r4 = json.load(open(os.path.join(GQ, "defects", "R4_quasi_lie", "d5", "d5_results.json")))
+    a1 = json.load(open(os.path.join(WORK, "a", "a1_results.json")))["sizes"]
+    for N in (AUD_SIZES if "atoms" in parts else []):
+        S = f"{N}x{N}"; G = aud_geom(N); A = G["A"]; t1 = time.time()
+        vac, s_vac = aud_vacancy(G["x_p"], G["x_d"], A)
+        far, dax, dtr, fset = aud_far(G["x_d"], G["x_p"], s_vac, A)
+        dpa = np.linalg.norm(cart_axis(G["x_p"] - s_vac, A), axis=1); dpt = cart_true(G["x_p"] - s_vac, A)[1]
+        rec = dict(ngfft=list(G["ng"]), a_sc_A=float(np.linalg.norm(A[:, 0])), vacancy=vac, far=far,
+                   shells_d=aud_shells(dax, dtr, (("< 1,8 Å", -1.0, 1.8), ("2,2–2,7 Å", 2.2, 2.7))),
+                   shells_p_analyze_Ved=aud_shells(dpa, dpt, (("0,5–1,6 Å", 0.5, 1.6),)),
+                   R_CUT_14p5_target=dict(n_axis=int((dax < 14.5).sum()), n_true=int((dtr < 14.5).sum()), same=bool(np.array_equal(dax < 14.5, dtr < 14.5))))
+        # sphères de Lu (0,5 et 1,0 Å) autour de l'atome axe par axe et des atomes vraiment les plus loin ; porte : nombre de points de R7 (sphère d)
+        sph = {}
+        for rho in (0.5, 1.0):
+            ia = far["i_axis_1based"] - 1
+            sph[str(rho)] = dict(axis_atom=aud_sphere(np.mod(G["x_d"][ia], 1.0), A, G["ng"], rho),
+                                 far_true=[aud_sphere(np.mod(G["x_d"][i], 1.0), A, G["ng"], rho) for i in fset])
+        if str(N) in r7:
+            m7 = r7[str(N)]["alignment"]["means"]
+            sph["gate_R7_npts_d"] = {k: dict(R7=int(v[2]), audit_axis=sph[k]["axis_atom"]["n_axis"], ok=bool(int(v[2]) == sph[k]["axis_atom"]["n_axis"])) for k, v in m7.items()}
+        # toutes les sphères (P1, A.1) pour les tailles de R9
+        if S in SIZES_A:
+            allsp = [aud_sphere(np.mod(x, 1.0), A, G["ng"], rho) for rho in (0.5, 1.0) for x in G["x_d"]]
+            sph["all_atoms"] = dict(n_spheres=len(allsp), n_differ=int(sum(not s["same"] for s in allsp)), n_boundary_points=int(sum(s["n_within_1e9_of_rho"] for s in allsp)))
+        rec["spheres"] = sph
+        rec["discs"] = {str(r): aud_disc(s_vac, A, G["ng"], r) for r in (1.0, 2.0)}
+        if f"{S}_map" in V.files:
+            rec["radial_analyze_Ved"] = aud_radial(S, V, G["x_d"], G["A_b"])
+        # valeur de Lu : sphère 1,0 Å autour de l'atome axe par axe (publiée) contre atomes vraiment les plus loin (profils P1 d'A.1)
+        pf = os.path.join(WORK, "a", f"a1_profiles_{S}.npz")
+        if os.path.exists(pf):
+            P = np.load(pf); ia = far["i_axis_1based"] - 1
+            lu = dict(gate_dist_true_max_abs_A=float(np.abs(P["dist"] - dtr).max()), axis_atom_meV=float(P["shift10"][ia] * 1e3), published_meV=LU_PUBLISHED_MEV.get(S),
+                      far_true_meV=[float(P["shift10"][i] * 1e3) for i in fset], axis_atom_05_meV=float(P["shift05"][ia] * 1e3),
+                      far_true_05_meV=[float(P["shift05"][i] * 1e3) for i in fset], plateau_i_meV=float(a1[S]["C_i_eV"] * 1e3))
+            lu["delta_mean_meV"] = float(np.mean(lu["far_true_meV"]) - lu["axis_atom_meV"]); lu["delta_mean_05_meV"] = float(np.mean(lu["far_true_05_meV"]) - lu["axis_atom_05_meV"])
+            rec["Lu"] = lu
+        # atome de Lu enregistré par R4 D5, R5 C, R7 D1 (même règle axe par axe) : porte
+        rec["recorded_far_atom"] = dict(R4_D5=r4.get(S, {}).get("far_atom_1based"), R5_C=r5.get(str(N), {}).get("alignment", {}).get("i_far_1based"),
+                                        R7_D1=r7.get(str(N), {}).get("alignment", {}).get("i_far_1based"))
+        qe = {}
+        for src, J in (("R5_C", r5), ("R7_D1", r7)):
+            if str(N) in J:
+                r = J[str(N)]; qe[src] = dict(shift_10_meV=float(r["alignment"]["shift_10"] * 1e3), pi_x=(r["pi_state"] or {}).get("x"),
+                                              sigma_x=[q["x"] for q in (r["sigma_doublet"] or [])])
+        rec["qe_levels"] = qe
+        rec["elapsed_s"] = time.time() - t1
+        out["sizes"][S] = rec
+        log(f"[audit] {S} : lacune {'identique' if vac['same'] else 'DIFFÈRE'} ; atome de Lu axe par axe {far['i_axis_1based']} "
+            f"({far['d_axis_A']:.2f} Å axe, {far['d_true_of_axis_atom_A']:.2f} Å vrai, rang {far['rank_true_of_axis_atom']}) ; vrais plus loin {far['far_true_1based']} "
+            f"à {far['r_max_true_A']:.2f} Å ; {time.time()-t1:.0f} s")
+    # R1 9x9 relaxée (R4 D1 : far_atom_alignment sur les positions relaxées)
+    if "r1" in parts:
+        out["R1"] = {}
+    R1_SAVES = [("nspin1", f"{QE_TMP}/vacancy_relaxed/nspin1/vac_9x9_relax_nspin1.save"), ("nspin2", f"{QE_TMP}/vacancy_relaxed/nspin2/vac_9x9_relax_nspin2.save")]
+    for tag, sv in (R1_SAVES if "r1" in parts else []):
+        A_r, _ = qe_io.get_A_volume(sv); assert np.allclose(A_r, G9["A_b"]); xr = qe_io.get_x_red(sv)
+        vac, s_vac = aud_vacancy(G9["x_p"], xr, G9["A"]); far, dax, dtr, fset = aud_far(xr, G9["x_p"], s_vac, G9["A"])
+        out["R1"][tag] = dict(vacancy=vac, far=far, shells=aud_shells(dax, dtr, (("< 1,8 Å", -1.0, 1.8), ("2,2–2,7 Å", 2.2, 2.7))),
+                              spheres={str(r): dict(axis_atom=aud_sphere(np.mod(xr[far["i_axis_1based"] - 1], 1.0), G9["A"], G9["ng"], r)) for r in (0.5, 1.0)})
+        log(f"[audit] R1 {tag} : atome axe par axe {far['i_axis_1based']} ({far['d_axis_A']:.2f} / {far['d_true_of_axis_atom_A']:.2f} Å), vrais {far['far_true_1based']}")
+    # étiquettes R (Wannier) : grilles denses de production et grossières N×N ; fig_locality_final
+    L = np.load(os.path.join(PROJ, "results", "M2", "mwr_locality.npz"))
+    if "rgrids" in parts:
+        out["R_grids"] = {}
+    for S in (SIZES_A if "rgrids" in parts else []):
+        D = int(cfg["dense"][S]["D"]); n = size_n(S)
+        out["R_grids"][S] = dict(dense=aud_rgrid(D)[0], coarse=aud_rgrid(n)[0], locality=aud_locality(S, L, D))
+        if f"{S}_coarse_dist" in L.files:
+            out["R_grids"][S]["locality"]["coarse"] = aud_locality_coarse(S, L, n)
+        log(f"[audit] R {S} : dense D={D} {out['R_grids'][S]['dense']['n_dist_differs']} étiquettes à distance changée ; "
+            f"amas R_cut 3 identiques {out['R_grids'][S]['dense']['clusters']['3']['same']}")
+    if "d1" in parts:
+        out["interp_D1"] = aud_interp_bound(float(a1["9x9"]["C_retenu_eV"]))
+        out["interp_D1"]["carte"] = aud_interp_D1(float(json.load(open(os.path.join(WORK, "d", "d_results.json")))["D1_meta"]["C9_eV"]), cfg)
+        log(f"[audit] D.1 : porte {out['interp_D1']['carte']['gate_vs_d_results_max_abs_mean_eVA2']:.2e} eV Å² ; "
+            + " ; ".join(f"{k_} {v['max_abs_in_disks_eVA2']:.3f}" for k_, v in out["interp_D1"]["carte"]["differences"].items()))
+    # grilles k : point le plus proche de K, K', Γ ; couronnes de crown_table
+    A9 = G9["A"] / 9.0; B2 = (2 * np.pi * np.linalg.inv(A9).T)[:2, :2]
+    if "kgrids" in parts:
+        out["k_grids"] = aud_kgrids(B2); out["crowns_240"] = aud_crowns(B2)
+    if "transplant" in parts:
+        out["transplant_R7c"] = aud_transplant()
+    if "zone" in parts:
+        out["zone_analyze_M"] = aud_zone()
+    if "label" in parts:
+        out["label_analyze_M"] = aud_label()
+    out["runs"][-1]["elapsed_s"] = time.time() - t0
+    save_json(f_out, out)
+    log(f"[audit] écrit audit/audit_results.json en {time.time()-t0:.0f} s")
+
+
 # ----------------------------------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description="R9 : pilote unique (voir la docstring)")
@@ -1724,11 +2207,12 @@ def main():
     sub.add_parser("d")
     sub.add_parser("dfig")
     sub.add_parser("cfig")
+    p = sub.add_parser("audit"); p.add_argument("--parts", default="all", help="all ou liste parmi " + ",".join(AUD_PARTS) + " (fusion dans le json existant)")
     a = ap.parse_args()
     global CN
     CN = getattr(a, "cn", None)                                                  # clôture : C_N Lu ou plateau (a3, a3pole, b, btables)
     {"r0": cmd_r0, "synth": cmd_synth, "a3tables": cmd_a3tables, "a2c": cmd_a2c, "a2d": cmd_a2d, "a2dpost": cmd_a2dpost, "a0": cmd_a0, "a1": cmd_a1, "a3": cmd_a3, "a3pole": cmd_a3pole, "b": cmd_b,
-     "btables": cmd_btables, "c": cmd_c, "d": cmd_d, "dfig": cmd_dfig, "cfig": cmd_cfig}[a.cmd](a)
+     "btables": cmd_btables, "c": cmd_c, "d": cmd_d, "dfig": cmd_dfig, "cfig": cmd_cfig, "audit": cmd_audit}[a.cmd](a)
 
 
 if __name__ == "__main__":

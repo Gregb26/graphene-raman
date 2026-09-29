@@ -540,9 +540,151 @@ bloc π), potentiel hermitien aléatoire sur 5 mailles, T = V[1 − G₀V]⁻¹ 
 paquets de 2 énergies et 7 k) = inversion directe ; c = 0 ⇒ ρ = ρ₀ ; (4) terme `linear` = (1/π) Im Tr[t ∂_ε g₀] ; (5) Q5 = inversion directe sur un chemin Γ–K–M ;
 sommet exact de pics paraboliques ; (6) `build_k_path` : Γ–K–M à 601 points → coins aux indices 0, 400, 600 (|ΓK| : |KM| = 2 : 1), |ΓK| = 4π/(3a), pas constant
 par segment, `nk` = 7 → 0, 4, 6, erreur si `nk` < nombre de coins. Tolérance 1e-12 relative (1e-14 pour les identités exactes). `PYTHONPATH=src pytest
-tests/test_r8_functions.py` : **6 passés** (1,5 s). md5 : `disorder_average.py` aa5c3fe2…, `test_r8_functions.py` f4ca6071…, `lattice.py` 0eb72093… ; pilote
+tests/test_r8_functions.py` : **6 passés** (1,5 s) ; suite complète `PYTHONPATH=src pytest tests` : **119 passés** (15 min 37 s, nœud de connexion). md5 : `disorder_average.py` aa5c3fe2…, `test_r8_functions.py` f4ca6071…, `lattice.py` 0eb72093… ; pilote
 `r8_driver.py` 08862e45… (sous-commande `extract` seule).
 
 **STOP — 7a et fonctions faites le 2026-09-28.** Aucune de nos DOS n'est calculée ; rien dans `results/` ; J1 et suivants attendent l'audit de l'image minimale
 puis le GO. Pour 7b, décision attendue : l'axe « DOS (eV⁻¹) » de la Fig. 13 compte-t-il le spin (pentes mesurées 0,107 / 0,115 eV⁻² contre 0,0563 par maille et
 par spin avec nos constantes) ?
+
+## GO des calculs (Greg, 2026-09-28 soir « GO!!!! ») — exécution
+
+Pilote `r8_driver.py` complété (sous-commandes `prep`, `g0`, `gate`, `dos`, `spec`, `sens`, `fig` ; `extract` inchangé) et lanceur `submit_r8.sh` (modèle de R9 :
+diff du pilote et du lanceur archivé dans `submitted/<jobid>/diff.txt` à chaque soumission, ligne dans `JOBID` ; g₀ à 16 fils BLAS ; `gate`, `dos`, `spec`, `sens` à
+1 fil BLAS + 16 fils Python). Sorties dans `out/` et `fig/`, rien dans `results/` (décision 7). Un seul chemin pour g₀ : `local_green_batch` à 5 WF ; bloc π par sélection
+d'indices ; R_cut 2 = sous-bloc de R_cut 3 ; T̄ toujours par Q1 + Q2 (y compris la courbe Γ_T contrôlée par P4 et les éléments sur couche de P2).
+
+**prep** (job 22024568, 2026-09-29 09:04) :
+
+| taille | md5 M2 (= MD5SUMS = sidecar) | Wannier | R_d | E_D (eV) | lacune | voisins (mailles, distance) | amas R_cut 2/3/4 | hors boîte | dernière maille de la boîte | ½ Re Tr π de V†M2V à (K, K) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 9×9 | c8753a70… | baa17b88b1b69e51 | (4, 4) | −4,238896 | WF 3 (A) | p_z(B) en (−1,0), (0,−1), (0,0) ; 1,4237 Å | 13 / 29 / 49 | 0 / 0 / 0 | 0 / 0 / 4 | 14,408 eV (= R9 0.4 (b)) |
+| 12×12 | 41055dfc… | 061f31015ba7e32b | (5, 5) | −4,238884 | WF 4 (B) | p_z(A) en (1,0), (0,1), (0,0) ; 1,4237 Å | 13 / 29 / 49 | 0 / 0 / 0 | 0 / 0 / 0 | 14,325 eV |
+
+Hermiticité de V_loc ≤ 7,7e-15. Voisins 9×9 = `NN_CELLS` de R4/R9 (contrôle intégré).
+
+**Tests smoke** (nœud de connexion, `R8_SMOKE=1` : grilles 24/30/36/48 au lieu de 300/600/900/1 200, 24² pour les états, caches `cache_smoke/` et sorties `out_smoke/`,
+`fig_smoke/` séparés ; P2 et P4 sans comparaison) : g₀ 24 s ; `gate` 1,2 min (P1 5e-16, P3 1,0e-13) ; `dos` 0,3 min ; `spec` 0,1 min ; `sens` 0,3 min ; `fig` : 4 figures. Deux
+corrections avant soumission, sans effet sur les calculs : sauts de branche de `spec` journalisés seulement à |k − K| ≤ 0,25 Å⁻¹ (tous gardés dans le json) ; points de
+`spectral_GKM` tracés seulement où A ≥ 1 % du maximum de la carte. `cache_smoke/` (≈ 6 Go apparents), `out_smoke/`, `fig_smoke/` : artefacts de test, supprimables.
+
+**Jobs** (rrg-cotemich-ac) : 22024568 `r8g0` (prep + 10 g₀) ; 22026235 `r8gate` (afterok g0) ; 22026236 `r8dos`, 22026237 `r8spec`, 22026238 `r8sens` (afterok gate :
+une porte en échec arrête la chaîne) ; 22026239 `r8fig` (afterok dos, spec, sens). Le pilote n'est plus modifié avant le démarrage de ces jobs.
+
+## Résultats (2026-09-29 ; jobs 22024568 → 22026239, tous COMPLETED)
+
+Durées : `r8g0` 35 min 45 (prep 19 s ; g₀ 5 WF, 2 417 énergies : 300² 1,0 / 0,8 min, 600² 3,7 / 3,4 min, 900² 7,9 / 7,7 min pour 9×9 / 12×12 ; R_cut 4, 961 énergies,
+900² 6,6 min ; η 50 et 25 meV, 600², 1,9 et 2,1 min ; ∂_ε g₀ 300² 0,3 min) ; `r8gate` 1 min 43 ; `r8dos` 5 min 10 ; `r8spec` 12 s ; `r8sens` 7 min 58 ; `r8fig` 18 s. Énergies en eV
+relatives à E_D ; DOS en états/eV/maille/spin (bloc π) sauf mention « ×2 » ; c_i par maille.
+
+### 1. Portes (`out/gate/gate_results.json`) : **PASS**
+
+| porte | contenu | résultat |
+|---|---|---|
+| P1 Born | Q1 + Q2 (t ← V_loc) contre `Mwr_to_Mwk_pairs`, 8 k, 2 tailles × 2 variantes | écart relatif max 4,0e-16 / 4,9e-16 (9×9) ; 8,0e-16 / 7,8e-16 (12×12) |
+| P2 Γ | −2 Im T̄^{nn}_k(ε_j) (5 WF, Q1 + Q2) contre `G_T` de `resonance_9x9.npz`, 19 états de ±1,2 eV | 5,3e-15 ; grille « res » identique (écart 0,0) |
+| P3 Lloyd | terme linéaire de Q4 contre (1/π) Im Tr[t ∂_ε g₀], bloc π, 300², 241 énergies | 4,6e-14 |
+| P4 R9 | pics de la courbe Γ_T et de −Im T̄(K) (+ maxima) à 300/600/900, 2 tailles × 2 variantes ; LDOS C.3 9×9 tel quel 600/900 | 12/12 et 2/2 identiques (pics au point de grille, maxima à ≤ 1e-8) |
+
+Information (bloc π, N_k^int 900, fenêtre ±1,2 eV ; max sur la fenêtre / à E_D) :
+
+| taille, variante | \|T̄_AB(K)\|/‖T̄(K)‖ | ‖T̄(K) − T̄(K′)‖/‖T̄(K)‖ | ‖T̄ − T̄†‖/‖T̄‖ à K | C₃ : \|T̄^{nn}(K+δ) − T̄^{nn}(C₃(K+δ))\|/\|T̄^{nn}\| |
+|---|---|---|---|---|
+| 9×9 tel quel | 6,4e-3 / 5,8e-3 | 1,1e-6 / 1e-6 | 2,00 / 0,31 | 2,3e-2 / 1,9e-2 |
+| 9×9 aligné | 4,8e-3 / 4,5e-3 | 1e-6 / 1e-6 | 2,00 / 0,33 | 1,9e-2 / 1,5e-2 |
+| 12×12 tel quel | 6,4e-3 / 5,8e-3 | 2e-6 / 1e-6 | 2,00 / 0,33 | 2,4e-2 / 1,9e-2 |
+| 12×12 aligné | 5,3e-3 / 4,7e-3 | 2e-6 / 1e-6 | 2,00 / 0,35 | 2,1e-2 / 1,5e-2 |
+
+(K et C₃K sont équivalents modulo le réseau réciproque, T̄^{(W)} y est identique par construction : le contrôle C₃ est fait en K + δ, δ = (0,01, 0, 0) réduit, sur les
+éléments diagonaux en base de bandes.) t_π contre t à 5 WF restreint au bloc π : 9,5e-15.
+
+### 2. DOS 9×9 (`out/dos/dos_results.json`, `dos_9x9.npz`, `fig/dos_c`)
+
+Parfait, η_G 15 meV : ρ(E_D) 0,00389 (300²), 0,00342 (1 200²) ; ∫ sur ±1,2 eV 0,09173 / 0,09167 ; 300² − 1 200² : max 0,0068, rms 0,0018 (ondulations de la grille 300²).
+Maximum de ρ − ρ₀ sur [−1, 0] eV (ρ₀ au même η_G et à la même grille), η_G 50 meV :
+
+| variante (N_k^int, η_t) | grille | c_i | position | hauteur (×2) | largeur à mi-hauteur [bornes] | ρ(E_D) | max local de ρ sur [−1, 0] |
+|---|---|---|---|---|---|---|---|
+| tel quel (900, 20 meV) | 300² | 0,1 % | −0,1650 | 0,00284 | 0,191 | 0,00949 | — |
+| tel quel | 600² | 0,1 % | −0,1625 | 0,00283 (0,00566) | 0,191 [−0,264 ; −0,073] | 0,00949 | — |
+| tel quel | 300² | 1 % | −0,1650 | 0,02677 | 0,201 | 0,01313 | |
+| tel quel | 600² | 1 % | −0,1650 | 0,02676 (0,0535) | 0,201 [−0,271 ; −0,070] | 0,01313 | −0,175 (0,0413) |
+| aligné plateau (900, 20 meV) | 300² | 0,1 % | −0,1500 | 0,00311 | 0,175 | 0,00954 | — |
+| aligné | 600² | 0,1 % | −0,1475 | 0,00312 (0,00623) | 0,175 [−0,241 ; −0,066] | 0,00954 | — |
+| aligné | 300² | 1 % | −0,1500 | 0,02908 | 0,187 | 0,01417 | |
+| aligné | 600² | 1 % | −0,1500 | 0,02909 (0,0582) | 0,187 [−0,248 ; −0,061] | 0,01417 | −0,155 (0,0429) |
+| eta_unique tel quel (600, 50 meV) | 300² | 0,1 % | −0,1650 | 0,00223 | 0,239 | 0,00974 | — |
+| eta_unique | 600² | 0,1 % | −0,1600 | 0,00223 (0,00446) | 0,241 [−0,288 ; −0,047] | 0,00973 | — |
+| eta_unique | 300² | 1 % | −0,1625 | 0,02133 | 0,251 | 0,01523 | |
+| eta_unique | 600² | 1 % | −0,1625 | 0,02132 (0,0427) | 0,252 [−0,295 ; −0,043] | 0,01523 | −0,1825 (0,0361) |
+
+Kaasbjerg (7a) : −0,200 / −0,210 eV ; hauteurs 0,00126 / 0,0307 ; largeurs 0,163 / 0,306 eV (0,1 % / 1 %) ; minimum parfait 0,00684.
+
+### 2 bis. Limite c_i → 0 (N_k^int 900 ; `out/fig/fig_results.json`, `table_2bis`)
+
+| taille, variante | max LDOS 3 voisins (valeur, états/eV) | pic −Im T̄(K) | pic courbe Γ_T | max ρ − ρ₀ 0,1 % (600² / 300²) | max ρ − ρ₀ 1 % (600² / 300²) |
+|---|---|---|---|---|---|
+| 9×9 tel quel | −0,1925 (0,748) | −0,1925 | −0,1825 | −0,1625 / −0,1650 | −0,1650 / −0,1650 |
+| 9×9 aligné | −0,1750 (0,791) | −0,1725 | −0,1800 | −0,1475 / −0,1500 | −0,1500 / −0,1500 |
+| 12×12 tel quel | −0,1750 (0,790) | −0,1750 | −0,1800 | — | −0,1500 / — |
+| 12×12 aligné | −0,1625 (0,826) | −0,1625 | −0,1775 | — | −0,1375 / — |
+
+### 3. A_k(ε) Γ–K–M (601 points, K à l'indice 400, Δs = 4,25e-3 Å⁻¹ ; η_G 25 meV ; `out/spec/`, `fig/spectral_GKM`)
+
+| variante | c_i | maxima de A_K dans ±0,5 eV (ε ; hauteur) | écart des deux plus hauts | sauts > 0,15 eV de la branche inférieure à \|k − K\| ≤ 0,25 Å⁻¹ |
+|---|---|---|---|---|
+| tel quel | 0,1 % | +0,0091 (133,3) | — (un seul maximum) | aucun |
+| tel quel | 1 % | −0,3052 (5,2) ; **+0,0076 (82,5) ; +0,1252 (42,2)** | **0,1176** | côté Γ : −0,4357 → −0,1325 (indices 385 → 386) ; côté M : −0,1330 → −0,4300 (415 → 416) ; et −0,1891 → −1,1861 (354 → 355, \|k − K\| = 0,196) |
+| aligné | 0,1 % | +0,0101 (130,6) | — | aucun |
+| aligné | 1 % | −0,2974 (5,6) ; +0,0149 (82,4) ; +0,1331 (40,0) | 0,1182 | −0,4323 → −0,1169 (385 → 386) ; −0,1170 → −0,4269 (415 → 416) |
+| eta_unique | 0,1 % | +0,0087 (132,6) | — | aucun |
+| eta_unique | 1 % | −0,3052 (5,1) ; +0,0076 (82,8) ; +0,1253 (40,9) | 0,1177 | −0,4347 → −0,1345 ; −0,1350 → −0,4289 ; −0,1912 → −1,1861 (354 → 355) |
+
+Kaasbjerg (7a, 1 %) : +0,010 et +0,110 eV → 0,100 eV ; aucun maximum dans ]−0,45 ; −0,16[ (Γ) ni ]−0,50 ; −0,21[ (M) ; 0,1 % non lisible. Branche supérieure : aucun saut
+> 0,15 eV près de K dans les trois variantes. Maxima : `spectral_maxima`, prominence 1e-3 × max de la carte ; branches = deux maxima les plus hauts par k.
+
+### 5. Sensibilités (DOS c_i = 1 %, 600², position / hauteur / largeur du maximum de ρ − ρ₀ ; `out/sens/sens_results.json`, `fig/sensibilites`)
+
+| paramètre | tel quel | aligné |
+|---|---|---|
+| base (9×9, R_cut 3, N_k^int 900, η_G 50) | −0,1650 / 0,02676 / 0,201 | −0,1500 / 0,02909 / 0,187 |
+| N_k^int 300 | −0,1725 / 0,02780 / 0,193 | −0,1325 / 0,02943 / 0,185 |
+| N_k^int 600 | −0,1625 / 0,02676 / 0,201 | −0,1525 / 0,02908 / 0,187 |
+| R_cut 2 | −0,1625 / 0,02703 / 0,201 | −0,1525 / 0,02880 / 0,190 |
+| R_cut 4 | −0,1675 / 0,02629 / 0,203 | −0,1500 / 0,02897 / 0,188 (4 mailles sur la dernière maille de la boîte, M.1) |
+| 12×12 (lacune B, 24×24) | −0,1500 / 0,02903 / 0,187 | −0,1375 / 0,03091 / 0,177 |
+| η_G 25 meV | −0,1625 / 0,02763 / 0,205 | −0,1475 / 0,03008 / 0,191 |
+
+### 7b. Superposition sur la Fig. 13 (haut) (`fig/superposition`, `fig_results.json`)
+
+Courbe au protocole de l'article : ρ₀(300², η 15 meV) + [ρ(c_i) − ρ₀](600², η 50 meV), interpolée sur les abscisses extraites ; rms sur [−1, +1] eV ; « ×2 » = nos valeurs
+multipliées par 2 (spin compté), sans autre changement.
+
+| variante | c_i | écart de position du max de ρ − ρ₀ (nous − Kaasbjerg) | rms ×1 | rms ×2 | rms ×2 avec ρ₀ 1 200² |
+|---|---|---|---|---|---|
+| tel quel | 0,1 % | +0,0375 | 0,0333 | 0,0040 | 0,0030 |
+| tel quel | 1 % | +0,0450 | 0,0349 | 0,0070 | 0,0064 |
+| aligné | 0,1 % | +0,0525 | 0,0333 | 0,0040 | 0,0030 |
+| aligné | 1 % | +0,0600 | 0,0351 | 0,0081 | 0,0076 |
+| eta_unique | 0,1 % | +0,0400 | 0,0333 | 0,0040 | 0,0029 |
+| eta_unique | 1 % | +0,0475 | 0,0349 | 0,0056 | 0,0049 |
+
+Hauteurs ×2 à 1 % : 0,0535 (tel quel), 0,0582 (aligné), 0,0427 (eta_unique) contre 0,0307 ; à 0,1 % : 0,0057 / 0,0062 / 0,0045 contre 0,00126. Largeurs à 1 % : 0,201 / 0,187 /
+0,252 contre 0,306 eV ; à 0,1 % : 0,191 / 0,175 / 0,241 contre 0,163 eV. Écarts rapportés, non investigués (amendement du 28 sept.).
+
+### Fichiers
+
+- `out/` : `prep/` (json), `gate/` (gate_results.json ; `res_<S>_<variante>_nk<N>.npz` : courbe Γ_T et T̄(K), 0,08 Mo chacun), `dos/` (json, `dos_9x9.npz` 0,46 Mo),
+  `spec/` (json 0,19 Mo ; `spectral_GKM_9x9.npz` **14 Mo**, cartes A_k float32, non copié dans `article/`), `sens/` (json, npz 0,13 Mo), `fig/fig_results.json`, `7a/`,
+  `r8_log.txt`. Chaque npz porte `prov` (convention c_i, unités, variante, C_N, md5 de a1_results.json, N_k^int, R_cut, η_t, η_G, grilles, md5 M2, run_id Wannier, HEAD,
+  sha256 de `disorder_average.py`, `local_tmatrix.py` et du pilote).
+- `fig/` : `dos_c`, `spectral_GKM`, `sensibilites`, `superposition`, `7a_controle` (pdf, png).
+- `cache/` : 10 g₀ + prep (6,1 Go apparents ; 849 Mo sur disque) — TEST, supprimables après consignation ; `cache_smoke/`, `out_smoke/`, `fig_smoke/` : tests, supprimables.
+  Aucune suppression faite.
+- `submitted/<jobid>/` (diffs), `JOBID`, `slurm-r8-*` : répertoire de travail seulement.
+- Copie `article/R8_kaasbjerg/` : rapport, README, pilote, lanceur, `out/` sans les npz > 5 Mo ni le journal, `fig/`.
+- Étapes 4 (Σ^eff) et 6 (modèle de Dirac) : non lancées (article, GO séparé).
+- Fonctions Q1–Q6 et `tests/test_r8_functions.py` : commitées par Greg dans d1161f4 (md5 identiques à ceux de la section « Fonctions écrites »).
+
+**STOP — R8 calculs du premier GO terminés le 2026-09-29.** Chiffres bruts. Pour la suite : décision sur les unités de la Fig. 13 (le rms ×2 est 5 à 8 fois plus petit
+que le rms ×1) ; étapes 4 et 6 sur GO séparé ; à la clôture de R8, réécriture de l'historique git (essai à blanc d'abord).

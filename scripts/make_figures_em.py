@@ -15,7 +15,6 @@ from pathlib import Path
 import numpy as np
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 
 ROOT = Path(__file__).resolve().parents[1]
 plt.style.use(ROOT / "figures" / "memoire.mplstyle")
@@ -25,7 +24,8 @@ ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default=str(ROOT / "
 EM = ROOT / "memoire" / "EM"
 LASERS = {1.96: "633", 2.33: "532", 2.54: "488"}        # eV : nm
 VARIANTS = ("full", "centres_only", "no_berry")
-# une couleur et un trait par variante de la vitesse, les mêmes dans les deux panneaux ; références (DFT, postw90) en gris
+# une couleur et un trait par variante de la vitesse, les mêmes dans les deux panneaux ; références en marqueurs gris ouverts
+# (DFT : cercles, postw90 : carrés), posés sur le mode complet qu'ils valident
 STYLE = {"full": dict(color=NAVY, lw=1.5, ls="-", label="complet"),
          "centres_only": dict(color=GREEN, lw=1.2, ls="-.", label="centres seuls"),
          "no_berry": dict(color=ORANGE, lw=1.3, ls=":", label="sans connexion de Berry")}
@@ -68,7 +68,8 @@ panel(a1, "a")
 # ---------------- (b) conductivité optique
 for v in VARIANTS:
     a2.plot(hw, s[v], **{**STYLE[v], "label": None})
-a2.plot(P["hw"], P["sigma"][:, 0, 0], color=REF, lw=0.8, ls=(0, (3, 2)), label="postw90")
+REF_P = dict(ls="none", marker="s", mfc="none", mew=0.7, color=REF, zorder=3)
+a2.plot(P["hw"][5::10], P["sigma"][5::10, 0, 0], ms=2.8, label="postw90", **REF_P)   # tous les 0.1 eV, pic de van Hove (4.05) compris
 a2.axhline(1, color=MUTED, lw=0.6, zorder=0)
 a2.axvline(hw_froz, color=MUTED, lw=0.8, ls="-.", zorder=0)
 a2.text(hw_froz + 0.07, 3.0, "limite de la fenêtre gelée", rotation=90, fontsize=7, color=INK, ha="left", va="bottom")
@@ -80,7 +81,7 @@ a2.set_xlabel(r"Énergie du photon $\hbar\omega$ (eV)"); a2.set_ylabel(r"$\sigma
 ins = a2.inset_axes([0.14, 0.52, 0.42, 0.40])
 for v in VARIANTS:
     ins.plot(hw, s[v], **{**STYLE[v], "lw": STYLE[v]["lw"] - 0.2, "label": None})
-ins.plot(P["hw"], P["sigma"][:, 0, 0], color=REF, lw=0.8, ls=(0, (3, 2)))
+ins.plot(P["hw"][::5], P["sigma"][::5, 0, 0], ms=2.8, **REF_P)
 for e, nm in LASERS.items():
     ins.axvline(e, color=C_LASER, lw=0.8, zorder=0); last = e == max(LASERS)   # « nm » une seule fois, sur la dernière, alignée à gauche pour ne pas toucher la précédente
     ins.text(e - (0.02 if last else 0), 1.81, nm + (" nm" if last else ""), fontsize=6, ha="left" if last else "center", va="bottom", color=INK, clip_on=False)

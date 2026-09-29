@@ -88,7 +88,7 @@ def Mwk_to_Mwr(Mwk, k_red, MP_grid):
 
     return Mwr, R
 
-def Mwr_to_Mwk(Mwr, R, k):
+def Mwr_to_Mwk(Mwr, R, k, ws=None):
     """
     Transforms the object in Mwr in real space in Wannier gauge to Mwk in reciprocal space in Wannier gauge. Here, the kpoint grid k can be any arbitrarily dense grid hence this function can be used to interpolate Mwk on a finer grid.
     Inputs:
@@ -98,21 +98,31 @@ def Mwr_to_Mwk(Mwr, R, k):
             Real space lattice vectors in reduced coordinates for which Mwr is defined.
         k: (nk, 3) array of floats
             k vectors in reduced coordinates for which to transform Mwr.
+        ws: dict or None
+            Wigner-Seitz images of R (ws_images); if given, exp(-/+ 2 pi i k.R) -> ws_phase(k, ws, nR, -/+1), for off-grid k.
     Returns:
         Mwk: (nw, nk, nw, nk) array of complex
             Object in reciprocal space in Wannier gauge.
     """
-    
+
+    nR = R.shape[0]
+
     # precompute phases
-    phase_kp = np.exp(-2j*np.pi * (k @ R.T)) # (nk, nr)
-    phase_k = phase_kp.conj() # (nk, nr)
+    if ws is not None:
+        assert len(ws["dist"]) == nR, "ws was built on other R labels than Mwr (len(ws['dist']) != len(R))"
+        bra = ws_phase(k, ws, nR, -1)
+        ket = ws_phase(k, ws, nR, +1)
+
+    else:
+        bra = np.exp(-2j*np.pi * (k @ R.T)) # (nk, nr)
+        ket = bra.conj() # (nk, nr)
 
     # sum over R 
-    Mwk = np.einsum("kr, wrWR, KR -> wkWK", phase_kp, Mwr, phase_k, optimize=True)
+    Mwk = np.einsum("kr, wrWR, KR -> wkWK", bra, Mwr, ket, optimize=True)  
 
     return Mwk
 
-def Mwr_to_Mwk_pairs(Mwr, R, k_bra, k_ket):
+def Mwr_to_Mwk_pairs(Mwr, R, k_bra, k_ket, ws=None):
     """
     Rectangular version of Mwr_to_Mwk (R9, 2026-09-28): the bra and ket k-points are two independent lists, so a few fixed k
     against a large map of k' costs O(n' + n) phases instead of the (nw*nk)^2 square array.
@@ -125,16 +135,26 @@ def Mwr_to_Mwk_pairs(Mwr, R, k_bra, k_ket):
         R: (nr, 3) ints, the R vectors of Mwr (reduced coordinates).
         k_bra: (nk', 3) floats, bra k-points k' (reduced coordinates).
         k_ket: (nk, 3) floats, ket k-points k (reduced coordinates).
+        ws: dict or None, Wigner-Seitz images of R (ws_images); if given, the phases are ws_phase(k_bra, ws, nR, -1) and ws_phase(k_ket, ws, nR, +1).
     Returns:
         Mwk: (nw, nk', nw, nk) complex, Wannier gauge, index [w, k', W, k] = [bra WF, k', ket WF, k].
     """
 
     R = np.asarray(R, dtype=float)
-    phase_bra = np.exp(-2j*np.pi * (np.asarray(k_bra, dtype=float) @ R.T)) # (nk', nr)
-    phase_ket = np.exp(+2j*np.pi * (np.asarray(k_ket, dtype=float) @ R.T)) # (nk, nr)
+    nR = R.shape[0]
+
+    if ws is not None:
+        assert len(ws["dist"]) == nR, "ws was built on other R labels than Mwr (len(ws['dist']) != len(R))"
+        bra = ws_phase(k_bra, ws, nR, -1)
+        ket = ws_phase(k_ket, ws, nR, +1)
+
+    else:
+        bra = np.exp(-2j*np.pi * (np.asarray(k_bra, dtype=float) @ R.T)) # (nk', nr)
+        ket = np.exp(+2j*np.pi * (np.asarray(k_ket, dtype=float) @ R.T)) # (nk, nr)
 
     # sum over R (bra side) and R' (ket side)
-    return np.einsum("kr, wrWR, KR -> wkWK", phase_bra, Mwr, phase_ket, optimize=True)
+    return np.einsum("kr, wrWR, KR -> wkWK", bra, Mwr, ket, optimize=True)
+
 
 def Mwk_to_Mbk(Mwk, Hwr, Rw, k, ndegen=None):
     """
@@ -254,3 +274,99 @@ def wannier_interpolate(M, k_coarse, k_fine, wannier_tb, u_path, u_dis_path=None
 
     return M_bk_fine, E_fine
 
+
+def _as_int(X, name):
+    """
+    X as an int array, rounded to the nearest integer (np.rint, never truncation). Raises ValueError naming `name` if X is not
+    integer to 1e-6 (e.g. a k-point passed instead of an R label).
+    """
+    X = np.asarray(X, float)
+    if np.allclose(X, np.rint(X), atol=1e-6, rtol=0):
+        return np.rint(X).astype(int)
+    else:
+        raise ValueError(f'integer rounding error in {name}')
+
+
+def ws_images(R, R_center, MP, A_cols, tol=1e-6):
+    """
+    Wigner-Seitz images of the M_W labels (defined modulo the MP superlattice D s), centred on the defect: among
+    R - R_center + D s, s in {-1, 0, 1}^2, keep those nearest in CARTESIAN distance, weight 1/n_tie each (Wannier90's ndegen).
+    Inputs:
+        R:        (nR, 3) ints, labels of Mwk_to_Mwr (raw) or of recenter_mwr (recentred).
+        R_center: (3,) ints, R_d for raw labels, 0 for recentred ones.
+        MP:       (3,) ints, MP grid (D1, D2, 1) of M, i.e. the period of the labels.
+        A_cols:   (3, 3) floats, unit-cell vectors in columns.
+        tol:      float, absolute tie tolerance, in the length unit of A_cols.
+    Returns: dict with
+        R_img: (n_img, 3) ints, kept images (absolute labels, = R[idx] modulo D).
+        idx:   (n_img,) ints, row of R each image belongs to.
+        w:     (n_img,) floats, 1/n_tie[idx].
+        dist:  (nR,) floats, true distance to R_center, in the length unit of A_cols.
+        n_tie: (nR,) ints, number of images kept per label.
+    """
+
+    A_cols = np.asarray(A_cols, float)
+
+    # convert arrays to integer
+    R = _as_int(R, 'R') # (nR, 3)
+    R_center = _as_int(R_center, 'R_center') # (3,)
+    D = _as_int(MP, 'MP') # (3,)
+
+    # compute relative vector
+    d = R - R_center # (nR, 3) int
+
+    # bring d into [-D/2, D/2)
+    d = (d + D//2 ) % D - D//2
+
+    # construct table of the supercell's nine translations
+    s = np.array([-1, 0, 1])
+    T = np.array([(i,j,0) for i in s for j in s])
+    T = D * T # (9, 3)
+
+    # compute candidates
+    c = d[:, None, :] + T[None, :, :] # (nR, 9, 3)
+    c_cart = c @ A_cols.T
+
+    L = np.linalg.norm(c_cart, axis=-1) # (nR, 9), lengths
+    dist = np.min(L, axis=-1) # (nR, ), minimum distance
+
+    mask = L <= dist[:, None] + tol # (nR, 9), bool
+    n_tie = np.sum(mask, axis=1) # (nR,)
+
+    idx, j = np.nonzero(mask) # 2*(n_img, )
+
+    R_img = R_center[None, :] + c[idx, j, :] # (n_img, 3) int labels
+    w = np.asarray(1 / n_tie[idx], float) # (n_img)
+
+    return {'R_img': R_img, 'idx': idx, 'w': w, 'dist': dist, 'n_tie': n_tie}
+
+def ws_phase(k, ws, nR, sign):
+    """
+    Phase matrix of the Wigner-Seitz images, Phi(k, r) = sum_{a : idx_a = r} w_a exp(sign 2 pi i k.R_img_a); on the MP grid
+    it equals exp(sign 2 pi i k.R_r).
+    Inputs:
+        k:    (nk, 3) floats, k-points in reduced coordinates.
+        ws:   dict returned by ws_images (uses R_img, idx, w).
+        nR:   int, number of labels R (rows of the R passed to ws_images).
+        sign: +1 (ket side) or -1 (bra side).
+    Returns:
+        Phi:  (nk, nR) complex.
+    """
+
+    k = np.atleast_2d(np.asarray(k, float)
+                      )
+    R_img = ws["R_img"] # (n_img, 3), ints
+    dot = k @ R_img.T # (nk, n_img)
+    phase = sign * 2j*np.pi * dot
+
+    w = ws["w"] # (n_img)
+    idx = ws['idx'] # (n_img)
+    n_img = len(w)
+
+
+    I = np.zeros((len(w), nR)) # (n_img, nR)
+    I[np.arange(n_img), idx] = w 
+
+    Phi = np.exp(phase) @ I # (nk, nR)
+
+    return Phi

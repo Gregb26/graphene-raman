@@ -21,6 +21,7 @@ local_tmatrix.py
 import numpy as np
 
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr
 
 
 def mp_grid(n1, n2=None, n3=1):
@@ -303,3 +304,42 @@ def scattering_rate_fast(Hwr, Rw, ndegen, V_loc, R_local, k_out, eta, k_int=None
     if positivity_atol is not None and g.size and g.min() < -positivity_atol:
         raise AssertionError(f"positivity: min Gamma = {g.min():.2e} < 0 (sign/gauge bug)")
     return gamma
+
+
+def defect_mwr(Mbk, U, U_dis, k, MP, n_box, C_N=0.0):
+    """
+    M_W(R, R') of the defect for the chain (R10): rotation V^dag M V, double FT, alignment M_W(R, R) -= C_N for every Wannier
+    function and every cell of the N x N supercell box (approximation (i), Delta V - C_N), then recentring on the defect.
+    Inputs:
+        Mbk:    (nb, nk, nb, nk) complex, M in Bloch gauge on the MP grid k (eV).
+        U:      (nk, nb, nw) or (nk, nw, nw) complex, Wannier gauge matrix (see Mbk_to_Mwk).
+        U_dis:  (nk, nb, nw) complex or None, disentanglement matrix.
+        k:      (nk, 3) floats, full unshifted MP grid in reduced coordinates.
+        MP:     (3,) ints, MP grid (D1, D2, 1): D = N (coarse) or pN (dense).
+        n_box:  int, supercell size N; box = cells with (R mod D) in [0, N)^2, on the raw labels.
+        C_N:    float, far-field Delta V in the unit of Mbk (e.g. -25.14 meV for 9x9), subtracted; 0 = no alignment.
+    Returns: dict with
+        Mwr:    (nw, nR, nw, nR) complex, aligned M_W(R, R').
+        R:      (nR, 3) ints, raw labels of Mwk_to_Mwr.
+        Rn:     (nR, 3) ints, labels recentred on the defect (recenter_mwr).
+        R_d:    (3,) ints, defect cell in the raw labels.
+        in_box: (nR,) bool, cells of the supercell box.
+    """
+
+    Mwk = Mbk_to_Mwk(Mbk, U, U_dis) # (nW, nk, nW, nk)
+    Mwr, R = Mwk_to_Mwr(Mwk, k, MP) # (nW, nR, nW, nR), (nR, 3)
+
+    *_, nW, nR = Mwr.shape
+
+    c = R.copy()
+    c[:, :2] %= MP[:2] # (nR, 3)
+
+    in_box = np.all(c[:,:2] < n_box, axis=1)
+
+    for w in range(nW):
+        Mwr[w, in_box, w, in_box] -= C_N
+
+    Rn, R_d = recenter_mwr(Mwr, R, MP)
+
+    return {"Mwr": Mwr, "R": R, "Rn": Rn, "R_d": R_d, "in_box": in_box}
+

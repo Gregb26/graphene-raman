@@ -219,13 +219,13 @@ Après validation P1, proposer (pas exécuter) la liste des `_ph0` à archiver/s
 ## 5. En attente de l'utilisateur
 
 - `_ph0` supprimés le 2026-09-10 sur instruction : 30k-30q (334 Go ; **sans** save/ : ses dvscf sont perdus, les dyn*.xml restent, 438 Mo) et 24k-24q (140 Go ; save/ vérifié 123/123 identiques avant suppression). Restent : 16k-16q 30 Go, 12k-12q 9.8 Go, 16k-8q (non arbitrés).
-- Commits à pousser (dépôt ab-initio-defects) : 14e07db, a9855af, cb94d4b, d2d0bac, d49f5bb.
+- Commits à pousser (dépôt ab-initio-defects) : d617f4b, ff39c7f, e8fe798, 9e0d1a9, 2be8d79.
 
 ## 6. Reprise (prochaine session)
 
 0. P18 (2026-09-21) : chaîne 24k-24q_mv0.02 complète, §1g ; figures génériques = mv0.02, anciennes en `_mv0.002` ; A1' par caractère (P18b). Non arbitré : quelle chaîne le chapitre cite (0.002 documentée en §1c–1f, 0.02 en §1g) ; `_ph0` de 24k-24q_mv0.02 (140 + 56 + 56 Go) à archiver/supprimer après arbitrage.
 1. Figures faites et inspectées (`scripts/make_figures_epw.py --prod-tag 240_dg0.02 --phself-tag path_1200_dg0.02`). Facteur 2 tranché empiriquement en P7 (§1d) ; vérifier les valeurs de Piscanec 2004 / Lazzeri 2008 dans Zotero et, si souhaité, lancer le prtgkk « anneau » de 30 s.
-2. Commits à pousser (dépôt) : ba151b3, bc83f91 et le commit de retouche de figure ; vérifier `git log`.
+2. Commits à pousser (dépôt) : 95ee83c, 26a9956 et le commit de retouche de figure ; vérifier `git log`.
 3. Reste non arbitré : `_ph0` de 16k-16q, 12k-12q, 16k-8q ; P3 phonselfen si le plan le réintroduit.
 
 ## 1g. P18 — chaîne complète refaite à degauss 0.02 Ry (`24k-24q_mv0.02/`, 2026-09-20/21)

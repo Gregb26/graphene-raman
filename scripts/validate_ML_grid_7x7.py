@@ -12,7 +12,7 @@ if sys.argv[1] == "ref":
     np.save(f"{RES}/_ML_7x7_ref_b4.npy", M); print("ref saved", M.shape, "max", np.abs(M).max())
 else:
     import os
-    if not os.path.exists(f"{RES}/_ML_7x7_ref_b4.npy"): raise SystemExit(f"[non rejouable] {RES}/_ML_7x7_ref_b4.npy absent : relancer d'abord `validate_ML_grid_7x7.py ref` (noyau série corrigé, 09280bb)")
+    if not os.path.exists(f"{RES}/_ML_7x7_ref_b4.npy"): raise SystemExit(f"[non rejouable] {RES}/_ML_7x7_ref_b4.npy absent : relancer d'abord `validate_ML_grid_7x7.py ref` (noyau série corrigé, a223687)")
     ref = np.load(f"{RES}/_ML_7x7_ref_b4.npy"); new = np.load(f"{RES}/M_L_dense_7x7_coarsecheck.npy"); old = np.load(f"{RES}/M_L_7x7.npy")[:4, :, :4, :]
     for name, X in (("fixed MPI kernel (resampled 224)", new), ("OLD M_L_7x7 (ix % 30 on a 216 grid)", old)):
         print(f"{name}: max|X - ref| / max|ref| = {np.abs(X - ref).max() / np.abs(ref).max():.3e}; diag rel {np.abs(np.einsum('nknk->nk', X) - np.einsum('nknk->nk', ref)).max() / np.abs(np.einsum('nknk->nk', ref)).max():.3e}")

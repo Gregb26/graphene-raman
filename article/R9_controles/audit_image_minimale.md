@@ -3,7 +3,7 @@
 - Prompt : « Audit — image minimale dans une cellule à 60° (écart 2 de R9) et contour de zone de analyze_M.py (écart 3) » (Greg, 2026-09-28),
   à la suite du STOP de la clôture de R9.
 - Statut : **TEST**, lecture seule. Aucune campagne, aucun job. Rien de modifié dans `src/`, `scripts/`, `config/`, `results/`, ni dans les
-  pilotes et rapports existants ; seule la sous-commande `audit` a été ajoutée à `r9_driver.py`. Git en lecture (HEAD ab2d884).
+  pilotes et rapports existants ; seule la sous-commande `audit` a été ajoutée à `r9_driver.py`. Git en lecture (HEAD 1883861).
 - Exécution : `python r9_driver.py audit` sur le nœud de connexion, géométrie seule. Sortie : `audit/audit_results.json`.
   L'option `--parts` permet de rejouer une partie seule ; le résultat est alors fusionné dans le json.
 - Chiffres bruts. Les corrections sont proposées au §7 ; aucune n'a été appliquée.

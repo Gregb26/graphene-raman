@@ -2,7 +2,7 @@
 
 Campagne R9 (contrôles avant le chapitre 4, puis clôture « rejeu C_N = plateau »), statut **TEST**. Établi le 2026-09-28 après la clôture.
 **Aucun fichier n'est promu en production** : rien n'est écrit dans `results/`, `config/`, `scripts/` ; les fonctions P1–P4 de `src/` sont des fonctions de bibliothèque
-(commit 5a4bc94), pas des résultats. La suppression de `cache/` fait l'objet d'un GO séparé sur ce manifeste.
+(commit cb7241d), pas des résultats. La suppression de `cache/` fait l'objet d'un GO séparé sur ce manifeste.
 
 | catégorie | contenu | taille |
 |---|---|---|
@@ -14,35 +14,35 @@ Campagne R9 (contrôles avant le chapitre 4, puis clôture « rejeu C_N = platea
 
 | chemin | taille | état git |
 |---|---|---|
-| `article/R9_controles/R9_rapport.md` | 76,03 ko | modifié depuis 5a4bc94 |
-| `article/R9_controles/README.md` | 1,71 ko | modifié depuis 5a4bc94 |
-| `article/R9_controles/r9_driver.py` | 124,74 ko | modifié depuis 5a4bc94 |
-| `article/R9_controles/submit_r9.sh` | 7,02 ko | modifié depuis 5a4bc94 |
-| `article/R9_controles/a2/a2c_9x9.json` | 405 o | commité (5a4bc94), inchangé |
-| `article/R9_controles/a2/a2d_5x5.json` | 29,78 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/a2/a2d_9x9.json` | 29,91 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/a/A1_tables.md` | 2,14 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/a/A3_tables.md` | 8,72 ko | commité (5a4bc94), inchangé (restauré, voir le rapport) |
+| `article/R9_controles/R9_rapport.md` | 76,03 ko | modifié depuis cb7241d |
+| `article/R9_controles/README.md` | 1,71 ko | modifié depuis cb7241d |
+| `article/R9_controles/r9_driver.py` | 124,74 ko | modifié depuis cb7241d |
+| `article/R9_controles/submit_r9.sh` | 7,02 ko | modifié depuis cb7241d |
+| `article/R9_controles/a2/a2c_9x9.json` | 405 o | commité (cb7241d), inchangé |
+| `article/R9_controles/a2/a2d_5x5.json` | 29,78 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/a2/a2d_9x9.json` | 29,91 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/a/A1_tables.md` | 2,14 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/a/A3_tables.md` | 8,72 ko | commité (cb7241d), inchangé (restauré, voir le rapport) |
 | `article/R9_controles/a/A3_tables_plateau.md` | 6,58 ko | non suivi |
-| `article/R9_controles/a/a0_gate.json` | 446 o | commité (5a4bc94), inchangé |
-| `article/R9_controles/a/a1_results.json` | 9,58 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/a/a3_results.json` | 36,46 ko | commité (5a4bc94), inchangé |
+| `article/R9_controles/a/a0_gate.json` | 446 o | commité (cb7241d), inchangé |
+| `article/R9_controles/a/a1_results.json` | 9,58 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/a/a3_results.json` | 36,46 ko | commité (cb7241d), inchangé |
 | `article/R9_controles/a/a3_results_plateau.json` | 182,21 ko | non suivi |
 | `article/R9_controles/a/r0_gate.json` | 544 o | non suivi |
-| `article/R9_controles/b/B_tables.md` | 7,29 ko | commité (5a4bc94), inchangé |
+| `article/R9_controles/b/B_tables.md` | 7,29 ko | commité (cb7241d), inchangé |
 | `article/R9_controles/b/B_tables_plateau.md` | 5,46 ko | non suivi |
-| `article/R9_controles/b/b_results.json` | 21,72 ko | commité (5a4bc94), inchangé |
+| `article/R9_controles/b/b_results.json` | 21,72 ko | commité (cb7241d), inchangé |
 | `article/R9_controles/b/b_results_plateau.json` | 16,03 ko | non suivi |
-| `article/R9_controles/fig/folded_vs_R7.pdf` | 304,36 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/fig/folded_vs_R7.png` | 61,79 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/fig/kaasbjerg_fig3_map.pdf` | 851,80 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/fig/kaasbjerg_fig3_map.png` | 383,97 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/fig/offset_profiles.pdf` | 423,86 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/fig/offset_profiles.png` | 71,81 ko | commité (5a4bc94), inchangé |
+| `article/R9_controles/fig/folded_vs_R7.pdf` | 304,36 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/fig/folded_vs_R7.png` | 61,79 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/fig/kaasbjerg_fig3_map.pdf` | 851,80 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/fig/kaasbjerg_fig3_map.png` | 383,97 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/fig/offset_profiles.pdf` | 423,86 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/fig/offset_profiles.png` | 71,81 ko | commité (cb7241d), inchangé |
 | `article/R9_controles/fig/rcut_aligned.pdf` | 481,63 ko | non suivi |
 | `article/R9_controles/fig/rcut_aligned.png` | 83,30 ko | non suivi |
-| `article/R9_controles/fig/resonance_vs_nkint.pdf` | 522,41 ko | modifié depuis 5a4bc94 |
-| `article/R9_controles/fig/resonance_vs_nkint.png` | 72,74 ko | modifié depuis 5a4bc94 |
+| `article/R9_controles/fig/resonance_vs_nkint.pdf` | 522,41 ko | modifié depuis cb7241d |
+| `article/R9_controles/fig/resonance_vs_nkint.png` | 72,74 ko | modifié depuis cb7241d |
 | `article/R9_controles/fig/resonance_vs_nkint_R9.pdf` | 521,33 ko | non suivi |
 | `article/R9_controles/fig/resonance_vs_nkint_R9.png` | 61,86 ko | non suivi |
 | `article/R9_controles/fig/resonance_vs_nkint_plateau.pdf` | 519,19 ko | non suivi |
@@ -52,16 +52,16 @@ Campagne R9 (contrôles avant le chapitre 4, puis clôture « rejeu C_N = platea
 | `article/R9_controles/cloture/r9_driver_propose.py` | 123,35 ko | non suivi |
 | `article/R9_controles/cloture/submit_r9_propose.sh` | 7,02 ko | non suivi |
 | `article/R9_controles/cloture/synthese.md` | 15,66 ko | non suivi |
-| `article/R9_controles/c/C_tables.md` | 6,80 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/c/c_results.json` | 75,92 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/d/D_tables.md` | 1,67 ko | commité (5a4bc94), inchangé |
-| `article/R9_controles/d/d_results.json` | 3,66 ko | commité (5a4bc94), inchangé |
+| `article/R9_controles/c/C_tables.md` | 6,80 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/c/c_results.json` | 75,92 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/d/D_tables.md` | 1,67 ko | commité (cb7241d), inchangé |
+| `article/R9_controles/d/d_results.json` | 3,66 ko | commité (cb7241d), inchangé |
 | `article/R9_controles/manifeste_R9.md` | ce fichier | non suivi |
-| `src/electron_defect_interaction/defects/alignment.py` | 10,77 ko | commité (5a4bc94), inchangé |
-| `src/electron_defect_interaction/wannier/wannier_interpolation.py` | 12,24 ko | commité (5a4bc94), inchangé |
-| `src/electron_defect_interaction/defects/many_body/local_tmatrix.py` | 15,02 ko | commité (5a4bc94), inchangé |
-| `src/electron_defect_interaction/wannier/supercell_fold.py` | 8,35 ko | commité (5a4bc94), inchangé |
-| `tests/test_r9_functions.py` | 4,40 ko | commité (5a4bc94), inchangé |
+| `src/electron_defect_interaction/defects/alignment.py` | 10,77 ko | commité (cb7241d), inchangé |
+| `src/electron_defect_interaction/wannier/wannier_interpolation.py` | 12,24 ko | commité (cb7241d), inchangé |
+| `src/electron_defect_interaction/defects/many_body/local_tmatrix.py` | 15,02 ko | commité (cb7241d), inchangé |
+| `src/electron_defect_interaction/wannier/supercell_fold.py` | 8,35 ko | commité (cb7241d), inchangé |
+| `tests/test_r9_functions.py` | 4,40 ko | commité (cb7241d), inchangé |
 
 ## Gardé dans le répertoire de travail (`graphene/qe/defects/R9_controles/`)
 
@@ -225,7 +225,7 @@ recréent d'eux-mêmes à la première sous-commande qui en a besoin.
 | `cache/g0_9x9_nk900.json` | 983 o | g₀ sur l'amas, 9x9, 900², R_cut 3, grille « res » — métadonnées | automatique (`g0_cached`, sous-commande b) : 8,5 min |
 | `cache/g0_9x9_nk900.npy` | 813,08 Mo | g₀ sur l'amas, 9x9, 900², R_cut 3, grille « res » | automatique (`g0_cached`, sous-commande b) : 8,5 min |
 
-## git status (lecture, 2026-09-28 18:00) — branche main à jour avec origin/main (dernier commit 5a4bc94 « R9 checkpoint »)
+## git status (lecture, 2026-09-28 18:00) — branche main à jour avec origin/main (dernier commit cb7241d « R9 checkpoint »)
 
 ```
  M article/R9_controles/R9_rapport.md
@@ -251,8 +251,8 @@ recréent d'eux-mêmes à la première sous-commande qui en a besoin.
 
 ## À commiter par Greg
 
-- `article/R9_controles/` : fichiers modifiés depuis 5a4bc94 (`R9_rapport.md`, `README.md`, `r9_driver.py`, `submit_r9.sh`, `fig/resonance_vs_nkint.{pdf,png}`) et nouveaux
+- `article/R9_controles/` : fichiers modifiés depuis cb7241d (`R9_rapport.md`, `README.md`, `r9_driver.py`, `submit_r9.sh`, `fig/resonance_vs_nkint.{pdf,png}`) et nouveaux
   (`manifeste_R9.md`, `a/a3_results_plateau.json`, `a/A3_tables_plateau.md`, `a/r0_gate.json`, `b/b_results_plateau.json`, `b/B_tables_plateau.md`, `cloture/` (5 fichiers), `fig/rcut_aligned.{pdf,png}`,
   `fig/resonance_vs_nkint_R9.{pdf,png}`, `fig/resonance_vs_nkint_plateau.{pdf,png}`).
-- `src/` (P1–P4) et `tests/test_r9_functions.py` : déjà commités dans 5a4bc94, inchangés depuis ; rien à commiter.
+- `src/` (P1–P4) et `tests/test_r9_functions.py` : déjà commités dans cb7241d, inchangés depuis ; rien à commiter.
 - Les autres lignes de `git status` (s'il y en a hors `article/R9_controles/`) ne viennent pas de R9.

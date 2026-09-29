@@ -16,5 +16,5 @@
 - Contenu (phase 0) : `R6_rapport.md` (inventaire 0.1–0.5, plan, coûts), `phase0/*.diff` (diffs proposés, NON appliqués :
   `local_R.py`, `local_G.py`, `config.py`, `matrix_io.py`, `compute_M.py`, `production.json`),
   `phase0/README_results_M_gele.md` (texte du README à déposer dans `results/M/` au GO 1).
-- État du dépôt au moment de la phase 0 : HEAD f4b7ec3 (EM1), `article/R5_base_vs_M/` non suivi, `article/R4_quasi_lie/R4_rapport.md`
+- État du dépôt au moment de la phase 0 : HEAD a5afdd4 (EM1), `article/R5_base_vs_M/` non suivi, `article/R4_quasi_lie/R4_rapport.md`
   modifié (erratum R5), rien commité par Code.

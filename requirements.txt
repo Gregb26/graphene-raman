@@ -14,7 +14,7 @@ contourpy==1.3.3
 cycler==0.12.1
 debugpy==1.8.16
 decorator==5.2.1
--e git+https://github.com/Gregb26/ab-initio-electron-defect-interaction@d4d794e8fccb488526fff6dff5b28f4e957b05f1#egg=electron_defect_interaction
+-e git+https://github.com/Gregb26/ab-initio-electron-defect-interaction@4dfe83174fdf3e0dfe380c205f9e1f5416f73f2d#egg=electron_defect_interaction
 executing==2.2.0
 fonttools==4.59.1
 h5py==3.15.0

@@ -83,7 +83,7 @@ reproductible ou redondant (voir §2 et §3c).
 | Répertoire | Taille | Fichiers | Contenu le plus récent (mtime) | Dernier accès |
 |---|---|---|---|---|
 | `graphene/` | 1 763,5 G | 79 629 | 2026-09-14 | 2026-09-16 |
-| `ab-initio-defects/` (dépôt git, `main`, dernier commit ab98f6b 2026-09-15) | 160,8 G | 16 885 | 2026-09-16 | 2026-09-16 |
+| `ab-initio-defects/` (dépôt git, `main`, dernier commit 3f2ac7a 2026-09-15) | 160,8 G | 16 885 | 2026-09-16 | 2026-09-16 |
 | `codes/` | 2,8 G | 16 700 | 2026-01-19 | 2026-09-16 |
 | `abinit_assignment/` | 2,4 G | 208 | 2026-05-28 | 2026-05-29 |
 | `dft/` | 1,2 G | 701 | 2025-11-24 | 2025-11-26 |

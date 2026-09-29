@@ -150,7 +150,7 @@ seuils 0.1831 / 0.0812 / 0.0457). Référence trois points (R5) : π 1/N ε_∞ 
 
 Code prévu (répertoire de travail, rien dans `src/`) : `r7_driver.py` (sous-commande `d1` ; réutilise `r5_driver.window_states_gamma`,
 `load_pot_eV`, le schéma `sc_paths`, `r5_alignment_ext.{dirac_quadruplet,size_fits}` et les modules `qe_gamma_io`, `alignment`
-commis dans 75c8656 ; routines de production intouchées) + `submit_r7.sh` (patron `submit_r5.sh`). Coût : R5 C sur huit tailles
+commis dans 112617d ; routines de production intouchées) + `submit_r7.sh` (patron `submit_r5.sh`). Coût : R5 C sur huit tailles
 2 min 38, MaxRSS 2,6 G (12×12 : 55/57 états, lecture 12 s) ; 18×18 ≈ 125 états × 1,54 M npw × 16 o = 3,1 G de coefficients +
 FFT 540×540×192 → ≈ 8–10 G, quelques minutes par taille → job 16 cœurs, 64 G, 1 h.
 

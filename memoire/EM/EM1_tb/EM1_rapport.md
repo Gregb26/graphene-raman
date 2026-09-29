@@ -311,7 +311,7 @@ Unités : Å (réseau, r) et eV (H). 40 070 lignes = 56 lignes d'en-tête + 741 
   (`memoire/EM1_tb/` + CLAUDE.md ; copie faite par `cp -p` depuis le répertoire de travail, `wannier.win.diff` = `diff -u` référence → copie).
 - **Statut PRODUCTION** : aucun `.save` produit, rien sur le scratch ; toutes les sorties (≤ 3,9 Mo) sont dans le répertoire de travail sur
   `/project`. Le `.save` du nscf d'origine est déjà miroité (`qe_tmp_backup/defect_uc_dense_27/`, md5 2026-09-17, 5 fichiers revérifiés).
-- Dépôt `graphene-raman` : propre avant EM1 (HEAD `75c8656`, R4 terminé) ; seul ajout = `memoire/EM1_tb/` + CLAUDE.md ; rien du mémoire (ch. 4/5) touché.
+- Dépôt `graphene-raman` : propre avant EM1 (HEAD `112617d`, R4 terminé) ; seul ajout = `memoire/EM1_tb/` + CLAUDE.md ; rien du mémoire (ch. 4/5) touché.
 
 ## Fichiers du répertoire de travail
 

@@ -4,7 +4,7 @@ assemble_M2.py -- R6 (2026-09-25): reassemble a production M with the corrected 
 
     M2 = N_cells * M^L(v1) + M^NL          (both parts in unit-cell Bloch norm)
 
-v1 = any M^L file produced before commit ee051ec (kernels compute_ML_R* with psi normalized over the SUPERCELL: the local
+v1 = any M^L file produced before commit 99d64da (kernels compute_ML_R* with psi normalized over the SUPERCELL: the local
 part is N_cells = Omega_sc/Omega_uc times too small relative to M^NL, R5-A.2). Nothing is recomputed and no input is ever
 modified. Outputs are new files (refused if they exist, unless --force), each with a JSON sidecar carrying
 bloch_norm=unit_cell, units=hartree, M_normalization="v2 ...", N_cells, assembled_from, date, md5:
@@ -72,7 +72,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--ml", help="M^L v1 file (supercell-normalized local part): scaled by N_cells")
-    g.add_argument("--ml-v2", help="M^L already in unit-cell norm (corrected kernel, commit ee051ec): copied, not scaled")
+    g.add_argument("--ml-v2", help="M^L already in unit-cell norm (corrected kernel, commit 99d64da): copied, not scaled")
     ap.add_argument("--nl", help="M^NL file (unchanged by R6)")
     ap.add_argument("--nl-from-diff", metavar="M_ED_V1", help="M^NL = M_ed(v1) - M^L(v1); M^L(v1) is --ml, or --diff-ml, or --ml-v2 / N_cells")
     ap.add_argument("--diff-ml", help="explicit M^L(v1) for --nl-from-diff (e.g. a June M^L known to be wrong but summed into M_ed)")

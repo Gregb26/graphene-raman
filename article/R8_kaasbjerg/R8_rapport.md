@@ -3,7 +3,7 @@
 Statut **TEST** (post-traitement seul ; à confirmer par Greg au GO). Prompt R8 (Greg, 2026-09-27) et ajout du même jour (phase 0 seule ;
 GO après R9 ; un seul ensemble de fonctions avec R9 ; rien dans `src/` ni `results/` en phase 0 ; portée mémoire = étapes 1–3, 5, 7 ; étapes 4
 et 6 pour l'article, planifiées, non lancées au premier GO). Ordre : phase 0 → STOP → (Greg : fonctions nouvelles) → (GO) calculs → rapport →
-STOP. Dépôt `graphene-raman`, HEAD e4122ab (« R6 clos ») ; seul fichier non suivi : `article/R9_controles/`. Répertoire de travail
+STOP. Dépôt `graphene-raman`, HEAD d90c929 (« R6 clos ») ; seul fichier non suivi : `article/R9_controles/`. Répertoire de travail
 `graphene/qe/defects/R8_kaasbjerg/`, copie versionnée `article/R8_kaasbjerg/`. Chiffres bruts, sans interprétation.
 
 ## Phase 0 (2026-09-27 ; rien n'est calculé)
@@ -267,9 +267,9 @@ Amendement « R8 — 28 septembre, après R9 » + ajout (pic de la courbe Γ_T e
 la phase 0 ci-dessus n'est pas réécrite, cette section la complète et la remplace là où elle le dit. Le GO attend en plus l'audit de l'image minimale
 (session séparée). Opérations faites : lectures de `article/R9_controles/R9_rapport.md` (A, B, C, D, Clôture), du code de P2 (`Mwr_to_Mwk_pairs`,
 `wannier_interpolation.py` l. 115–137) et de P3 (`cluster_ldos`, `local_tmatrix.py` l. 167–195), de `tests/test_r9_functions.py`, de
-`R9_controles/a/a1_results.json` et de lignes de `r9_driver.py` (grille « res », `NN_CELLS`, C.3). Dépôt : HEAD ab2d884 (« R9 finished ») ; P1–P4 et leurs tests
-sont commités (5a4bc94) ; `article/R8_kaasbjerg/` commité dans b257e7b. **Le PDF est sur Rorqual depuis le 2026-09-28 14 h 47** :
-`article/R8_kaasbjerg/ref/kaasbjerg_2020_prb101_045433.pdf` (25 pages, md5 25e169d573441ffac17bd380cd77379c, commité dans b257e7b ; il n'est pas dans le
+`R9_controles/a/a1_results.json` et de lignes de `r9_driver.py` (grille « res », `NN_CELLS`, C.3). Dépôt : HEAD 1883861 (« R9 finished ») ; P1–P4 et leurs tests
+sont commités (cb7241d) ; `article/R8_kaasbjerg/` commité dans f2518d7. **Le PDF est sur Rorqual depuis le 2026-09-28 14 h 47** :
+`article/R8_kaasbjerg/ref/kaasbjerg_2020_prb101_045433.pdf` (25 pages, md5 25e169d573441ffac17bd380cd77379c, commité dans f2518d7 ; il n'est pas dans le
 répertoire de travail, où la phase 0 le cherchait). Lu en texte (`pdftotext`, dans le scratchpad de la session) et inspecté (`pdfimages -list`, `mutool trace`
 pages 14–15 : comptes de balises seulement) ; aucune courbe extraite, aucune position lue sur une figure. Aucune écriture hors de `R8_kaasbjerg/` et de sa copie.
 
@@ -684,7 +684,7 @@ Hauteurs ×2 à 1 % : 0,0535 (tel quel), 0,0582 (aligné), 0,0427 (eta_unique) c
 - `submitted/<jobid>/` (diffs), `JOBID`, `slurm-r8-*` : répertoire de travail seulement.
 - Copie `article/R8_kaasbjerg/` : rapport, README, pilote, lanceur, `out/` sans les npz > 5 Mo ni le journal, `fig/`.
 - Étapes 4 (Σ^eff) et 6 (modèle de Dirac) : non lancées (article, GO séparé).
-- Fonctions Q1–Q6 et `tests/test_r8_functions.py` : commitées par Greg dans d1161f4 (md5 identiques à ceux de la section « Fonctions écrites »).
+- Fonctions Q1–Q6 et `tests/test_r8_functions.py` : commitées par Greg dans cff65cd (md5 identiques à ceux de la section « Fonctions écrites »).
 
 **STOP — R8 calculs du premier GO terminés le 2026-09-29.** Chiffres bruts. Pour la suite : décision sur les unités de la Fig. 13 (le rms ×2 est 5 à 8 fois plus petit
 que le rms ×1) ; étapes 4 et 6 sur GO séparé ; à la clôture de R8, réécriture de l'historique git (essai à blanc d'abord).

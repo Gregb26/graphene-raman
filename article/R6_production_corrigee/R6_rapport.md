@@ -2,7 +2,7 @@
 
 Statut PRODUCTION. Prompt R6 (Greg, 2026-09-25). Ordre : phase 0 → STOP → étape G (Greg corrige le noyau, commit) → (GO 1)
 assemblage et portes → STOP → (GO 2) validation super-cellule → STOP → (GO 3) production du chapitre 4 → rapport → STOP.
-Dépôt `graphene-raman`, HEAD f4b7ec3 au moment de la phase 0 ; racine `$GRAPHENE_RAMAN`. Chiffres bruts, sans interprétation.
+Dépôt `graphene-raman`, HEAD a5afdd4 au moment de la phase 0 ; racine `$GRAPHENE_RAMAN`. Chiffres bruts, sans interprétation.
 
 ## Phase 0 — Inventaire (2026-09-25 ; rien n'est calculé, rien n'est modifié dans le dépôt ni dans `results/`)
 
@@ -78,7 +78,7 @@ l. 59–62 (`kbasis_matrix`), `scripts/test_local_tmatrix_real.py:42–48` (`com
 
 ### 0.2 Le noyau local
 
-#### Lignes où la normalisation entre (`src/electron_defect_interaction/defects/local_R.py`, HEAD f4b7ec3)
+#### Lignes où la normalisation entre (`src/electron_defect_interaction/defects/local_R.py`, HEAD a5afdd4)
 
 | noyau | lignes | contenu |
 |---|---|---|
@@ -255,7 +255,7 @@ Décisions attendues de Greg avant GO 1 :
 
 **STOP — phase 0 terminée le 2026-09-25.** Rien n'est calculé, rien n'est appliqué ; attente de l'étape G puis du GO 1.
 
-## Étape G — lecture du commit de Greg (ee051ec, 2026-09-25 16:00, « correction de la normalisation du noyau local »)
+## Étape G — lecture du commit de Greg (99d64da, 2026-09-25 16:00, « correction de la normalisation du noyau local »)
 
 Le clone local était en retard d'un commit (Greg a poussé depuis une autre machine) : `git pull --ff-only` fait par Code (avance
 rapide, aucune fusion, arbre propre ; seul acte git de la campagne). Diff du commit : `local_R.py` (+5/−2) et `fold_wfk_to_sc.py` (+1/−1).
@@ -298,14 +298,14 @@ Le premier J1 a calculé les M^L grossiers 9×9 (143 s, 32 rangs), 7×7 (62 s, g
 
 | test | résultat | attendu |
 |---|---|---|
-| M^L 9×9 grossier (16 b, 81 k), noyau `compute_ML_R_mpi` ee051ec, contre 81 × `M_L_9x9.npy` (juin) | max\|v2 − 81 v1\| / max\|81 v1\| = **8,97e-16** ; rapport v2/(81 v1) médian 1,000000 (min 1,0000, max 1,0000) ; hermiticité 2,3e-16 ; max\|v2\| 0,6923 Ha | ≤ 1e-12 : **OK** |
+| M^L 9×9 grossier (16 b, 81 k), noyau `compute_ML_R_mpi` 99d64da, contre 81 × `M_L_9x9.npy` (juin) | max\|v2 − 81 v1\| / max\|81 v1\| = **8,97e-16** ; rapport v2/(81 v1) médian 1,000000 (min 1,0000, max 1,0000) ; hermiticité 2,3e-16 ; max\|v2\| 0,6923 Ha | ≤ 1e-12 : **OK** |
 | idem contre 81 × `M_L_dense_9x9_coarsecheck.npy` (noyau partagé de septembre) | 1,36e-15 | — |
 | M^L 7×7 grossier contre 49 × `M_L_7x7.npy` (sept., grille 217) | **8,72e-16** ; rapport médian 1,000000 ; hermiticité 2,2e-16 ; max 0,6400 Ha | OK |
 | M^L 5×5, 6×6, 8×8 (parties absentes en v1) | max\|v2\| 0,6710 / 0,8025 / 0,6519 Ha (max/N_cells 2,68e-2 / 2,23e-2 / 1,02e-2 Ha) ; hermiticité 2,2e-16 | — |
 | Porte A.2 sur le M^L 9×9 recalculé (NL = `_test_mnl/M_NL_serial.npy` de juin), 8 paires dont (3,K,3,K) L direct +0,155642 = M^L/81 | max\|Δ_L\| = **6,79e-15 eV**, max\|Δ_NL\| = 3,44e-15 eV ; rapports médians 1,000000 / 1,000000 | ≤ 1e-6 eV : **OK** |
-| Potentiel périodique, maille : `ks_reconstruction_all.py --sizes 9x9` rejoué après ee051ec (sortie hors `results/`) contre `results/M/ks_reconstruction.npz` | 24 clés (9×9 grossier et dense), écart **0,00e+00** ; grossier max 0,0015 meV, dense max 0,4606 meV (identiques aux anciens) | inchangé : **OK** (la reconstruction ne passe pas par le noyau) |
+| Potentiel périodique, maille : `ks_reconstruction_all.py --sizes 9x9` rejoué après 99d64da (sortie hors `results/`) contre `results/M/ks_reconstruction.npz` | 24 clés (9×9 grossier et dense), écart **0,00e+00** ; grossier max 0,0015 meV, dense max 0,4606 meV (identiques aux anciens) | inchangé : **OK** (la reconstruction ne passe pas par le noyau) |
 | Potentiel périodique, super-cellule : `compute_ML_R_mpi` avec `pristine=True` (V_p, 9×9, 4 bandes, `subtract_mean=False`) contre ⟨u\|V_p\|u⟩ sur la grille de la maille (V_p restreint, périodicité 0,018 meV) | blocs k = k′ : max\|M^L(V_p) − 81 ⟨u\|V_p\|u⟩\| / max = **1,07e-7** (1,6e-5 Ha absolu ; sans le facteur 81 : 80,0) ; blocs k ≠ k′ : max 3,6e-6 Ha = 2,5e-8 × max\|M\| ; moyenne diagonale −3241,92 eV = 81 × (−40,02 eV) | × N_cells par construction (§0.2) : **conforme** |
-| Noyau série `compute_ML_R` (`fold_wfk_to_sc.py:93` ee051ec), 5×5, bandes 0–1, contre le noyau MPI corrigé | rapport série/MPI = **172 800** (min = max = médiane) = N_uc = 30·30·192 ; max\|M\| 9,23e4 Ha | **écart confirmé** : diviseur √(Ω_sc/N_grid) au lieu de √(Ω_sc/N_cells) ; correction `np.sqrt(float(Omega_sc)/np.prod(Ndiag))` (Greg) |
+| Noyau série `compute_ML_R` (`fold_wfk_to_sc.py:93` 99d64da), 5×5, bandes 0–1, contre le noyau MPI corrigé | rapport série/MPI = **172 800** (min = max = médiane) = N_uc = 30·30·192 ; max\|M\| 9,23e4 Ha | **écart confirmé** : diviseur √(Ω_sc/N_grid) au lieu de √(Ω_sc/N_cells) ; correction `np.sqrt(float(Omega_sc)/np.prod(Ndiag))` (Greg) |
 | Noyau partagé `compute_ML_R_mpi_shared` (`--coarse 5x5`, 2 bandes, 32 rangs) | `UnboundLocalError: cannot access local variable 'Ndiag'` sur 31 rangs (tous sauf le rang 0 du nœud) ; le rang 0 attend au `Reduce`, étape tuée par le `timeout 20m` ; aucun fichier produit | **écart confirmé** : `N_cells = np.prod(meta["Ndiag"])` (Greg) ; ce noyau sera nécessaire pour tout futur M dense |
 
 #### 1.2 Réassemblage M2 (J2b, `scripts/assemble_M2.py`, `assemble_summary.jsonl`, `results/M2/`)
@@ -315,7 +315,7 @@ max\|out_L − N_cells·M^L\| = 0, max\|out_NL − source\| = 0, max\|M2 − (ou
 
 | fichier (`results/M2/`) | N_cells | source de M^L | source de M^NL | max\|N·M^L\| (Ha) | max\|M^NL\| | max\|M2\| | herm. rel. | durée |
 |---|---|---|---|---|---|---|---|---|
-| `M_ed_5x5` (16, 25) | 25 | recalculé ee051ec (`ml/M_L_5x5_v2`) | M_ed(juin) − M^L_v2/25 | 0,6710 | 0,2698 | 0,9260 | 2,4e-16 | 2 s |
+| `M_ed_5x5` (16, 25) | 25 | recalculé 99d64da (`ml/M_L_5x5_v2`) | M_ed(juin) − M^L_v2/25 | 0,6710 | 0,2698 | 0,9260 | 2,4e-16 | 2 s |
 | `M_ed_6x6` (16, 36) | 36 | recalculé | M_ed(juin) − M^L_v2/36 | 0,8025 | 0,2698 | 1,0034 | 2,2e-16 | 1 s |
 | `M_ed_7x7` (16, 49) | 49 | `M_L_7x7` (sept.) × 49 | `M_NL_7x7` (sept.) | 0,6400 | 0,2698 | 0,8544 | 4,3e-15 | 4 s |
 | `M_ed_8x8` (16, 64) | 64 | recalculé | M_ed(juin) − M^L_v2/64 | 0,6519 | 0,2698 | 0,8934 | 3,7e-16 | 2 s |
@@ -382,8 +382,8 @@ Tous les M2 entrent en production ; aucun fichier de `results/M/` n'a été modi
 
 ## Étape 2 (GO 2 reçu le 2026-09-25, 22 h 50) — Validation contre la super-cellule 9×9 : escalier D4 avec M2
 
-Git : `pull --ff-only` (Code) vers 09280bb « fix normalisation v2 » (Greg : `fold_wfk_to_sc.py:93` → √(Ω_sc/prod(Ndiag)), `local_R.py:322` →
-`meta["Ndiag"]` ; les deux écarts de l'étape 1 sont clos) ; b9f36b0 « R6-R7 » contient les fichiers de l'étape 1. Pilote `r6_d4.py` (prep, d4,
+Git : `pull --ff-only` (Code) vers a223687 « fix normalisation v2 » (Greg : `fold_wfk_to_sc.py:93` → √(Ω_sc/prod(Ndiag)), `local_R.py:322` →
+`meta["Ndiag"]` ; les deux écarts de l'étape 1 sont clos) ; 7187266 « R6-R7 » contient les fichiers de l'étape 1. Pilote `r6_d4.py` (prep, d4,
 d3, b3) réutilisant les pilotes R4/R5 ; jobs J5 `r6d4` 21833649 (prep + d4 en 42 s, puis d3 : TIMEOUT à 4 h, voir 2.3), J6 `r6b3` 21833650
 (COMPLETED 10 min 49), J7 `r6d3` (relance de d3 à 1 fil BLAS).
 
@@ -555,7 +555,7 @@ Non touchés (à signaler) : `CLAUDE.md` (« Données : lues uniquement dans res
 
 ### 3.0b Test d'or (GO 3b ; `scripts/submit_golden_dense.sh 5x5`, job `r6golden` 21852238, COMPLETED 1 h 52 min 27 s, 16 cœurs, 120 Go)
 
-Commit de Greg après 3.0 : 2e49ffa « r6 stage 3 » (clone à jour, arbre propre). `test_local_tmatrix_real.py 5x5 --dense` sur `results/M2/M_dense_5x5.npy`
+Commit de Greg après 3.0 : edd6ee6 « r6 stage 3 » (clone à jour, arbre propre). `test_local_tmatrix_real.py 5x5 --dense` sur `results/M2/M_dense_5x5.npy`
 (sidecar v2 exigé) : R_d = [2, 2, 0], ‖V_loc(0, 0)‖ = **40,8800 eV** (v1 : 9,9183), résidu d'hermiticité 1,3e-14 ; Γ dense × N_cells et Γ local sur
 [0,2646, 14,93] eV ; **max|Γ_loc − Γ_dense N_cells| / max = 1,80e-13 (seuil 1e-8) : PASS** ; positivité min Γ_loc = +0,2646 : OK. Code de sortie 0 →
 3.1 autorisé.
@@ -600,7 +600,7 @@ Re Σ médian à R_cut 3 : −26,65 meV (v1 : +722,3), |Re Σ|/Γ médian 0,125 
 
 Complément du 2026-09-27 : C10 selon la définition de NOTES_TGAMMA (écart médian **par état** à R_cut 4, rapporté à la médiane de R_cut 4) :
 13,1 / 4,1 / 4,2 / 1,15 % pour R_cut 0…3 (v1 : 10,0 / 4,6 / 1,5 / 0,63 %) ; la porte ci-dessus compare les médianes (0,47 %). Source :
-`results/M2/m_rcut_resigma.csv`, reconstruit par `r6_m_rcut_resigma.py` (mêmes colonnes que le csv v1 de a9855af, dont le script n'est pas dans
+`results/M2/m_rcut_resigma.csv`, reconstruit par `r6_m_rcut_resigma.py` (mêmes colonnes que le csv v1 de ff39c7f, dont le script n'est pas dans
 `scripts/` ; appliqué aux npz v1, il redonne le csv v1 à 0,0 près).
 
 Niveau 2 (post_fig 21872955 ; `level2_summary.csv`, `level2_families.csv` ; R_cut 3, 240², η 0,02) :
@@ -772,7 +772,7 @@ max 32,442 à −0,180 eV, croisements (rapport = 1) à −1,504 et +0,690 eV. v
 
 ### Figures (post_fig 21872955, puis relecture et corrections du 2026-09-27)
 
-Le job a régénéré dans `figures/` (versions v1 sauvegardées dans `etape3/figures_v1/`, identiques au bit aux blobs de HEAD 2e49ffa) :
+Le job a régénéré dans `figures/` (versions v1 sauvegardées dans `etape3/figures_v1/`, identiques au bit aux blobs de HEAD edd6ee6) :
 - qui dépendent de M2 : fig_convergence, fig_locality_final, fig_spectral_final, fig_M_map_final, fig_M_scaling_final (`make_figures_memoire.py`) ;
   fig_rcut, fig_plateau, fig_level2, fig_locality, fig_spectral, fig_M_map, fig_M_scaling (`make_figures.py`) ;
 - qui ne dépendent pas de M : fig_Ved*, fig_ks_reconstruction, fig_epw_kohn_degauss (PNG identiques au bit à HEAD ; PDF différents seulement par
@@ -829,7 +829,7 @@ dans `article/R6_production_corrigee/etape3/figures_v2/`). Le classificateur du 
 
 ### État du dépôt (rien n'est commité par Code)
 
-- Modifiés depuis 2e49ffa : `scripts/analyze_M.py` (échantillon `ks` hors du bloc nb16, `GOLDEN_RESULT`), `scripts/resonance_criteria.py` (`--blocks`,
+- Modifiés depuis edd6ee6 : `scripts/analyze_M.py` (échantillon `ks` hors du bloc nb16, `GOLDEN_RESULT`), `scripts/resonance_criteria.py` (`--blocks`,
   `--flag-eV`), `scripts/resonance_metrics.py` (`--shift-L-meV`), `scripts/epw_ed_vs_ep.py` (sortie dans `results_dir`), `scripts/make_figures_memoire.py` et
   `scripts/make_figures_epw.py` (limites d'axe), `.gitignore` (`ed_vs_ep`), `article/R6_production_corrigee/R6_rapport.md`.
 - Nouveaux : `scripts/submit_post.sh` ; `results/M2/` (produits ci-dessus) ; `article/R6_production_corrigee/etape3/` (csv_v2, figures_v2, table_v1_v2.md,

@@ -1,7 +1,7 @@
 # R9 — Contrôles avant le chapitre 4 — rapport de campagne
 
 Statut **TEST** (post-traitement seul). Prompt R9 (Greg, 2026-09-27). Ordre : phase 0 → STOP → étape G (Greg) → (GO) A → B → C → D →
-rapport → STOP. Dépôt `graphene-raman`, HEAD e4122ab (« R6 clos », arbre propre) ; racine `$GRAPHENE_RAMAN`. Répertoire de travail
+rapport → STOP. Dépôt `graphene-raman`, HEAD d90c929 (« R6 clos », arbre propre) ; racine `$GRAPHENE_RAMAN`. Répertoire de travail
 `graphene/qe/defects/R9_controles/`, copie versionnée `article/R9_controles/`. Chiffres bruts, sans interprétation.
 
 ## Phase 0 (2026-09-27 ; rien n'est calculé)
@@ -15,7 +15,7 @@ R5 C ; a = 2,4659 Å ; |b| = 4π/(√3 a) = 2,9422 Å⁻¹ ; A_cell = 5,266 Å²
 ### 0.1 Alignement : fonction, définition, signe, valeurs par taille
 
 **Fonction** : `far_atom_alignment(V_d, V_p, x_red_d, x_red_p, A_cols, radii)` de `src/electron_defect_interaction/defects/alignment.py`
-(R4, commit 75c8656), appelée par `r4_driver.py` (d1, d5), `r5_driver.py` (c) et `r7_driver.py` (d1) avec `radii = (0,5 ; 1,0)` Å ;
+(R4, commit 112617d), appelée par `r4_driver.py` (d1, d5), `r5_driver.py` (c) et `r7_driver.py` (d1) avec `radii = (0,5 ; 1,0)` Å ;
 valeur de travail : 1,0 Å.
 
 Définition exacte :
@@ -102,7 +102,7 @@ Boîte en étiquettes recentrées Rn = R − R_d (R_d de `recenter_mwr`, journau
 **Proposition (i)**, en base de Wannier, coût nul : M_W(R, R) − C_N·𝕀₅ pour les mailles R de la boîte, rien hors de la boîte ni hors diagonale ;
 sur l'amas : V_loc,aligné = V_loc − C_N·P_boîte (P_boîte = 𝕀 sur les 5 orbitales des sites de l'amas situés dans la boîte).
 
-**Proposition (ii)**, exacte : M^L[1_boîte] par le noyau partagé corrigé (`compute_ML_R_mpi_shared`, 09280bb) avec ΔV = 1 sur la grille N×N,
+**Proposition (ii)**, exacte : M^L[1_boîte] par le noyau partagé corrigé (`compute_ML_R_mpi_shared`, a223687) avec ΔV = 1 sur la grille N×N,
 **sans modifier `src/`** : le pilote passe au noyau un module `io` enveloppe de `qe_io` dont `get_pot` renvoie des 1 (chemin « défectueux ») et
 des 0 (chemin « parfait ») sur la grille du vrai fichier (ΔV = 1 − 0 ; l'argument `io=` du noyau est utilisé tel quel) ; autre voie : un
 argument `Ved=None` ajouté au noyau (P5, changement de `src/`). Puis M_aligné,exact = M2 − C_N·M^L[1_boîte] (20 bandes, tous les k) et
@@ -764,7 +764,7 @@ variantes + exactes pour la 9×9) ; `fig/offset_profiles` inchangée. C et D non
 Écart d'exécution relevé après coup (corrigé) : `a3_tables` écrivait toujours `a/A3_tables.md`, sans suffixe, contrairement à la phase 0 de la clôture ; le rejeu
 `--cn plateau` avait remplacé la table de R9 par celle du plateau (les json n'étaient pas touchés). Nom de sortie corrigé (`A3_tables{suffixe}.md`), sous-commande
 `a3tables [--cn]` ajoutée (tables depuis le json, sans calcul) ; `a/A3_tables.md` régénéré depuis `a3_results.json` est identique au bit à la version commitée
-(5a4bc94) ; la table du plateau est `a/A3_tables_plateau.md`. Les autres sorties du rejeu étaient suffixées (json, courbes, tables et figure de B).
+(cb7241d) ; la table du plateau est `a/A3_tables_plateau.md`. Les autres sorties du rejeu étaient suffixées (json, courbes, tables et figure de B).
 
 ### README, manifeste, git
 
@@ -772,7 +772,7 @@ variantes + exactes pour la 9×9) ; `fig/offset_profiles` inchangée. C et D non
 - `manifeste_R9.md` (répertoire de travail et copie) : versionné (copie `article/R9_controles/`, P1–P4, tests : état git par fichier), gardé dans le répertoire de travail
   (npz, slurm, `submitted/`, `JOBID`, `r9_log.txt` ; ≈ 9,7 Mo), supprimable (`cache/`, 72 fichiers, 50,0 Go en taille apparente, 12 Go sur le disque ; rôle, commande et
   durée de reconstruction par fichier). Aucun fichier n'est promu en production. Aucune suppression faite.
-- git (lecture) : `src/` (P1–P4) et `tests/test_r9_functions.py` sont dans le commit 5a4bc94 (« R9 checkpoint », poussé : `main...origin/main`), inchangés depuis ;
+- git (lecture) : `src/` (P1–P4) et `tests/test_r9_functions.py` sont dans le commit cb7241d (« R9 checkpoint », poussé : `main...origin/main`), inchangés depuis ;
   restent à commiter par Greg les fichiers de `article/R9_controles/` listés à la fin du manifeste.
 
 **STOP — clôture de R9 terminée le 2026-09-28.** La suppression de `cache/` attend un GO séparé sur `manifeste_R9.md`.

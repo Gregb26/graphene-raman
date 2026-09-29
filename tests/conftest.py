@@ -50,6 +50,7 @@ W90_REF = SimpleNamespace(
         'sigma': ((2.5423e-3, 1.6520e-3), 1.1977e-2, (6.9451e-3, 5.8033e-3)),
         'pz':    ((1.2222e-3, 1.3698e-3), 2.5760e-2, (1.2815e-2, 1.4190e-2)),
     },
+    hw_froz={100: 4.985446, 200: 4.979360}, # eV, frozen_window_limit(N) at froz_max, mu = E_D (4.9595 at N = 800)
     ring_stats={                      # ring_stats at mu = E_D, 720 angles: (avg x y, node x y in degrees, ratio min max)
         1.96: {'full':         ((1.037521, 1.037438), (6.0, 0.0), (1.0, 1.0)),
                'centres_only': ((1.000591, 1.000504), (6.0, 0.0), (0.980848, 0.982751)),

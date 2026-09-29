@@ -225,7 +225,7 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 
 Lancer avec `.venv/bin/python -m pytest tests -v`. Fixtures partagées dans `tests/conftest.py` : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
-**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (48 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
+**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (51 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
 
 **Faits (F1–F7 et pilote, 78 exécutions ; à partir de F6, les tests sont écrits par Code) :**
 
@@ -482,10 +482,19 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   - pour résoudre l'anneau, il faut un pas de grille ≲ η/(2ħv_F), soit environ 3.6×10⁻³ Å⁻¹ pour η = 0.04 eV, donc N ≳ 800 ;
   - balayer N = 900, 1200, 1800 et η = 0.02, 0.04, 0.08 eV ;
   - retenir le couple stable à 10⁻³ près sur σ(ε_L).
+- **Pilote fait (2026-09-29, en local, ~13 min)** : 5×5 complet, μ = E_D, ħω = 0.20–6.00 eV par pas de 0.01, les trois η partageant chaque diagonalisation (boucle identique à `sigma_on_grid` à 2×10⁻¹⁴ ; script et npz dans le scratchpad de la séance, non versionnés).
+  - **Convergence en N très rapide** (grille décalée, intégrande lisse) : à η = 0.04, N = 900 et 1800 diffèrent de 10⁻¹¹ ; à η = 0.02, N = 900 est à 1.3×10⁻⁴ et N = 1200 à 1.5×10⁻⁶ de N = 1800. Le critère « pas ≲ η/(2ħv_F) » est largement pessimiste.
+  - **Biais en η quadratique**, σ(η) ≈ σ(0) + 0.42 η² à 2.33 eV (mêmes coefficients de 0.02 à 0.08) : 1.7×10⁻⁴ à η = 0.02, **6.7×10⁻⁴ à η = 0.04**, 2.7×10⁻³ à η = 0.08.
+  - **Couple retenu : N = 1200, η = 0.04 eV** (convergé en N à 10⁻¹⁴, biais < 10⁻³, 65 s par variante) ; η = 0.04 est aussi l'élargissement prévu pour postw90.
+  - σ_xx/σ₀ à η = 0.04 (1.96, 2.33, 2.54 eV) : complet **1.2637, 1.4056, 1.5115** ; centres seuls 1.2190, 1.3372, 1.4258 (rapport 0.965, 0.951, 0.943, comme ⟨|v_cv|²⟩ sur les anneaux, F15) ; sans Berry 1.3648, 1.5548, 1.6944 en xx, et yy/xx = 0.89, 0.86, 0.84.
+  - Vérifications : σ/σ₀ = 1.0026 à 0.2 eV ; pic de van Hove à **4.05 eV** (σ/σ₀ = 6.9 ; transition en M à 4.056 eV) ; complet : |σ_yy − σ_xx| = 1.9×10⁻⁴ (C₃ des données, comme les moyennes de F15), |σ_xy| = 9×10⁻¹² ; sans Berry : isotropie brisée (yy/xx = 0.86 à 2.33 eV), σ_xy toujours nul (miroir).
 
-**F18 — `frozen_window_limit(tb, grid, dis_froz_max, mu)`** → ħω_froz = min_k {ε_c − ε_v : ε_c > dis_froz_max}.
+**F18 — `frozen_window_limit(tb, N, froz_max, mu, chunk=int(1e5))`** → ħω_froz = min_k {ε_c − ε_v : ε_c > froz_max}, par blocs comme `sigma_on_grid`, valeurs propres seules (`eigvalsh`). Dans `diagnostics.py`. **Fait (Greg, 2026-09-29).**
 - Au-delà de cette énergie, les π* sortent de la fenêtre gelée : l'interpolation reste lisse mais n'est plus exacte aux points grossiers.
 - Trace une ligne verticale sur la figure. Les trois énergies laser tombent largement en dessous, puisque leurs π* sont vers E_D + 1.0–1.3 eV.
+- **Valeurs (27×27, froz_max = −1.74 eV = E_D + 2.50 eV)** : 4.9854 (N = 100), 4.9794 (200), 4.9603 (400), **4.9595 eV (N = 800)**. Minimum sur des points de grille de la frontière ε_c = froz_max : converge par valeurs supérieures, N ≥ 400 pour 10⁻³ eV. π* en M = E_D + 1.69 eV (sous la fenêtre) ; 70 % de la zone a son π* au-dessus. Le 5×5 et le 2×2 donnent la même valeur : le minimum est près de M–K, où π est la plus haute bande de valence (près de Γ, c'est une σ).
+- Pièges rencontrés : masque inversé (`<` garde les k *dans* la fenêtre, et donne ≈ 0 près de K) ; `return` dans la boucle ; blocs sans aucun k au-dessus de la fenêtre (`np.min` vide : `initial=np.inf`).
+- Tests (`tests/test_diagnostics.py`, 5 ; valeurs dans `W90_REF.hw_froz`) : M0 symétrique électron-trou, limite 2F atteinte par valeurs supérieures (N = 300 puis 600, F = 1 et 2 eV) ; valeurs à N = 100 et 200 ; même valeur que le 2×2 avec tous les k d'un coup, et indépendante de `chunk` ; croissante avec froz_max, +∞ au-dessus de toutes les bandes. Mutations : masque inversé (5 échecs), `return` dans la boucle (1, vu seulement avec `chunk=100`), v et c inversés (5), masque ignoré (5), ndegen oublié (2), `initial=0` (5), v = bande σ (5).
 
 **F19 — `map_around_K(tb, K, half_width, n)`** → carte de |e_x·ħv_cv|² et de Δε(k) autour de K, pour le panneau (a) avec les iso-contours Δε = ε_L.
 
@@ -508,7 +517,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 | F1, F4, F5, F7 (modèle, transformée, vitesse, Kubo) | **Greg** |
 | F6, F13–F15 (anneau, v_F, statistiques) | Greg |
 | F8 : lecteur `read_w90_tb` dans `io/wannier_io.py` (fait, à la demande de Greg) ; construction du `WannierTB` | Code ; Greg |
-| Découpage et performance, échafaudage pytest, F16, F18, F19, figures (F17 codée par Greg) | Code |
+| Découpage et performance, échafaudage pytest, F16, F19, figures (F17, F18 codées par Greg) | Code |
 | EM2, EM3 (cluster, QE, Wannier90) | Code |
 
 Mode technicien : skill `technicien`, avec les mots-clés « explique » (par défaut), « indice », « montre », « écris-le » et « fin technicien ».
@@ -566,7 +575,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | M2 — v(k) réel | **fait** : F12 (`kpath`), F13 (`fermi_velocity`) ; ħv_F = 5.469 eV·Å ; 134 tests en tout | 2026-09-28 |
 | M3 — symétries et anneaux | **fait** : F14 (`pz_block`), F15 (`ring_stats`), F17 (`ring_kpoints_crystal`) ; F16 reportée ; 160 tests en tout | 2026-09-29 |
 | EM2 — DFT directe et postw90 | à préparer (liste de k prête) | |
-| M4 — σ(ω) et données de figure | à faire | |
+| M4 — σ(ω) et données de figure | en cours : pilote fait (N = 1200, η = 0.04 eV retenus), F18 (`frozen_window_limit`) fait ; 165 tests ; reste F19 | 2026-09-29 |
 | EM3 — figure et chiffres | après M4 | |
 | P28 — texte | après validation complète | |
 

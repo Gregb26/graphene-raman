@@ -1,11 +1,12 @@
 """
-Diagnostics of a WannierTB (M1): numbers that describe a model without changing it
-(hermiticity_report, symmetry_report).
+Diagnostics of a WannierTB: numbers that describe a model without changing it
+(hermiticity_report, symmetry_report in M1; frozen_window_limit in M4).
 """
 
 import numpy as np
 from electron_defect_interaction.electron_photon.velocity_operator import dagger, fourier
 from electron_defect_interaction.electron_photon.tb_model import centres_only, extract_block
+from electron_defect_interaction.electron_photon.kgrid import make_grid_tb
 
 
 def hermiticity_report(tb, blocks, k):
@@ -76,3 +77,47 @@ def symmetry_report(tb, even, odd):
     symmetries = {'H_mixed': H_mixed,  'r_mixed': r_mixed, 'rz_same': rz_same}
 
     return symmetries
+
+def frozen_window_limit(tb, N, froz_max, mu, chunk=int(1e5)):
+    """
+    hbar omega_froz = min of eps_c - eps_v over the k whose eps_c lies above the frozen window (c, v on
+    either side of mu). Above it, some transitions end on states that the interpolation no longer
+    reproduces exactly at the coarse k points: the vertical line of the sigma(omega) figure. A minimum
+    over grid points, so it converges from above with N.
+
+    Inputs:
+        tb       : WannierTB
+        N        : int, N x N grid (make_grid_tb)
+        froz_max : float, eV, top of the frozen window (dis_froz_max of the .win)
+        mu       : float, eV, chemical potential (E_D for the real data)
+        chunk    : int, k points per block (memory: see `fourier`)
+    Returns:
+        float, eV; inf if eps_c never exceeds froz_max
+    """
+
+    grid = make_grid_tb(tb, N)
+
+    mins = [] # store mins per block
+    # loop over kpoints in blocks
+    for block in range(0, grid.nk, chunk):
+        # only keep k's in this block
+        k = grid.k_cart[block:block+chunk]
+
+        # find eigenvalues for this block
+        H_k = fourier(tb.H_R, tb.R_cart, tb.ndegen, k) # (chunk, nW, nW)
+        eps = np.linalg.eigvalsh(H_k) # (chunk, nW)
+
+        # find valence and conduction band indices
+        n_occ = np.sum(eps < mu, axis=1) # (chunk,)
+        n = n_occ[0]
+        assert np.allclose(n_occ, n)
+        v = n - 1 # valence band
+        c = n     # conduction band
+
+        # keep the k whose conduction state lies above the frozen window
+        mask = eps[:, c] > froz_max
+        # find min of eps_c - eps_v on these k's
+        mins.append(np.min(eps[mask, c] - eps[mask, v], initial=np.inf)) # inf for a block without such k
+
+    # global minimum over the blocks
+    return np.min(mins)

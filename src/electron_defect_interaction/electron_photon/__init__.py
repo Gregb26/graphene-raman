@@ -14,7 +14,8 @@ of dependence:
     ring               resonant k points around K (eps_c - eps_v = hbar omega), fermi_velocity,
                        ring_stats and ring_kpoints_crystal (M3)
     kubo               sigma(omega)/sigma_0, block by block, driver `sigma_on_grid`
-    diagnostics        reports on a model: hermiticity_report, symmetry_report (M1)
+    diagnostics        reports on a model: hermiticity_report, symmetry_report (M1),
+                       frozen_window_limit (M4)
 Plan, derivations and reference values: memoire/EM/EM.md.
 
 Conventions:
@@ -32,7 +33,7 @@ from .kgrid import GridTB, reciprocal, k_grid, make_grid_tb, kpath
 from .velocity_operator import dagger, hermitize, fourier, velocity, compute_velocity
 from .ring import ring, fermi_velocity, ring_stats, ring_kpoints_crystal
 from .kubo import gaussian_eta, kubo_accumulate, kubo_normalize, sigma_on_grid
-from .diagnostics import hermiticity_report, symmetry_report
+from .diagnostics import hermiticity_report, symmetry_report, frozen_window_limit
 
 __all__ = [
     "WannierTB", "make_graphene_tb", "make_wannier_tb", "centres_only", "pz_block",
@@ -40,5 +41,5 @@ __all__ = [
     "dagger", "hermitize", "fourier", "velocity", "compute_velocity",
     "ring", "fermi_velocity", "ring_stats", "ring_kpoints_crystal",
     "gaussian_eta", "kubo_accumulate", "kubo_normalize", "sigma_on_grid",
-    "hermiticity_report", "symmetry_report",
+    "hermiticity_report", "symmetry_report", "frozen_window_limit",
 ]

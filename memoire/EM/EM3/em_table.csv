@@ -1,0 +1,81 @@
+block,quantity,context,variant,value,unit
+vF,hbar v_F,"Wannier, q = 1e-3 1/A",full,5.46919,eV A
+vF,hbar v_F,"DFT, slopes on q = 0.005 1/A",dft,5.46977,eV A
+vF,v_F,Wannier,full,830916,m/s
+vF,v_F,DFT,dft,831004,m/s
+dft,|hv_cv|/DFT - 1 min,1.96 eV (12 k),full,-0.0422342,%
+dft,|hv_cv|/DFT - 1 mean,1.96 eV (12 k),full,-0.0134155,%
+dft,|hv_cv|/DFT - 1 max,1.96 eV (12 k),full,0.00200219,%
+dft,|hv_cv|/DFT - 1 min,1.96 eV (12 k),centres_only,-1.95648,%
+dft,|hv_cv|/DFT - 1 mean,1.96 eV (12 k),centres_only,-1.83023,%
+dft,|hv_cv|/DFT - 1 max,1.96 eV (12 k),centres_only,-1.75206,%
+dft,|hv_cv|/DFT - 1 min,1.96 eV (12 k),no_berry,-33.8306,%
+dft,|hv_cv|/DFT - 1 mean,1.96 eV (12 k),no_berry,-0.0927607,%
+dft,|hv_cv|/DFT - 1 max,1.96 eV (12 k),no_berry,22.4897,%
+dft,|hv_cv|/DFT - 1 min,2.33 eV (48 k),full,-0.0396717,%
+dft,|hv_cv|/DFT - 1 mean,2.33 eV (48 k),full,-0.0166896,%
+dft,|hv_cv|/DFT - 1 max,2.33 eV (48 k),full,-0.000355806,%
+dft,|hv_cv|/DFT - 1 min,2.33 eV (48 k),centres_only,-2.74718,%
+dft,|hv_cv|/DFT - 1 mean,2.33 eV (48 k),centres_only,-2.55141,%
+dft,|hv_cv|/DFT - 1 max,2.33 eV (48 k),centres_only,-2.3942,%
+dft,|hv_cv|/DFT - 1 min,2.33 eV (48 k),no_berry,-42.2085,%
+dft,|hv_cv|/DFT - 1 mean,2.33 eV (48 k),no_berry,-0.0148627,%
+dft,|hv_cv|/DFT - 1 max,2.33 eV (48 k),no_berry,28.132,%
+dft,|hv_cv|/DFT - 1 min,2.54 eV (12 k),full,-0.0346966,%
+dft,|hv_cv|/DFT - 1 mean,2.54 eV (12 k),full,-0.0166453,%
+dft,|hv_cv|/DFT - 1 max,2.54 eV (12 k),full,-0.00456451,%
+dft,|hv_cv|/DFT - 1 min,2.54 eV (12 k),centres_only,-3.25242,%
+dft,|hv_cv|/DFT - 1 mean,2.54 eV (12 k),centres_only,-3.00226,%
+dft,|hv_cv|/DFT - 1 max,2.54 eV (12 k),centres_only,-2.78177,%
+dft,|hv_cv|/DFT - 1 min,2.54 eV (12 k),no_berry,-47.2652,%
+dft,|hv_cv|/DFT - 1 mean,2.54 eV (12 k),no_berry,0.0485994,%
+dft,|hv_cv|/DFT - 1 max,2.54 eV (12 k),no_berry,29.4107,%
+avg,<|e_x.hv_cv|^2>,1.96 eV,full,1.03752,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,1.96 eV,full,1.03744,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2>,1.96 eV,centres_only,1.00059,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,1.96 eV,centres_only,1.0005,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2>,1.96 eV,no_berry,1.13074,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,1.96 eV,no_berry,1.0005,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2> centres/full,1.96 eV,centres_only,0.964406,
+avg,<|e_y.hv_cv|^2> centres/full,1.96 eV,centres_only,0.964399,
+avg,<|e_x.hv_cv|^2>,2.33 eV,full,1.05124,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,2.33 eV,full,1.05113,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2>,2.33 eV,centres_only,0.999513,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,2.33 eV,centres_only,0.999395,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2>,2.33 eV,no_berry,1.18345,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,2.33 eV,no_berry,0.999395,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2> centres/full,2.33 eV,centres_only,0.950791,
+avg,<|e_y.hv_cv|^2> centres/full,2.33 eV,centres_only,0.950781,
+avg,<|e_x.hv_cv|^2>,2.54 eV,full,1.05945,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,2.54 eV,full,1.05938,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2>,2.54 eV,centres_only,0.998396,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,2.54 eV,centres_only,0.998331,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2>,2.54 eV,no_berry,1.217,(hbar v_F)^2/2
+avg,<|e_y.hv_cv|^2>,2.54 eV,no_berry,0.998331,(hbar v_F)^2/2
+avg,<|e_x.hv_cv|^2> centres/full,2.54 eV,centres_only,0.942375,
+avg,<|e_y.hv_cv|^2> centres/full,2.54 eV,centres_only,0.942371,
+sigma,sigma_xx/sigma_0,1.96 eV,full,1.26367,
+sigma,sigma_xx/sigma_0,1.96 eV,centres_only,1.21903,
+sigma,sigma_xx/sigma_0,1.96 eV,no_berry,1.36481,
+sigma,sigma_yy/sigma_0,1.96 eV,no_berry,1.21895,
+sigma,sigma_xx/sigma_0,1.96 eV,postw90_ti,1.26343,
+sigma,postw90 ti - full (xx),1.96 eV,postw90_ti,-0.000242651,
+sigma,sigma_xx/sigma_0,2.33 eV,full,1.40555,
+sigma,sigma_xx/sigma_0,2.33 eV,centres_only,1.33724,
+sigma,sigma_xx/sigma_0,2.33 eV,no_berry,1.55476,
+sigma,sigma_yy/sigma_0,2.33 eV,no_berry,1.33704,
+sigma,sigma_xx/sigma_0,2.33 eV,postw90_ti,1.40511,
+sigma,postw90 ti - full (xx),2.33 eV,postw90_ti,-0.000440855,
+sigma,sigma_xx/sigma_0,2.54 eV,full,1.51148,
+sigma,sigma_xx/sigma_0,2.54 eV,centres_only,1.42576,
+sigma,sigma_xx/sigma_0,2.54 eV,no_berry,1.69435,
+sigma,sigma_yy/sigma_0,2.54 eV,no_berry,1.42563,
+sigma,sigma_xx/sigma_0,2.54 eV,postw90_ti,1.51098,
+sigma,postw90 ti - full (xx),2.54 eV,postw90_ti,-0.000498845,
+misc,van Hove peak (position),"full, sigma_xx",full,4.05,eV
+misc,hbar omega_froz,N = 800,full,4.95949,eV
+budget,"hermiticity of r (dropped by hermitize), max |d hv_cv|/hbar v_F",2.33 eV ring,full,0.0013,
+budget,"|hv_cv| full vs DFT, max relative",72 ring k,full,0.000422342,
+budget,eta bias sigma(0.04) - sigma(0),2.33 eV,full,0.00066325,
+budget,prefactor 1/Delta - 1/hw,2.33 eV,full,-0.000311611,
+budget,use_ws_distance (postw90 ti - ti_nows),2.33 eV,postw90_ti,-0.000134613,

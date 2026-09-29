@@ -285,7 +285,7 @@ dans le module de leur rôle, pas dans un module par étape ; la lecture de fich
 Les étapes M0–M4 sont codées par Greg lui-même en mode technicien (skill `technicien`) : n'écrire ni ne
 modifier son code sans « écris-le » ou demande explicite. Données de production : `memoire/EM/M4_sigma/` (calcul local,
 `m4_prod.py`, pilote de convergence dans `pilote/`) ; figure : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` ;
-prompt d'EM2 : `memoire/EM/EM2_prompt.md`.
+prompt d'EM2 : `memoire/EM/EM2_prompt.md` ; données de la figure (anneau de 2.33 eV, postw90 `transl_inv`) et tableau des chiffres : `memoire/EM/EM3/`.
 
 ## Campagnes de calcul (règle du 2026-09-17, CLEANUP.md ; précisée le 2026-09-23)
 
@@ -312,7 +312,7 @@ prompt d'EM2 : `memoire/EM/EM2_prompt.md`.
 6. Le scratch reste la copie de travail (les `outdir` des `.in` et les liens
    `data/` y pointent) ; on ne réécrit jamais les `outdir`/`prefix` d'un run terminé.
 
-Classement au 2026-09-23 (EM1 ajouté le 2026-09-25, M4_sigma et EM2 le 2026-09-29) :
+Classement au 2026-09-23 (EM1 ajouté le 2026-09-25, M4_sigma, EM2 et EM3 le 2026-09-29) :
 
 | Campagne | Répertoire | Statut | Miroir |
 |---|---|---|---|
@@ -324,3 +324,4 @@ Classement au 2026-09-23 (EM1 ajouté le 2026-09-25, M4_sigma et EM2 le 2026-09-
 | EM1 éléments de position r(R) de la wannierisation 27×27 (mémoire §2.5, `restart = plot`) | `graphene/qe/electron_photon/EM1_tb/` (copie `memoire/EM/EM1_tb/`) | PRODUCTION | aucun `.save` produit ; nscf déjà miroité `qe_tmp_backup/defect_uc_dense_27` (md5 2026-09-17) |
 | M4_sigma σ(ω), cartes et chiffres des anneaux (mémoire §2.5, calcul local) | `memoire/EM/M4_sigma/` (seul emplacement : calcul local de ~4 min, sans répertoire de travail hors dépôt) | PRODUCTION | aucun `.save` ; tout se relance avec `m4_prod.py` |
 | EM2 références indépendantes (DFT directe aux anneaux + postw90 `kubo`) | `graphene/qe/electron_photon/EM2/` (copie `memoire/EM/EM2/`) | PRODUCTION (faite le 2026-09-29, rapport `EM2_rapport.md`) | `qe_tmp_backup/em2_bands_27/` (84 k, md5 OK 2026-09-29) |
+| EM3 figure et chiffres du §2.5 (anneau de 2.33 eV, postw90 `transl_inv`, tableau) | `memoire/EM/EM3/` (seul emplacement : calcul local < 1 s) | PRODUCTION | aucun `.save` ; tout se relance avec `make_em3_data.py` |

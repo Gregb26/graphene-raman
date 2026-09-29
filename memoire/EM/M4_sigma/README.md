@@ -11,4 +11,4 @@
 - `make_table.py` → `em_table.csv` (format long : σ, ⟨|ħv_cv|²⟩, nœuds, rapports, par laser et variante) et `em_table.tex`
   (`tabular` booktabs pour le mémoire, généré : ne pas éditer à la main).
 - Relancer : `.venv/bin/python memoire/EM/M4_sigma/m4_prod.py` (fonctions du paquet seulement).
-- Suite : concordance avec postw90 `kubo` (EM2, rorqual), figure (EM3).
+- Suite : concordance avec postw90 faite (EM2, M4 fermé) ; figure et tableau complets dans `memoire/EM/EM3/`.

@@ -1,4 +1,6 @@
-# Manifeste de fin — R9 (proposition ; rien n'est supprimé)
+# Manifeste de fin — R9
+
+**Mise à jour 2026-09-29 : `cache/` supprimé sur GO de Greg ; R9 clos (voir la dernière section).**
 
 Campagne R9 (contrôles avant le chapitre 4, puis clôture « rejeu C_N = plateau »), statut **TEST**. Établi le 2026-09-28 après la clôture.
 **Aucun fichier n'est promu en production** : rien n'est écrit dans `results/`, `config/`, `scripts/` ; les fonctions P1–P4 de `src/` sont des fonctions de bibliothèque
@@ -145,7 +147,7 @@ Campagne R9 (contrôles avant le chapitre 4, puis clôture « rejeu C_N = platea
 
 Les fichiers du répertoire de travail qui ont une copie dans `article/R9_controles/` (rapport, README, manifeste, pilote, lanceur, json, tables, figures) ne sont pas répétés.
 
-## Supprimable : `cache/` (proposition ; aucune suppression faite)
+## Supprimable : `cache/` (proposition du 2026-09-28 ; supprimé le 2026-09-29, voir la dernière section)
 
 Tous ces fichiers se reconstruisent à l'identique depuis `results/M2/`, les wannierisations et les `.save` (lecture seule) par le pilote de R9 ; les g₀ et M_W se
 recréent d'eux-mêmes à la première sous-commande qui en a besoin.
@@ -256,3 +258,18 @@ recréent d'eux-mêmes à la première sous-commande qui en a besoin.
   `fig/resonance_vs_nkint_R9.{pdf,png}`, `fig/resonance_vs_nkint_plateau.{pdf,png}`).
 - `src/` (P1–P4) et `tests/test_r9_functions.py` : déjà commités dans cb7241d, inchangés depuis ; rien à commiter.
 - Les autres lignes de `git status` (s'il y en a hors `article/R9_controles/`) ne viennent pas de R9.
+
+## Clôture définitive (2026-09-29)
+
+- **`cache/` supprimé** le 2026-09-29 sur GO de Greg. Avant suppression, le contenu (72 fichiers) était identique à la liste de la section
+  « Supprimable » ; aucun autre script ne le lisait, aucun job R9 n'était en file. Place libérée : 50,04 Go en taille apparente, 12 Go sur le
+  disque. Les fichiers se reconstruisent par les commandes de cette liste. Le répertoire de travail fait maintenant 14 Mo.
+- **Audit « image minimale »** (2026-09-28, après ce manifeste) : `audit_image_minimale.md`, `audit/audit_results.json` et la sous-commande
+  `audit` de `r9_driver.py`. Les trois sont versionnés dans `article/R9_controles/`. Le json fait 196,6 ko. Il n'y a pas de cache, rien de
+  supprimable.
+- **État git** : tout `article/R9_controles/` est commité, y compris l'audit, dans cff65cd « R9 done » (numéros après la réécriture de
+  l'historique du 2026-09-29 ; cb7241d = ancien 5a4bc94, 1883861 = ancien ab2d884). Cette mise à jour du README et du manifeste reste à
+  commiter.
+- **Corrections proposées par l'audit** (§7 d'`audit_image_minimale.md`) : gardées par Greg pour plus tard, non appliquées.
+- **Ligne « Lecture » du README** : laissée vide (texte à fournir par Greg).
+- Aucun fichier n'est promu en production.

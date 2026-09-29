@@ -283,7 +283,9 @@ un guide, pas un cadre : en cas d'écart le code fait foi, et on réaligne EM.md
 est `src/electron_defect_interaction/electron_photon/` (un module par responsabilité : les fonctions de M1–M4 vont
 dans le module de leur rôle, pas dans un module par étape ; la lecture de fichiers reste dans `io/`) ; les campagnes de calcul EM vont sous `memoire/EM/<campagne>/`.
 Les étapes M0–M4 sont codées par Greg lui-même en mode technicien (skill `technicien`) : n'écrire ni ne
-modifier son code sans « écris-le » ou demande explicite.
+modifier son code sans « écris-le » ou demande explicite. Données de production : `memoire/EM/M4_sigma/` (calcul local,
+`m4_prod.py`, pilote de convergence dans `pilote/`) ; figure : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` ;
+prompt d'EM2 : `memoire/EM/EM2_prompt.md`.
 
 ## Campagnes de calcul (règle du 2026-09-17, CLEANUP.md ; précisée le 2026-09-23)
 
@@ -310,7 +312,7 @@ modifier son code sans « écris-le » ou demande explicite.
 6. Le scratch reste la copie de travail (les `outdir` des `.in` et les liens
    `data/` y pointent) ; on ne réécrit jamais les `outdir`/`prefix` d'un run terminé.
 
-Classement au 2026-09-23 (EM1 ajouté le 2026-09-25) :
+Classement au 2026-09-23 (EM1 ajouté le 2026-09-25, M4_sigma et EM2 le 2026-09-29) :
 
 | Campagne | Répertoire | Statut | Miroir |
 |---|---|---|---|
@@ -320,3 +322,5 @@ Classement au 2026-09-23 (EM1 ajouté le 2026-09-25) :
 | EPW 24k-24q et 24k-24q_mv0.02 | `graphene/qe/epw/` | PRODUCTION (outdir dans le projet) | — |
 | EPW grilles test avril 2026 | `graphene/qe/epw/{36k-30q,30k-24q,24k-12q,16k-16q,16k-12q,12k-12q}` | TEST consigné (NOTES_EPW) | — (étage 1 du ménage) |
 | EM1 éléments de position r(R) de la wannierisation 27×27 (mémoire §2.5, `restart = plot`) | `graphene/qe/electron_photon/EM1_tb/` (copie `memoire/EM/EM1_tb/`) | PRODUCTION | aucun `.save` produit ; nscf déjà miroité `qe_tmp_backup/defect_uc_dense_27` (md5 2026-09-17) |
+| M4_sigma σ(ω), cartes et chiffres des anneaux (mémoire §2.5, calcul local) | `memoire/EM/M4_sigma/` (seul emplacement : calcul local de ~4 min, sans répertoire de travail hors dépôt) | PRODUCTION | aucun `.save` ; tout se relance avec `m4_prod.py` |
+| EM2 références indépendantes (DFT directe aux anneaux + postw90 `kubo`) | `graphene/qe/electron_photon/EM2/` (copie `memoire/EM/EM2/`) | PRODUCTION (lancé le 2026-09-29) | `.save` du nscf (72 k) à miroiter en fin de campagne |

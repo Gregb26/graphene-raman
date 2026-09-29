@@ -1,11 +1,13 @@
 """
 Tests of the Kubo conductivity (F7) and of the driver `sigma_on_grid`, down to the reference table
-of EM.md on the 1800^2 grid (~13 s; skip with -k "not kubo_reference").
+of EM.md on the 1800^2 grid (~13 s; skip with -k "not kubo_reference"), and sigma(omega) of the
+27 x 27 data for the three velocity variants (M4; ~7 s).
 """
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import gaussian_eta, kubo_accumulate, make_graphene_tb, sigma_on_grid
+from electron_defect_interaction.electron_photon import (centres_only, gaussian_eta, kubo_accumulate, make_graphene_tb,
+                                                         sigma_on_grid)
 
 # EM.md table, 1800^2 shifted grid, eta = 0.04 eV: (shift_B, mode) -> {hw: (sigma_xx, sigma_yy, sigma_xy)/sigma_0}
 KUBO_REFERENCE = {
@@ -129,3 +131,48 @@ def test_sigma_on_grid_blocks_and_inputs():
     assert np.allclose(sigma_on_grid(tb, 300, 2.33), sigma_on_grid(tb, 300, np.array([2.33])), rtol=0, atol=0)
     with pytest.raises(ValueError):
         sigma_on_grid(tb, 30, hw, mode='centres')
+
+
+LASERS = [1.96, 2.33, 2.54] # eV, 633, 532, 488 nm
+
+
+@pytest.fixture(scope="module")
+def sigma_w90(tb_w90, w90_ref):
+    """
+    sigma(omega)/sigma_0 of the 27 x 27 data, three variants, N = 300 and eta = 0.08 eV (converged to 1e-5
+    at the lasers, M4 pilot), at the lasers then 3.80 ... 4.30 eV (van Hove peak).
+    """
+    hw = np.array(LASERS + list(np.arange(380, 431) / 100))
+    variants = {'full': (tb_w90, 'berry'), 'centres_only': (centres_only(tb_w90), 'berry'), 'no_berry': (tb_w90, 'no_berry')}
+    return hw, {v: sigma_on_grid(model, 300, hw, mu=w90_ref.E_D, eta=0.08, mode=mode) for v, (model, mode) in variants.items()}
+
+
+def test_sigma_real_values(sigma_w90, w90_ref):
+    """At the lasers, the three variants reproduce the converged pilot (N = 1800, other code path) to 3e-5."""
+    _, sigma = sigma_w90
+    for v, ref in w90_ref.sigma_eta008.items():
+        assert np.allclose(sigma[v][:3, 0, 0], ref, rtol=0, atol=3e-5), v
+
+
+def test_sigma_real_symmetries(sigma_w90):
+    """
+    Full and centres only: isotropic (C3; 9e-4 at N = 300, 2e-4 converged) and sigma_xy = 0 (mirror).
+    Without Berry: xx != yy, but yy equals centres only to rounding (tau_B - tau_A along x: no y term).
+    """
+    _, sigma = sigma_w90
+    for v in ('full', 'centres_only'):
+        assert np.allclose(sigma[v][:, 1, 1], sigma[v][:, 0, 0], rtol=2e-3, atol=0), v
+    assert all(np.abs(s[:, 0, 1]).max() < 1e-8 for s in sigma.values())
+    assert np.all(sigma['no_berry'][:3, 0, 0] / sigma['no_berry'][:3, 1, 1] > 1.1)
+    assert np.allclose(sigma['no_berry'][:, 1, 1], sigma['centres_only'][:, 1, 1], rtol=1e-12, atol=0)
+
+
+def test_sigma_real_features(sigma_w90):
+    """
+    van Hove peak at 4.05 eV (transition at M, 4.056 eV) in every variant; centres only / full = 0.951
+    at 2.33 eV, the ratio of <|hbar v_cv|^2> on the ring (F15).
+    """
+    hw, sigma = sigma_w90
+    for v, s in sigma.items():
+        assert np.isclose(hw[3:][np.argmax(s[3:, 0, 0])], 4.05, rtol=0, atol=1e-9), v
+    assert np.isclose(sigma['centres_only'][1, 0, 0] / sigma['full'][1, 0, 0], 0.951, rtol=0, atol=1e-3)

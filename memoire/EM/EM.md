@@ -225,7 +225,7 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 
 Lancer avec `.venv/bin/python -m pytest tests -v`. Fixtures partagées dans `tests/conftest.py` : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
-**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (55 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
+**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (58 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
 
 **Faits (F1–F7 et pilote, 78 exécutions ; à partir de F6, les tests sont écrits par Code) :**
 
@@ -482,7 +482,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   - pour résoudre l'anneau, il faut un pas de grille ≲ η/(2ħv_F), soit environ 3.6×10⁻³ Å⁻¹ pour η = 0.04 eV, donc N ≳ 800 ;
   - balayer N = 900, 1200, 1800 et η = 0.02, 0.04, 0.08 eV ;
   - retenir le couple stable à 10⁻³ près sur σ(ε_L).
-- **Pilote fait (2026-09-29, en local, ~13 min)** : 5×5 complet, μ = E_D, ħω = 0.20–6.00 eV par pas de 0.01, les trois η partageant chaque diagonalisation (boucle identique à `sigma_on_grid` à 2×10⁻¹⁴ ; script et npz dans le scratchpad de la séance, non versionnés).
+- **Pilote fait (2026-09-29, en local, ~13 min)** : 5×5 complet, μ = E_D, ħω = 0.20–6.00 eV par pas de 0.01, les trois η partageant chaque diagonalisation (boucle identique à `sigma_on_grid` à 2×10⁻¹⁴) ; script, npz et tableau de convergence archivés dans `memoire/EM/M4_sigma/pilote/`.
   - **Convergence en N très rapide** (grille décalée, intégrande lisse) : à η = 0.04, N = 900 et 1800 diffèrent de 10⁻¹¹ ; à η = 0.02, N = 900 est à 1.3×10⁻⁴ et N = 1200 à 1.5×10⁻⁶ de N = 1800. Le critère « pas ≲ η/(2ħv_F) » est largement pessimiste.
   - **Biais en η quadratique**, σ(η) ≈ σ(0) + 0.42 η² à 2.33 eV (mêmes coefficients de 0.02 à 0.08) : 1.7×10⁻⁴ à η = 0.02, **6.7×10⁻⁴ à η = 0.04**, 2.7×10⁻³ à η = 0.08.
   - **Couple retenu : N = 1200, η = 0.04 eV** (convergé en N à 10⁻¹⁴, biais < 10⁻³, 65 s par variante) ; η = 0.04 est aussi l'élargissement prévu pour postw90. Biais du mode complet à η = 0.04 : 5.0, 6.6, 8.2×10⁻⁴ aux trois lasers (sans Berry : jusqu'à 1.0×10⁻³ à 2.54 eV). Tableau complet : `memoire/EM/M4_sigma/pilote/convergence.txt`.
@@ -502,12 +502,13 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 - Pièges rencontrés : sorties de `meshgrid` nommées dans le mauvais ordre (carte transposée sans erreur, les deux axes étant identiques) ; axe `q` écrasé par la liste de vecteurs. Le `reshape(nq, nq)` défait le `ravel` (ordre C des deux côtés), sans transposée.
 - Tests (`tests/test_ring.py`, 7 ; valeurs dans `W90_REF.map_K`) : M0 près de K (cône : Δε = 2ħv_F|q| à 4×10⁻³, |ħv_cv|² = (ħv_F)² à 1.7×10⁻², deux jauges) ; invariance de jauge de la carte ; valeurs (nq = 100) ; orientation contre `compute_velocity` en un point hors diagonale ; iso-lignes = anneaux ; sans Berry : même Δε, autre P ; nq impair refusé avec le bon message. Mutations : sorties de `meshgrid` inversées (2 échecs), `indexing='ij'` (2), `.real` au lieu de |·|² (5), v et c inversés (5), `reshape` transposé (2), assert de parité retiré (1, grâce au message), mode ignoré (1), K oublié (6).
 
-- **Vérifications :**
-  - mode complet : σ_xx = σ_yy et σ_xy = 0 ;
-  - σ/σ₀ → 1 à basse énergie ;
-  - montée vers la singularité de van Hove en M ;
-  - le mode sans Berry brise l'isotropie ;
-  - concordance avec postw90 `kubo` (EM2).
+- **Vérifications** (faites le 2026-09-29, sauf postw90) :
+  - mode complet : σ_xx = σ_yy (1.9×10⁻⁴, C₃ des données) et σ_xy = 0 (9×10⁻¹²) ;
+  - σ/σ₀ → 1 à basse énergie (1.0026 à 0.2 eV) ;
+  - montée vers la singularité de van Hove en M (pic à 4.05 eV) ;
+  - le mode sans Berry brise l'isotropie (yy/xx = 0.86 à 2.33 eV) ; son σ_yy est celui des centres seuls à 10⁻¹⁴ ;
+  - concordance avec postw90 `kubo` (EM2) : **en attente**.
+- Tests sur données réelles (`tests/test_kubo.py`, 3 ; valeurs dans `W90_REF.sigma_eta008`) : N = 300 et η = 0.08 eV (convergé à 10⁻⁵ aux lasers, ~7 s) contre le pilote convergé (N = 1800, autre chemin de code) à 3×10⁻⁵ ; isotropie et σ_xy = 0 avec Berry, σ_yy sans Berry = centres seuls ; pic de van Hove à 4.05 eV, rapport centres/complet 0.951 à 2.33 eV. Seuls ces tests voient la suppression de `hermitize` (le r de M0 est déjà hermitien). ndegen oublié n'y change rien (|H(R)| ≤ 1.4×10⁻⁵ eV là où ndegen = 2), mais 11 autres tests le détectent.
 - **Sorties (npz)** : `em_sigma_{mode}_N{N}_eta{eta}.npz` (ω, σ_αβ, paramètres), `em_map_K.npz` (F19), `em_ring_stats.json` (F15), plus ħv_F et ħω_froz.
 - **Production faite (2026-09-29, local, 145 s, commit a6bb02f, `src` propre)** dans `memoire/EM/M4_sigma/` (`m4_prod.py`, README ; pilote dans `pilote/`) : `em_sigma_{full,centres_only,no_berry}_N1200_eta0.04.npz`, `em_map_K.npz` (h = 0.35 Å⁻¹, nq = 300, trois variantes, 4.1 Mo), `em_ring_stats.json`, `em_scalars.json` (ħv_F = 5.46919 eV·Å, v_F = 8.31×10⁵ m/s, ħω_froz = 4.9595 eV à N = 800, σ aux lasers, sha256 des modules). La production redonne le pilote à l'identique (écart 0).
 
@@ -533,6 +534,8 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 
 ### EM2 — références indépendantes (Code)
 
+Lancée sur rorqual le 2026-09-29 avec `memoire/EM/EM2_prompt.md`, qui précise ce plan : liste de F17 (72 k), run QE en `calculation = 'bands'` dans un `outdir` neuf, contrôle de la cellule QE contre `unit_cell_cart`, `berry_kmesh = 1200 1200 1`, largeur de postw90 = √2 η si sa gaussienne est exp(−x²)/√π (à vérifier dans le code), sortie `em2_postw90_sigma.npz` lue par la figure.
+
 - **DFT directe** :
   - nscf sur les points de `em2_kpoints_crystal.txt` (même pseudo-potentiel, ecutwfc 100 Ry, nbnd 20, `nosym`), à partir de la densité de `defect_uc_dense_27` (scratch ou miroir `qe_tmp_backup/`) ;
   - puis `bands.x` avec `lp = .true.`, qui donne les éléments ⟨ψ_c|p̂|ψ_v⟩. Code documente les unités et vérifie dans la doc de 7.5 si le commutateur [V_NL, r] y est inclus ;
@@ -544,7 +547,8 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 
 ### EM3 — figure et chiffres (Code)
 
-- **Première version (2026-09-29)** : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` (6.5 × 3.45 po), données de `memoire/EM/M4_sigma/`. (a) |ħv^x_cv|²/(ħv_F)² du mode complet autour de K (h = 0.35 Å⁻¹), anneaux à 1.96, 2.33, 2.54 eV, axe q ∥ x en pointillé (le nœud est à +7°) ; (b) σ_xx/σ₀ complet, centres seuls, sans Berry (xx), médaillon 1.8–2.7 eV avec les trois lasers, ligne ħω_froz. σ_yy sans Berry = σ_yy centres seuls à 10⁻¹⁴ sur toute la courbe (τ_B − τ_A selon x, comme en F15) : une seule courbe verte. La courbe postw90 s'ajoute d'elle-même quand `memoire/EM/EM2/em2_postw90_sigma.npz` existe. Reste : postw90 (EM2), le tableau, la légende du mémoire.
+- **Première version (2026-09-29)** : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` (6.5 × 3.45 po), données de `memoire/EM/M4_sigma/`. (a) |ħv^x_cv|²/(ħv_F)² du mode complet autour de K (h = 0.35 Å⁻¹), anneaux à 1.96, 2.33, 2.54 eV, axe q ∥ x en pointillé (le nœud est à +7°) ; (b) σ_xx/σ₀ complet, centres seuls, sans Berry (xx), médaillon 1.8–2.7 eV avec les trois lasers, ligne ħω_froz. σ_yy sans Berry = σ_yy centres seuls à 10⁻¹⁴ sur toute la courbe (τ_B − τ_A selon x, comme en F15) : une seule courbe verte. La courbe postw90 s'ajoute d'elle-même quand `memoire/EM/EM2/em2_postw90_sigma.npz` existe.
+- **Tableau (2026-09-29)** : `memoire/EM/M4_sigma/make_table.py` → `em_table.tex` (`tabular` booktabs, 10 colonnes : σ/σ₀ complet, centres, sans Berry xx et yy ; ⟨|ħv^x_cv|²⟩ complet et centres ; nœud δ_x complet et sans Berry ; une ligne par laser ; compile en `\small` avec des marges de 2.5 cm) et `em_table.csv` (tous les chiffres). ħv_F, v_F, ħω_froz, N et η sont en commentaire sous le tableau, pour la légende. Reste : postw90 (EM2), la légende de la figure et du tableau (P28).
 
 - Figure à deux panneaux :
   - (a) carte de |e_x·v_cv|² autour de K avec les anneaux à 1.96, 2.33 et 2.54 eV ;
@@ -581,9 +585,9 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | M1 — lecteur et diagnostics | **fait** : F8 (`read_w90_tb`, `make_wannier_tb`), F9 (`centres_only`), F10 (`hermiticity_report`), F11 (`symmetry_report`) ; 118 tests en tout | 2026-09-28 |
 | M2 — v(k) réel | **fait** : F12 (`kpath`), F13 (`fermi_velocity`) ; ħv_F = 5.469 eV·Å ; 134 tests en tout | 2026-09-28 |
 | M3 — symétries et anneaux | **fait** : F14 (`pz_block`), F15 (`ring_stats`), F17 (`ring_kpoints_crystal`) ; F16 reportée ; 160 tests en tout | 2026-09-29 |
-| EM2 — DFT directe et postw90 | à préparer (liste de k prête) | |
-| M4 — σ(ω) et données de figure | en cours : pilote et production faits (`memoire/EM/M4_sigma/`, N = 1200, η = 0.04 eV), F18, F19 faits ; 174 tests ; reste la concordance postw90 (EM2) | 2026-09-29 |
-| EM3 — figure et chiffres | première version faite (`figures/fig_em_coupling`), postw90 à ajouter après EM2 | 2026-09-29 |
+| EM2 — DFT directe et postw90 | **en cours sur rorqual** (prompt `memoire/EM/EM2_prompt.md`) | 2026-09-29 |
+| M4 — σ(ω) et données de figure | en cours : pilote et production faits (`memoire/EM/M4_sigma/`, N = 1200, η = 0.04 eV), F18, F19 faits ; 177 tests ; reste la concordance postw90 (EM2) | 2026-09-29 |
+| EM3 — figure et chiffres | figure et tableau faits (`figures/fig_em_coupling`, `M4_sigma/em_table.tex`), postw90 à ajouter après EM2 | 2026-09-29 |
 | P28 — texte | après validation complète | |
 
 ---

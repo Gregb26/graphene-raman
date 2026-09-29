@@ -1,0 +1,1009 @@
+{
+ "sizes": {
+  "5x5": {
+   "N": 5,
+   "n_atoms": 49,
+   "ngfft": [
+    150,
+    150,
+    192
+   ],
+   "r_max_A": 7.118301170928329,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 5.3387258781962466,
+   "plateau_i_10": {
+    "mean": -0.0575626062015234,
+    "rms": 0.09413647407375364,
+    "max_abs_dev": 0.23370320732269242,
+    "n": 13
+   },
+   "plateau_i_05": {
+    "mean": -0.05997577619793814,
+    "rms": 0.10839761012327825,
+    "max_abs_dev": 0.3152900798264474,
+    "n": 13
+   },
+   "C_N_eV": -0.0575626062015234,
+   "far_true": {
+    "index1": [
+     2
+    ],
+    "dist_A": [
+     7.118301170928329
+    ],
+    "shift10_meV": [
+     176.14060112116903
+    ],
+    "shift05_meV": [
+     255.31430362850926
+    ],
+    "mean10_meV": 176.14060112116903,
+    "mean05_meV": 255.31430362850926
+   },
+   "Lu": {
+    "axis_atom_1based": 49,
+    "dist_axis_A": 9.965621638870608,
+    "dist_true_A": 6.205591091537014,
+    "P1_meV": -122.32935833955594,
+    "P1_05_meV": -131.6433135878583,
+    "far_atom_alignment_meV": -122.32935833955594,
+    "far_atom_alignment_05_meV": -131.6433135878583,
+    "same_as_function": true,
+    "published_meV": -122.32935833955594,
+    "published_source": "R5 C",
+    "published_atom_1based": 49,
+    "dev_published_meV": 0.0
+   },
+   "mean3d_meV": 28.618369670300847,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_5x5_d/defect_5x5_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_5x5_p/defect_5x5_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/5x5/defective/Vks_5x5_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/5x5/pristine/Vks_5x5_p"
+   },
+   "read_s": 1.1823790073394775,
+   "elapsed_s": 1.6153264045715332
+  },
+  "6x6": {
+   "N": 6,
+   "n_atoms": 71,
+   "ngfft": [
+    180,
+    180,
+    192
+   ],
+   "r_max_A": 8.541961405113993,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 6.406471053835494,
+   "plateau_i_10": {
+    "mean": -0.05050914517629934,
+    "rms": 0.02455991723470971,
+    "max_abs_dev": 0.050040885327099716,
+    "n": 26
+   },
+   "plateau_i_05": {
+    "mean": -0.052330788451159765,
+    "rms": 0.036064533342997376,
+    "max_abs_dev": 0.07516175788359028,
+    "n": 26
+   },
+   "C_N_eV": -0.05050914517629934,
+   "far_true": {
+    "index1": [
+     2,
+     57
+    ],
+    "dist_A": [
+     8.541961405112321,
+     8.541961405113993
+    ],
+    "shift10_meV": [
+     -100.55003050339906,
+     -86.57324447052162
+    ],
+    "shift05_meV": [
+     -127.49254633475005,
+     -111.64735901769518
+    ],
+    "mean10_meV": -93.56163748696034,
+    "mean05_meV": -119.56995267622261
+   },
+   "Lu": {
+    "axis_atom_1based": 71,
+    "dist_axis_A": 12.812942106387187,
+    "dist_true_A": 7.3975555757151765,
+    "P1_meV": -98.61571051992257,
+    "P1_05_meV": -125.82857796208202,
+    "far_atom_alignment_meV": -98.61571051991547,
+    "far_atom_alignment_05_meV": -125.82857796208202,
+    "same_as_function": true,
+    "published_meV": -98.61571051991547,
+    "published_source": "R5 C",
+    "published_atom_1based": 71,
+    "dev_published_meV": -7.105427357601002e-12
+   },
+   "mean3d_meV": 20.82580554610125,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_6x6_d/defect_6x6_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_6x6_p/defect_6x6_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/6x6/defective/Vks_6x6_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/6x6/pristine/Vks_6x6_p"
+   },
+   "read_s": 1.714693307876587,
+   "elapsed_s": 2.2767810821533203
+  },
+  "7x7": {
+   "N": 7,
+   "n_atoms": 97,
+   "ngfft": [
+    216,
+    216,
+    192
+   ],
+   "r_max_A": 9.96562163929771,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 7.474216229473283,
+   "plateau_i_10": {
+    "mean": -0.02691429425434127,
+    "rms": 0.018525932765631827,
+    "max_abs_dev": 0.03557841616550111,
+    "n": 31
+   },
+   "plateau_i_05": {
+    "mean": -0.027811277608891724,
+    "rms": 0.01809758620994512,
+    "max_abs_dev": 0.03200125334804364,
+    "n": 31
+   },
+   "C_N_eV": -0.02691429425434127,
+   "far_true": {
+    "index1": [
+     81
+    ],
+    "dist_A": [
+     9.96562163929771
+    ],
+    "shift10_meV": [
+     -37.03801350504676
+    ],
+    "shift05_meV": [
+     -34.774299395508024
+    ],
+    "mean10_meV": -37.03801350504676,
+    "mean05_meV": -34.774299395508024
+   },
+   "Lu": {
+    "axis_atom_1based": 97,
+    "dist_axis_A": 14.23660234356226,
+    "dist_true_A": 8.65978712922328,
+    "P1_meV": -38.53881844096918,
+    "P1_05_meV": -37.92834888952257,
+    "far_atom_alignment_meV": -38.538818440962075,
+    "far_atom_alignment_05_meV": -37.928348889494146,
+    "same_as_function": true,
+    "published_meV": -38.538818440962075,
+    "published_source": "R5 C",
+    "published_atom_1based": 97,
+    "dev_published_meV": -7.105427357601002e-12
+   },
+   "mean3d_meV": 14.553554054264506,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_7x7_d/defect_7x7_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_7x7_p/defect_7x7_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/7x7/defective/Vks_7x7_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/7x7/pristine/Vks_7x7_p"
+   },
+   "read_s": 2.403717517852783,
+   "elapsed_s": 3.2792725563049316
+  },
+  "8x8": {
+   "N": 8,
+   "n_atoms": 127,
+   "ngfft": [
+    240,
+    240,
+    192
+   ],
+   "r_max_A": 11.389281873485329,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 8.541961405113996,
+   "plateau_i_10": {
+    "mean": -0.014410274533323343,
+    "rms": 0.018868375924447074,
+    "max_abs_dev": 0.05919450065487321,
+    "n": 49
+   },
+   "plateau_i_05": {
+    "mean": -0.014577441845911993,
+    "rms": 0.01988252491483274,
+    "max_abs_dev": 0.07604209810403624,
+    "n": 49
+   },
+   "C_N_eV": -0.014410274533323343,
+   "far_true": {
+    "index1": [
+     20
+    ],
+    "dist_A": [
+     11.389281873485329
+    ],
+    "shift10_meV": [
+     44.784226121549864
+    ],
+    "shift05_meV": [
+     61.46465625812425
+    ],
+    "mean10_meV": 44.784226121549864,
+    "mean05_meV": 61.46465625812425
+   },
+   "Lu": {
+    "axis_atom_1based": 1,
+    "dist_axis_A": 17.08392281193303,
+    "dist_true_A": 9.863407434286902,
+    "P1_meV": -22.965857127417166,
+    "P1_05_meV": -24.61997622916101,
+    "far_atom_alignment_meV": -22.965857127417166,
+    "far_atom_alignment_05_meV": -24.6199762291468,
+    "same_as_function": true,
+    "published_meV": -22.965857127417166,
+    "published_source": "R5 C",
+    "published_atom_1based": 1,
+    "dev_published_meV": 0.0
+   },
+   "mean3d_meV": 11.229852574144328,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_8x8_d/defect_8x8_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_8x8_p/defect_8x8_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/8x8/defective/Vks_8x8_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/8x8/pristine/Vks_8x8_p"
+   },
+   "read_s": 2.830349922180176,
+   "elapsed_s": 3.97944974899292
+  },
+  "9x9": {
+   "N": 9,
+   "n_atoms": 161,
+   "ngfft": [
+    270,
+    270,
+    192
+   ],
+   "r_max_A": 12.81294210767099,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 9.609706580753242,
+   "plateau_i_10": {
+    "mean": -0.02514371002267805,
+    "rms": 0.009050935331807373,
+    "max_abs_dev": 0.024098466653886447,
+    "n": 53
+   },
+   "plateau_i_05": {
+    "mean": -0.025293795257683105,
+    "rms": 0.013687303671147767,
+    "max_abs_dev": 0.03685193914740931,
+    "n": 53
+   },
+   "C_N_eV": -0.02514371002267805,
+   "far_true": {
+    "index1": [
+     21,
+     140
+    ],
+    "dist_A": [
+     12.81294210767099,
+     12.812942107668476
+    ],
+    "shift10_meV": [
+     -42.518811106120324,
+     -49.2421766765645
+    ],
+    "shift05_meV": [
+     -54.80255531470846,
+     -62.14573440509241
+    ],
+    "mean10_meV": -45.88049389134241,
+    "mean05_meV": -58.474144859900434
+   },
+   "Lu": {
+    "axis_atom_1based": 161,
+    "dist_axis_A": 18.507583046972616,
+    "dist_true_A": 11.119141883716845,
+    "P1_meV": -24.65140127665677,
+    "P1_05_meV": -21.593938958474723,
+    "far_atom_alignment_meV": -24.65140127665677,
+    "far_atom_alignment_05_meV": -21.593938958474723,
+    "same_as_function": true,
+    "published_meV": -24.65140127665677,
+    "published_source": "R5 C",
+    "published_atom_1based": 161,
+    "dev_published_meV": 0.0
+   },
+   "mean3d_meV": 9.087407856163132,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_9x9_d/defect_9x9_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_9x9_p/defect_9x9_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/9x9/defective/Vks_9x9_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/9x9/pristine/Vks_9x9_p"
+   },
+   "read_s": 3.612698554992676,
+   "elapsed_s": 5.215769290924072
+  },
+  "12x12": {
+   "N": 12,
+   "n_atoms": 287,
+   "ngfft": [
+    360,
+    360,
+    192
+   ],
+   "r_max_A": 17.083922810227993,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 12.812942107670995,
+   "plateau_i_10": {
+    "mean": -0.01868959310083182,
+    "rms": 0.005415014150579857,
+    "max_abs_dev": 0.01387667811067575,
+    "n": 95
+   },
+   "plateau_i_05": {
+    "mean": -0.019082201406594904,
+    "rms": 0.008281131336371665,
+    "max_abs_dev": 0.020618364338867864,
+    "n": 95
+   },
+   "C_N_eV": -0.01868959310083182,
+   "far_true": {
+    "index1": [
+     28,
+     235
+    ],
+    "dist_A": [
+     17.083922810224642,
+     17.083922810227993
+    ],
+    "shift10_meV": [
+     -32.56627121150757,
+     -28.661662686879197
+    ],
+    "shift05_meV": [
+     -39.70056574546277,
+     -35.60685498133864
+    ],
+    "mean10_meV": -30.613966949193383,
+    "mean05_meV": -37.653710363400705
+   },
+   "Lu": {
+    "axis_atom_1based": 287,
+    "dist_axis_A": 25.625884217899532,
+    "dist_true_A": 14.795111151430351,
+    "P1_meV": -29.235084249123133,
+    "P1_05_meV": -36.0660307293017,
+    "far_atom_alignment_meV": -29.235084249116028,
+    "far_atom_alignment_05_meV": -36.06603072928749,
+    "same_as_function": true,
+    "published_meV": -29.235084249116028,
+    "published_source": "R5 C",
+    "published_atom_1based": 287,
+    "dev_published_meV": -7.105427357601002e-12
+   },
+   "mean3d_meV": 5.058902986926128,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_12x12_d/defect_12x12_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_12x12_p/defect_12x12_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/12x12/defective/Vks_12x12_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/12x12/pristine/Vks_12x12_p"
+   },
+   "read_s": 6.3028693199157715,
+   "elapsed_s": 11.47273588180542
+  },
+  "10x10": {
+   "N": 10,
+   "n_atoms": 199,
+   "ngfft": [
+    300,
+    300,
+    192
+   ],
+   "r_max_A": 14.236602341856655,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 10.677451756392491,
+   "plateau_i_10": {
+    "mean": -0.009341716029942201,
+    "rms": 0.006131955910896638,
+    "max_abs_dev": 0.012537473136445751,
+    "n": 70
+   },
+   "plateau_i_05": {
+    "mean": -0.00945518710218656,
+    "rms": 0.006255559106729655,
+    "max_abs_dev": 0.01485284366234956,
+    "n": 70
+   },
+   "C_N_eV": -0.009341716029942201,
+   "far_true": {
+    "index1": [
+     23
+    ],
+    "dist_A": [
+     14.236602341856655
+    ],
+    "shift10_meV": [
+     -14.285155951668571
+    ],
+    "shift05_meV": [
+     -13.640568560816746
+    ],
+    "mean10_meV": -14.285155951668571,
+    "mean05_meV": -13.640568560816746
+   },
+   "Lu": {
+    "axis_atom_1based": 198,
+    "dist_axis_A": 19.93124327774121,
+    "dist_true_A": 12.41118218307403,
+    "P1_meV": -8.223781758729842,
+    "P1_05_meV": -7.802046543076813,
+    "far_atom_alignment_meV": -8.223781758715631,
+    "far_atom_alignment_05_meV": -7.802046543062602,
+    "same_as_function": true,
+    "published_meV": -8.223781758715631,
+    "published_source": "R5 C",
+    "published_atom_1based": 198,
+    "dev_published_meV": -1.4210854715202004e-11
+   },
+   "mean3d_meV": 7.173000097179916,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_10x10_d/defect_10x10_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_10x10_p/defect_10x10_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/10x10/defective/Vks_10x10_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/10x10/pristine/Vks_10x10_p"
+   },
+   "read_s": 4.497121334075928,
+   "elapsed_s": 6.366916179656982
+  },
+  "11x11": {
+   "N": 11,
+   "n_atoms": 241,
+   "ngfft": [
+    360,
+    360,
+    192
+   ],
+   "r_max_A": 15.660262576039251,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 11.745196932029438,
+   "plateau_i_10": {
+    "mean": -0.009550651557225422,
+    "rms": 0.005759586378469606,
+    "max_abs_dev": 0.017570919840599743,
+    "n": 73
+   },
+   "plateau_i_05": {
+    "mean": -0.009561720074242547,
+    "rms": 0.005891310997989673,
+    "max_abs_dev": 0.021706468180167464,
+    "n": 73
+   },
+   "C_N_eV": -0.009550651557225422,
+   "far_true": {
+    "index1": [
+     26
+    ],
+    "dist_A": [
+     15.660262576039251
+    ],
+    "shift10_meV": [
+     8.020268283374321
+    ],
+    "shift05_meV": [
+     12.144748105924918
+    ],
+    "mean10_meV": 8.020268283374321,
+    "mean05_meV": 12.144748105924918
+   },
+   "Lu": {
+    "axis_atom_1based": 241,
+    "dist_axis_A": 22.77856375166426,
+    "dist_true_A": 13.580853070113466,
+    "P1_meV": -12.163021491296888,
+    "P1_05_meV": -12.085535489632093,
+    "far_atom_alignment_meV": -12.163021491289783,
+    "far_atom_alignment_05_meV": -12.085535489632093,
+    "same_as_function": true,
+    "published_meV": -12.163021491289783,
+    "published_source": "R5 C",
+    "published_atom_1based": 241,
+    "dev_published_meV": -7.105427357601002e-12
+   },
+   "mean3d_meV": 5.946608321612423,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_11x11_d/defect_11x11_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_11x11_p/defect_11x11_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/11x11/defective/Vks_11x11_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/11x11/pristine/Vks_11x11_p"
+   },
+   "read_s": 6.532376527786255,
+   "elapsed_s": 9.113228559494019
+  },
+  "15x15": {
+   "N": 15,
+   "n_atoms": 449,
+   "ngfft": [
+    450,
+    450,
+    192
+   ],
+   "r_max_A": 21.3549035127808,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 16.016177634585603,
+   "plateau_i_10": {
+    "mean": -0.01621854502926427,
+    "rms": 0.0027581903411269307,
+    "max_abs_dev": 0.00829694877022687,
+    "n": 149
+   },
+   "plateau_i_05": {
+    "mean": -0.01621844486750309,
+    "rms": 0.0041341757102320836,
+    "max_abs_dev": 0.01221172098306237,
+    "n": 149
+   },
+   "C_N_eV": -0.01621854502926427,
+   "far_true": {
+    "index1": [
+     65,
+     384
+    ],
+    "dist_A": [
+     21.3549035127808,
+     21.3549035127808
+    ],
+    "shift10_meV": [
+     -22.160032262064533,
+     -24.51549379949114
+    ],
+    "shift05_meV": [
+     -26.021048655394452,
+     -28.43016585056546
+    ],
+    "mean10_meV": -23.337763030777836,
+    "mean05_meV": -27.225607252979955
+   },
+   "Lu": {
+    "axis_atom_1based": 449,
+    "dist_axis_A": 31.320525155922365,
+    "dist_true_A": 18.507583046238242,
+    "P1_meV": -15.642378585795313,
+    "P1_05_meV": -14.544936023256128,
+    "far_atom_alignment_meV": -15.642378585788208,
+    "far_atom_alignment_05_meV": -14.544936023241917,
+    "same_as_function": true,
+    "published_meV": -15.642378585788208,
+    "published_source": "R7 D1",
+    "published_atom_1based": 449,
+    "dev_published_meV": -7.105427357601002e-12
+   },
+   "mean3d_meV": 1.4157659381535126,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_15x15_d/defect_15x15_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_15x15_p/defect_15x15_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/15x15/defective/Vks_15x15_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/15x15/pristine/Vks_15x15_p"
+   },
+   "read_s": 9.887906551361084,
+   "elapsed_s": 17.634373426437378
+  },
+  "18x18": {
+   "N": 18,
+   "n_atoms": 647,
+   "ngfft": [
+    540,
+    540,
+    192
+   ],
+   "r_max_A": 25.625884215341962,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 19.219413161506473,
+   "plateau_i_10": {
+    "mean": -0.015062070057554946,
+    "rms": 0.001735438244804098,
+    "max_abs_dev": 0.00499421423132934,
+    "n": 212
+   },
+   "plateau_i_05": {
+    "mean": -0.015177745358203992,
+    "rms": 0.0025506784414341985,
+    "max_abs_dev": 0.007068587371233776,
+    "n": 212
+   },
+   "C_N_eV": -0.015062070057554946,
+   "far_true": {
+    "index1": [
+     115,
+     570
+    ],
+    "dist_A": [
+     25.62588421533696,
+     25.625884215341962
+    ],
+    "shift10_meV": [
+     -18.57512578763476,
+     -20.056284288884285
+    ],
+    "shift05_meV": [
+     -20.75569835982094,
+     -22.246332729437768
+    ],
+    "mean10_meV": -19.315705038259523,
+    "mean05_meV": -21.501015544629354
+   },
+   "Lu": {
+    "axis_atom_1based": 1,
+    "dist_axis_A": 38.438826326849316,
+    "dist_true_A": 22.19266672714553,
+    "P1_meV": -18.180482432597955,
+    "P1_05_meV": -20.336318151152,
+    "far_atom_alignment_meV": -18.18048243260506,
+    "far_atom_alignment_05_meV": -20.33631815113779,
+    "same_as_function": true,
+    "published_meV": -18.18048243260506,
+    "published_source": "R7 D1",
+    "published_atom_1based": 1,
+    "dev_published_meV": 7.105427357601002e-12
+   },
+   "mean3d_meV": -8.481730789323905,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_18x18_d/defect_18x18_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_18x18_p/defect_18x18_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/18x18/defective/Vks_18x18_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/18x18/pristine/Vks_18x18_p"
+   },
+   "read_s": 14.145740032196045,
+   "elapsed_s": 22.24708604812622
+  },
+  "21x21": {
+   "N": 21,
+   "n_atoms": 881,
+   "ngfft": [
+    625,
+    625,
+    192
+   ],
+   "r_max_A": 29.89686491789899,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 22.422648688424243,
+   "plateau_i_10": {
+    "mean": -0.014234270413329362,
+    "rms": 0.0010319410741586256,
+    "max_abs_dev": 0.0031333732247096364,
+    "n": 275
+   },
+   "plateau_i_05": {
+    "mean": -0.014331701835232283,
+    "rms": 0.0015052686340684058,
+    "max_abs_dev": 0.004298523511706972,
+    "n": 275
+   },
+   "C_N_eV": -0.014234270413329362,
+   "far_true": {
+    "index1": [
+     133,
+     748
+    ],
+    "dist_A": [
+     29.89686491789899,
+     29.896864917893144
+    ],
+    "shift10_meV": [
+     -16.377568399988718,
+     -17.367643638039
+    ],
+    "shift05_meV": [
+     -17.629235671307697,
+     -18.630225346939255
+    ],
+    "mean10_meV": -16.87260601901386,
+    "mean05_meV": -18.129730509123476
+   },
+   "Lu": {
+    "axis_atom_1based": 881,
+    "dist_axis_A": 44.13346725846567,
+    "dist_true_A": 25.90122779323973,
+    "P1_meV": -13.771481369850846,
+    "P1_05_meV": -13.437402758384565,
+    "far_atom_alignment_meV": -13.771481369850846,
+    "far_atom_alignment_05_meV": -13.437402758356143,
+    "same_as_function": true,
+    "published_meV": -13.771481369850846,
+    "published_source": "R7 D1",
+    "published_atom_1based": 881,
+    "dev_published_meV": 0.0
+   },
+   "mean3d_meV": 1.0337128167221543,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_21x21_d/defect_21x21_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_21x21_p/defect_21x21_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/21x21/defective/Vks_21x21_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/21x21/pristine/Vks_21x21_p"
+   },
+   "read_s": 19.315778970718384,
+   "elapsed_s": 31.42899990081787
+  },
+  "24x24": {
+   "N": 24,
+   "n_atoms": 1151,
+   "ngfft": [
+    720,
+    720,
+    192
+   ],
+   "r_max_A": 34.167845620449285,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 25.625884215336963,
+   "plateau_i_10": {
+    "mean": -0.013481540317473475,
+    "rms": 0.0007204835667812933,
+    "max_abs_dev": 0.002249037821014297,
+    "n": 383
+   },
+   "plateau_i_05": {
+    "mean": -0.013560848078547051,
+    "rms": 0.0009668761722959761,
+    "max_abs_dev": 0.0028980761448530665,
+    "n": 383
+   },
+   "C_N_eV": -0.013481540317473475,
+   "far_true": {
+    "index1": [
+     201,
+     1000
+    ],
+    "dist_A": [
+     34.167845620449285,
+     34.167845620449285
+    ],
+    "shift10_meV": [
+     -14.993002218602669,
+     -15.730578138487772
+    ],
+    "shift05_meV": [
+     -15.754900487451096,
+     -16.458924223400118
+    ],
+    "mean10_meV": -15.36179017854522,
+    "mean05_meV": -16.106912355425607
+   },
+   "Lu": {
+    "axis_atom_1based": 2,
+    "dist_axis_A": 49.828108200332416,
+    "dist_true_A": 29.624450448890425,
+    "P1_meV": -13.1200424148048,
+    "P1_05_meV": -12.943093419139018,
+    "far_atom_alignment_meV": -13.1200424148048,
+    "far_atom_alignment_05_meV": -12.943093419139018,
+    "same_as_function": true,
+    "published_meV": -13.1200424148048,
+    "published_source": "R7 D1",
+    "published_atom_1based": 2,
+    "dev_published_meV": 0.0
+   },
+   "mean3d_meV": -62.73899109958503,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_24x24_d/defect_24x24_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_24x24_p/defect_24x24_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/24x24/defective/Vks_24x24_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/24x24/pristine/Vks_24x24_p"
+   },
+   "read_s": 25.416187524795532,
+   "elapsed_s": 43.72754430770874
+  },
+  "27x27": {
+   "N": 27,
+   "n_atoms": 1457,
+   "ngfft": [
+    810,
+    810,
+    192
+   ],
+   "r_max_A": 38.438826323005465,
+   "plateau_frac": 0.75,
+   "d_min_plateau_A": 28.8291197422541,
+   "plateau_i_10": {
+    "mean": -0.0130057717522539,
+    "rms": 0.0005318051100756837,
+    "max_abs_dev": 0.001623847819495785,
+    "n": 461
+   },
+   "plateau_i_05": {
+    "mean": -0.01306088317320841,
+    "rms": 0.000652330146999243,
+    "max_abs_dev": 0.0020365239095403494,
+    "n": 461
+   },
+   "C_N_eV": -0.0130057717522539,
+   "far_true": {
+    "index1": [
+     225,
+     1232
+    ],
+    "dist_A": [
+     38.438826323005465,
+     38.438826323005415
+    ],
+    "shift10_meV": [
+     -14.085128532194346,
+     -14.629619571749686
+    ],
+    "shift05_meV": [
+     -14.566415746074313,
+     -15.09740708274876
+    ],
+    "mean10_meV": -14.357374051972016,
+    "mean05_meV": -14.831911414411536
+   },
+   "Lu": {
+    "axis_atom_1based": 1457,
+    "dist_axis_A": 56.94640937382189,
+    "dist_true_A": 33.296609874798534,
+    "P1_meV": -12.765946493296099,
+    "P1_05_meV": -12.68706605610248,
+    "far_atom_alignment_meV": -12.765946493296099,
+    "far_atom_alignment_05_meV": -12.687066056116691,
+    "same_as_function": true,
+    "published_meV": -12.765946493296099,
+    "published_source": "R7 D1",
+    "published_atom_1based": 1457,
+    "dev_published_meV": 0.0
+   },
+   "mean3d_meV": -99.91305943908868,
+   "files": {
+    "d": "/lustre10/scratch/gregb26/qe_tmp/defect_27x27_d/defect_27x27_d.save",
+    "p": "/lustre10/scratch/gregb26/qe_tmp/defect_27x27_p/defect_27x27_p.save",
+    "vd": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/27x27/defective/Vks_27x27_d",
+    "vp": "/lustre09/project/6004866/gregb26/graphene/qe/defects/super_cell/27x27/pristine/Vks_27x27_p"
+   },
+   "read_s": 31.816851377487183,
+   "elapsed_s": 56.693883180618286
+  }
+ },
+ "rule": {
+  "radius_A": 1.0,
+  "plateau_frac": 0.75,
+  "tie_A": 1e-06,
+  "C_N": "moyenne du plateau (i), sans critère d'arrêt (D14)"
+ },
+ "head": "da2bc42",
+ "gate_A0": {
+  "rows": {
+   "5x5": {
+    "C_i_R10_eV": -0.0575626062015234,
+    "C_i_R9_eV": -0.0575626062015234,
+    "C_bit": true,
+    "far_R10": [
+     2
+    ],
+    "far_audit": [
+     2
+    ],
+    "far_same": true,
+    "far_max_dev_meV": 0.0,
+    "mean_far_R10_meV": 176.14060112116903,
+    "mean_far_audit_meV": 176.14060112116903,
+    "Lu_same_as_function": true,
+    "Lu_dev_published_meV": 0.0,
+    "ok": true
+   },
+   "6x6": {
+    "C_i_R10_eV": -0.05050914517629934,
+    "C_i_R9_eV": -0.05050914517629934,
+    "C_bit": true,
+    "far_R10": [
+     2,
+     57
+    ],
+    "far_audit": [
+     2,
+     57
+    ],
+    "far_same": true,
+    "far_max_dev_meV": 0.0,
+    "mean_far_R10_meV": -93.56163748696034,
+    "mean_far_audit_meV": -93.56163748696034,
+    "Lu_same_as_function": true,
+    "Lu_dev_published_meV": -7.105427357601002e-12,
+    "ok": true
+   },
+   "7x7": {
+    "C_i_R10_eV": -0.02691429425434127,
+    "C_i_R9_eV": -0.02691429425434127,
+    "C_bit": true,
+    "far_R10": [
+     81
+    ],
+    "far_audit": [
+     81
+    ],
+    "far_same": true,
+    "far_max_dev_meV": 0.0,
+    "mean_far_R10_meV": -37.03801350504676,
+    "mean_far_audit_meV": -37.03801350504676,
+    "Lu_same_as_function": true,
+    "Lu_dev_published_meV": -7.105427357601002e-12,
+    "ok": true
+   },
+   "8x8": {
+    "C_i_R10_eV": -0.014410274533323343,
+    "C_i_R9_eV": -0.014410274533323343,
+    "C_bit": true,
+    "far_R10": [
+     20
+    ],
+    "far_audit": [
+     20
+    ],
+    "far_same": true,
+    "far_max_dev_meV": 0.0,
+    "mean_far_R10_meV": 44.784226121549864,
+    "mean_far_audit_meV": 44.784226121549864,
+    "Lu_same_as_function": true,
+    "Lu_dev_published_meV": 0.0,
+    "ok": true
+   },
+   "9x9": {
+    "C_i_R10_eV": -0.02514371002267805,
+    "C_i_R9_eV": -0.02514371002267805,
+    "C_bit": true,
+    "far_R10": [
+     21,
+     140
+    ],
+    "far_audit": [
+     21,
+     140
+    ],
+    "far_same": true,
+    "far_max_dev_meV": 0.0,
+    "mean_far_R10_meV": -45.88049389134241,
+    "mean_far_audit_meV": -45.88049389134241,
+    "Lu_same_as_function": true,
+    "Lu_dev_published_meV": 0.0,
+    "ok": true
+   },
+   "12x12": {
+    "C_i_R10_eV": -0.01868959310083182,
+    "C_i_R9_eV": -0.01868959310083182,
+    "C_bit": true,
+    "far_R10": [
+     28,
+     235
+    ],
+    "far_audit": [
+     28,
+     235
+    ],
+    "far_same": true,
+    "far_max_dev_meV": 0.0,
+    "mean_far_R10_meV": -30.613966949193383,
+    "mean_far_audit_meV": -30.613966949193383,
+    "Lu_same_as_function": true,
+    "Lu_dev_published_meV": -7.105427357601002e-12,
+    "ok": true
+   }
+  },
+  "ok": true
+ },
+ "C_N_eV": {
+  "5x5": -0.0575626062015234,
+  "6x6": -0.05050914517629934,
+  "7x7": -0.02691429425434127,
+  "8x8": -0.014410274533323343,
+  "9x9": -0.02514371002267805,
+  "10x10": -0.009341716029942201,
+  "11x11": -0.009550651557225422,
+  "12x12": -0.01868959310083182,
+  "15x15": -0.01621854502926427,
+  "18x18": -0.015062070057554946,
+  "21x21": -0.014234270413329362,
+  "24x24": -0.013481540317473475,
+  "27x27": -0.0130057717522539
+ }
+}

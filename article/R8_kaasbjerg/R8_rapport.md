@@ -688,3 +688,79 @@ Hauteurs ×2 à 1 % : 0,0535 (tel quel), 0,0582 (aligné), 0,0427 (eta_unique) c
 
 **STOP — R8 calculs du premier GO terminés le 2026-09-29.** Chiffres bruts. Pour la suite : décision sur les unités de la Fig. 13 (le rms ×2 est 5 à 8 fois plus petit
 que le rms ×1) ; étapes 4 et 6 sur GO séparé ; à la clôture de R8, réécriture de l'historique git (essai à blanc d'abord).
+
+**Décision de Greg (2026-09-29) — unités** : les DOS de R8 restent en états/eV/maille/**par spin** (convention de 0.2, éq. 34 sur le bloc π), sans changement ; les
+comparaisons « ×2 » de 7b restent rapportées telles quelles, à titre d'information.
+
+## Étapes 4 et 6 (article ; GO de Greg du 2026-09-29, « si c'est pas long »)
+
+Fonctions ajoutées à `disorder_average.py` (non commitées) : **Q7** `sigma_eff(eps_k, Sigma, e, eta=0.0)` (éq. 45, complément de Schur) ; **Q8** `dirac_g0bar`
+(éq. 48), `dirac_t0` (éq. 47), `dirac_pole` (racine de 1/V₀ = Re Ḡ₀ la plus proche de E_D, du côté −signe(V₀)), `dirac_lambda_for_pole` (Λ = |ε_p| √(1 +
+exp(−1/(V₀ C ε_p))), C = A_cell g_v/(4π(ħv_F)²)). Tests ajoutés à `tests/test_r8_functions.py` : Q7 = diagonale de l'inverse direct 2 × 2 (1e-12) ; Q8 : Re Ḡ₀ =
+transformée de Hilbert de la DOS de Dirac par quadrature de Cauchy (1e-9), Im Ḡ₀ exact, pôle et Λ réciproques (1e-9) ; **8 tests passés** (1,2 s). Pilote :
+sous-commandes `sigeff`, `dirac` ; exécutées sur le nœud de connexion (6 s chacune), caches de J1 (N_k^int 900, η_t 20 meV) ; deux erreurs d'exécution corrigées
+(sérialisation json d'un tableau numpy puis d'un complexe), sans effet sur les calculs.
+
+### 4. Self-énergie effective à K (V_A, 9×9, c_i = 1 %, N_k^int 900, η_t 20 meV ; `out/sigeff/`, `fig/sigma_K`)
+
+Base de bandes à K : limite des vecteurs propres de H(K + 10⁻⁶ x̂) (π et π* dégénérés à K) ; en K + δ : point de R9 D.1 (δ = 0,0294 Å⁻¹, ε − E_D = −0,1614 / +0,1604).
+Σ = c_i T̄ (Q1 + Q2), Σ^eff par Q7 (sans η), solutions de ε − ε_nk − Re Σ^eff = 0 par changement de signe (pas 2,5 meV).
+
+| variante | k | solutions (π) | solutions (π*) | pente de ε − Re Σ^eff aux solutions de K | pic de −Im Σ^eff sur ]0 ; 0,3] | min de Im Σ^eff sur [−1, 0] | Σ_nn(E_D) ; Σ^eff(E_D) |
+|---|---|---|---|---|---|---|---|
+| tel quel | K | +0,0074 ; +0,0821 ; +0,1215 | identiques | 2,00 ; −24,7 ; 2,48 | +0,080 (0,377) | −0,2975 (−0,173) | 0,1115 − 0,0171 i ; 0,0144 − 0,0002 i |
+| tel quel | K + δ | −0,0609 | −0,0518 ; −0,0316 ; +0,2200 | | | | |
+| aligné plateau | K | +0,0147 ; +0,0913 ; +0,1282 | identiques | 2,01 ; −18,3 ; 2,41 | +0,0875 (0,345) | −0,2800 (−0,184) | 0,1266 − 0,0201 i ; 0,0278 − 0,0004 i |
+| aligné plateau | K + δ | −0,0510 | −0,0429 ; −0,0208 ; +0,2268 | | | | |
+
+Base des sous-réseaux à K (lacune sur p_z(A), WF 3), max sur ±1,2 eV : tel quel |Σ_AA| 0,498, |Σ_BB| 0,0093, |Σ_AB| 0,0030 ; aligné 0,539 / 0,0165 / 0,0025 eV. En regard :
+maxima de A_K de l'étape 3 (tel quel) +0,0076 et +0,1252 ; Kaasbjerg (Fig. 14, V_A, 1 %) +0,010 et +0,110 ; sa Fig. 15 (N substitutionnels) n'a pas d'équivalent lacune.
+
+### 6. Modèle de Dirac (éq. 47–48 ; `out/dirac/dirac_results.json`, `dirac_9x9.npz`)
+
+V₀ = 2Ṽ/A_cell (A_cell = 5,2658 Å²) ; pôle de T₀ = racine de 1/V₀ = Re Ḡ₀ la plus proche de E_D (sous E_D pour V₀ > 0), sans ajustement ; « sans Λ » : racine de
+1/V₀ = Re Ḡ₀^W(ε) la plus proche sous E_D, Ḡ₀^W = ½ Tr du g₀ sur site (p_z(A), p_z(B), maille 0) de la wannierisation 27×27, N_k^int 900, η 20 meV ; Λ reproduisant = Λ de
+l'éq. 48 qui place le pôle de Dirac à cette énergie. Constantes R8 : ħv_F = 5,459 eV Å, A_cell de la maille ; Kaasbjerg : v_F = 10⁶ m/s (ħv_F = 6,582 eV Å), A_cell 5,25 Å².
+ε₀ = c_i V₀/2 (pôle du second terme de l'éq. 50 à K pour le modèle, Kaasbjerg) à c_i = 1 % : 0,146 / 0,148 / 0,144 / 0,155 / 0,157 / 0,156 / 0,157 / 0,164 / 0,164 eV (lignes du tableau).
+
+| source de Ṽ | Ṽ (eV Å²) | V₀ (eV) | pôle, constantes R8, Λ = 10³ / 10⁴ / 10⁵ eV | pôle, constantes Kaasbjerg, 10³ / 10⁴ / 10⁵ | pôle sans Λ (Re Ḡ₀^W) | Λ reproduisant (R8 / Kaasbjerg) |
+|---|---|---|---|---|---|---|
+| R9 D.1 tel quel, valence (disque K) | 76,96 | 29,23 | −0,0629 / −0,0498 / −0,0414 | −0,0959 / −0,0752 / −0,0621 | −0,1870 | 4,8 / 21,5 eV |
+| R9 D.1 tel quel, conduction | 78,16 | 29,69 | −0,0618 / −0,0490 / −0,0407 | −0,0942 / −0,0739 / −0,0610 | −0,1837 | 4,8 / 21,3 |
+| R9 D.2 tel quel, ½ Re Tr (K, K) | 75,87 | 28,82 | −0,0639 / −0,0506 / −0,0420 | −0,0974 / −0,0764 / −0,0630 | −0,1902 | 4,9 / 21,6 |
+| R9 D.1 aligné exact, C_N = Lu, valence | 81,51 | 30,96 | −0,0590 / −0,0468 / −0,0389 | −0,0899 / −0,0706 / −0,0583 | −0,1750 | 4,7 / 20,9 |
+| R9 D.1 aligné exact, C_N = Lu, conduction | 82,71 | 31,41 | −0,0580 / −0,0461 / −0,0383 | −0,0884 / −0,0695 / −0,0574 | −0,1721 | 4,6 / 20,8 |
+| R8 V_loc R_cut 3 tel quel, valence (k′ = k = K + δ) | 82,33 | 31,27 | −0,0583 / −0,0463 / −0,0385 | −0,0889 / −0,0698 / −0,0577 | −0,1730 | 4,6 / 20,9 |
+| R8 V_loc R_cut 3 tel quel, conduction | 82,76 | 31,44 | −0,0580 / −0,0460 / −0,0383 | −0,0884 / −0,0694 / −0,0574 | −0,1720 | 4,6 / 20,8 |
+| R8 V_loc R_cut 3 aligné (i) plateau, valence | 86,17 | 32,73 | −0,0554 / −0,0440 / −0,0367 | −0,0845 / −0,0664 / −0,0550 | −0,1643 | 4,5 / 20,4 |
+| R8 V_loc R_cut 3 aligné (i) plateau, conduction | 86,60 | 32,89 | −0,0551 / −0,0438 / −0,0365 | −0,0840 / −0,0661 / −0,0547 | −0,1634 | 4,5 / 20,4 |
+
+(Λ = 2 × 10³, 5 × 10³, 2 × 10⁴, 5 × 10⁴ dans le json.) Variante alignée : R9 D.1 n'existe qu'en alignement exact avec C_N = Lu (plateau non rejoué, écart estimé
++0,09 eV Å² par la clôture de R9, 0.5) ; l'approximation (i) plateau est donnée par les lignes R8 V_loc. Kaasbjerg : Ṽ ∼ 70 eV Å², V₀ ≈ +27 eV ; Λ = 10⁴ eV ajusté (Fig. 15, N).
+
+Fichiers ajoutés : `out/sigeff/` (json, `sigma_K_9x9.npz`), `out/dirac/` (json, npz), `fig/sigma_K.{pdf,png}`.
+
+**STOP — étapes 4 et 6 faites le 2026-09-29.** Chiffres bruts. Reste : essai à blanc de la réécriture git (demande de Greg).
+
+## Figures de DOS : ρ₀ 1 200² (demande de Greg, 2026-09-29)
+
+Dans `dos_c` et `superposition`, toutes les courbes ρ₀ et ρ₀ + δρ utilisent désormais ρ₀ sur **1 200², η_G 15 meV** (déjà calculé, décision 3 ; clé
+`pristine_eta15_1200` de `dos_9x9.npz`) au lieu du 300² du protocole de l'article (Kaasbjerg : 300 × 300) ; δρ = ρ − ρ₀ (600², η_G 50 meV) inchangé ; aucun lissage ;
+légendes « ρ₀ : 1 200², η 15 meV ». Aucun calcul : `fig` relancée (12 s, nœud de connexion). Anciennes figures gardées : `fig/{dos_c,superposition}_rho0_300.{pdf,png}` ;
+ancien json : `out/fig/fig_results_rho0_300.json`.
+
+- ρ₀,300 − ρ₀,1 200 : rms 0,00137 sur [−1, +1] eV (max 0,00383) ; rms 0,00175 sur ±1,2 eV (max 0,00682).
+- Contrôles : `dos_results.json`, `dos_9x9.npz`, `sens_results.json` inchangés (md5, `out/fig/md5_avant_lissage.txt`) ; positions des maxima de ρ − ρ₀, écarts de
+  position de 7b et table 2 bis identiques ; rms « avant » recalculés = anciennes valeurs à 1e-15.
+- rms contre Kaasbjerg sur [−1, +1] eV, avant (ρ₀ 300²) → après (ρ₀ 1 200²), grille de δρ 600² :
+
+| variante | c_i | ×2 | ×1 |
+|---|---|---|---|
+| tel quel | 0,1 % | 0,00399 → 0,00296 | 0,03333 → 0,03329 |
+| tel quel | 1 % | 0,00696 → 0,00643 | 0,03489 → 0,03485 |
+| aligné | 0,1 % | 0,00400 → 0,00297 | 0,03335 → 0,03331 |
+| aligné | 1 % | 0,00808 → 0,00762 | 0,03509 → 0,03505 |
+| eta_unique | 0,1 % | 0,00397 → 0,00293 | 0,03333 → 0,03328 |
+| eta_unique | 1 % | 0,00560 → 0,00492 | 0,03487 → 0,03483 |
+
+(δρ sur 300² : mêmes valeurs à ≤ 1e-5, `fig_results.json`.) Figures sans ondulation visible à l'œil : pas de 2 400².

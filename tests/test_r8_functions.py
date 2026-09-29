@@ -174,3 +174,33 @@ def test_build_k_path_proportional():
     assert len(k2) == 7 and idx2 == [0, 4, 6]
     with pytest.raises(ValueError):
         build_k_path(corners, 2, B)
+
+
+def test_sigma_eff_is_the_schur_complement():
+    """Q7: 1/(z - eps_n - Sigma^eff_n) equals the diagonal of the direct 2 x 2 inverse."""
+    rng = np.random.default_rng(7)
+    e = np.linspace(-1.0, 1.0, 9); eps_k = np.array([-0.3, 0.4]); eta = 0.02
+    S = rng.standard_normal((9, 2, 2)) * 0.1 + 1j * rng.standard_normal((9, 2, 2)) * 0.1
+    Se = da.sigma_eff(eps_k, S, e, eta)
+    G = np.linalg.inv((e + 1j * eta)[:, None, None] * np.eye(2) - np.diag(eps_k)[None] - S)
+    for n in (0, 1):
+        assert np.allclose(1.0 / ((e + 1j * eta) - eps_k[n] - Se[:, n]), G[:, n, n], rtol=0, atol=1e-12)
+
+
+def test_dirac_model():
+    """Q8: G0bar = Hilbert transform of the Dirac site DOS (quadrature, 1e-9) ; pole and cutoff are inverse of each other (1e-12)."""
+    from scipy.integrate import quad
+    hv, Ac, Lam, gv = 5.459, 5.266, 7.0, 2
+    C = Ac * gv / (4 * np.pi * hv ** 2)
+    for x in (-3.0, -0.2, 0.15, 2.5):
+        pv = quad(lambda y: C * abs(y), -Lam, Lam, weight="cauchy", wvar=x, epsabs=1e-14, epsrel=1e-13, limit=200)[0]
+        g = da.dirac_g0bar(x, Lam, hv, Ac, gv)
+        assert abs(g.real - (-pv)) < 1e-9 * max(1.0, abs(pv))            # quad cauchy integrates f(y)/(y - x)
+        assert abs(g.imag + np.pi * C * abs(x)) < 1e-14
+    for V0, L in ((28.8, 1e4), (29.7, 1e3), (-10.0, 1e4)):
+        ep = da.dirac_pole(V0, L, hv, Ac)
+        assert np.sign(ep) == -np.sign(V0)
+        assert abs(da.dirac_g0bar(ep, L, hv, Ac).real - 1.0 / V0) < 1e-12 / abs(V0) * 1e2
+        assert abs(da.dirac_lambda_for_pole(ep, V0, hv, Ac) / L - 1.0) < 1e-9
+        t0 = da.dirac_t0(ep * np.array([0.5, 1.5]), V0, L, hv, Ac)
+        assert np.all(np.isfinite(t0))

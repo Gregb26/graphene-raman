@@ -15,6 +15,8 @@ Sub-commands
     spec      step 3 (A_k on Gamma-K-M)
     sens      step 5 (DOS c_i = 1 %: N_k^int, R_cut, 12x12, eta_G)
     fig       step 7b (superposition on Kaasbjerg Fig. 13), 2 bis table, figures, tables
+    sigeff    step 4 (article): Sigma_nK and Sigma^eff_nK (Kaasbjerg Eqs. 44-45), quasiparticle solutions, fig/sigma_K
+    dirac     step 6 (article): Dirac model (Eqs. 47-48), pole vs Lambda, pole without Lambda from the on-site g0
 
 Outputs: out/ (json, npz, csv, md), fig/ ; nothing in results/ (TEST, decision 7 of 2026-09-28). Energies in eV relative to E_D
 (Wannier Dirac point). DOS in states / eV / unit cell / spin (pi block). Concentrations c_i = defects per unit cell.
@@ -481,6 +483,8 @@ def _jsonable(o):
         return o.tolist()
     if isinstance(o, np.generic):
         return o.item()
+    if isinstance(o, complex):                   # complex numbers written as [Re, Im]
+        return [o.real, o.imag]
     raise TypeError(type(o))
 
 
@@ -1133,19 +1137,28 @@ def cmd_fig(a):
     egr = D["eg_rel"]; col = {"tel_quel": NAVY, "aligne": ORANGE, "eta_unique": GREEN}
     lab = {"tel_quel": "tel quel", "aligne": r"aligné ($C_N$ plateau)", "eta_unique": r"$\eta_t = \eta_G$"}
     Nmain = NK(600)
-    # ---- 7b : our curves at the protocol of the article vs the extracted curves
+    # pristine DOS of the figures (Greg, 2026-09-29): 1 200^2, eta 15 meV, instead of the 300^2 of the article's protocol; rho - rho0 unchanged
+    P0 = NK(1200)
+    rho0_fig = D[f"pristine_eta15_{P0}"]
+    prot = lambda key: rho0_fig + (D[key] - D[key.rsplit("_c", 1)[0] + "_rho0"])          # rho0(1200^2, 15 meV) + delta rho
+    # ---- 7b : our curves at the protocol of the article vs the extracted curves (rms with rho0 300^2 and 1 200^2 kept side by side)
     sup = {}
     mK = (eK >= -1.0) & (eK <= 1.0)
     for name in ("tel_quel", "aligne", "eta_unique"):
         for N in GRIDS_DOS:
             for cv in C_LIST:
                 key = f"{name}_{N}_c{cv}"
-                ours = np.interp(eK, egr, D[f"{key}_protocole"])
                 row = dict(pos_ours=Dj["metrics"][key]["drho_max_pos_eV"], pos_K=K7["0.1" if cv == 0.001 else "1.0"]["drho_max_pos_eV"])
                 row["pos_diff_eV"] = row["pos_ours"] - row["pos_K"]
-                for f_ in (1, 2):
-                    row[f"rms_x{f_}"] = float(np.sqrt(np.mean((f_ * ours[mK] - rK[cv][mK]) ** 2)))
+                for tag, curve in (("rho0_300", D[f"{key}_protocole"]), (f"rho0_{P0}", prot(key))):
+                    ours = np.interp(eK, egr, curve)
+                    for f_ in (1, 2):
+                        row[f"rms_x{f_}_{tag}"] = float(np.sqrt(np.mean((f_ * ours[mK] - rK[cv][mK]) ** 2)))
+                row["rms_x1"], row["rms_x2"] = row[f"rms_x1_rho0_{P0}"], row[f"rms_x2_rho0_{P0}"]           # values of the figures
                 sup[key] = row
+    d0 = D[f"pristine_eta15_{NK(300)}"] - rho0_fig
+    pris_cmp = {f"rms_{w}": float(np.sqrt(np.mean(d0[np.abs(egr) <= w + 1e-9] ** 2))) for w in (1.0, WIN)}
+    pris_cmp.update({f"max_{w}": float(np.abs(d0[np.abs(egr) <= w + 1e-9]).max()) for w in (1.0, WIN)})
     # ---- 2 bis table
     tab2 = {}
     for S in SIZES:
@@ -1160,12 +1173,13 @@ def cmd_fig(a):
                 rr = [x for x in Se["rows"] if x["group"] == "taille" and x["variant"] == var][0]
                 r["drho_max_c0.01_600"] = rr["drho_max_pos_eV"]
             tab2[f"{S} {var}"] = r
-    save_json(os.path.join(d, "fig_results.json"), dict(prov=provenance(), superposition_7b=sup, table_2bis=tab2))
+    save_json(os.path.join(d, "fig_results.json"), dict(prov=provenance(rho0_figures=f"{P0}^2, eta 15 meV"), superposition_7b=sup, table_2bis=tab2,
+                                                        rho0_300_minus_rho0_1200=pris_cmp))
     # ---- figure dos_c
     fig, ax = plt.subplots(1, 3, figsize=(6.5, 2.5), sharex=True)
-    ax[0].plot(egr, D["pristine_eta15_300"], color=REF, lw=0.8, label=r"parfait ($\eta$ 15 meV)")
+    ax[0].plot(egr, rho0_fig, color=REF, lw=0.8, label=r"$\rho_0$ : 1\,200$^2$, $\eta$ 15 meV")
     for cv, cc in ((0.001, SKY), (0.01, NAVY)):
-        ax[0].plot(egr, D[f"tel_quel_{GRID_SENS}_c{cv}_protocole"], color=cc, lw=0.9, label=rf"$c_i$ = {cv * 100:g}".replace(".", ",") + r"\,\%")
+        ax[0].plot(egr, prot(f"tel_quel_{GRID_SENS}_c{cv}"), color=cc, lw=0.9, label=rf"$c_i$ = {cv * 100:g}".replace(".", ",") + r"\,\%")
     for i, cv in enumerate(C_LIST):
         for name in ("tel_quel", "aligne", "eta_unique"):
             ax[i + 1].plot(egr, D[f"{name}_{GRID_SENS}_c{cv}"] - D[f"{name}_{GRID_SENS}_rho0"], color=col[name], lw=0.9, label=lab[name])
@@ -1217,27 +1231,144 @@ def cmd_fig(a):
             x.plot(eK, rK["pristine"], color=MUTED, lw=0.6, ls="--", label="Kaasbjerg, parfait")
             x.plot(eK, rK[cv], color=REF, lw=1.2, label="Kaasbjerg")
             for name in ("tel_quel", "aligne", "eta_unique"):
-                x.plot(egr, f_ * D[f"{name}_{GRID_SENS}_c{cv}_protocole"], color=col[name], lw=0.8, label=lab[name])
+                x.plot(egr, f_ * prot(f"{name}_{GRID_SENS}_c{cv}"), color=col[name], lw=0.8, label=lab[name])
             x.set_xlim(-1.2, 1.2)
             x.set_title(f"({'abcd'[2 * i + j]}) " + rf"$c_i$ = {cv * 100:g}".replace(".", ",") + r"\,\%, " + ("par spin" if f_ == 1 else r"$\times 2$ (spin compté)"),
                         fontsize=8)
         ax[i, 0].set_ylabel(r"DOS (eV$^{-1}$)")
     for x in ax[1]:
         x.set_xlabel(r"Énergie $\varepsilon - E_D$ (eV)")
+    ax[0, 0].plot([], [], " ", label=r"(nous : $\rho_0$ 1\,200$^2$, $\eta$ 15 meV)")      # legend line only
     ax[0, 0].legend(fontsize=6)
     fig.tight_layout(); [fig.savefig(os.path.join(fdir, f"superposition.{e}"), dpi=300) for e in ("pdf", "png")]; plt.close(fig)
     rlog(f"[fig] figures dos_c, spectral_GKM, sensibilites, superposition -> {fdir} ; 7b : { {k: (round(v['pos_diff_eV'], 4), round(v['rms_x1'], 5), round(v['rms_x2'], 5)) for k, v in sup.items()} }")
+
+
+# ------------------------------------------------------------------------------------------------ article: steps 4 and 6 (GO 2026-09-29)
+R9_D = os.path.join(R9W, "d", "d_results.json")
+
+
+def cmd_sigeff(a):
+    """Step 4: Sigma_nK and Sigma^eff_nK (Kaasbjerg Eqs. (44)-(45)) for V_A, c_i = 1 %, 9x9, N_k^int 900, eta_t 20 meV, both variants.
+    At K (pi and pi* degenerate) the band basis is the limit of the eigenvectors of H(K + 1e-6 xhat); also at K + delta (point of R9 D.1)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    plt.style.use(os.path.join(PROJ, "figures", "memoire.mplstyle"))
+    sys.path.insert(0, os.path.join(PROJ, "scripts"))
+    from _palette import NAVY, ORANGE, SKY, GOLD, REF
+    from electron_defect_interaction.defects.many_body.pole_criterion import sign_changes
+    m = mods(); c = cfg(); eta_p = c["eta_eV"]; d = ensure(OUTC, "sigeff"); cv = 0.01
+    S = "9x9"; P = load_prep(S); E_D = float(P["E_D"]); K = np.array(c["K_red"], float)
+    kd = np.array(json.load(open(R9_D))["D1_meta"]["k_red"], float).reshape(-1)[:3]          # K + delta of R9 D.1
+    xhat = (kd - K) / np.linalg.norm(kd - K)
+    res = dict(prov=provenance(S, c_i=cv, eta_t=eta_p, N_k_int=NK(NK_MAIN), k_delta=kd, R9_D=R9_D, R9_D_md5=md5(R9_D)), runs={})
+    arr = {}
+    fig, axs = plt.subplots(1, 2, figsize=(6.5, 2.8), sharey=True)
+    for iv, var in enumerate(VARIANTS):
+        ch = t_pi(S, 3, NK_MAIN, eta_p, var); eg = ch["eg"] - E_D
+        kk = np.vstack([K, K + 1e-6 * xhat, kd])
+        Hk = hk_pi(P, kk); Ek, Uk = np.linalg.eigh(Hk)
+        T = m.da.tbar_k(ch["tau"], ch["Du"], kk)                                             # (nE, 3, 2, 2), sublattice basis
+        sub = cv * T[:, 0]                                                                   # Sigma at K, sublattice basis
+        for tag, ik, Ubasis in (("K", 0, Uk[1]), ("K+delta", 2, Uk[2])):
+            eps_k = Ek[ik] - E_D
+            Sb = cv * np.einsum("wn,ewv,vm->enm", Ubasis.conj(), T[:, ik], Ubasis)          # band basis (pi, pi*)
+            Se = m.da.sigma_eff(eps_k, Sb, eg)
+            qp = {}
+            for n, bn in ((0, "pi"), (1, "pi*")):
+                _, roots = sign_changes(eg - eps_k[n] - Se[:, n].real, eg)
+                qp[bn] = roots
+            iD = int(np.argmin(np.abs(eg)))
+            res["runs"][f"{var} {tag}"] = dict(eps_k=eps_k, qp_roots=qp, Sigma_nn_at_ED=np.diagonal(Sb[iD]), Seff_at_ED=Se[iD],
+                                                max_abs_ImSeff=np.abs(Se.imag).max(0))
+            arr[f"Sigma_{var}_{tag}"] = Sb; arr[f"Seff_{var}_{tag}"] = Se
+            rlog(f"[sigeff] {var} {tag} : eps_k - E_D {np.round(eps_k, 5).tolist()} ; solutions de e - eps_nk - Re Seff = 0 : "
+                 f"pi {np.round(qp['pi'], 4).tolist()}, pi* {np.round(qp['pi*'], 4).tolist()}")
+        arr[f"Sigma_sublattice_K_{var}"] = sub
+        res["runs"][f"{var} K sous-reseaux"] = dict(vacancy_wf=int(P["vac_wf"]), max_abs_AB=float(np.abs(sub[:, 0, 1]).max()),
+                                                   max_abs_AA=float(np.abs(sub[:, 0, 0]).max()), max_abs_BB=float(np.abs(sub[:, 1, 1]).max()))
+        x = axs[iv]; Se = arr[f"Seff_{var}_K"]; Sb = arr[f"Sigma_{var}_K"]
+        x.plot(eg, eg - res["runs"][f"{var} K"]["eps_k"][0], color=REF, lw=0.7, ls="--", label=r"$\varepsilon - \varepsilon_{nK}$")
+        x.plot(eg, Sb[:, 0, 0].real, color=SKY, lw=0.7, label=r"Re $\Sigma_{nn}$")
+        x.plot(eg, Sb[:, 0, 0].imag, color=GOLD, lw=0.7, label=r"Im $\Sigma_{nn}$")
+        x.plot(eg, Se[:, 0].real, color=NAVY, lw=1.0, label=r"Re $\Sigma^\mathrm{eff}_{nK}$")
+        x.plot(eg, Se[:, 0].imag, color=ORANGE, lw=1.0, label=r"Im $\Sigma^\mathrm{eff}_{nK}$")
+        x.set_xlim(-1, 1); x.set_ylim(-0.35, 0.35); x.set_xlabel(r"Énergie $\varepsilon - E_D$ (eV)")
+        x.set_title(f"({'ab'[iv]}) " + ("tel quel" if var == "tel_quel" else r"aligné ($C_N$ plateau)") + r", $c_i$ = 1\,\%, $k = K$", fontsize=9)
+    axs[0].set_ylabel(r"$\Sigma$ (eV)"); axs[0].legend(fontsize=6, loc="lower left")
+    fig.tight_layout(); fdir = ensure(HERE, "fig_smoke" if SMOKE else "fig")
+    [fig.savefig(os.path.join(fdir, f"sigma_K.{e}"), dpi=300) for e in ("pdf", "png")]; plt.close(fig)
+    np.savez(os.path.join(d, "sigma_K_9x9.npz"), eg_rel=eg, **arr, prov=json.dumps(res["prov"], default=_jsonable))
+    save_json(os.path.join(d, "sigeff_results.json"), res)
+    rlog(f"[sigeff] termine -> {d}, fig/sigma_K")
+
+
+def cmd_dirac(a):
+    """Step 6: Dirac model (Kaasbjerg Eqs. (47)-(48)), V0 = 2 Vtilde / A_cell ; pole 1/V0 = Re G0bar vs Lambda (no fit), our constants and the
+    article's ; pole without Lambda from the on-site g0 of the 9x9 wannierisation (N_k^int 900) and the Lambda of Eq. (48) reproducing it."""
+    from electron_defect_interaction.defects.many_body.pole_criterion import sign_changes
+    m = mods(); c = cfg(); eta_p = c["eta_eV"]; d = ensure(OUTC, "dirac")
+    S = "9x9"; P = load_prep(S); E_D = float(P["E_D"]); A = P["A"]
+    A_cell = float(abs(np.linalg.det(A[:2, :2])))
+    R9 = json.load(open(R9_D)); D1, D2 = R9["D1"], R9["D2"]["blocks"]
+    kd = np.array(R9["D1_meta"]["k_red"], float).reshape(-1)[:3]
+    Vt = {"R9 D.1 tel quel, valence (disque K)": D1["brut"]["valence | K"]["mean"],
+          "R9 D.1 tel quel, conduction (disque K)": D1["brut"]["conduction | K"]["mean"],
+          "R9 D.2 tel quel, 1/2 Re Tr (K, K)": D2["tot | brut"]["half_trace_eVA2"],
+          "R9 D.1 aligné exact C_N = Lu, valence (disque K)": D1["exact"]["valence | K"]["mean"],
+          "R9 D.1 aligné exact C_N = Lu, conduction (disque K)": D1["exact"]["conduction | K"]["mean"]}
+    # our V_loc (R_cut 3), Born, intraband at k' = k = K + delta (R9 D.1 point), both variants (aligne = approximation (i), plateau)
+    Hk = hk_pi(P, kd[None]); _, Uk = np.linalg.eigh(Hk)
+    ip = pi_index(len(P["Rloc_rc3"]))
+    for var in VARIANTS:
+        V = V_of(P, 3, var, S)[np.ix_(ip, ip)]
+        Du, tau = m.da.tbar_reduce(V, P["Rloc_rc3"], 2)
+        Tn = m.da.tbar_k(tau, Du, kd[None], U=Uk)[0]
+        lab = "tel quel" if var == "tel_quel" else "aligné (i) plateau"
+        Vt[f"R8 V_loc R_cut 3 {lab}, valence (k' = k = K + delta)"] = float(A_cell * abs(Tn[0, 0]))
+        Vt[f"R8 V_loc R_cut 3 {lab}, conduction (k' = k = K + delta)"] = float(A_cell * abs(Tn[1, 1]))
+    consts = {"R8 : hbar vF 5,459 eV A, A_cell maille": (5.459, A_cell), "Kaasbjerg : vF 1e6 m/s, A_cell 5,25 A^2": (6.582119569, 5.25)}
+    lams = [1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5]
+    # on-site g0 of the lattice (1/2 Tr over the two p_z at R = 0), N_k^int 900, eta 20 meV
+    g0, egr = g0_for(S, 3, NK_MAIN, eta_p, "res"); eg = egr - E_D
+    L0 = int(np.where((P["Rloc_rc3"] == 0).all(axis=1))[0][0])
+    G0W = 0.5 * (g0[:, L0 * NW + 3, L0 * NW + 3] + g0[:, L0 * NW + 4, L0 * NW + 4]); del g0
+    rows = []
+    for name, v in Vt.items():
+        V0 = 2.0 * v / A_cell
+        row = dict(source=name, Vtilde_eVA2=v, V0_eV=V0, eps0_second_term_cV0_over_2_at_1pc=0.01 * V0 / 2)
+        for cname, (hv, Ac) in consts.items():
+            row[f"pole [{cname}]"] = {f"{L:g}": m.da.dirac_pole(V0, L, hv, Ac) for L in lams}
+        _, roots = sign_changes(G0W.real - 1.0 / V0, eg)
+        below = [r for r in roots if -1.2 <= r < 0]
+        epW = max(below) if below else float("nan")
+        row["pole_sans_Lambda_ReG0W_eV"] = epW; row["all_roots_ReG0W_minus_1_over_V0"] = roots
+        for cname, (hv, Ac) in consts.items():
+            row[f"Lambda_reproduisant [{cname}]"] = m.da.dirac_lambda_for_pole(epW, V0, hv, Ac) if np.isfinite(epW) else float("nan")
+        rows.append(row)
+        rlog(f"[dirac] {name} : Vtilde {v:.2f} eV A^2, V0 {V0:.3f} eV ; pole (R8, Lambda 1e3/1e4/1e5) "
+             f"{[round(row[f'pole [{list(consts)[0]}]'][f'{L:g}'], 4) for L in (1e3, 1e4, 1e5)]} ; (Kaasbjerg) "
+             f"{[round(row[f'pole [{list(consts)[1]}]'][f'{L:g}'], 4) for L in (1e3, 1e4, 1e5)]} ; sans Lambda (Re G0W) {epW:+.4f} ; "
+             f"Lambda reproduisant {[round(row[f'Lambda_reproduisant [{k_}]'], 1) for k_ in consts]}")
+    np.savez(os.path.join(d, "dirac_9x9.npz"), eg_rel=eg, G0W=G0W,
+             prov=json.dumps(provenance(S, eta_t=eta_p, N_k_int=NK(NK_MAIN), R9_D=R9_D, R9_D_md5=md5(R9_D), A_cell=A_cell)))
+    save_json(os.path.join(d, "dirac_results.json"), dict(prov=provenance(S, R9_D=R9_D, R9_D_md5=md5(R9_D)), A_cell=A_cell, constants=consts,
+                                                          Lambdas=lams, rows=rows,
+                                                          G0W_at_ED=[float(np.interp(0, eg, G0W.real)), float(np.interp(0, eg, G0W.imag))]))
+    rlog(f"[dirac] termine -> {d}")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest="cmd", required=True)
     for name, h in (("extract", "step 7a (login node)"), ("prep", "M2 -> V_loc caches"), ("g0", "all g0 (16 BLAS threads)"),
-                    ("gate", "step 1"), ("dos", "steps 2, 2 bis"), ("spec", "step 3"), ("sens", "step 5"), ("fig", "7b, figures, tables")):
+                    ("gate", "step 1"), ("dos", "steps 2, 2 bis"), ("spec", "step 3"), ("sens", "step 5"), ("fig", "7b, figures, tables"),
+                    ("sigeff", "step 4 (article)"), ("dirac", "step 6 (article)")):
         sp.add_parser(name, help=h)
     a = ap.parse_args()
     {"extract": cmd_extract, "prep": cmd_prep, "g0": cmd_g0, "gate": cmd_gate, "dos": cmd_dos, "spec": cmd_spec, "sens": cmd_sens,
-     "fig": cmd_fig}[a.cmd](a)
+     "fig": cmd_fig, "sigeff": cmd_sigeff, "dirac": cmd_dirac}[a.cmd](a)
 
 
 if __name__ == "__main__":

@@ -7,4 +7,4 @@
 - Date : 2026-09-27 (phase 0) ; mise à jour du 2026-09-28 (amendement après R9).
 - Lecture seule : `results/M2/`, `wannier/27x27`, `wannier/24x24`, json de R9 (jamais `R9_controles/cache/`) ; g₀ recalculé. Aucun calcul QE. Git en lecture.
 - Copie versionnée : `article/R8_kaasbjerg/` (rapport, pilote, tables, figures ; jamais npz > 5 Mo ni slurm).
-- État : GO des calculs exécuté le 2026-09-29 (jobs 22024568–22026239, portes PASS) ; résultats 1, 2, 2 bis, 3, 5, 7b dans `R8_rapport.md`, `out/`, `fig/` ; STOP. Étapes 4 et 6 : GO séparé.
+- État : 1er GO (étapes 1, 2, 2 bis, 3, 5, 7b) et GO article (étapes 4, 6) exécutés le 2026-09-29 ; résultats dans `R8_rapport.md`, `out/`, `fig/` ; STOP.

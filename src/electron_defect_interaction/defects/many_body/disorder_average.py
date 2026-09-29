@@ -228,3 +228,79 @@ def spectral_maxima(A, egrid, prominence=0.0, refine=True):
             pk.append((x, y))
         out.append(np.array(pk, float).reshape(-1, 2))
     return out
+
+
+def sigma_eff(eps_k, Sigma, e, eta=0.0):
+    """
+    Q7. Effective self-energy of each band of a 2 x 2 subspace (Kaasbjerg Eqs. (44)-(45)): eliminating the other band n' from
+    G_k = [(e + i eta) - diag(eps_k) - Sigma]^{-1} (Schur complement) gives
+
+        G^{nn}_k(e) = 1 / (e + i eta - eps_nk - Sigma^eff_nk(e)),
+        Sigma^eff_nk(e) = Sigma_nn(e) + Sigma_nn'(e) Sigma_n'n(e) / (e + i eta - eps_n'k - Sigma_n'n'(e)),   n' != n.
+
+    The second term is the defect-induced coupling between the two bands (Kaasbjerg: responsible for the band-gap opening at K).
+    Quasiparticle solutions: e - eps_nk - Re Sigma^eff_nk(e) = 0 (pole_criterion.sign_changes on a grid).
+
+    Inputs:
+        eps_k: (2,) band energies at k (band basis of Sigma).
+        Sigma: (nE, 2, 2) complex self-energy in the band basis (e.g. c_cell * tbar_k(..., U=U)[:, ik]).
+        e: (nE,) energies; eta: broadening added to e (0 in Eq. (45)).
+    Returns:
+        Seff: (nE, 2) complex, column n = Sigma^eff of band n.
+    """
+    e = np.asarray(e, float); S = np.asarray(Sigma); eps_k = np.asarray(eps_k, float)
+    z = e + 1j * eta
+    out = np.empty((len(e), 2), dtype=complex)
+    for n, m in ((0, 1), (1, 0)):
+        out[:, n] = S[:, n, n] + S[:, n, m] * S[:, m, n] / (z - eps_k[m] - S[:, m, m])
+    return out
+
+
+def dirac_g0bar(eps, Lam, hbar_vF, A_cell, g_v=2):
+    """
+    Q8a. k-summed Green's function of the Dirac model per sublattice site (Kaasbjerg Eq. (48)):
+
+        G0bar(eps) = A_cell (rho0bar / 2) [ eps ln| eps^2 / (eps^2 - Lam^2) | - i pi |eps| theta(Lam - |eps|) ],
+        rho0bar = g_v / (2 pi (hbar vF)^2),
+
+    i.e. the Hilbert transform of the site DOS D(eps) = A_cell (rho0bar/2) |eps| on [-Lam, Lam].
+    Units: eps, Lam (eV), hbar_vF (eV Angstrom), A_cell (Angstrom^2) -> 1/eV.
+    """
+    eps = np.asarray(eps, float)
+    C = A_cell * g_v / (2 * np.pi * hbar_vF ** 2) / 2
+    with np.errstate(divide="ignore"):
+        re = C * eps * np.log(np.abs(eps ** 2 / (eps ** 2 - Lam ** 2)))
+    re = np.where(eps == 0.0, 0.0, re)
+    im = -np.pi * C * np.abs(eps) * (np.abs(eps) < Lam)
+    return re + 1j * im
+
+
+def dirac_t0(eps, V0, Lam, hbar_vF, A_cell, g_v=2):
+    """Q8b. T0(eps) = V0 / (1 - V0 G0bar(eps)) (Kaasbjerg Eq. (47))."""
+    return V0 / (1.0 - V0 * dirac_g0bar(eps, Lam, hbar_vF, A_cell, g_v))
+
+
+def dirac_pole(V0, Lam, hbar_vF, A_cell, g_v=2):
+    """
+    Q8c. Pole of T0 closest to the Dirac point: root of 1/V0 = Re G0bar(eps) with the smallest |eps|, on the side sign(eps) = -sign(V0)
+    (below the Dirac point for a repulsive V0 > 0). Re G0bar vanishes at 0 and at |eps| = Lam/sqrt(2) and has one extremum in between,
+    so the root is bracketed between 0 and that extremum (log-spaced search, then brentq). Returns NaN if |1/V0| exceeds the extremum.
+    """
+    from scipy.optimize import brentq
+    s = -np.sign(V0)
+    f = lambda x: dirac_g0bar(s * x, Lam, hbar_vF, A_cell, g_v).real - 1.0 / V0
+    xs = np.geomspace(1e-12 * Lam, Lam / np.sqrt(2) * (1 - 1e-12), 4000)
+    fx = f(xs)
+    i = np.where(np.sign(fx[:-1]) != np.sign(fx[1:]))[0]
+    if len(i) == 0:
+        return float("nan")
+    return float(s * brentq(f, xs[i[0]], xs[i[0] + 1], xtol=1e-15, rtol=1e-14))
+
+
+def dirac_lambda_for_pole(eps_p, V0, hbar_vF, A_cell, g_v=2):
+    """
+    Q8d. Cutoff Lam for which the Dirac-model pole sits at eps_p: from 1/V0 = C eps_p ln(eps_p^2 / (Lam^2 - eps_p^2)) (|eps_p| < Lam),
+        Lam = |eps_p| sqrt(1 + exp(-1 / (V0 C eps_p))),   C = A_cell g_v / (4 pi (hbar vF)^2).
+    """
+    C = A_cell * g_v / (2 * np.pi * hbar_vF ** 2) / 2
+    return float(abs(eps_p) * np.sqrt(1.0 + np.exp(-1.0 / (V0 * C * eps_p))))

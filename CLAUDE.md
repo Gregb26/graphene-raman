@@ -134,7 +134,7 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   approximation of r, `pz_block(tb, pz)` for the p_z-only model, `extract_block` (not exported)), `kgrid` (reciprocal lattice, k grids),
   `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
   `compute_velocity(tb, k, mode)`), `ring`
-  (resonant k points around K, `fermi_velocity`, `ring_stats` for the three velocity variants on the laser rings, `ring_kpoints_crystal` for the EM2 k list, `map_around_K` for the maps of the figure), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`), `diagnostics` (reports on a model:
+  (resonant k points around K, `fermi_velocity`, `ring_stats` for the three velocity variants on the laser rings, `ring_kpoints_crystal` for the EM2 k list, `map_around_K` for the maps of the figure), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`, doping and temperature through `mu` and `kT`, Dirac reference `kubo_doped_finite_T_analytical`), `diagnostics` (reports on a model:
   `hermiticity_report`, `symmetry_report`, `frozen_window_limit`). Tests (pytest) in
   `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py`, shared fixtures in `tests/conftest.py` (real data:
   `tb_w90`, `eig_w90`, `w90_ref` on the tracked `wannier/27x27/`; every data-specific value and the sha256 of the
@@ -323,4 +323,4 @@ Classement au 2026-09-23 (EM1 ajouté le 2026-09-25, M4_sigma et EM2 le 2026-09-
 | EPW grilles test avril 2026 | `graphene/qe/epw/{36k-30q,30k-24q,24k-12q,16k-16q,16k-12q,12k-12q}` | TEST consigné (NOTES_EPW) | — (étage 1 du ménage) |
 | EM1 éléments de position r(R) de la wannierisation 27×27 (mémoire §2.5, `restart = plot`) | `graphene/qe/electron_photon/EM1_tb/` (copie `memoire/EM/EM1_tb/`) | PRODUCTION | aucun `.save` produit ; nscf déjà miroité `qe_tmp_backup/defect_uc_dense_27` (md5 2026-09-17) |
 | M4_sigma σ(ω), cartes et chiffres des anneaux (mémoire §2.5, calcul local) | `memoire/EM/M4_sigma/` (seul emplacement : calcul local de ~4 min, sans répertoire de travail hors dépôt) | PRODUCTION | aucun `.save` ; tout se relance avec `m4_prod.py` |
-| EM2 références indépendantes (DFT directe aux anneaux + postw90 `kubo`) | `graphene/qe/electron_photon/EM2/` (copie `memoire/EM/EM2/`) | PRODUCTION (lancé le 2026-09-29) | `.save` du nscf (72 k) à miroiter en fin de campagne |
+| EM2 références indépendantes (DFT directe aux anneaux + postw90 `kubo`) | `graphene/qe/electron_photon/EM2/` (copie `memoire/EM/EM2/`) | PRODUCTION (faite le 2026-09-29, rapport `EM2_rapport.md`) | `qe_tmp_backup/em2_bands_27/` (84 k, md5 OK 2026-09-29) |

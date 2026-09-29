@@ -45,6 +45,8 @@ Le résultat sans ce terme dépend donc du choix arbitraire de la maille d'attac
 
 Avec des pseudo-potentiels NC, p̂ ≠ m_e v̂. Le couplage minimal passe par v̂ = (i/ħ)[Ĥ, r̂] (Ismail-Beigi, Chang et Louie 2001). La formule ci-dessus inclut automatiquement [V_NL, r̂], parce que H(R) est le hamiltonien KS complet.
 
+**Vérifié par la DFT (EM2, 2026-09-29).** Le « p » de `bands.x lp` (QE 7.5) est (i/2)[H, x] en unités Rydberg, soit m_e v̂ **commutateur [V_NL, r] compris** (lu dans le source qe-7.5 : `compute_ppsi` → `commutator_Hx_psi`, terme non local actif) ; ħv = 14.39965 eV·Å × p. Contrôle sans Wannier : ħv_F des pentes QE 5.46977 = ⟨|ħv_cv|⟩ de p 5.46978 eV·Å (10⁻⁶). Notre |ħv_cv| complet concorde avec la DFT à **4×10⁻⁴** près, k par k (−0.042 % à +0.002 % sur les 72 points des anneaux). Le poids du commutateur lui-même n'est pas chiffré (il faudrait recompiler `bands.x`).
+
 ---
 
 ## 1. Décisions verrouillées (2026-09-25)
@@ -53,6 +55,7 @@ Avec des pseudo-potentiels NC, p̂ ≠ m_e v̂. Le couplage minimal passe par v�
 2. **r(R) complet** : on ne se limite pas aux centres. « Centres seuls » sert de test de sensibilité.
 3. **Hermitisation de r dans l'espace k** : A(k) → ½[A(k) + A(k)†], comme postw90 (`get_oper.F90`). C'est équivalent à r_ij(R) → ½[r_ij(R) + r_ji(−R)*], puisque tout R a son −R. La version en k est infaillible et donne le même objet que postw90.
 4. **Pas de Wigner-Seitz** (wsvec.dat ignoré), ni pour H ni pour ∂H ni pour r. C'est la convention de la chaîne du ch. 4 pour H. L'effet est au plus de 6.8×10⁻⁵ Å sur r et de 1.4×10⁻⁵ eV sur H.
+   **Chiffres réels (EM2, postw90)** : sur σ_xx/σ₀, `use_ws_distance` pèse −1.5×10⁻⁵, −1.3×10⁻⁴, −9.4×10⁻⁵ aux trois lasers et jusqu'à 1.7×10⁻³ près de van Hove (et non ≤ 10⁻⁵ comme prévu en §10). **Origine de l'anisotropie de M4** : |σ_yy − σ_xx| = 1.9×10⁻⁴ à 2.33 eV (2.7×10⁻³ au max) vient de la boîte de R simple, qui n'est pas symétrique par C₃ ; avec les images de Wigner-Seitz, postw90 est isotrope à 2×10⁻⁶ près aux lasers. Même ordre que la brisure de C₃ de |ħv_cv| Wannier vue en DFT directe (0.6–1.5×10⁻⁴, lien plausible, non testé). La décision est maintenue (cohérence avec le ch. 4), l'effet est documenté.
 5. **Figure du §2.5** avec la courbe « sans Berry ». Celle-ci est définie comme l'éq. (2.5.7) telle qu'écrite, en jauge du réseau e^{ik·R}, avec les mailles d'attache choisies par Wannier90. La légende devra le dire.
 6. **Texte** : on n'y touche qu'une fois tous les résultats validés et rentrés (P28).
 
@@ -80,6 +83,7 @@ Avec des pseudo-potentiels NC, p̂ ≠ m_e v̂. Le couplage minimal passe par v�
   - rapport de Frobenius anti-hermitien/hermitien : 1.2×10⁻³ ;
   - en k : max |r(k) − r(k)†| = 4.9×10⁻³ Å à K, mais **1.5×10⁻² Å** sur 20 000 k tirés au hasard, et ce maximum est dans le bloc **p_z** (σ : 7×10⁻³ Å ; croisé : 10⁻¹⁰ Å). Mesure du 2026-09-28, à consolider par F10.
   - C'est l'erreur des différences finies de l'éq. (44) de WYSV06. Budget d'erreur sur ħv_cv à 2.33 eV : environ 0.01 eV·Å, soit ≲ 0.2 % de ħv_F.
+  - **Budget confirmé par la DFT (EM2)** : |ħv_cv| complet − DFT = −0.042 % à +0.002 % k par k sur les trois anneaux (≤ 4×10⁻⁴, soit ~2×10⁻³ eV·Å), et ε_π, ε_π* à 0.09 meV près. Centres seuls : −1.8 à −3.3 % ; sans Berry : −47 à +29 %.
 - **Décroissance** : r hors diagonale décroît jusqu'à 4×10⁻⁵ Å au bord de la cellule de Wigner-Seitz, soit 2×10⁻⁴ du maximum.
 
 ### Format de `wannier_tb.dat` (Wannier90 3.1.0)
@@ -507,12 +511,12 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   - σ/σ₀ → 1 à basse énergie (1.0026 à 0.2 eV) ;
   - montée vers la singularité de van Hove en M (pic à 4.05 eV) ;
   - le mode sans Berry brise l'isotropie (yy/xx = 0.86 à 2.33 eV) ; son σ_yy est celui des centres seuls à 10⁻¹⁴ ;
-  - concordance avec postw90 `kubo` (EM2) : **en attente**.
+  - concordance avec postw90 `kubo` (EM2) : **faite**. postw90 − M4 (xx) = −1.4, −2.2, −2.7×10⁻³ aux lasers (yy environ trois fois moins), 2.9×10⁻² au max près de van Hove, décomposé exactement en conventions : diagonale de r (−1.2 à −2.2×10⁻³), préfacteur 1/(ε_c − ε_v) de postw90 contre 1/ħω de `kubo.py` (−3×10⁻⁴), `use_ws_distance` (≤ 1.3×10⁻⁴) ; **résidu à conventions égales ≤ 5×10⁻⁵ aux lasers** (2.1×10⁻⁴ au max). Détails : §10, EM2.
 - Tests sur données réelles (`tests/test_kubo.py`, 3 ; valeurs dans `W90_REF.sigma_eta008`) : N = 300 et η = 0.08 eV (convergé à 10⁻⁵ aux lasers, ~7 s) contre le pilote convergé (N = 1800, autre chemin de code) à 3×10⁻⁵ ; isotropie et σ_xy = 0 avec Berry, σ_yy sans Berry = centres seuls ; pic de van Hove à 4.05 eV, rapport centres/complet 0.951 à 2.33 eV. Seuls ces tests voient la suppression de `hermitize` (le r de M0 est déjà hermitien). ndegen oublié n'y change rien (|H(R)| ≤ 1.4×10⁻⁵ eV là où ndegen = 2), mais 11 autres tests le détectent.
 - **Sorties (npz)** : `em_sigma_{mode}_N{N}_eta{eta}.npz` (ω, σ_αβ, paramètres), `em_map_K.npz` (F19), `em_ring_stats.json` (F15), plus ħv_F et ħω_froz.
 - **Production faite (2026-09-29, local, 145 s, commit a6bb02f, `src` propre)** dans `memoire/EM/M4_sigma/` (`m4_prod.py`, README ; pilote dans `pilote/`) : `em_sigma_{full,centres_only,no_berry}_N1200_eta0.04.npz`, `em_map_K.npz` (h = 0.35 Å⁻¹, nq = 300, trois variantes, 4.1 Mo), `em_ring_stats.json`, `em_scalars.json` (ħv_F = 5.46919 eV·Å, v_F = 8.31×10⁵ m/s, ħω_froz = 4.9595 eV à N = 800, σ aux lasers, sha256 des modules). La production redonne le pilote à l'identique (écart 0).
 
-**Critère de sortie** : σ(ω) convergé et concordant avec postw90, chiffres consignés.
+**Critère de sortie** : σ(ω) convergé et concordant avec postw90, chiffres consignés. **Rempli le 2026-09-29** (convergence : pilote ; concordance : résidu ≤ 5×10⁻⁵ aux lasers une fois les conventions alignées, EM2).
 
 ---
 
@@ -534,21 +538,28 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 
 ### EM2 — références indépendantes (Code)
 
-Lancée sur rorqual le 2026-09-29 avec `memoire/EM/EM2_prompt.md`, qui précise ce plan : liste de F17 (72 k), run QE en `calculation = 'bands'` dans un `outdir` neuf, contrôle de la cellule QE contre `unit_cell_cart`, `berry_kmesh = 1200 1200 1`, largeur de postw90 = √2 η si sa gaussienne est exp(−x²)/√π (à vérifier dans le code), sortie `em2_postw90_sigma.npz` lue par la figure.
+**Faite le 2026-09-29** sur rorqual (PRODUCTION) avec `memoire/EM/EM2_prompt.md` ; rapport `memoire/EM/EM2/EM2_rapport.md`, copie versionnée `memoire/EM/EM2/` ; `.save` du run `bands` miroité (`qe_tmp_backup/em2_bands_27/`, md5 OK).
 
-- **DFT directe** :
-  - nscf sur les points de `em2_kpoints_crystal.txt` (même pseudo-potentiel, ecutwfc 100 Ry, nbnd 20, `nosym`), à partir de la densité de `defect_uc_dense_27` (scratch ou miroir `qe_tmp_backup/`) ;
-  - puis `bands.x` avec `lp = .true.`, qui donne les éléments ⟨ψ_c|p̂|ψ_v⟩. Code documente les unités et vérifie dans la doc de 7.5 si le commutateur [V_NL, r] y est inclus ;
-  - comparaison des |v_cv|² invariants de jauge, k par k. Écart attendu : quelques pour cent au plus, limité par les différences finies de r et le désenchevêtrement.
-- **postw90 `kubo`** sur la copie d'EM1 :
-  - réglages : `berry = true`, `berry_task = kubo`, `fermi_energy = E_D`, élargissement gaussien fixe de 0.04 eV, `berry_kmesh` égal au N retenu (noms des mots-clés à confirmer dans la doc 3.1.0) ;
-  - postw90 donne σ en S/cm pour une cellule 3D : σ_2D = σ_3D · c avec c = 15.875316 Å, puis on divise par σ₀ ;
-  - postw90 applique use_ws_distance, un écart négligeable (≤ 10⁻⁵).
+- **A. DFT directe** (QE 7.5 `bands` + `bands.x lp`, 84 k : les 72 de F17 et 12 sur un cercle de Dirac q = 0.005 Å⁻¹ ; 1 min 33) :
+  - cellule du nscf = `unit_cell_cart` de `wannier.win` (égalité exacte) ; run en `calculation = 'bands'` dans un `outdir` neuf ;
+  - `bands.x lp` : p = m_e v̂ avec [V_NL, r] (voir §0) ; ħv = 14.39965 eV·Å × p ; seuls les |p|² sont écrits, sans moyenne sur les dégénérescences ;
+  - ε_π, ε_π* : QE − Wannier ≤ 0.09 meV ; |ħv_cv| dans le plan, k par k : complet −0.042 à +0.002 %, centres seuls −1.8 à −3.3 %, sans Berry −47 à +29 % ;
+  - C₃ : |ħv_cv| DFT invariant à 4×10⁻⁶, Wannier complet à 0.6–1.5×10⁻⁴.
+- **B. postw90 3.1.0 `kubo`** (1201², 38 min) — conventions vérifiées dans le source v3.1.0 :
+  - **pas de facteur de spin** : postw90 somme sur des états de Wannier sans spin, occupations 0/1 ; il faut multiplier par g_s = 2 (0.50118 brut → 1.00235 à 0.2 eV) ;
+  - **largeur** : gaussienne exp(−x²)/√π de x = ΔE/w, donc w = √2 η = 0.0565685 eV pour notre η (écart-type) = 0.04 eV ;
+  - **conversion** : σ_2D/σ₀ = σ_3D[S/cm] × 100 × c × g_s / σ₀, c = 15.8753 Å, σ₀ = e²/4ħ ;
+  - **défauts liés à `dis_froz_max`** : `kubo_eigval_max` = `dis_froz_max` + 0.6667 = E_D + 3.17 eV (couperait les π* au-dessus : fixé à 1000) et `kubo_freq_max` = 3.17 eV au-dessus de E_F (fixé à 6.0) ;
+  - **binaire série** : le `postw90.x` du module n'est pas compilé MPI (1 tâche ; avec 8, 8 copies identiques) ;
+  - **diagonale de r** : postw90 par défaut prend l'éq. (44) sans logarithme pour r_nn, alors que le `_tb.dat` prend −Im ln M_nn ; **`transl_inv = true` aligne postw90 sur notre `_tb.dat`** ;
+  - `use_ws_distance` : défaut `.true.` dans postw90 (voir la décision 4 pour son poids réel) ; préfacteur par transition 1/(ε_c − ε_v) contre 1/ħω dans `kubo.py` (même limite η → 0, écart O(η²)).
+- **Résultat** : postw90 (réglages du prompt) − M4 = −1.4, −2.2, −2.7×10⁻³ (xx) aux lasers ; avec `transl_inv` −4.4×10⁻⁴ à 2.33 eV, dont −3.1×10⁻⁴ de préfacteur ; résidu à conventions égales ≤ 5×10⁻⁵ aux lasers. `em2_postw90_sigma.npz` (g_s = 2 appliqué) est écrit depuis le run `k1201` (réglages du prompt).
+- **Laissé à Greg** (rapport, partie C) : quelle courbe postw90 montrer dans la figure (réglages du prompt ou `transl_inv`) ; garder le préfacteur 1/ħω de `kubo.py` ou passer à 1/(ε_c − ε_v).
 
 ### EM3 — figure et chiffres (Code)
 
-- **Première version (2026-09-29)** : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` (6.5 × 3.45 po), données de `memoire/EM/M4_sigma/`. (a) |ħv^x_cv|²/(ħv_F)² du mode complet autour de K (h = 0.35 Å⁻¹), anneaux à 1.96, 2.33, 2.54 eV, axe q ∥ x en pointillé (le nœud est à +7°) ; (b) σ_xx/σ₀ complet, centres seuls, sans Berry (xx), médaillon 1.8–2.7 eV avec les trois lasers, ligne ħω_froz. σ_yy sans Berry = σ_yy centres seuls à 10⁻¹⁴ sur toute la courbe (τ_B − τ_A selon x, comme en F15) : une seule courbe verte. La courbe postw90 s'ajoute d'elle-même quand `memoire/EM/EM2/em2_postw90_sigma.npz` existe.
-- **Tableau (2026-09-29)** : `memoire/EM/M4_sigma/make_table.py` → `em_table.tex` (`tabular` booktabs, 10 colonnes : σ/σ₀ complet, centres, sans Berry xx et yy ; ⟨|ħv^x_cv|²⟩ complet et centres ; nœud δ_x complet et sans Berry ; une ligne par laser ; compile en `\small` avec des marges de 2.5 cm) et `em_table.csv` (tous les chiffres). ħv_F, v_F, ħω_froz, N et η sont en commentaire sous le tableau, pour la légende. Reste : postw90 (EM2), la légende de la figure et du tableau (P28).
+- **Première version (2026-09-29)** : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` (6.5 × 3.45 po), données de `memoire/EM/M4_sigma/`. (a) |ħv^x_cv|²/(ħv_F)² du mode complet autour de K (h = 0.35 Å⁻¹), anneaux à 1.96, 2.33, 2.54 eV, axe q ∥ x en pointillé (le nœud est à +7°) ; (b) σ_xx/σ₀ complet, centres seuls, sans Berry (xx), médaillon 1.8–2.7 eV avec les trois lasers, ligne ħω_froz. σ_yy sans Berry = σ_yy centres seuls à 10⁻¹⁴ sur toute la courbe (τ_B − τ_A selon x, comme en F15) : une seule courbe verte. La courbe postw90 s'ajoute d'elle-même quand `memoire/EM/EM2/em2_postw90_sigma.npz` existe : **ajoutée le 2026-09-29** (cercles gris, un point sur 10 dans le panneau, un sur 5 dans le médaillon ; run `k1201`, réglages du prompt, g_s = 2), superposée au mode complet sur toute la gamme.
+- **Tableau (2026-09-29)** : `memoire/EM/M4_sigma/make_table.py` → `em_table.tex` (`tabular` booktabs, 10 colonnes : σ/σ₀ complet, centres, sans Berry xx et yy ; ⟨|ħv^x_cv|²⟩ complet et centres ; nœud δ_x complet et sans Berry ; une ligne par laser ; compile en `\small` avec des marges de 2.5 cm) et `em_table.csv` (tous les chiffres). ħv_F, v_F, ħω_froz, N et η sont en commentaire sous le tableau, pour la légende. Reste : le choix de la courbe postw90 (réglages du prompt ou `transl_inv`, EM2), la légende de la figure et du tableau (P28).
 
 - Figure à deux panneaux :
   - (a) carte de |e_x·v_cv|² autour de K avec les anneaux à 1.96, 2.33 et 2.54 eV ;
@@ -581,6 +592,10 @@ Lancée sur rorqual le 2026-09-29 avec `memoire/EM/EM2_prompt.md`, qui précise 
 Pistes « équation → code » proposées pendant qu'EM2 tourne ; aucune n'est dans le mémoire tant que Greg ne le décide pas.
 
 - **A. Kubo à température finie et dopé (Pauli blocking)** — *choisie par Greg (2026-09-29)*. Poids de Fermi-Dirac f(ε_v) − f(ε_c) au lieu du masque « v occupé, c vide », paramètres T et μ. L'absorption s'effondre sous ħω = 2|μ − E_D|. Test analytique (cône de Dirac) : σ/σ₀ = ½[tanh((ħω + 2μ)/4k_BT) + tanh((ħω − 2μ)/4k_BT)], μ compté depuis le point de Dirac. Petite extension de `kubo.py`.
+  - **Faite (Greg, 2026-09-29)** : argument `kT` (eV, en dernier dans `kubo_accumulate` et `sigma_on_grid`, 0 = marche : résultat T = 0 inchangé au bit près) ; poids w[k, n, m] = f_m − f_n par broadcasting, paires retenues par `w > 1e-14` (pas de masque triangulaire : les ε sont croissants) ; interbande seulement (pas de Drude). Référence analytique `kubo_doped_finite_T_analytical(hw, mu, kT)` (μ compté depuis le point de Dirac), exportée.
+  - **Valeurs** : M0, μ = 0.3 eV, N = 900, η = 0.01 : σ/σ(0, 0) = formule à 2.6×10⁻³ (kT = 0.025) et 8.5×10⁻⁴ (kT = 0.05), écart dû à l'arrondi du bord par η ; queue thermique sous le bord à 3 % près en relatif ; μ = 0 : tanh(ħω/4kT) à 3.5×10⁻⁴ ; M0 symétrique électron-trou : σ(μ) = σ(−μ) à 10⁻¹⁶. **Données réelles** (N = 1200, η = 0.02, kT = 0.025) : bord à mi-hauteur **0.6028 eV** (μ = E_D + 0.3, dopage n) et **0.5959 eV** (μ = E_D − 0.3, dopage p), soit 6.9 meV d'asymétrie électron-trou PBE (7.0 meV à N = 300, η = 0.08).
+  - Pièges rencontrés : `kT` inséré entre `mu` et `eta` (un appel positionnel aurait passé η comme kT) ; fonction renommée `kubo_accumulate_` dans `src` (paquet non importable) ; référence du rapport calculée dopée (dénominateur ~10⁻⁸⁶).
+  - Tests (`tests/test_kubo.py`, 7 ; bords réels dans `W90_REF.pauli_edges`) : limites de la formule ; kT → 0 = marche, indépendance de `chunk`, kT < 0 refusé ; Pauli blocking M0 (deux kT, et queue thermique en relatif) ; M0 non dopé ; symétrie électron-trou ; bords n et p réels. Mutations (sur une copie du paquet, `src/` jamais touché) : Fermi-Dirac sans facteur 2 (4 échecs), signe de w (14), poids ignorés (4), poids au carré (4), kT non transmis (4), assert kT retiré (1), formule 2μ → μ (3), seuil de poids 10⁻² (1, vu seulement par la queue thermique en relatif).
 - **B. σ(ω) complet, partie imaginaire comprise** : Kramers-Kronig (valeur principale) ou Kubo complexe avec élargissement lorentzien ; test analytique du cône dopé, Im σ ∝ ln|(ħω − 2μ)/(ħω + 2μ)|. Taille moyenne, plus numérique que physique.
 - **C. Conductivité optique du graphène avec défauts** : Kubo-Greenwood avec les fonctions de Green moyennées de la matrice T (`defects/many_body/disorder_average.green_k`), σ(ω) ∝ (1/ω)∫dε [f(ε) − f(ε + ħω)] Σ_k Tr[v_x A(k, ε) v_x A(k, ε + ħω)] dans la base de Wannier (sans vertex). Relie les chapitres électron-défaut et électron-photon ; la résonance de la lacune près de E_D devrait ouvrir une absorption à basse énergie. Plus gros ; plutôt perspective du mémoire ou de l'article.
 - **D. Amplitude Raman de la bande D (double résonance)** sur M0 : perturbation d'ordre 4 réunissant les couplages électron-photon, électron-phonon et électron-défaut. Vrai projet de recherche.
@@ -596,9 +611,9 @@ Pistes « équation → code » proposées pendant qu'EM2 tourne ; aucune n'est 
 | M1 — lecteur et diagnostics | **fait** : F8 (`read_w90_tb`, `make_wannier_tb`), F9 (`centres_only`), F10 (`hermiticity_report`), F11 (`symmetry_report`) ; 118 tests en tout | 2026-09-28 |
 | M2 — v(k) réel | **fait** : F12 (`kpath`), F13 (`fermi_velocity`) ; ħv_F = 5.469 eV·Å ; 134 tests en tout | 2026-09-28 |
 | M3 — symétries et anneaux | **fait** : F14 (`pz_block`), F15 (`ring_stats`), F17 (`ring_kpoints_crystal`) ; F16 reportée ; 160 tests en tout | 2026-09-29 |
-| EM2 — DFT directe et postw90 | **en cours sur rorqual** (prompt `memoire/EM/EM2_prompt.md`) | 2026-09-29 |
-| M4 — σ(ω) et données de figure | en cours : pilote et production faits (`memoire/EM/M4_sigma/`, N = 1200, η = 0.04 eV), F18, F19 faits ; 177 tests ; reste la concordance postw90 (EM2) | 2026-09-29 |
-| EM3 — figure et chiffres | figure et tableau faits (`figures/fig_em_coupling`, `M4_sigma/em_table.tex`), postw90 à ajouter après EM2 | 2026-09-29 |
+| EM2 — DFT directe et postw90 | **fait** : DFT directe (\|ħv_cv\| complet à 4×10⁻⁴, [V_NL, r] inclus) et postw90 `kubo` (résidu ≤ 5×10⁻⁵ aux lasers à conventions égales) ; rapport `memoire/EM/EM2/EM2_rapport.md` | 2026-09-29 |
+| M4 — σ(ω) et données de figure | **fait** : pilote et production (`memoire/EM/M4_sigma/`, N = 1200, η = 0.04 eV), F18, F19, concordance postw90 (EM2) | 2026-09-29 |
+| EM3 — figure et chiffres | figure (postw90 compris) et tableau faits (`figures/fig_em_coupling`, `M4_sigma/em_table.tex`) ; reste le choix de la courbe postw90 et les légendes (P28) | 2026-09-29 |
 | P28 — texte | après validation complète | |
 
 ---

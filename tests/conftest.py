@@ -55,6 +55,7 @@ W90_REF = SimpleNamespace(
     sigma_eta008={                    # sigma_xx / sigma_0 at 1.96, 2.33, 2.54 eV, eta = 0.08, mu = E_D, converged (N = 1800, M4 pilot)
         'full': (1.265163, 1.407543, 1.513938), 'centres_only': (1.220271, 1.338913, 1.427834),
         'no_berry': (1.366779, 1.557323, 1.697450)},
+    pauli_edges=(0.59231, 0.58526),   # eV, half-max edge at mu = E_D +/- 0.3 eV, kT = 0.025, N = 300, eta = 0.08 (n, p)
     ring_stats={                      # ring_stats at mu = E_D, 720 angles: (avg x y, node x y in degrees, ratio min max)
         1.96: {'full':         ((1.037521, 1.037438), (6.0, 0.0), (1.0, 1.0)),
                'centres_only': ((1.000591, 1.000504), (6.0, 0.0), (0.980848, 0.982751)),

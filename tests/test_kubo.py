@@ -1,12 +1,13 @@
 """
 Tests of the Kubo conductivity (F7) and of the driver `sigma_on_grid`, down to the reference table
 of EM.md on the 1800^2 grid (~13 s; skip with -k "not kubo_reference"), and sigma(omega) of the
-27 x 27 data for the three velocity variants (M4; ~7 s).
+27 x 27 data for the three velocity variants (M4; ~7 s); doping and temperature (kT, perspective A).
 """
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import (centres_only, gaussian_eta, kubo_accumulate, make_graphene_tb,
+from electron_defect_interaction.electron_photon import (centres_only, gaussian_eta, kubo_accumulate,
+                                                         kubo_doped_finite_T_analytical, make_graphene_tb,
                                                          sigma_on_grid)
 
 # EM.md table, 1800^2 shifted grid, eta = 0.04 eV: (shift_B, mode) -> {hw: (sigma_xx, sigma_yy, sigma_xy)/sigma_0}
@@ -176,3 +177,78 @@ def test_sigma_real_features(sigma_w90):
     for v, s in sigma.items():
         assert np.isclose(hw[3:][np.argmax(s[3:, 0, 0])], 4.05, rtol=0, atol=1e-9), v
     assert np.isclose(sigma['centres_only'][1, 0, 0] / sigma['full'][1, 0, 0], 0.951, rtol=0, atol=1e-3)
+
+
+HW_EDGE = np.array([0.2, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 1.0]) # eV, around the Pauli edge 2 mu = 0.6
+
+
+def test_dirac_analytical_limits():
+    """The reference formula: tanh(mu/kT)/2 at hw = 2 mu, a step as kT -> 0, tanh(hw/4kT) undoped, even in mu."""
+    assert np.isclose(kubo_doped_finite_T_analytical(0.6, 0.3, 0.025), np.tanh(0.3 / 0.025) / 2, rtol=0, atol=1e-15)
+    assert np.allclose(kubo_doped_finite_T_analytical(np.array([0.5, 0.7]), 0.3, 1e-4), [0, 1], rtol=0, atol=1e-12)
+    assert np.allclose(kubo_doped_finite_T_analytical(HW_EDGE, 0.0, 0.025), np.tanh(HW_EDGE / 0.1), rtol=0, atol=1e-15)
+    assert np.allclose(kubo_doped_finite_T_analytical(HW_EDGE, 0.3, 0.025), kubo_doped_finite_T_analytical(HW_EDGE, -0.3, 0.025), rtol=0, atol=1e-15)
+    with pytest.raises(AssertionError):
+        kubo_doped_finite_T_analytical(HW_EDGE, 0.3, 0.0)
+
+
+def test_kubo_T0_limit_and_inputs():
+    """kT -> 0 joins the step (T = 0 unchanged); independent of chunk at kT > 0; negative kT refused."""
+    tb = make_graphene_tb()
+    step = sigma_on_grid(tb, 300, HW_EDGE, mu=0.3)
+
+    assert np.array_equal(sigma_on_grid(tb, 300, HW_EDGE, mu=0.3, kT=1e-6), step)
+    assert np.allclose(sigma_on_grid(tb, 300, HW_EDGE, mu=0.3, kT=0.025, chunk=7000),
+                       sigma_on_grid(tb, 300, HW_EDGE, mu=0.3, kT=0.025), rtol=0, atol=1e-12)
+    with pytest.raises(AssertionError):
+        sigma_on_grid(tb, 30, HW_EDGE, kT=-0.01)
+
+
+@pytest.mark.parametrize("kT, tol", [(0.025, 4e-3), (0.05, 1.5e-3)])
+def test_kubo_pauli_blocking_graphene(kT, tol):
+    """
+    M0 doped (mu = 0.3 eV) at finite T: sigma / sigma(mu = 0, T = 0) follows the Dirac formula
+    (trigonal warping cancels in the ratio); the gap is the eta rounding of the edge (2.6e-3, 8.5e-4).
+    Below the edge the thermal tail (weights down to 3e-4) matches in relative terms, to 3 % (eta/kT).
+    """
+    tb = make_graphene_tb()
+    ratio = sigma_on_grid(tb, 900, HW_EDGE, mu=0.3, eta=0.01, kT=kT)[:, 0, 0] / sigma_on_grid(tb, 900, HW_EDGE, eta=0.01)[:, 0, 0]
+    ref = kubo_doped_finite_T_analytical(HW_EDGE, 0.3, kT)
+
+    assert np.allclose(ratio, ref, rtol=0, atol=tol)
+    tail = HW_EDGE <= 0.4
+    assert np.allclose(ratio[tail] / ref[tail], 1, rtol=0, atol=0.05)
+
+
+def test_kubo_thermal_undoped_graphene():
+    """M0 at mu = 0: finite T only thins the lowest transitions, sigma(T)/sigma(0) = tanh(hw / 4kT) (3.5e-4)."""
+    tb = make_graphene_tb()
+    ratio = sigma_on_grid(tb, 900, HW_EDGE, eta=0.01, kT=0.025)[:, 0, 0] / sigma_on_grid(tb, 900, HW_EDGE, eta=0.01)[:, 0, 0]
+
+    assert np.allclose(ratio, np.tanh(HW_EDGE / 0.1), rtol=0, atol=1e-3)
+
+
+def test_kubo_electron_hole_graphene():
+    """M0 is electron-hole symmetric: n and p doping give the same sigma, to rounding."""
+    tb = make_graphene_tb()
+    assert np.allclose(sigma_on_grid(tb, 600, HW_EDGE, mu=0.3, eta=0.02, kT=0.025),
+                       sigma_on_grid(tb, 600, HW_EDGE, mu=-0.3, eta=0.02, kT=0.025), rtol=0, atol=1e-13)
+
+
+def test_kubo_pauli_edges_real(tb_w90, w90_ref):
+    """
+    27 x 27 data, mu = E_D +/- 0.3 eV, kT = 0.025: the half-max edge is 7 meV higher for n than for p doping
+    (PBE electron-hole asymmetry; 6.9 meV converged, EM.md); sigma stays positive.
+    """
+    hw = np.round(np.arange(0.40, 0.801, 0.01), 2)
+    base = sigma_on_grid(tb_w90, 300, hw, mu=w90_ref.E_D, eta=0.08)[:, 0, 0]
+    edges = []
+    for dmu in (0.3, -0.3):
+        s = sigma_on_grid(tb_w90, 300, hw, mu=w90_ref.E_D + dmu, eta=0.08, kT=0.025)[:, 0, 0]
+        assert np.all(s > 0)
+        r = s / base
+        i = np.flatnonzero(np.diff(np.sign(r - 0.5)))[0] # r crosses 1/2 between hw[i] and hw[i+1]
+        edges.append(hw[i] + (0.5 - r[i]) * (hw[i+1] - hw[i]) / (r[i+1] - r[i]))
+
+    assert np.allclose(edges, w90_ref.pauli_edges, rtol=0, atol=1e-4)
+    assert 0.006 < edges[0] - edges[1] < 0.008

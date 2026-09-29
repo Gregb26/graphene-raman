@@ -1,6 +1,7 @@
 """
 Absorptive optical conductivity sigma(omega)/sigma_0 by the Kubo formula, accumulated block by
-block (`kubo_accumulate`, `kubo_normalize`), and the driver `sigma_on_grid`.
+block (`kubo_accumulate`, `kubo_normalize`), and the driver `sigma_on_grid`; doping and temperature
+through mu and kT, with the Dirac-cone reference `kubo_doped_finite_T_analytical`.
 """
 
 import numpy as np
@@ -17,12 +18,12 @@ def gaussian_eta(x, eta):
 
 def kubo_accumulate(eps, hv, hw, mu=0, eta=0.04, kT=0):
     """
-    Partial Kubo sum over one block of k points,
+    Partial Kubo sum over one block of k points, with occupations f (step at kT = 0, Fermi-Dirac above),
 
-        S_ab(w) = sum_k sum_{eps_v < mu < eps_c} Re[(hbar v^a_cv)* hbar v^b_cv] g_eta(hw - eps_c + eps_v),
+        S_ab(w) = sum_k sum_{m < n} [f(eps_m) - f(eps_n)] Re[(hbar v^a_nm)* hbar v^b_nm] g_eta(hw - eps_n + eps_m).
 
-    over all pairs (c empty, v occupied), selected by energy. Blocks add up; normalize once at the end
-    with `kubo_normalize`.
+    Interband only (no Drude term). At kT = 0 the weights are 0 or 1 (m occupied, n empty): the T = 0
+    result exactly. Blocks add up; normalize once at the end with `kubo_normalize`.
 
     Inputs:
         eps : (nk_block, nW) float, eV, from `velocity`
@@ -30,6 +31,7 @@ def kubo_accumulate(eps, hv, hw, mu=0, eta=0.04, kT=0):
         hw  : (nw,) float or scalar, eV, photon energies
         mu  : float, eV, chemical potential
         eta : float, eV, Gaussian broadening (standard deviation)
+        kT  : float, eV, k_B T (0.02585 eV at 300 K); 0 gives the step
     Returns:
         S : (nw, 3, 3) float, eV*Angstrom^2 (block contribution, not normalized)
     """
@@ -86,7 +88,8 @@ def sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', kT=0, chunk=int(1e5))
     """
     Optical conductivity sigma(omega)/sigma_0 on the shifted N x N grid (driver of M0 and M4): block by
     block compute_velocity -> kubo_accumulate, then kubo_normalize with N_k = N^2; independent of
-    `chunk`. Converges in N much faster than the grid step suggests (EM.md, M4 pilot).
+    `chunk`. Converges in N much faster than the grid step suggests (EM.md, M4 pilot). Doping and
+    temperature through mu and kT (Pauli blocking below hw = 2|mu - E_D|).
 
     Inputs:
         tb    : WannierTB
@@ -95,6 +98,7 @@ def sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', kT=0, chunk=int(1e5))
         mu    : float, eV, chemical potential (E_D for the real data)
         eta   : float, eV, Gaussian broadening (standard deviation)
         mode  : 'berry' or 'no_berry', passed to `compute_velocity`
+        kT    : float, eV, k_B T >= 0, passed to `kubo_accumulate` (0: T = 0)
         chunk : int, number of k points per block (memory: see `fourier`)
     Returns:
         (nw, 3, 3) float, sigma_ab / sigma_0
@@ -121,7 +125,21 @@ def sigma_on_grid(tb, N, hw, mu=0, eta=0.04, mode='berry', kT=0, chunk=int(1e5))
 
 
 def kubo_doped_finite_T_analytical(hw, mu, kT):
-    """ mu measured wrt to E_D """
+    """
+    Interband sigma/sigma_0 of a perfect Dirac cone at chemical potential mu and temperature kT,
+
+        0.5 [tanh((hw + 2 mu) / 4kT) + tanh((hw - 2 mu) / 4kT)],
+
+    i.e. f(-hw/2) - f(hw/2) at the resonance: Pauli blocking below hw = 2|mu|. Reference of the
+    finite-T tests (EM.md, perspective A).
+
+    Inputs:
+        hw : (nw,) float or scalar, eV
+        mu : float, eV, measured from the Dirac point
+        kT : float, eV, > 0
+    Returns:
+        (nw,) float, sigma / sigma_0
+    """
 
     assert kT > 0, 'k_BT must be positive to use this formula ! '
     sigma = 0.5 * (np.tanh((hw + 2*mu) / (4*kT)) + np.tanh((hw - 2*mu) / (4*kT)))

@@ -76,6 +76,8 @@ ins = a2.inset_axes([0.14, 0.52, 0.42, 0.40])
 for v, kw in (("full", dict(color=C_FULL, lw=1.3)), ("centres_only", dict(color=C_CENTRES, lw=1.0, ls="-.")),
               ("no_berry", dict(color=C_NOBERRY, lw=1.0, ls="--"))):
     ins.plot(hw, s[v][:, 0, 0], **kw)
+if EM2.exists():
+    ins.plot(P["hw"][::5], P["sigma"][::5, 0, 0], ls="none", marker="o", ms=3, mfc="none", color=C_POSTW90)
 for e, nm in LASERS.items():
     ins.axvline(e, color=C_LASER, lw=0.8, zorder=0); last = e == max(LASERS)   # « nm » une seule fois, sur la dernière, alignée à gauche pour ne pas toucher la précédente
     ins.text(e - (0.02 if last else 0), 1.81, nm + (" nm" if last else ""), fontsize=6, ha="left" if last else "center", va="bottom", color=INK, clip_on=False)

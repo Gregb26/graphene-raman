@@ -225,7 +225,7 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 
 Lancer avec `.venv/bin/python -m pytest tests -v`. Fixtures partagées dans `tests/conftest.py` : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
-**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (51 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
+**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (55 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
 
 **Faits (F1–F7 et pilote, 78 exécutions ; à partir de F6, les tests sont écrits par Code) :**
 
@@ -496,7 +496,11 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 - Pièges rencontrés : masque inversé (`<` garde les k *dans* la fenêtre, et donne ≈ 0 près de K) ; `return` dans la boucle ; blocs sans aucun k au-dessus de la fenêtre (`np.min` vide : `initial=np.inf`).
 - Tests (`tests/test_diagnostics.py`, 5 ; valeurs dans `W90_REF.hw_froz`) : M0 symétrique électron-trou, limite 2F atteinte par valeurs supérieures (N = 300 puis 600, F = 1 et 2 eV) ; valeurs à N = 100 et 200 ; même valeur que le 2×2 avec tous les k d'un coup, et indépendante de `chunk` ; croissante avec froz_max, +∞ au-dessus de toutes les bandes. Mutations : masque inversé (5 échecs), `return` dans la boucle (1, vu seulement avec `chunk=100`), v et c inversés (5), masque ignoré (5), ndegen oublié (2), `initial=0` (5), v = bande σ (5).
 
-**F19 — `map_around_K(tb, K, half_width, n)`** → carte de |e_x·ħv_cv|² et de Δε(k) autour de K, pour le panneau (a) avec les iso-contours Δε = ε_L.
+**F19 — `map_around_K(tb, K, mu, half_width, nq, mode='berry')`** → `deps` (nq, nq) et `P` = |ħv^{x,y}_cv|² (nq, nq, 2) sur le carré K + (q_x, q_y), q = `linspace(−h, h, nq)`, indexés [iy, ix] (`meshgrid(…, indexing='xy')`, `contour(q, q, deps)`), pour le panneau (a) avec les iso-contours Δε = ε_L. Dans `ring.py`. **Fait (Greg, 2026-09-29).**
+- nq pair obligatoire : avec nq impair, K est sur la grille ; les deux bandes π interpolées y sont à E_D − 1.3×10⁻⁶ eV (E_D arrondi), donc n_occ = 5 et ħv_cv n'y est pas défini.
+- **Valeurs (27×27, h = 0.35 Å⁻¹, nq = 300, 2.5 s, ~1 Go)** : Δε de 0.01809 à 6.211 eV ; max de |ħv^x_cv|², |ħv^y_cv|² = 59.693, 47.877 eV²·Å² ; en q ≈ (0.2002, −0.0012), Δε = 2.17069 eV, P = (0.4902, 28.2481) (près de la ligne sombre de e_x, nœud à +7°). Les iso-lignes Δε = ħω de la carte (interpolation cubique, nq = 100) passent par les points de `ring` à 5×10⁻⁶ eV.
+- Pièges rencontrés : sorties de `meshgrid` nommées dans le mauvais ordre (carte transposée sans erreur, les deux axes étant identiques) ; axe `q` écrasé par la liste de vecteurs. Le `reshape(nq, nq)` défait le `ravel` (ordre C des deux côtés), sans transposée.
+- Tests (`tests/test_ring.py`, 7 ; valeurs dans `W90_REF.map_K`) : M0 près de K (cône : Δε = 2ħv_F|q| à 4×10⁻³, |ħv_cv|² = (ħv_F)² à 1.7×10⁻², deux jauges) ; invariance de jauge de la carte ; valeurs (nq = 100) ; orientation contre `compute_velocity` en un point hors diagonale ; iso-lignes = anneaux ; sans Berry : même Δε, autre P ; nq impair refusé avec le bon message. Mutations : sorties de `meshgrid` inversées (2 échecs), `indexing='ij'` (2), `.real` au lieu de |·|² (5), v et c inversés (5), `reshape` transposé (2), assert de parité retiré (1, grâce au message), mode ignoré (1), K oublié (6).
 
 - **Vérifications :**
   - mode complet : σ_xx = σ_yy et σ_xy = 0 ;
@@ -517,7 +521,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 | F1, F4, F5, F7 (modèle, transformée, vitesse, Kubo) | **Greg** |
 | F6, F13–F15 (anneau, v_F, statistiques) | Greg |
 | F8 : lecteur `read_w90_tb` dans `io/wannier_io.py` (fait, à la demande de Greg) ; construction du `WannierTB` | Code ; Greg |
-| Découpage et performance, échafaudage pytest, F16, F19, figures (F17, F18 codées par Greg) | Code |
+| Découpage et performance, échafaudage pytest, F16, figures (F17–F19 codées par Greg) | Code |
 | EM2, EM3 (cluster, QE, Wannier90) | Code |
 
 Mode technicien : skill `technicien`, avec les mots-clés « explique » (par défaut), « indice », « montre », « écris-le » et « fin technicien ».
@@ -575,7 +579,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | M2 — v(k) réel | **fait** : F12 (`kpath`), F13 (`fermi_velocity`) ; ħv_F = 5.469 eV·Å ; 134 tests en tout | 2026-09-28 |
 | M3 — symétries et anneaux | **fait** : F14 (`pz_block`), F15 (`ring_stats`), F17 (`ring_kpoints_crystal`) ; F16 reportée ; 160 tests en tout | 2026-09-29 |
 | EM2 — DFT directe et postw90 | à préparer (liste de k prête) | |
-| M4 — σ(ω) et données de figure | en cours : pilote fait (N = 1200, η = 0.04 eV retenus), F18 (`frozen_window_limit`) fait ; 165 tests ; reste F19 | 2026-09-29 |
+| M4 — σ(ω) et données de figure | en cours : pilote fait (N = 1200, η = 0.04 eV retenus), F18 (`frozen_window_limit`), F19 (`map_around_K`) faits ; 174 tests ; reste les npz de production et la concordance postw90 (EM2) | 2026-09-29 |
 | EM3 — figure et chiffres | après M4 | |
 | P28 — texte | après validation complète | |
 

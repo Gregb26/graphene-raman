@@ -1,7 +1,8 @@
 """
 Around a Dirac point: the resonant ring, k points where eps_c - eps_v = hbar omega (`ring`), the
 Fermi velocity on a small circle (`fermi_velocity`), the ring statistics of the three velocity
-variants (`ring_stats`, M3) and the ring points in crystal coordinates for EM2 (`ring_kpoints_crystal`).
+variants (`ring_stats`, M3), the ring points in crystal coordinates for EM2 (`ring_kpoints_crystal`)
+and the maps around K of the figure (`map_around_K`, M4).
 """
 
 import numpy as np
@@ -250,3 +251,48 @@ def ring_kpoints_crystal(tb, K, mu, npoints):
         kpoints[w] = (k_red, theta)
 
     return kpoints
+
+def map_around_K(tb, K, mu, half_width, nq, mode='berry'):
+    """
+    Maps around K for panel (a) of the figure: Delta eps = eps_c - eps_v and |hbar v^{x,y}_cv|^2 on the
+    square K + (qx, qy, 0), qx and qy = np.linspace(-half_width, half_width, nq). The iso-lines
+    Delta eps = hw are the rings of `ring`; |hbar v^x_cv|^2 vanishes on a dark line through K (the node
+    of `ring_stats`). One call to compute_velocity: ~1 GB at nq = 300 (see `fourier`).
+
+    Inputs:
+        tb         : WannierTB
+        K          : (3,) float, 1/Angstrom, Dirac point
+        mu         : float, eV, chemical potential (E_D for the real data)
+        half_width : float, 1/Angstrom
+        nq         : int, points per axis, even (K itself, degenerate, stays off the grid)
+        mode       : 'berry' or 'no_berry' (centres only: pass centres_only(tb))
+    Returns:
+        deps : (nq, nq) float, eV, indexed [iy, ix] (plot with contour(q, q, deps))
+        P    : (nq, nq, 2) float, eV^2 Angstrom^2, |hbar v^x_cv|^2 and |hbar v^y_cv|^2, same indexing
+    """
+    assert nq % 2 == 0, 'nq must be even'
+
+    h = half_width
+    q = np.linspace(-h, h, nq)
+    Qx, Qy = np.meshgrid(q,q, indexing='xy')
+
+    Q = np.column_stack((Qx.ravel(), Qy.ravel(), np.zeros_like(Qx.ravel())))
+    k = K + Q
+
+    _, eps, _, hv = compute_velocity(tb, k, mode=mode) # (nq^2, nW), (nq^2, 3, nW, nW)
+
+    # find valence and conduction bands indices
+    n_occ = np.sum(eps < mu, axis=1)
+    n = n_occ[0]
+    assert np.allclose(n_occ, n)
+    v = n - 1 # valence
+    c = n     # conduction
+
+    deps = eps[:, c] - eps[:, v] # (nq^2, )
+    deps = deps.reshape(nq, nq)
+    
+    P = np.abs(hv[:, :2, c, v])**2 # (nq^2, 2)
+    P = P.reshape(nq, nq, -1)
+
+    return deps, P 
+    

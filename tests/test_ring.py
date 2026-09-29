@@ -1,14 +1,16 @@
 """
 Tests of the resonant ring (F6) and of the velocity on it: resonance, Dirac limit, symmetries,
 node with Berry, isotropy, ring averages, and the effect of dropping the Berry term; fermi_velocity
-(F13), ring_stats (F15) and ring_kpoints_crystal (F17) on the M0 model and on the 27 x 27 data.
+(F13), ring_stats (F15), ring_kpoints_crystal (F17) and map_around_K (F19) on the M0 model and on the
+27 x 27 data.
 """
 
 import pytest
 import numpy as np
 from electron_defect_interaction.electron_photon import (centres_only, compute_velocity, fermi_velocity,
-                                                         make_graphene_tb, make_grid_tb, reciprocal, ring,
-                                                         ring_kpoints_crystal, ring_stats)
+                                                         make_graphene_tb, make_grid_tb, map_around_K,
+                                                         reciprocal, ring, ring_kpoints_crystal, ring_stats)
+from scipy.interpolate import RegularGridInterpolator
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
 @pytest.mark.parametrize("hw", [0.1, 1.0, 2.33, 2.54])
@@ -344,3 +346,84 @@ def test_ring_kpoints_crystal_on_shell(tb_w90, kpoints_w90, w90_ref):
     for hw, (k_red, _) in kpoints_w90.items():
         _, eps, _, _ = compute_velocity(tb_w90, k_red @ B.T, mode='no_berry')
         assert np.allclose(eps[:, c] - eps[:, v], hw, rtol=0, atol=1e-10), hw
+
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_map_around_K_dirac_limit(tb, grid):
+    """
+    M0 close to K (half width 0.01): a cone, Delta eps = 2 hbar v_F |q| and |hbar v^x_cv|^2 +
+    |hbar v^y_cv|^2 = (hbar v_F)^2 (to 4e-3 and 1.7e-2, trigonal corrections), in both gauges.
+    """
+    deps, P = map_around_K(tb, grid.K, 0.0, 0.01, 20)
+    q = np.linspace(-0.01, 0.01, 20)
+    qx, qy = np.meshgrid(q, q, indexing='xy')
+    hv_F = 3*tb.t*tb.a_cc/2
+
+    assert deps.shape == (20, 20) and P.shape == (20, 20, 2)
+    assert np.allclose(deps, 2*hv_F*np.hypot(qx, qy), rtol=1e-2, atol=0)
+    assert np.allclose(P.sum(axis=-1), hv_F**2, rtol=3e-2, atol=0)
+
+
+def test_map_around_K_gauge():
+    """Moving the B centre (shift_B) leaves the full map unchanged."""
+    maps = []
+    for shift in [(0,0,0), (1,0,0)]:
+        tb = make_graphene_tb(shift_B=shift)
+        maps.append(map_around_K(tb, make_grid_tb(tb, 3).K, 0.0, 0.3, 20))
+
+    assert np.allclose(maps[1][0], maps[0][0], rtol=0, atol=1e-12)
+    assert np.allclose(maps[1][1], maps[0][1], rtol=0, atol=1e-9)
+
+
+@pytest.fixture(scope="module")
+def map_w90(tb_w90, K_w90, w90_ref):
+    """map_around_K of the 27 x 27 data, half width 0.35 (beyond the 2.54 eV ring), nq = 100."""
+    return map_around_K(tb_w90, K_w90, w90_ref.E_D, 0.35, 100)
+
+
+def test_map_around_K_values(map_w90, w90_ref):
+    """Reference values: range of Delta eps and maxima of |hbar v^{x,y}_cv|^2."""
+    deps, P = map_w90
+    (de_min, de_max), P_max = w90_ref.map_K
+
+    assert np.allclose([deps.min(), deps.max()], [de_min, de_max], rtol=1e-5, atol=0)
+    assert np.allclose(P.max(axis=(0, 1)), P_max, rtol=1e-5, atol=0)
+
+
+def test_map_around_K_orientation(tb_w90, K_w90, map_w90, w90_ref):
+    """
+    Element [iy, ix] is the point K + (q[ix], q[iy]): checked against compute_velocity at a point off
+    the diagonal (q ~ (0.2, 0)), where x and y differ (P = (0.49, 28.2) there, (47.0, 0.0007) transposed).
+    """
+    deps, P = map_w90
+    v, c = w90_ref.bands_pi
+    q = np.linspace(-0.35, 0.35, 100)
+    ix, iy = np.argmin(np.abs(q - 0.2)), np.argmin(np.abs(q))
+
+    _, eps, _, hv = compute_velocity(tb_w90, K_w90 + np.array([[q[ix], q[iy], 0]]), mode='berry')
+
+    assert np.isclose(deps[iy, ix], eps[0, c] - eps[0, v], rtol=1e-12, atol=0)
+    assert np.allclose(P[iy, ix], np.abs(hv[0, :2, c, v])**2, rtol=1e-10, atol=0)
+    assert P[iy, ix, 0] < 0.05 * P[iy, ix, 1] # close to the dark line of e_x
+
+
+def test_map_around_K_rings(tb_w90, K_w90, map_w90, w90_ref):
+    """The iso-lines Delta eps = hw of the map are the rings of `ring`: cubic interpolation at the ring points gives hw (5e-6 eV)."""
+    deps, _ = map_w90
+    q = np.linspace(-0.35, 0.35, 100)
+    interp = RegularGridInterpolator((q, q), deps.T, method='cubic') # deps.T is indexed [ix, iy]
+
+    for hw in (1.96, 2.33, 2.54):
+        dk = ring(tb_w90, K_w90, hw, mu=w90_ref.E_D)[0] - K_w90
+        assert np.allclose(interp(dk[:, :2]), hw, rtol=0, atol=2e-5), hw
+
+
+def test_map_around_K_modes(tb_w90, K_w90, map_w90, w90_ref):
+    """Without Berry: same Delta eps (eigenvalues), different |hbar v_cv|^2; odd nq refused (K on the grid)."""
+    deps, P = map_w90
+    deps_nb, P_nb = map_around_K(tb_w90, K_w90, w90_ref.E_D, 0.35, 100, mode='no_berry')
+
+    assert np.array_equal(deps_nb, deps)
+    assert np.abs(P_nb - P).max() > 10
+    with pytest.raises(AssertionError, match='even'): # not the later occupation check, which also fails at K
+        map_around_K(tb_w90, K_w90, w90_ref.E_D, 0.35, 101)

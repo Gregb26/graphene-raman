@@ -5,13 +5,15 @@ analyze_Ved.py -- checks of V_ed^L = V_d - V_p (local defect potential), existin
   2. profile along a1 WITH and WITHOUT the G=0 (3D mean) subtraction; 3D mean and in-plane mean
   3. azimuthal average in the plane vs distance to the vacancy, four N
 Boundary values (max |V| on the half-box planes along a1/a2, all z and in-plane only), raw and mean-subtracted.
+R10 (P-c2) : distance to the site r = true minimum image in the plane (alignment.true_min_image_dist, 27 images), was the per-axis reduction.
 Output: <results_dir>/ved_analysis.npz
 """
 import numpy as np
 from scipy.ndimage import map_coordinates
 from electron_defect_interaction.io import qe_io
+from electron_defect_interaction.defects import alignment as al
 from electron_defect_interaction.config import HA2EV, load_production, results_dir
-RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 BOHR = 0.529177210903; DATA = "data/graphene"; out = {}
 import sys
 SIZES = sys.argv[1].split(",") if len(sys.argv) > 1 else ["5x5", "7x7", "8x8", "9x9"]
@@ -24,10 +26,10 @@ for S in SIZES:
     dV = (Vd - Vp).transpose(2, 1, 0) * HA2EV; nr = np.array(dV.shape); del Vp, Vd
     mean3d = float(dV.mean()); iz = int(np.round(s_vac[2] * nr[2])) % nr[2]; plane = dV[:, :, iz]; mean_plane = float(plane.mean())
     zC = s_vac[2] * A[2, 2] * BOHR; zgrid = iz / nr[2] * A[2, 2] * BOHR
-    # in-plane Cartesian coordinates (A) relative to the vacancy, minimum image
-    i = np.arange(nr[0]); j = np.arange(nr[1]); s1 = (i / nr[0] - s_vac[0] + 0.5) % 1 - 0.5; s2 = (j / nr[1] - s_vac[1] + 0.5) % 1 - 0.5
-    S1, S2 = np.meshgrid(s1, s2, indexing="ij"); X = (S1 * A[0, 0] + S2 * A[0, 1]) * BOHR; Y = (S1 * A[1, 0] + S2 * A[1, 1]) * BOHR
-    R = np.sqrt(X ** 2 + Y ** 2)
+    # in-plane distance (A) to the vacancy, minimum image
+    i = np.arange(nr[0]); j = np.arange(nr[1])
+    I1, I2 = np.meshgrid(i / nr[0], j / nr[1], indexing="ij")                                          # R10 (P-c2) : grid points of the plane at z = z_vac
+    R = al.true_min_image_dist(np.stack([I1.ravel(), I2.ravel(), np.full(I1.size, s_vac[2])], axis=1), s_vac, A * BOHR).reshape(I1.shape)
     # 1. map (roll so that the vacancy is centred)
     i0 = int(np.round(s_vac[0] * nr[0])); j0 = int(np.round(s_vac[1] * nr[1])); sh = (nr[0] // 2 - i0, nr[1] // 2 - j0)
     # continuous coordinates of the rolled (vacancy-centred) grid: no wrap-around cells in the mesh
@@ -76,8 +78,9 @@ for S in SIZES:
     # core-masked radial profile (mask r < 0.5 A around every atom present in the DEFECTIVE cell), plane z = z_C
     Vp, _ = qe_io.get_pot(f"{scp}/Vks_{S}_p", subtract_mean=False, to_hartree=True); Vd, _ = qe_io.get_pot(f"{scd}/Vks_{S}_d", subtract_mean=False, to_hartree=True)
     dV = (Vd - Vp).transpose(2, 1, 0) * HA2EV; del Vp, Vd; iz = int(np.round(s_vac[2] * nr[2])) % nr[2]; plane = dV[:, :, iz]; del dV
-    i = np.arange(nr[0]); j = np.arange(nr[1]); S1, S2 = np.meshgrid((i / nr[0] - s_vac[0] + 0.5) % 1 - 0.5, (j / nr[1] - s_vac[1] + 0.5) % 1 - 0.5, indexing="ij")
-    X = (S1 * A[0, 0] + S2 * A[0, 1]) * BOHR; Y = (S1 * A[1, 0] + S2 * A[1, 1]) * BOHR; R = np.sqrt(X ** 2 + Y ** 2)
+    i = np.arange(nr[0]); j = np.arange(nr[1])
+    I1, I2 = np.meshgrid(i / nr[0], j / nr[1], indexing="ij")                                          # R10 (P-c2) : true minimum image
+    R = al.true_min_image_dist(np.stack([I1.ravel(), I2.ravel(), np.full(I1.size, s_vac[2])], axis=1), s_vac, A * BOHR).reshape(I1.shape)
     mask = np.ones(plane.shape, bool)
     for s_at in xd:
         d1 = (i / nr[0] - s_at[0] + 0.5) % 1 - 0.5; d2 = (j / nr[1] - s_at[1] + 0.5) % 1 - 0.5; D1, D2 = np.meshgrid(d1, d2, indexing="ij")

@@ -7,7 +7,7 @@ Noms distincts des figures de travail (rien n'est écrasé) :
   fig_spectral_final     (a) Γ(ε) T vs Born (log) ; (b) δρ ; (c) T̄_ππ(K,K;ε) ; (d) critère det / λ_min       — 6.5 × 5.6 po
   fig_M_map_final        (a) π, (b) π*, (c) partie locale projetée, (d) partie non locale projetée ; colorbars M̃ et M_∥ — 6.5 × 6.0 po
   fig_M_scaling_final    max|M| vs N, convention cellule unitaire (panneau unique)                           — 6.5 × 4.0 po
-  fig_Ved                (a) carte 5×5, (b) carte 9×9 (colorbar commune) ; (c) profil radial masqué          — 6.5 × 7.2 po
+  fig_Ved                (a) carte 5×5, (b) carte 9×9 (colorbar commune) ; (c) profil radial masqué, + C_N (pointillés, R10) — 6.5 × 7.2 po
   fig_Ved_zoom           inchangée (make_figures.py)
 Usage : python scripts/make_figures_memoire.py [--outdir figures]
 """
@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
 from matplotlib.patches import Polygon
 from scipy.spatial import Voronoi
-from electron_defect_interaction.config import load_production, results_dir
-RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+from electron_defect_interaction.config import load_production, results_dir, alignment_C
+RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 
 plt.style.use("figures/memoire.mplstyle")
 from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
@@ -126,7 +126,9 @@ for ax, S, let in ((axa, "5x5", "a"), (axb, "9x9", "b")):
 axa.set_ylabel(r"$y$ (Å)"); axb.tick_params(labelleft=False)
 cb = fig.colorbar(pc, ax=[axa, axb], shrink=1.0, pad=0.02, aspect=16); cb.ax.tick_params(labelsize=7); cb.set_label("$V_\\mathrm{ed}^L$ (eV)\nsymlog, lin. entre $\\pm10^{-2}$ eV", fontsize=7)
 for S in SIZES:
-    if f"{S}_rad_masked" in V: axc.plot(V[f"{S}_rc_masked"], V[f"{S}_rad_masked"], color=COL[S], label=famlab(S))
+    if f"{S}_rad_masked" in V:
+        axc.plot(V[f"{S}_rc_masked"], V[f"{S}_rad_masked"], color=COL[S], label=famlab(S))
+        axc.axhline(alignment_C(cfg, S), color=COL[S], ls=":", lw=0.9)                                 # R10 : C_N (plateau (i), config) de la taille
 axc.axhline(0, color=MUTED, lw=0.8); axc.set_yscale("symlog", linthresh=LIN, linscale=0.4)
 axc.set_xlabel(r"Distance au site $r$ (Å)"); axc.set_ylabel(r"$\bar V_\mathrm{ed}^{L}$ (eV)"); axc.legend(title="Super-cellule", ncol=6, fontsize=7, title_fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), frameon=False)
 axc.set_title("Moyenne du potentiel local dans le plan du graphène", loc="left", fontsize=9); panel(axc, "c")

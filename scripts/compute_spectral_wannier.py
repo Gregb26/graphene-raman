@@ -17,11 +17,10 @@ import argparse
 import numpy as np
 
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
-from electron_defect_interaction.config import load_production, dense_paths, results_dir
-RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+from electron_defect_interaction.config import load_production, dense_paths, matrices_dir, alignment_C
+MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule) ; produits dans results_dir
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import (
-    Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order)
+from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
 
 HA2EV = 27.211386245988
@@ -57,7 +56,7 @@ def main():
         dp = dense_paths(cfg, args.size); uc = dp["uc"]; mfile = dp["mfile"]
     else:
         uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
-        mfile = f"{RES}/M_ed_{args.size}.npy"
+        mfile = f"{MAT}/M_ed_{args.size}.npy"
     # NORMALIZATION CONTRACT (validated by test_local_tmatrix_real.py to 1e-13):
     #   * the LOCAL Wannier t-matrix needs the INTENSIVE real-space potential V_loc = <wR|V|w'R'>,
     #     i.e. Mwr built from the unit-cell-normalized M_raw (bloch_norm='unit_cell');
@@ -76,10 +75,11 @@ def main():
     Hwr, Rw, ndegen, _, _ = read_w90_tb(paths["tb"])
 
     # interpolate coarse M -> Wannier real space once; locality guardrail (hard)
-    Mwk = Mbk_to_Mwk(M, U, U_dis)
-    MP = _infer_mp_grid(k_coarse)
-    Mwr, R_mwr = Mwk_to_Mwr(Mwk, k_coarse, MP)
-    R_mwr, R_d = lt.recenter_mwr(Mwr, R_mwr, MP)                     # defect -> origin, applied ONCE
+    # R10 : rotation -> double TF -> alignement M_W(R,R) - C_N sur la boîte N x N (approximation (i)) -> recentrage (defect_mwr)
+    MP = _infer_mp_grid(k_coarse); N_sc = int(args.size.split("x")[0]); C_N = alignment_C(cfg, args.size)
+    d = lt.defect_mwr(M, U, U_dis, k_coarse, MP, n_box=N_sc, C_N=C_N)
+    Mwr, R_mwr, R_d = d["Mwr"], d["Rn"], d["R_d"]                     # defect -> origin, applied ONCE
+    print(f"[align] C_N = {C_N*1e3:+.4f} meV subtracted from M_W(R,R), {int(d['in_box'].sum())} cells of the {N_sc}x{N_sc} box (MP {MP})", flush=True)
     print(f"[recenter] defect site detected at R_d={R_d.tolist()} (supercell cell index); labels shifted so R0=0", flush=True)
     dist, wt = lt.mwr_locality(Mwr, R_mwr)                            # guardrail a (raises if off-center)
     print("[locality] ||Mwr(R,R0)|| (eV) vs |R-R0|:", [(float(d), round(float(w), 4)) for d, w in zip(dist[:12], wt[:12])], "...", flush=True)

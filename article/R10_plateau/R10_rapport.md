@@ -509,3 +509,91 @@ MV 0,01 Ry.
 
 **STOP — GO 1 terminé le 2026-09-29.** Suite (étape G) : Greg écrit (a) et commit ; Code écrit (b) contre ces signatures (y compris D6 pour `analyze_M.py` et
 `lnl_frobenius_all.py`), Greg relit et commit ; Greg applique (c) avec les C_N ci-dessus ; puis GO 2.
+
+## (b) — changements de `scripts/` écrits par Code (2026-09-29 ; non commités)
+
+Base : (a) commité par Greg (`c61c118`, HEAD `c1d9792`). Signatures relues dans le diff : `ws_images` n'accepte que `A_cols` (3, 3) ; `Mwr_to_Mwk(_pairs)(ws=)`
+exige `len(ws["dist"]) == len(R)` (étiquettes brutes avec `R_center = R_d`, ou recentrées avec `R_center = 0`) ; `defect_mwr` soustrait C_N sur M_W(R, R) pour tous
+les w et toutes les mailles de la boîte (étiquettes brutes), puis `recenter_mwr`, sans conversion d'unités. (c) n'est pas appliqué : les scripts importent
+`matrices_dir` et `alignment_C` de `config.py` tels que proposés en 0.5 (c).
+
+`git diff --stat` : 11 fichiers de `scripts/`, +182 −99. Rien dans `src/`, `config/`, `tests/`, `results/`, `figures/`.
+
+| fichier | changement |
+|---|---|
+| `compute_spectral_wannier.py` | `lt.defect_mwr(M, U, U_dis, k_coarse, MP, n_box=N, C_N=alignment_C(cfg, S))` (dense et grossier) à la place de Mbk_to_Mwk → Mwk_to_Mwr → recenter_mwr ; M_ed grossier lu dans `matrices_dir` ; ligne `[align]` dans le journal |
+| `rcut_resigma.py`, `resonance_criteria.py` | idem (`defect_mwr`, C_N de la config, ligne de journal) |
+| `resonance_metrics.py` | `vloc_from` par `defect_mwr` ; D10 : V_sub retiré (ML_diag_mean, lecture de M_L, matrice identité de la taille de M, t_S, G_S, GS_e, ligne « alignment ») ; clés npz retirées `Gamma_T_noshift`, `G_S`, `ML_diag_mean` (aucun lecteur, `grep`) ; clé ajoutée `C_N_eV` ; `--shift-L-meV` inchangé dans son principe (constantes en meV autour du V_loc aligné), aide : « ±rms du plateau (9x9 : 9.05,-9.05) » |
+| `m_rcut_convergence.py` | `defect_mwr` ; `ws = ws_images(Rn, 0, MP, A_uc)` (cellule du .save dense, bohr) ; Pm, Pp = `ws_phase(kf, ws, nR, ∓1)` ; masques R_cut sur Rn inchangés ; ligne `[ws]` (étiquettes à égalité, nombre d'images) |
+| `mwr_locality_coarse_vs_dense.py` | `defect_mwr` (dense et grossier) ; abscisse `ws_images(Rn, 0, MP, A_cols)["dist"]` (A de la l. 19 en colonnes, a₃ sans effet, R_z = 0) ; M_ed dans `matrices_dir` |
+| `analyze_Ved.py` | r = `al.true_min_image_dist` sur (i/n₁, j/n₂, z_vac), centre s_vac, cellule en Å (deux boucles) ; X, Y, S1, S2 devenus inutiles retirés (la carte utilise IC, JC, inchangés) |
+| `analyze_M.py` | chemins des matrices par `MAT = matrices_dir(cfg)` (l. 21, M_ed, nb16, coarsecheck, M_L) ; `corners` et `map_corners` supprimés ; fermeture par `defect_mwr(…, C_N=0.0)` ; D7 : deux lignes par famille (tailles lues dans `cfg["families"]`, libellé construit sur les tailles présentes) ; D6 : carte alignée (`map_Vpi_aligned`, `map_Vpistar_aligned`, `map_Lpar_aligned`, `map_Npar_aligned`, `map_Labs_aligned`, `map_C_N_eV`), Re M^L à K aligné (`lnl_<S>_ReL_aligned`, `lnl_<S>_C_N_eV`), portes D6 (ci-dessous, clés `align_gate_*`) ; clés brutes inchangées |
+| `lnl_frobenius_all.py` | D6 : colonnes ajoutées en fin de ligne `C_N_eV`, `ratio_full_aligned`, `mean_fL_aligned_eV`, `ratio_diag_aligned`, `ratio_min_aligned`, `ratio_max_aligned`, `ratio_median_pairs_aligned` ; colonnes brutes inchangées ; contrôle refusant de D_N contre la somme explicite sur la boîte (trois kets, 1e-12) |
+| `level2_families.py` | colonne `ReML_K_aligned_eV` ajoutée en fin de ligne (lue dans `M_analysis.npz`) — hors des deux fichiers nommés par D6, voir point 3 ci-dessous |
+| `make_figures_memoire.py` | fig_Ved (c) : `axhline(alignment_C(cfg, S))` pointillé, couleur de la taille, pour chaque taille tracée |
+| lignes `RES = results_dir(…)` | commentaire « R6 : results/M2 » remplacé par « R10 : produits (results/M2_plateau) » dans les fichiers touchés |
+
+Variante alignée en base de Bloch (D6), forme fermée utilisée dans `analyze_M.py` et `lnl_frobenius_all.py` :
+ΔM[m, k′, n, k] = −C_N·D_N(k − k′)·Σ_w V(k′)[m, w]·V(k)[n, w]*, D_N(q) = Σ_{R ∈ [0, N)²} e^{2πi q·R} calculé sur les indices MP entiers ; ΔM s'ajoute à M et à M^L,
+pas à M^NL (contrôle : M_dense = M_L_dense + M_NL_dense en v2, 8,8e-17 sur une colonne 9×9).
+
+Portes D6 dans `analyze_M.py` (taille de référence, refus au-delà du seuil) :
+(i) forme fermée contre la chaîne de Wannier (`defect_mwr` sur M = 0 en jauge identité, puis `Mwr_to_Mwk_pairs`), 729 k′ contre K, seuil 1e-12 ;
+(ii) sous-grille grossière 9×9 de la grille dense 27×27, jauge de Wannier, toutes les paires (k′, k) : ΔM_W = −N_cells·C_N·δ_kk′·𝕀₅, seuil 1e-12 ;
+(iii) bandes de la fenêtre gelée ([−25 ; −1,74] eV, 4 ou 5 par k), (k, k) de la sous-grille, base de Bloch : ΔM = −N_cells·C_N·𝕀, seuil 1e-9 (point 1).
+
+### Essais (nœud de connexion, 16 Go ; `config.py` de substitution conforme à 0.5 (c) dans le scratchpad, `results_dir` → scratchpad ; rien écrit dans `results/`)
+
+- pyflakes sur les 11 fichiers, avant et après : aucun message nouveau (les messages préexistants, imports inutilisés, restent identiques).
+- `analyze_M.py`, en-tête + section 1 + bloc D6 exécutés tels quels (9×9) : portes (i) 2,9e-15, (ii) 1,3e-15, (iii) 1,4e-10 (max|V V† − 𝕀| sur les bandes gelées
+  1,37e-10) ; clés brutes de la carte (`map_Vpi`, `map_Vpistar`, M^L_∥, M^NL_∥, |M^L|, |M^NL|, kx) = `M_analysis.npz` de M2 à 0,0 ; `map_corners` absent.
+  Carte alignée (eV Å²) : Ṽ_π à K 107,22 → 114,89 ; M^L_∥ à K 84,39 → 92,09 ; ⟨M^L_∥⟩ 89,53 → 89,63 ; max|ΔM| (ligne π, paire à K) 10,72 = A_cell·N_cells·|C_9|.
+- Re M^L à K, lignes de la section 3 (eV) : 9×9 +11,3051 → +13,3417 ; 5×5 +10,5343 → +11,9733 ; 12×12 +11,2220 → +13,9133 ; décalages +2,0366 / +1,4391 / +2,6913
+  = −N_cells·C_N (paire π à K dans la fenêtre gelée pour les trois tailles ; 5×5 : point de grille le plus proche de K à 0,0555 Å⁻¹).
+- D7 sur les `scale_<S>_dense` de M2 : 3m (N = 6, 9, 12) 2,3e-2 ; non-3m (N = 5, 7, 8) 2,1e-2 (R9 : 2,26e-2 et 2,05e-2).
+- `lnl_frobenius_all.py 5x5,9x9` (28 s) : les 13 colonnes brutes = `results/M2/lnl_frobenius.csv` (chaînes identiques) ; contrôle D_N passé ; aligné :
+  ⟨‖M^NL‖_F⟩/⟨‖M^L‖_F⟩ 5×5 0,258 → 0,257 (diagonale k′ = k 0,287 → 0,270) ; 9×9 0,252 → 0,252 (0,278 → 0,255).
+- `mwr_locality_coarse_vs_dense.py` restreint à 5×5 : p_z–p_z sur site de la lacune +31,0023 → +31,0599 eV (dense), +1,1235 → +1,1811 eV (grossier), décalage
+  +57,563 meV = −C_5 ; poids hors site identiques à 0,0 ; abscisse max 20,785 → 13,892 a (dense, D = 25, borne D/√3 = 14,43 a) ; 3,464 → 2,646 a (grossier).
+- `m_rcut_convergence.py --size 5x5 --nf 24 --rcuts 0,1,2,3` (15 s) : 24 étiquettes à égalité, 649 images pour 625 étiquettes ; max|ΔM|/max|M| 2,898e-1 / 1,583e-1 /
+  6,161e-2 / 2,553e-2 (aucune référence pour cette taille : exécution seulement ; la porte chiffrée est celle de C.2 sur 9×9 et 12×12).
+- Lignes de `rcut_resigma.py` jusqu'au recentrage, 5×5 et 9×9 : V_loc (R_cut 3) aligné = V_loc(C = 0) − C_N·diag(in_box) **au bit** ; R_d et étiquettes recentrées
+  identiques à la chaîne sans alignement ; 5×5 : 25 des 29 mailles du R_cut 3 dans la boîte 5×5 (les 4 autres, dans la zone de remplissage de la grille 25×25,
+  ne reçoivent pas C_N : approximation (i)) ; 9×9 : 29 sur 29.
+- `analyze_Ved.py 9x9` : anneau 9,625 Å 534 points, 11,075 Å 518 (audit : 534, 518) ; anneaux r < 0,433 a_sc = 9,609 Å (192) : 1,2e-14 (profil), 4,3e-14 (profil
+  masqué) de M2, pas 0,0 ; les 30 anneaux au-delà changent ; les 24 autres clés 9×9 = M2 à 0,0. Cause de l'écart de 1e-14 : r nouveau − ancien ≤ 5,3e-15, les
+  49 543 points restent dans le même anneau, mais `np.histogram` pondéré somme par différences de sommes cumulées dans l'ordre trié des r ; une somme par anneau
+  dans l'ordre du tableau (`bincount`) donne 0,0.
+- `make_figures_memoire.py --outdir <scratchpad>` sur des copies des npz de M2 : six figures écrites ; fig_Ved (c) avec les six traits C_N (7×7 −26,91 et 9×9 −25,14 meV
+  presque superposés).
+- Non exécutés ici (mémoire du nœud de connexion ou durée) : `compute_spectral_wannier.py`, `resonance_metrics.py`, `resonance_criteria.py`, `analyze_M.py` complet
+  (sections 2, 4, 5), `mwr_locality` sur les six tailles, `m_rcut_convergence.py` 9×9 et 12×12, `level2_families.py` sur des produits alignés. Ils passent en C.0/C.1
+  derrière leurs portes.
+
+### Écarts au plan et points à trancher
+
+1. **Test D6 « (k, k) → −N_cells·C_N·𝕀 à 1e-12 »** : impossible à la lettre en base de Bloch ; V V† = 𝕀 sur les bandes gelées à 1,37e-10 seulement (`wannier_u.mat`
+   et `wannier_u_dis.mat` écrits avec 10 décimales ; U†U − 𝕀 1,7e-10, U_dis†U_dis − 𝕀 1,4e-10). Écrit : portes (i) et (ii) à 1e-12 (exactes, jauge de Wannier), porte
+   (iii) en base de Bloch à **1e-9** (seuil de Code, à confirmer ou à remplacer).
+2. **Grille grossière du test** : pas de wannierisation grossière de la 9×9 (`wannier/9x9` absent ; `wannier/` : 5×5, 7×7, 8×8 grossiers) ; le test utilise la
+   sous-grille 9×9 de la grille dense 27×27 (même algèbre : D_9(k − k′) = 81·δ_kk′ sur cette sous-grille).
+3. **`level2_families.py`** : colonne alignée ajoutée pour que « Re M^L à K (tableau des familles) » ait brut et aligné côte à côte ; fichier hors des deux nommés par
+   D6 ; à garder ou à retirer.
+4. **fig_M_map** : `make_figures.py` et `make_figures_memoire.py` inchangés (carte brute) ; la variante alignée est dans `M_analysis.npz` ; la planche côte à côte
+   brut/aligné est prévue au pilote (C.4). Des panneaux alignés dans la figure du mémoire seraient un changement séparé.
+5. **fig_Ved (c)** : les traits C_N n'ont pas d'entrée de légende (légende à six colonnes inchangée) ; à dire dans la légende de la figure.
+6. **Contrôle C.3 des anneaux de `analyze_Ved`** : « anneaux < 0,433 a_sc redonnés à 0,0 » donne 1,2e-14 et 4,3e-14 (cause ci-dessus) ; proposé pour C.3 : appartenance
+   aux anneaux identique (indices) et valeurs à 1e-13, ou recalcul par `bincount` à 0,0.
+7. **Ordre des commits** : les scripts de (b) importent `matrices_dir` et `alignment_C` ; entre un commit de (b) seul et (c), ils échouent à l'import. Commit de (b)
+   et (c) ensemble, ou (c) d'abord.
+8. **Scripts hors chaîne (D11, laissés)** : 14 scripts lisent des matrices par `f"{RES}/M_…"` et chercheront dans `results/M2_plateau` après (c) : `check_ML_coarse_kernel`,
+   `check_onsite_and_NL`, `check_M_dense_vs_coarse`, `check_M_dense_nb20_vs_nb16`, `compute_tmatrix`, `compute_spectral`, `migrate_M_norm`, `_old_vs_new_7x7`,
+   `_eta_scan`, `_normtest`, `tag_vacancy_sublattice`, `_mcheck`, `test_local_tmatrix_real`, `validate_ML_grid_7x7`. Aucun n'est utilisé en C.
+
+Ajouts aux contraintes du lanceur de C (0.6) : C14 appelé avec `--shift-L-meV 9.05,-9.05` (D10) ; les lignes de la porte A.2 que R6 ajoutait à
+`M_tests_summary.csv` (`article/R6_production_corrigee/etape3/r6_tests_gate_row.py`, `results_dir` de la config) seront reprises dans le pilote pour
+`results/M2_plateau`.
+
+Fichiers de l'essai (scratchpad, temporaires) : config de substitution, bancs d'essai, sorties ; hors dépôt et hors répertoire de campagne.
+
+**STOP — (b) écrit le 2026-09-29, non commité.** Suite : relecture et commit par Greg ; (c) par Greg (points 1, 3 et 7 ci-dessus) ; puis GO 2.

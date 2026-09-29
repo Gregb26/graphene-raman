@@ -11,10 +11,9 @@ Usage: rcut_resigma.py --size 9x9 --rcut 0,1,2,3 [--grid 240 --eta 0.02] --out <
 import argparse, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, results_dir
-RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+from electron_defect_interaction.config import load_production, dense_paths, alignment_C
 
 p = argparse.ArgumentParser(); p.add_argument("--size", required=True); p.add_argument("--rcut", required=True)
 p.add_argument("--grid", type=int, default=None); p.add_argument("--eta", type=float, default=None); p.add_argument("--out", required=True); p.add_argument("--npe", type=int, default=None, help="ne_per_eta override (default: frozen config)")
@@ -27,9 +26,10 @@ k_coarse = qe_io.get_k_red(dp["uc"])
 U, k_U = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(k_U, k_coarse)]
 U_dis, k_Ud = read_w90_mat(paths["u_dis"]); U_dis = U_dis[_match_kpoint_order(k_Ud, k_coarse)]
 Hwr, Rw, ndegen, _, _ = read_w90_tb(paths["tb"])
-Mwk = Mbk_to_Mwk(M, U, U_dis); MP = _infer_mp_grid(k_coarse); Mwr, R_mwr = Mwk_to_Mwr(Mwk, k_coarse, MP)
-R_mwr, R_d = lt.recenter_mwr(Mwr, R_mwr, MP); lt.mwr_locality(Mwr, R_mwr); del M, Mwk
-print(f"[recenter] R_d={R_d.tolist()}; MP={MP}", flush=True)
+MP = _infer_mp_grid(k_coarse); C_N = alignment_C(cfg, a.size)                           # R10 : M_W(R,R) - C_N sur la boîte (approximation (i))
+d = lt.defect_mwr(M, U, U_dis, k_coarse, MP, n_box=int(a.size.split("x")[0]), C_N=C_N); Mwr, R_mwr, R_d = d["Mwr"], d["Rn"], d["R_d"]
+lt.mwr_locality(Mwr, R_mwr); del M, d
+print(f"[recenter] R_d={R_d.tolist()}; MP={MP}; C_N = {C_N*1e3:+.4f} meV (config alignment)", flush=True)
 _, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=ndegen); gap = E_ref[:, 4] - E_ref[:, 3]
 iD = int(np.argmin(gap)); E_D = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4])); win = (E_D - ew, E_D + ew)
 print(f"[dirac] E_D = {E_D:.4f} eV; window {win}; grid {N}, eta {eta}, nk_int {nk_int}, ne_per_eta {npe} (de = {eta/npe*1e3:.3f} meV)", flush=True)

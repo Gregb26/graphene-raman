@@ -12,10 +12,10 @@ Output: <results_dir>/resonance_criteria_<size>.npz
 import argparse, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
 from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, results_dir
-RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+from electron_defect_interaction.config import load_production, dense_paths, results_dir, alignment_C
+RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--c-compare", type=float, default=1e-3)
 ap.add_argument("--band-de", type=float, default=None, help="energy spacing for the full-band sum rule (default eta/4)")
@@ -30,12 +30,13 @@ k_coarse = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k_coarse)
 U, kU = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(kU, k_coarse)]
 Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k_coarse)]
 Hwr, Rw, nd, _, _ = read_w90_tb(paths["tb"])
-Mwr, R = Mwk_to_Mwr(Mbk_to_Mwk(M, U, Ud), k_coarse, MP); Rn, Rd = lt.recenter_mwr(Mwr, R, MP); lt.mwr_locality(Mwr, Rn); del M
+C_N = alignment_C(cfg, S); d = lt.defect_mwr(M, U, Ud, k_coarse, MP, n_box=int(S.split("x")[0]), C_N=C_N)   # R10 : M_W(R,R) - C_N (approximation (i))
+Mwr, Rn = d["Mwr"], d["Rn"]; lt.mwr_locality(Mwr, Rn); del M, d
 Rloc = Rn[np.linalg.norm(Rn, axis=1) <= rc + 1e-9]; V, _ = lt.extract_V_loc(Mwr, Rn, Rloc); dim = V.shape[0]
 k_int = lt.mp_grid(nk_int, nk_int, 1); Hwk_int, E_int, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)
 _, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=nd)
 gap = E_ref[:, 4] - E_ref[:, 3]; iD = int(np.argmin(gap)); E_D = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4]))
-print(f"[setup] {S}: R_cut={rc} dim={dim}, E_D={E_D:.4f} eV, Wannier bands span [{E_int.min():.2f}, {E_int.max():.2f}] eV", flush=True)
+print(f"[setup] {S}: C_N = {C_N*1e3:+.4f} meV (config alignment), R_cut={rc} dim={dim}, E_D={E_D:.4f} eV, Wannier bands span [{E_int.min():.2f}, {E_int.max():.2f}] eV", flush=True)
 I = np.eye(dim)
 # R6 (3.4): blocks of V_loc by Wannier character (projections C1:sp2;pz C2:pz -> w = 0,1,2 sigma, 3,4 pi ; flat index L*nw + w)
 nw = Hwr.shape[1]; nL = len(Rloc)

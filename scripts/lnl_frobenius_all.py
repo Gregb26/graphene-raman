@@ -4,13 +4,15 @@ lnl_frobenius_all.py -- <|M^NL|_F>/<|M^L|_F> on the full pi/pi* subspace (2x2 bl
 grid) for every size with dense M^L / M^NL files (tab:L_NL). Same metric as the "[BZ avg]" block of analyze_M.py
 (which only does the reference size). No new physics run; reads the dense Hartree M files (mmap) and the dense
 wannierization U, U_dis to select the pi/pi* pair per k by pz weight. Output: <results_dir>/lnl_frobenius.csv.
+R10 (D6) : raw columns unchanged; *_aligned columns with M^L + dM, dM(k', k) = -C_N D_N(k - k') V(k') V(k)^dag (M_W(R,R) - C_N on the N x N box,
+approximation (i), brought back to the Bloch basis; same closed form as analyze_M.py, whose gates tie it to defect_mwr), C_N from the config.
 """
 import csv, os, sys, time, numpy as np
 from electron_defect_interaction.io import qe_io, matrix_io
 from electron_defect_interaction.io.wannier_io import read_w90_mat
-from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
-RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order, _infer_mp_grid
+from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir, alignment_C
+RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par dense_paths (matrices_dir)
 
 cfg = load_production()
 SIZES = sys.argv[1].split(",") if len(sys.argv) > 1 else ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"]
@@ -26,6 +28,11 @@ def wannier_V(wdir, k):
 def pi_pair(V, eps, ik):
     w = np.abs(V[ik][:, 3]) ** 2 + np.abs(V[ik][:, 4]) ** 2
     top = np.argsort(-w)[:2]; return tuple(sorted(top, key=lambda n: eps[ik, n])), w[top]
+def box_dirichlet(k_bra, k_ket, MP, N):
+    """R10 (D6): D_N(k - k') = sum over the N x N box (R in [0, N)^2) of exp(2 pi i (k - k').R), from the integer MP indices. (nk', nk) complex."""
+    MP = np.asarray(MP, int); mb = np.rint(np.asarray(k_bra) * MP).astype(int); mk = np.rint(np.asarray(k_ket) * MP).astype(int)
+    d = [np.exp(2j * np.pi * np.outer(np.arange(MP[a]), np.arange(N)) / MP[a]).sum(1) for a in (0, 1)]     # d_a[m] = sum_{i<N} e^{2 pi i m i / D_a}
+    q = (mk[None, :, :2] - mb[:, None, :2]) % MP[:2]; return d[0][q[..., 0]] * d[1][q[..., 1]]
 
 rows = []
 for S in SIZES:
@@ -42,20 +49,34 @@ for S in SIZES:
         (a, b), w = pi_pair(V, eps, ik); pi_idx[ik] = (a, b); wmin[ik] = w.min()
     ML = mmap_M(fL_path); MN = mmap_M(fN_path); nb = ML.shape[0]
     assert ML.shape == MN.shape == (nb, nk, nb, nk), (ML.shape, nk)
-    fL = np.zeros((nk, nk)); fN = np.zeros((nk, nk)); jj = np.arange(nk)[:, None, None]
+    # R10 (D6) : D_N on the dense grid, checked against its definition (explicit sum over the box) on three kets; refusal beyond 1e-12
+    N = int(S.split("x")[0]); C_N = alignment_C(cfg, S); MP = _infer_mp_grid(kd); Dn = box_dirichlet(kd, kd, MP, N)                # Dn[k', k] = D_N(k - k')
+    kmp = np.round(kd * np.asarray(MP)) / np.asarray(MP); box = np.array([(i, j, 0) for i in range(N) for j in range(N)], float)
+    for ik in (0, nk // 3, nk - 1):
+        ex = np.exp(2j * np.pi * ((kmp[ik][None, :] - kmp) @ box.T)).sum(1); e = np.abs(Dn[:, ik] - ex).max() / N ** 2
+        if not e < 1e-12: raise AssertionError(f"[{S}] D_N vs explicit box sum: {e:.2e} > 1e-12")
+    Vpi = V[np.arange(nk)[:, None], pi_idx, :]                                                           # (nk, 2, nw) pi/pi* rows of V per k
+    fL = np.zeros((nk, nk)); fN = np.zeros((nk, nk)); fLa = np.zeros((nk, nk)); jj = np.arange(nk)[:, None, None]
     for ik in range(nk):
         rowL = np.asarray(ML[:, :, :, ik]) * HA2EV; rowN = np.asarray(MN[:, :, :, ik]) * HA2EV      # (nb, nk', nb)
         bl = rowL[pi_idx[:, :, None], jj, pi_idx[ik][None, None, :]]                             # (nk', 2, 2)
         bn = rowN[pi_idx[:, :, None], jj, pi_idx[ik][None, None, :]]
         fL[:, ik] = np.linalg.norm(bl.reshape(nk, 4), axis=1); fN[:, ik] = np.linalg.norm(bn.reshape(nk, 4), axis=1)
+        bla = bl - C_N * Dn[:, ik][:, None, None] * np.einsum("Kmw,nw->Kmn", Vpi, Vpi[ik].conj())            # R10 (D6) : M^L + dM, pi/pi* blocks
+        fLa[:, ik] = np.linalg.norm(bla.reshape(nk, 4), axis=1)
     r = dict(size=S, N=int(S.split("x")[0]), D=dp["D"], nk=nk, nb=nb, min_pz_weight=float(wmin.min()),
              ratio_full=fN.mean() / fL.mean(), mean_fN_eV=fN.mean(), mean_fL_eV=fL.mean(),
              ratio_diag=np.diag(fN).mean() / np.diag(fL).mean(), ratio_min=(fN / fL).min(), ratio_max=(fN / fL).max(),
-             ratio_median_pairs=float(np.median(fN / fL)))
+             ratio_median_pairs=float(np.median(fN / fL)),
+             C_N_eV=C_N, ratio_full_aligned=fN.mean() / fLa.mean(), mean_fL_aligned_eV=fLa.mean(),
+             ratio_diag_aligned=np.diag(fN).mean() / np.diag(fLa).mean(), ratio_min_aligned=(fN / fLa).min(), ratio_max_aligned=(fN / fLa).max(),
+             ratio_median_pairs_aligned=float(np.median(fN / fLa)))
     rows.append(r)
     print(f"[{S}] D={dp['D']} nk={nk} nb={nb}: <|M^NL|_F>/<|M^L|_F> = {r['ratio_full']:.3f} (<F_N> {r['mean_fN_eV']:.4f} eV, <F_L> {r['mean_fL_eV']:.4f} eV); "
           f"diag k'=k {r['ratio_diag']:.3f}; pairwise ratio min {r['ratio_min']:.3f} median {r['ratio_median_pairs']:.3f} max {r['ratio_max']:.3f}; "
           f"min pz weight {r['min_pz_weight']:.2f}; {time.time()-t0:.0f} s", flush=True)
+    print(f"[{S}] aligned (C_N = {C_N*1e3:+.4f} meV): <|M^NL|_F>/<|M^L|_F> = {r['ratio_full_aligned']:.3f} (<F_L> {r['mean_fL_aligned_eV']:.4f} eV); "
+          f"diag k'=k {r['ratio_diag_aligned']:.3f}; pairwise ratio min {r['ratio_min_aligned']:.3f} median {r['ratio_median_pairs_aligned']:.3f} max {r['ratio_max_aligned']:.3f}", flush=True)
     del ML, MN
 if rows:
     with open(OUT, "w", newline="") as f:

@@ -6,7 +6,7 @@ Contexte pour le dépôt `graphene-raman`. Rédigé le 2026-09-28.
 - **EM1, EM2, …** : prompts de calcul exécutés par Code (cluster, QE, Wannier90).
 - **P28** : modifications du texte du mémoire. Aucune n'est faite avant que tous les résultats EM soient validés.
 
-**Ce plan est un guide, pas un cadre strict.** En implémentant, Greg ajuste les signatures et les structures quand ça aide. En cas d'écart, le code (`src/electron_defect_interaction/electron_photon/` et `tests/`) fait foi, et EM.md est réaligné ensuite. Dernier alignement : 2026-09-28.
+**Ce plan est un guide, pas un cadre strict.** En implémentant, Greg ajuste les signatures et les structures quand ça aide. En cas d'écart, le code (`src/electron_defect_interaction/electron_photon/` et `tests/`) fait foi, et EM.md est réaligné ensuite. Dernier alignement : 2026-09-29.
 
 ---
 
@@ -221,11 +221,11 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 - σ_yy sans Berry est inchangé par le déplacement : L = a₁ est purement selon x. C'est un contrôle de plus.
 - Ces valeurs ont été obtenues par deux implémentations indépendantes, en jauge du réseau et en jauge atomique.
 
-### Tests pytest (`tests/test_{tb_model,kgrid,velocity_operator,ring,kubo}.py`)
+### Tests pytest (`tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py`)
 
 Lancer avec `.venv/bin/python -m pytest tests -v`. Fixtures partagées dans `tests/conftest.py` : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
-**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (22 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
+**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (48 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
 
 **Faits (F1–F7 et pilote, 78 exécutions ; à partir de F6, les tests sont écrits par Code) :**
 
@@ -420,35 +420,56 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 
 **But** : les contrôles physiques sur les données réelles, et les chiffres par anneau pour le texte.
 
-**F14 — `pz_block(tb, pz)`** → `WannierTB` réduit aux WF p_z (liste d'indices en argument, pas de constante des données dans `src`). Dans `tb_model.py`, comme `centres_only`.
-- `extract_block` est dans `diagnostics.py`, qui importe déjà `tb_model` : l'importer depuis `tb_model` ferait un import circulaire. Le déplacer dans `tb_model.py` (module le plus bas) et l'importer de là dans `diagnostics`.
-- Aperçu (2026-09-28) : sur un cercle q = 0.1 autour de K, ε et |ħv^{x,y}_cv|² du 2×2 = ceux du 5×5 à 6×10⁻¹⁵ eV et 2×10⁻¹³ eV²·Å² ; `fermi_velocity` et `ring` donnent les mêmes valeurs (5.46919 ; ⟨|ħv_cv|²⟩ = 31.443 eV²·Å² sur l'anneau de 2.33 eV).
+**F14 — `pz_block(tb, pz)`** → `WannierTB` réduit aux WF `pz` (liste d'indices en argument, pas de constante des données dans `src`) : `H_R` et `r_R` coupés au bloc pz × pz, centres compris ; liste des R et `ndegen` inchangés. Dans `tb_model.py`, comme `centres_only`. **Fait (Greg, 2026-09-29).**
+- `extract_block` a été déplacé de `diagnostics.py` vers `tb_model.py` (module le plus bas ; l'inverse faisait un import circulaire) ; `diagnostics` l'importe de là. Il n'est pas exporté par le paquet : dans un notebook, l'importer depuis `tb_model`.
+- **Valeurs (27×27, 2026-09-29)** : sur un cercle q = 0.1 autour de K, ε et |ħv^{x,y}_cv|² du 2×2 = ceux du 5×5 à **5×10⁻¹⁵ eV** et **1.5×10⁻¹³ eV²·Å²** ; `fermi_velocity` donne 5.46919 eV·Å et l'anneau de 2.33 eV ⟨|ħv_cv|²⟩ = **31.443 eV²·Å²**, identiques au 5×5. La lumière dans le plan ne mélange pas σ et π (miroir, F11) ; seul r^z entre σ et p_z est perdu.
 - **Piège** : loin de K, π croise des bandes σ, et son indice dans le 5×5 trié change : comparer `eps5[:, 3:]` à `eps2` sur toute la zone donne 4.4 eV d'écart, alors que chaque bande du 2×2 coïncide avec *une* bande du 5×5 à 10⁻¹⁴. Comparer près de K, ou apparier par l'énergie.
-- **Test :** v_cv (π→π*) dans le plan est identique entre la matrice 5×5 et le bloc 2×2, à la taille près du bloc croisé de H (F11). La lumière dans le plan ne mélange pas σ et π.
+- Tests (`tests/test_tb_model.py`, 7) : `extract_block` contre `np.ix_` (lignes ≠ colonnes) ; M0 inchangé par `pz_block(tb, [0, 1])` (deux jauges) ; formes, valeurs = bloc `np.ix_`, copies (pas de mémoire partagée), entrée intacte, champs R partagés ; cercle q = 0.1 (ε à 10⁻¹², |ħv_cv|² à 10⁻¹⁰) ; toute la zone, bandes appariées par l'énergie à 10⁻¹² (et l'appariement par indice échoue, > 1 eV) ; même `fermi_velocity` et même anneau que le 5×5. Mutations : r non coupé (3 échecs), indices appariés `H_R[..., pz, pz]` (6), entrée modifiée sur place (4), r centres seuls (3), colonnes = lignes dans `extract_block` (6, dont les tests de F10 et F11), bloc transposé (1).
 
 **F6 (réutilisé) — anneaux** à 1.96, 2.33 et 2.54 eV (633, 532 et 488 nm) autour de K, avec c et v de part et d'autre de μ = E_D.
 
-**F15 — `ring_stats(tb, rings, modes)`** → pour chaque anneau et chaque mode :
-- ⟨|e_x·ħv_cv|²⟩_θ et ⟨|e_y·ħv_cv|²⟩_θ, en unités de (ħv_F)²/2 ;
-- l'angle du nœud ;
-- min et max de |v_cv| par rapport au mode complet.
+**F15 — `ring_stats(tb, K, mu, hws, ntheta=720)`** → dict ħω → variante (`'full'`, `'centres_only'`, `'no_berry'`) → `{'avg', 'node', 'ratio'}`. Dans `ring.py`. **Fait (Greg, 2026-09-29)** :
+- `avg` : ⟨|e_x·ħv_cv|²⟩_θ et ⟨|e_y·ħv_cv|²⟩_θ, en unités de (ħv_F)²/2 (ħv_F calculé dedans par `fermi_velocity`) ;
+- `node` : δ = angle du nœud − angle de e (e_x, e_y), en degrés, cherché dans la moitié d'anneau tournée vers +e (sinon `argmin` prend l'un ou l'autre des deux nœuds, de même profondeur) ;
+- `ratio` : min et max sur θ de |ħv_cv| / |ħv_cv|_complet, normes dans le plan √(P_x + P_y), point par point sur le même anneau (un seul anneau par ħω pour les trois variantes).
+- Pièges rencontrés : priorité de `%` et `*` dans le ramenage (`x % 2*np.pi` = `(x % 2)*np.pi`) ; indice d'`argmin` pris dans le tableau masqué ; norme calculée avec P² (P est déjà |·|²) ; `return` dans la boucle.
+- Tests (`tests/test_ring.py`, 9 ; valeurs de référence dans `W90_REF.ring_stats`) : M0 (moyennes de `test_ring_average`, nœud de e_x à 0, de e_y à −4°, centres seuls = complet, deux jauges) ; invariance de jauge du mode complet et nombres sans Berry de `test_ring_without_berry` (δ_x = −16.5°, rapport 0.664–1.271) ; tableau ci-dessous (rtol 10⁻⁵) ; symétries (δ_y = 0, C₃, ⟨y⟩ sans Berry = centres à 10⁻¹², nœud de e_x de part et d'autre de q ∥ x) ; moyenne recalculée directement sur l'anneau ; nœud = minimum local trouvé indépendamment, profondeur < 10⁻⁴ ; ħω scalaire. Mutations : `tb` au lieu de `model` (2 échecs), P sans module au carré (8), priorité de `%` (7), `argmin` sur d (7), indice hors masque (6), norme avec P² (2), `return` dans la boucle (5), masque retiré (6), unité sans ½ (4), φ inversés (7).
 
-- **Vérifications :**
-  - mode complet : nœud à q ∥ e ;
-  - mode complet : moyennes x et y égales (C₃) ;
-  - l'écart centres seuls − complet est petit (valeur à consigner : c'est l'approximation de liaisons fortes). Premier coup d'œil (F9) : −5 % sur ⟨|v_cv|²⟩ à 2.33 eV, pas si petit ;
-  - le mode sans Berry déplace le nœud.
+- **Vérifications** (corrigées par les valeurs ci-dessous) :
+  - mode complet : nœud **exactement** à q ∥ e seulement si e est le long d'une ligne miroir passant par K (ici e_y ; e_x dans M0, dont le réseau est tourné de 30°). Pour e_x, le gauchissement trigonal le décale de +6° à +8° (1.5° à 0.5 eV) ;
+  - moyennes x et y égales (C₃) en modes complet et centres seuls, à 10⁻⁴ près ; **pas** sans Berry, qui n'est pas covariant sous C₃ ;
+  - l'écart centres seuls − complet (c'est l'approximation de liaisons fortes) : −5 % sur ⟨|v_cv|²⟩ à 2.33 eV, presque uniforme en θ ;
+  - le mode sans Berry déplace le nœud de e_x (+7° → −9.5°), pas celui de e_y (fixé par le miroir).
+- **Valeurs (2026-09-29, 27×27, μ = E_D, 720 angles, un seul anneau par ħω pour les trois modes)**. Moyennes en unités de (ħv_F)²/2, ħv_F = 5.46919 eV·Å ; δ = angle du nœud − angle de e, cherché dans |δ| < 90° ; rapport = |ħv_cv|_mode / |ħv_cv|_complet point par point :
 
-**F16 — `shift_home_cell(tb, j, L)`**, optionnel : test de jauge sur les données réelles. Pour la WF j déplacée de L (|R j′⟩ = |R+L, j⟩) :
+  | ħω (eV) | mode | ⟨x⟩ | ⟨y⟩ | δ_x | δ_y | rapport min–max | ⟨\|v\|²⟩ / complet (déduit de `avg`) |
+  |---|---|---|---|---|---|---|---|
+  | 1.96 | complet | 1.0375 | 1.0374 | +6.0° | 0 | 1 | 1 |
+  | 1.96 | centres | 1.0006 | 1.0005 | +6.0° | 0 | 0.981–0.983 | 0.9644 |
+  | 1.96 | sans Berry | 1.1307 | 1.0005 | −8.0° | 0 | 0.662–1.231 | 1.0271 |
+  | 2.33 | complet | 1.0512 | 1.0511 | +7.0° | 0 | 1 | 1 |
+  | 2.33 | centres | 0.9995 | 0.9994 | +7.0° | 0 | 0.973–0.976 | 0.9508 |
+  | 2.33 | sans Berry | 1.1835 | 0.9994 | −9.5° | 0 | 0.578–1.283 | 1.0383 |
+  | 2.54 | complet | 1.0594 | 1.0594 | +7.5° | 0 | 1 | 1 |
+  | 2.54 | centres | 0.9984 | 0.9983 | +8.0° | 0 | 0.968–0.972 | 0.9424 |
+  | 2.54 | sans Berry | 1.2170 | 0.9983 | −10.5° | 0 | 0.528–1.315 | 1.0455 |
+
+  δ est limité par la grille (0.5° ; à 1440 angles : +7.3° et −9.5° à 2.33 eV). ⟨y⟩ sans Berry = ⟨y⟩ centres seuls : τ_B − τ_A est selon x dans ce réseau, donc le terme de Berry des centres n'a pas de composante y.
+
+**F16 — `shift_home_cell(tb, j, L)`**, optionnel, **reporté (2026-09-29)** : l'invariance de jauge est déjà montrée sur M0 (`test_ring_stats_gauge`, `test_ring_without_berry`) ; sur les données réelles, il faudrait étendre la liste des R et un `ndegen` par élément. Test de jauge sur les données réelles. Pour la WF j déplacée de L (|R j′⟩ = |R+L, j⟩) :
 - X′_{ij′}(R) = X_{ij}(R + L) pour i ≠ j ;
 - X′_{j′i}(R) = X_{ji}(R − L) pour i ≠ j ;
 - X′_{j′j′}(R) = X_{jj}(R), avec en plus **r′_{jj}(0) = r_{jj}(0) + L**.
 - On diffuse 1/ndegen dans X **avant** le décalage : ndegen devient propre à chaque élément.
 - **Attendu :** mode complet inchangé, mode sans Berry modifié.
 
-**F17 — `ring_kpoints_crystal(rings, B)`** → liste de k en coordonnées réduites pour EM2 : 24 à 48 points sur l'anneau à 2.33 eV, plus quelques-uns à 1.96 et 2.54 eV. On écrit `em2_kpoints_crystal.txt`.
+**F17 — `ring_kpoints_crystal(tb, K, mu, npoints)`** → dict ħω → (k_red, θ) : points de `ring` en coordonnées cristallines, k_red,i = a_i·k/2π (`k @ tb.lattice / 2π`). Dans `ring.py`. **Fait (Greg, 2026-09-29).**
+- Liste d'EM2 : `npoints = {2.33: 48, 1.96: 12, 2.54: 12}`, 72 k ; premier point à 2.33 eV (0.73959906, 0.40626573, 0) ; chaque anneau est centré sur K = (2/3, 1/3, 0) à 2×10⁻⁷ près (C₃ des données). Sur l'anneau de 2.33 eV, |ħv_cv| dans le plan va de 4.20 à 7.24 eV·Å : EM2 compare cette norme, sans nœud.
+- Pas d'écriture de fichier dans `src` : le fichier `K_POINTS crystal` (poids compris) est écrit par le script de la campagne EM2, qui vérifie aussi que la cellule du nscf est le `unit_cell_cart` de `wannier.win`.
+- Piège : `lattice.T` ou `B` à la place de `lattice` donnent K = (0.211, −0.455, 0) ou (4.33, 0, 0), sans erreur.
+- Tests (`tests/test_ring.py`, 4) : M0 (retour en cartésien = points de `ring`, anneau centré sur K exactement, deux jauges) ; liste d'EM2 (clés, tailles, premier point, conversion contre un `solve` indépendant avec B, centre) ; chaque point sur la couche ħω à 10⁻¹⁰ eV. Mutations : `lattice.T` (4 échecs), sans 2π (4), `inv(lattice)` (4), `ntheta` oublié (3), même ħω partout (2), μ oublié (2 erreurs), θ inversé (3).
 
-**Critère de sortie** : tableau de F15 (3 anneaux × 3 modes), test 5×5 = 2×2 réussi, liste de k d'EM2 écrite.
+**Critère de sortie** : tableau de F15 (3 anneaux × 3 modes), test 5×5 = 2×2 réussi, liste de k d'EM2 écrite. **Rempli le 2026-09-29** (la liste est produite par F17 ; le fichier QE est écrit avec la campagne EM2).
 
 ---
 
@@ -487,7 +508,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 | F1, F4, F5, F7 (modèle, transformée, vitesse, Kubo) | **Greg** |
 | F6, F13–F15 (anneau, v_F, statistiques) | Greg |
 | F8 : lecteur `read_w90_tb` dans `io/wannier_io.py` (fait, à la demande de Greg) ; construction du `WannierTB` | Code ; Greg |
-| Découpage et performance, échafaudage pytest, F16–F19, figures | Code |
+| Découpage et performance, échafaudage pytest, F16, F18, F19, figures (F17 codée par Greg) | Code |
 | EM2, EM3 (cluster, QE, Wannier90) | Code |
 
 Mode technicien : skill `technicien`, avec les mots-clés « explique » (par défaut), « indice », « montre », « écris-le » et « fin technicien ».
@@ -543,8 +564,8 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (78 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
 | M1 — lecteur et diagnostics | **fait** : F8 (`read_w90_tb`, `make_wannier_tb`), F9 (`centres_only`), F10 (`hermiticity_report`), F11 (`symmetry_report`) ; 118 tests en tout | 2026-09-28 |
 | M2 — v(k) réel | **fait** : F12 (`kpath`), F13 (`fermi_velocity`) ; ħv_F = 5.469 eV·Å ; 134 tests en tout | 2026-09-28 |
-| M3 — symétries et anneaux | à faire | |
-| EM2 — DFT directe et postw90 | après M3 | |
+| M3 — symétries et anneaux | **fait** : F14 (`pz_block`), F15 (`ring_stats`), F17 (`ring_kpoints_crystal`) ; F16 reportée ; 160 tests en tout | 2026-09-29 |
+| EM2 — DFT directe et postw90 | à préparer (liste de k prête) | |
 | M4 — σ(ω) et données de figure | à faire | |
 | EM3 — figure et chiffres | après M4 | |
 | P28 — texte | après validation complète | |

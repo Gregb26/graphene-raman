@@ -47,7 +47,7 @@ pip install -e .
 #   Python: derive it from __file__ (config.ROOT); shell: PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}
 #   (sbatch copies the script to the spool, so $0/BASH_SOURCE are useless there). Scripts outside the repo (graphene/qe/...)
 #   use ${GRAPHENE_RAMAN:-$PROJECTS/graphene-raman}; both variables are exported in ~/.bashrc. Wannier manifests store paths
-#   relative to the manifest directory. pytest needs PYTHONPATH=src (no editable install in the venv).
+#   relative to the manifest directory. The venv has the editable install (.pth -> src/): `.venv/bin/python -m pytest tests`.
 .venv/bin/python scripts/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline
 .venv/bin/python scripts/test_wannier.py               # Wannier interpolation pipeline
 .venv/bin/python scripts/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
@@ -131,10 +131,10 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
 - **defects/many_body/single_defect.py** — orphan / work-in-progress (not imported anywhere).
 - **electron_photon/** — electron-photon coupling (EM series, in progress), conventions in its
   `__init__.py`: `tb_model` (`WannierTB`, graphene toy model, `make_wannier_tb(path)` from a real `_tb.dat`, `centres_only(tb)` for the tight-binding
-  approximation of r), `kgrid` (reciprocal lattice, k grids),
+  approximation of r, `pz_block(tb, pz)` for the p_z-only model, `extract_block` (not exported)), `kgrid` (reciprocal lattice, k grids),
   `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
   `compute_velocity(tb, k, mode)`), `ring`
-  (resonant k points around K, `fermi_velocity`), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`), `diagnostics` (reports on a model:
+  (resonant k points around K, `fermi_velocity`, `ring_stats` for the three velocity variants on the laser rings, `ring_kpoints_crystal` for the EM2 k list), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`), `diagnostics` (reports on a model:
   `hermiticity_report`, `symmetry_report`). Tests (pytest) in
   `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py`, shared fixtures in `tests/conftest.py` (real data:
   `tb_w90`, `eig_w90`, `w90_ref` on the tracked `wannier/27x27/`; every data-specific value and the sha256 of the

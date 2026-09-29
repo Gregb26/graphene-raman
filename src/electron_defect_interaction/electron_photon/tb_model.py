@@ -1,8 +1,8 @@
 """
 Tight-binding model in the Wannier basis (`WannierTB`) and the analytic graphene model of M0.
 
-M1: `make_wannier_tb` builds it from Wannier90's `_tb.dat` (read in io/wannier_io.py), and
-`centres_only` is the first transformation of a model (pz_block, shift_home_cell will follow).
+M1: `make_wannier_tb` builds it from Wannier90's `_tb.dat` (read in io/wannier_io.py). Transformations
+of a model: `centres_only` (M1), `pz_block` (M3); `extract_block` cuts a sub-block of the orbital axes.
 Conventions: package docstring (electron_photon/__init__.py).
 """
 
@@ -135,3 +135,24 @@ def centres_only(tb):
     r_0_diag = r_0 * np.eye(r_0.shape[-1]) # (3, nW, nW), diagonal
     r_R_centres[iR0] = r_0_diag
     return dataclasses.replace(tb, r_R=r_R_centres)
+
+def extract_block(X, rows, columns):
+    """Sub-block rows x columns of the last two axes of X (X[..., rows, columns] would pair them)."""
+    return X[..., rows, :][..., columns]
+
+def pz_block(tb, pz):
+    """
+    Copy of `tb` reduced to the Wannier functions `pz`: H_R and r_R cut to their pz x pz block (their
+    centres included); R list and ndegen unchanged. Exact for in-plane light when the mirror decouples
+    sigma and p_z (symmetry_report): only r^z between them is dropped.
+
+    Inputs:
+        tb : WannierTB
+        pz : list of int, Wannier indices to keep (a list, so the blocks are copies)
+    Returns:
+        WannierTB with nW = len(pz); `tb` is not modified
+    """
+    H_R_pz = extract_block(tb.H_R, pz, pz)
+    r_R_pz = extract_block(tb.r_R, pz, pz)
+
+    return dataclasses.replace(tb, H_R=H_R_pz, r_R=r_R_pz)

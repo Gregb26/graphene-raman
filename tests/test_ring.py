@@ -1,11 +1,14 @@
 """
 Tests of the resonant ring (F6) and of the velocity on it: resonance, Dirac limit, symmetries,
-node with Berry, isotropy, ring averages, and the effect of dropping the Berry term.
+node with Berry, isotropy, ring averages, and the effect of dropping the Berry term; fermi_velocity
+(F13), ring_stats (F15) and ring_kpoints_crystal (F17) on the M0 model and on the 27 x 27 data.
 """
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import centres_only, compute_velocity, fermi_velocity, make_grid_tb, ring
+from electron_defect_interaction.electron_photon import (centres_only, compute_velocity, fermi_velocity,
+                                                         make_graphene_tb, make_grid_tb, reciprocal, ring,
+                                                         ring_kpoints_crystal, ring_stats)
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
 @pytest.mark.parametrize("hw", [0.1, 1.0, 2.33, 2.54])
@@ -184,3 +187,160 @@ def test_fermi_velocity_mu_between_bands(tb_w90, K_w90, w90_ref):
     """
     with pytest.raises(AssertionError):
         fermi_velocity(tb_w90, K_w90, w90_ref.E_D + 1.5, q=0.3)
+
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_ring_stats_graphene(tb, grid):
+    """
+    M0 at 2.33 eV: the averages of test_ring_average (0.98909, x = y), node of e_x pinned at q // x,
+    that of e_y at -4 degrees (trigonal warping); centres only = full (M0 has only centres).
+    """
+    stats = ring_stats(tb, grid.K, 0.0, 2.33)[2.33]
+    full = stats['full']
+
+    assert np.allclose(full['avg'], 0.98909, rtol=1e-4, atol=0)
+    assert np.allclose(full['node'], [0.0, -4.0], rtol=0, atol=1e-9) and full['ratio'] == (1.0, 1.0)
+    for key in ['avg', 'node', 'ratio']:
+        assert np.allclose(stats['centres_only'][key], full[key], rtol=1e-12, atol=0)
+
+
+def test_ring_stats_gauge():
+    """
+    Moving the B centre (shift_B) leaves the full velocity unchanged and changes the one without
+    Berry; in the default gauge, the no-Berry numbers are those of test_ring_without_berry.
+    """
+    tb, tb_shifted = make_graphene_tb(), make_graphene_tb(shift_B=(1,0,0))
+    K = make_grid_tb(tb, 3).K
+    stats, stats_shifted = ring_stats(tb, K, 0.0, 2.33)[2.33], ring_stats(tb_shifted, K, 0.0, 2.33)[2.33]
+
+    for key in ['avg', 'node', 'ratio']:
+        assert np.allclose(stats_shifted['full'][key], stats['full'][key], rtol=1e-10, atol=0)
+    assert not np.allclose(stats_shifted['no_berry']['avg'], stats['no_berry']['avg'], rtol=1e-2, atol=0)
+
+    no_berry = stats['no_berry']
+    assert np.isclose(no_berry['node'][0], -16.5, rtol=0, atol=1e-9) # the node at 343.5 degrees
+    assert np.allclose(no_berry['ratio'], (0.664, 1.271), rtol=0, atol=1e-3)
+    assert np.isclose(no_berry['avg'][0] / stats['full']['avg'][0], 1.125, rtol=1e-3, atol=0)
+
+
+@pytest.fixture(scope="module")
+def stats_w90(tb_w90, K_w90, w90_ref):
+    """ring_stats of the 27 x 27 data at the three laser energies (1.96, 2.33, 2.54 eV)."""
+    return ring_stats(tb_w90, K_w90, w90_ref.E_D, list(w90_ref.ring_stats))
+
+
+def test_ring_stats_values(stats_w90, w90_ref):
+    """The table of EM.md (F15): three lasers x three variants."""
+    assert set(stats_w90) == set(w90_ref.ring_stats)
+    for hw, ref in w90_ref.ring_stats.items():
+        for variant, (avg, node, ratio) in ref.items():
+            res = stats_w90[hw][variant]
+            assert np.allclose(res['avg'], avg, rtol=1e-5, atol=0), (hw, variant)
+            assert np.allclose(res['node'], node, rtol=0, atol=1e-9), (hw, variant)
+            assert np.allclose(res['ratio'], ratio, rtol=1e-5, atol=0), (hw, variant)
+
+
+def test_ring_stats_symmetries(stats_w90):
+    """
+    Node of e_y on the mirror line through K (0) in every variant; x = y averages (C3) with the Berry
+    term, full or centres only, not without it; the Berry term moves the node of e_x across q // x.
+    Without Berry, <y> = <y> centres only: tau_B - tau_A is along x, so the centres give no y term.
+    """
+    for hw, stats in stats_w90.items():
+        full, centres, no_berry = stats['full'], stats['centres_only'], stats['no_berry']
+
+        assert full['ratio'] == (1.0, 1.0)
+        assert all(abs(stats[v]['node'][1]) < 1e-9 for v in stats)
+        for res in (full, centres):
+            assert np.isclose(res['avg'][0], res['avg'][1], rtol=5e-4, atol=0)
+        assert no_berry['avg'][0] / no_berry['avg'][1] > 1.1
+        assert np.isclose(no_berry['avg'][1], centres['avg'][1], rtol=1e-12, atol=0)
+
+        assert full['node'][0] > 5 and no_berry['node'][0] < -5
+        assert abs(centres['node'][0] - full['node'][0]) < 0.5 + 1e-9 # one grid step
+
+
+def test_ring_stats_average_direct(tb_w90, K_w90, stats_w90, w90_ref):
+    """(avg_x + avg_y) (hbar v_F)^2 / 2 = <|hbar v_cv|^2> computed directly on the 2.33 eV ring."""
+    v, c = w90_ref.bands_pi
+    k = ring(tb_w90, K_w90, 2.33, mu=w90_ref.E_D)[0]
+    hv = compute_velocity(tb_w90, k, mode='berry')[-1]
+    direct = np.mean(np.abs(hv[:, 0, c, v])**2 + np.abs(hv[:, 1, c, v])**2) # eV^2 Angstrom^2
+
+    assert np.isclose(np.sum(stats_w90[2.33]['full']['avg']) * w90_ref.hv_F**2 / 2, direct, rtol=1e-4, atol=0)
+
+
+@pytest.mark.parametrize("variant, mode", [('full', 'berry'), ('no_berry', 'no_berry')])
+def test_ring_stats_node_is_minimum(tb_w90, K_w90, stats_w90, w90_ref, variant, mode):
+    """
+    The node of e_x is the local minimum of |hbar v^x_cv|^2 found independently in the half ring
+    facing +x, and a true zero (below 1e-4 of the maximum).
+    """
+    v, c = w90_ref.bands_pi
+    k, theta = ring(tb_w90, K_w90, 2.33, mu=w90_ref.E_D)[:2]
+    vx2 = np.abs(compute_velocity(tb_w90, k, mode=mode)[-1][:, 0, c, v])**2 # (ntheta,)
+
+    minima = (vx2 < np.roll(vx2, 1)) & (vx2 < np.roll(vx2, -1))
+    angles = np.degrees(np.angle(np.exp(1j * theta[minima]))) # in (-180, 180]
+    node = stats_w90[2.33][variant]['node'][0]
+
+    assert np.isclose(angles[np.abs(angles) < 90], node, rtol=0, atol=1e-9).sum() == 1
+    i = np.argmin(np.abs(np.degrees(np.angle(np.exp(1j * theta))) - node))
+    assert vx2[i] < 1e-4 * vx2.max()
+
+
+def test_ring_stats_scalar_hw(tb_w90, K_w90, stats_w90, w90_ref):
+    """A single energy (float) is accepted and gives the same entry as in the list."""
+    stats = ring_stats(tb_w90, K_w90, w90_ref.E_D, 2.33)
+
+    assert list(stats) == [2.33]
+    for key in ['avg', 'node', 'ratio']:
+        assert np.allclose(stats[2.33]['no_berry'][key], stats_w90[2.33]['no_berry'][key], rtol=1e-12, atol=0)
+
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_ring_kpoints_crystal_graphene(tb, grid):
+    """
+    M0: back to Cartesian (k_red @ B.T) gives the points of `ring`, same theta; the ring is centred
+    on K = (2/3, 1/3, 0) in crystal coordinates (C3, exact in M0).
+    """
+    k_red, theta = ring_kpoints_crystal(tb, grid.K, 0.0, {2.33: 12})[2.33]
+    k, theta_ring = ring(tb, grid.K, 2.33, ntheta=12)[:2]
+
+    assert k_red.shape == (12, 3) and np.array_equal(theta, theta_ring)
+    assert np.allclose(k_red @ reciprocal(tb.lattice).T, k, rtol=0, atol=1e-14)
+    assert np.allclose(k_red.mean(axis=0), [2/3, 1/3, 0], rtol=0, atol=1e-12)
+
+
+@pytest.fixture(scope="module")
+def kpoints_w90(tb_w90, K_w90, w90_ref):
+    """ring_kpoints_crystal of the 27 x 27 data: the EM2 list, 48 points at 2.33 eV and 12 at 1.96, 2.54."""
+    return ring_kpoints_crystal(tb_w90, K_w90, w90_ref.E_D, {2.33: 48, 1.96: 12, 2.54: 12})
+
+
+def test_ring_kpoints_crystal_real(tb_w90, K_w90, kpoints_w90, w90_ref):
+    """
+    Structure of the EM2 list; first point at 2.33 eV; the ring points of `ring` converted by an
+    independent inverse (solve with B); rings centred on K = (2/3, 1/3, 0) to 2e-7 (C3 of the data).
+    """
+    B = reciprocal(tb_w90.lattice)
+
+    assert list(kpoints_w90) == [2.33, 1.96, 2.54]
+    assert [len(k_red) for k_red, _ in kpoints_w90.values()] == [48, 12, 12]
+    assert np.allclose(kpoints_w90[2.33][0][0], [0.73959906, 0.40626573, 0], rtol=0, atol=1e-8)
+
+    for hw, (k_red, theta) in kpoints_w90.items():
+        k, theta_ring = ring(tb_w90, K_w90, hw, mu=w90_ref.E_D, ntheta=len(k_red))[:2]
+        assert np.array_equal(theta, theta_ring) and np.all(k_red[:, 2] == 0)
+        assert np.allclose(k_red, np.linalg.solve(B, k.T).T, rtol=0, atol=1e-14)
+        assert np.allclose(k_red.mean(axis=0), [2/3, 1/3, 0], rtol=0, atol=1e-6)
+
+
+def test_ring_kpoints_crystal_on_shell(tb_w90, kpoints_w90, w90_ref):
+    """Each point, back in Cartesian coordinates, absorbs exactly its hw: eps_c - eps_v = hw (5e-12 eV)."""
+    v, c = w90_ref.bands_pi
+    B = reciprocal(tb_w90.lattice)
+
+    for hw, (k_red, _) in kpoints_w90.items():
+        _, eps, _, _ = compute_velocity(tb_w90, k_red @ B.T, mode='no_berry')
+        assert np.allclose(eps[:, c] - eps[:, v], hw, rtol=0, atol=1e-10), hw

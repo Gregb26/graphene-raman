@@ -5,11 +5,8 @@ Diagnostics of a WannierTB (M1): numbers that describe a model without changing 
 
 import numpy as np
 from electron_defect_interaction.electron_photon.velocity_operator import dagger, fourier
-from electron_defect_interaction.electron_photon.tb_model import centres_only
+from electron_defect_interaction.electron_photon.tb_model import centres_only, extract_block
 
-def extract_block(X, rows, columns):
-    """Sub-block rows x columns of the last two axes of X (X[..., rows, columns] would pair them)."""
-    return X[..., rows, :][..., columns]
 
 def hermiticity_report(tb, blocks, k):
     """

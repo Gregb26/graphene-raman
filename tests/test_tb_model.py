@@ -1,14 +1,17 @@
 """
 Tests of the tight-binding model (tb_model): R-space Hermiticity, bonds, relabelling shift_B of the
-M0 graphene model; construction of the real 27 x 27 model by make_wannier_tb and its centres-only
-version centres_only (M1, fixtures tb_w90, eig_w90 and w90_ref of conftest.py).
+M0 graphene model; construction of the real 27 x 27 model by make_wannier_tb, its centres-only
+version centres_only (M1, fixtures tb_w90, eig_w90 and w90_ref of conftest.py), extract_block and
+its p_z block pz_block (M3).
 """
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import (centres_only, compute_velocity, dagger, fourier,
-                                                         hermitize, make_graphene_tb, make_grid_tb,
+from electron_defect_interaction.electron_photon import (centres_only, compute_velocity, dagger,
+                                                         fermi_velocity, fourier, hermitize,
+                                                         make_graphene_tb, make_grid_tb, pz_block,
                                                          reciprocal, ring)
+from electron_defect_interaction.electron_photon.tb_model import extract_block
 
 HW = 2.33        # eV, 532 nm laser
 
@@ -221,3 +224,87 @@ def test_centres_only_atomic_gauge(tb_w90):
 
     assert np.allclose(np.abs(hv_c)**2, np.abs(hv_at)**2, rtol=0, atol=1e-9)
     assert np.abs(np.abs(hv)**2 - np.abs(hv_at)**2).max() > 1
+
+
+def test_extract_block():
+    """rows x columns block of the last two axes, leading axes kept (reference: np.ix_)."""
+    X = np.random.default_rng(1).random((2, 3, 5, 5))
+    rows, cols = [0, 2], [1, 3, 4]
+
+    block = extract_block(X, rows, cols)
+
+    assert block.shape == (2, 3, 2, 3)
+    assert np.array_equal(block, X[(slice(None), slice(None)) + np.ix_(rows, cols)])
+
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_pz_block_graphene(tb):
+    """The M0 model has only its two p_z: pz_block keeps it whole, in both gauges."""
+    tb2 = pz_block(tb, [0, 1])
+
+    assert np.array_equal(tb2.H_R, tb.H_R) and np.array_equal(tb2.r_R, tb.r_R)
+
+
+def test_pz_block_structure(tb_w90, w90_ref):
+    """pz x pz blocks of H and r (centres included), as copies; tb intact; R list and ndegen shared."""
+    pz = w90_ref.pz
+    H_before, r_before = tb_w90.H_R.copy(), tb_w90.r_R.copy()
+    ix = np.ix_(pz, pz)
+
+    tb2 = pz_block(tb_w90, pz)
+
+    assert tb2.H_R.shape == (w90_ref.nR, 2, 2) and tb2.r_R.shape == (w90_ref.nR, 3, 2, 2)
+    assert np.array_equal(tb2.H_R, tb_w90.H_R[(slice(None),) + ix])
+    assert np.array_equal(tb2.r_R, tb_w90.r_R[(slice(None), slice(None)) + ix])
+    assert not np.shares_memory(tb2.H_R, tb_w90.H_R) and not np.shares_memory(tb2.r_R, tb_w90.r_R)
+
+    assert np.array_equal(tb_w90.H_R, H_before) and np.array_equal(tb_w90.r_R, r_before), 'pz_block modified its input'
+    assert tb2.R_int is tb_w90.R_int and tb2.ndegen is tb_w90.ndegen and tb2.minus is tb_w90.minus
+
+
+def test_pz_block_near_K(tb_w90, w90_ref):
+    """
+    Circle q = 0.1 around K: eps and |hbar v^{x,y}_cv|^2 of pi, pi* are those of the 5 x 5
+    (measured 5e-15 eV and 1.5e-13 eV^2 Angstrom^2). In-plane light does not mix sigma and pi.
+    """
+    K = make_grid_tb(tb_w90, 3).K
+    v, c = w90_ref.bands_pi
+    theta = np.linspace(0, 2*np.pi, 360, endpoint=False)
+    k = K + 0.1 * np.stack([np.cos(theta), np.sin(theta), np.zeros_like(theta)], axis=1)
+
+    _, eps5, _, hv5 = compute_velocity(tb_w90, k, mode='berry')
+    _, eps2, _, hv2 = compute_velocity(pz_block(tb_w90, w90_ref.pz), k, mode='berry')
+
+    assert np.allclose(eps2, eps5[:, [v, c]], rtol=0, atol=1e-12)
+    assert np.allclose(np.abs(hv2[:, :2, 1, 0])**2, np.abs(hv5[:, :2, c, v])**2, rtol=0, atol=1e-10)
+
+
+def test_pz_block_bands_in_5x5(tb_w90, w90_ref):
+    """
+    Whole zone: each band of the 2 x 2 is a band of the 5 x 5, matched by energy. Pairing by index
+    fails (pi crosses sigma bands far from K), hence the second assert.
+    """
+    v, c = w90_ref.bands_pi
+    k = random_k(tb_w90, 500)
+
+    _, eps5, _, _ = compute_velocity(tb_w90, k, mode='no_berry')
+    _, eps2, _, _ = compute_velocity(pz_block(tb_w90, w90_ref.pz), k, mode='no_berry')
+
+    nearest = np.abs(eps2[:, :, None] - eps5[:, None, :]).min(axis=2) # (Nk, 2), eV
+    assert nearest.max() < 1e-12
+    assert np.abs(eps2 - eps5[:, [v, c]]).max() > 1
+
+
+def test_pz_block_fermi_velocity_and_ring(tb_w90, w90_ref):
+    """Same hbar v_F as the 5 x 5, and same <|hbar v_cv|^2> on the 2.33 eV ring (31.443 eV^2 Angstrom^2)."""
+    K = make_grid_tb(tb_w90, 3).K
+    tb2 = pz_block(tb_w90, w90_ref.pz)
+
+    assert np.isclose(fermi_velocity(tb2, K, w90_ref.E_D)['inter_avg'], w90_ref.hv_F, rtol=1e-5, atol=0)
+
+    means = []
+    for model, (v, c) in [(tb_w90, w90_ref.bands_pi), (tb2, (0, 1))]:
+        k, _, _, _ = ring(model, K, HW, mu=w90_ref.E_D)
+        _, _, _, hv = compute_velocity(model, k, mode='berry')
+        means.append(np.mean(np.abs(hv[:, 0, c, v])**2 + np.abs(hv[:, 1, c, v])**2))
+    assert np.isclose(means[1], means[0], rtol=1e-10, atol=0)

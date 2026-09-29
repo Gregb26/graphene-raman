@@ -1,11 +1,13 @@
 """
-Around a Dirac point: the resonant ring, k points where eps_c - eps_v = hbar omega (`ring`), and
-the Fermi velocity on a small circle (`fermi_velocity`).
+Around a Dirac point: the resonant ring, k points where eps_c - eps_v = hbar omega (`ring`), the
+Fermi velocity on a small circle (`fermi_velocity`), the ring statistics of the three velocity
+variants (`ring_stats`, M3) and the ring points in crystal coordinates for EM2 (`ring_kpoints_crystal`).
 """
 
 import numpy as np
 
 from .velocity_operator import fourier, compute_velocity
+from .tb_model import centres_only
 
 def _gap(tb, K, q, e, mu):
     """
@@ -149,3 +151,102 @@ def fermi_velocity(tb, K, mu, q=1e-3, ntheta=360, mode='berry'):
     inter_avg = np.mean(hv_cv)
 
     return {"intra_avg": intra_avg, "inter_avg": inter_avg, "pi": pi, "pi_star": pi_star}
+
+def ring_stats(tb, K, mu, hws, ntheta=720):
+    """
+    In-plane interband velocity on the resonant rings, for the three variants of the thesis: 'full'
+    (tb, berry), 'centres_only' (centres_only(tb), berry) and 'no_berry'. One ring per hw, shared by
+    the three (same k); c and v chosen by energy around mu. A perfect cone gives avg = 1, node = 0.
+
+    Inputs:
+        tb     : WannierTB
+        K      : (3,) float, 1/Angstrom, Dirac point
+        mu     : float, eV, chemical potential (E_D for the real data)
+        hws    : float or list of float, eV, photon energies
+        ntheta : int, angles per ring (multiple of 6)
+    Returns:
+        dict hw -> variant -> {
+            'avg'  : (2,) <|hbar v^x_cv|^2>, <|hbar v^y_cv|^2> over theta, in units of (hbar v_F)^2 / 2
+            'node' : (2,) degrees, angle of the zero of |e.hbar v_cv|^2 minus that of e, for e_x, e_y;
+                     searched in the half ring facing +e, resolution 360/ntheta
+            'ratio': (min, max) over theta of |hbar v_cv| / |hbar v_cv|_full, in-plane norms }
+    """
+    hws = np.atleast_1d(hws)
+    # compute Fermi velocity on circle of radius q around Dirac point
+    hv_F = fermi_velocity(tb, K, mu, q=1e-3, ntheta=ntheta)['intra_avg']
+    hv_F2 = (hv_F)**2 / 2
+    # construct each variant
+    variants = [('full', tb, 'berry'), ('centres_only', centres_only(tb), 'berry'), ('no_berry', tb, 'no_berry')]
+
+    stats_dict = {}
+    # loop over laser energies
+    for hw in hws:
+        # construct resonant ring per energy
+        k, theta, _, _ = ring(tb, K, hw, mu, ntheta=ntheta) # (ntheta, 3)
+
+        name_dict = {}
+        # loop over variants
+        for name, model, mode in variants:
+            # compute eigenvalues and velocity operator on ring, for each model
+            _, eps, _, hv = compute_velocity(model, k, mode=mode) # (ntheta, nW), (ntheta, 3, nW, nW)
+            # compute number of occupied bands per point on the circle
+            n_occ = np.sum(eps < mu, axis=1) # (nt, )
+            n = n_occ[0]
+            assert np.all(n_occ == n)
+
+            v = n - 1 # valence band index
+            c = n     # conduction band index
+
+            # Compute P = |\hbar v^{x,y}_cv|^2 of shape (ntheta, 2)
+            P = np.abs(hv[:, :2, c, v])**2 # (ntheta, 2)
+            P_avg = np.mean(P, axis=0) / hv_F2 # (2,)
+
+            if  name == 'full':
+                P_full = P # store average for ratio below
+
+            # loop over polarisations (angles phi)
+            phis = [0, np.pi/2]
+            node = np.zeros(len(phis))
+            for i, phi in enumerate(phis):
+                # compute deviation and bring back into (-pi, pi]
+                d = (theta - phi - np.pi) % (2*np.pi) - np.pi
+
+                mask = np.abs(d) < np.pi / 2 # keep only |d| < pi/2
+                id = np.argmin(P[mask][:,i]) 
+
+                delta = np.degrees(d[mask][id])
+                node[i] = delta
+
+            ratios = np.sqrt(P[:,0] + P[:,1]) / np.sqrt(P_full[:,0] + P_full[:,1])
+            ratio = (min(ratios), max(ratios))
+
+            name_dict[name] = {
+                'avg': P_avg, # (2,)
+                'node': node, # (2,)
+                'ratio': ratio # (min, max)
+            }
+        stats_dict[hw] = name_dict
+
+    return stats_dict
+
+def ring_kpoints_crystal(tb, K, mu, npoints):
+    """
+    k points of the resonant rings in crystal coordinates, k_red_i = a_i.k / 2 pi (tb.lattice), for
+    the direct DFT check of EM2 (QE `K_POINTS crystal`, same cell as Wannier90).
+
+    Inputs:
+        tb      : WannierTB
+        K       : (3,) float, 1/Angstrom, Dirac point
+        mu      : float, eV, chemical potential (E_D for the real data)
+        npoints : dict hw (eV) -> number of points on that ring (multiple of 6), e.g. {2.33: 48}
+    Returns:
+        dict hw -> (k_red (n, 3), theta (n,) rad), the points of `ring` with ntheta = n
+    """
+    kpoints = {}
+    for w, nk in npoints.items():
+        k, theta, _, _ = ring(tb, K, w, mu, ntheta=nk) # (nk, 3), (nk,)
+        k_red = k @ tb.lattice / (2*np.pi) # (nk, 3)
+
+        kpoints[w] = (k_red, theta)
+
+    return kpoints

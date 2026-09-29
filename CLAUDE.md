@@ -135,9 +135,10 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
   `compute_velocity(tb, k, mode)`), `ring`
   (resonant k points around K), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`), `diagnostics` (reports on a model:
-  `hermiticity_report`). Tests (pytest) in
+  `hermiticity_report`, `symmetry_report`). Tests (pytest) in
   `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py`, shared fixtures in `tests/conftest.py` (real data:
-  `tb_w90`, `eig_w90` on the tracked `wannier/27x27/`).
+  `tb_w90`, `eig_w90`, `w90_ref` on the tracked `wannier/27x27/`; every data-specific value and the sha256 of the
+  files are in `W90_REF`/`W90_SHA256` of `conftest.py`).
   Plan and conventions: `memoire/EM/EM.md`.
 
 Index convention everywhere: `M[bra_band, k', ket_band, k]`, shape `(nband, nk, nband, nk)`.

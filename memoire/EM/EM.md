@@ -225,6 +225,8 @@ Grille 1800² décalée, η = 0.04 eV gaussienne, t = 2.7 eV, a_cc = 1.42 Å.
 
 Lancer avec `.venv/bin/python -m pytest tests -v`. Fixtures partagées dans `tests/conftest.py` : `tb`, paramétrée indirectement sur `shift_B` = (0,0,0) et (1,0,0) (« deux jauges »), et `grid` = `make_grid_tb(tb, N = 100)`.
 
+**Données réelles (M1 et après)** : tout ce que les tests savent du 27×27 (formes, ordre des WF, E_D, fenêtre gelée, valeurs figées) est dans `W90_REF` de `tests/conftest.py`, avec l'empreinte sha256 des quatre fichiers lus (fixture `w90_ref`). Si les données de référence changent, les tests sur données réelles (22 aujourd'hui) s'arrêtent tous sur « reference data changed », et les autres passent : on met alors à jour les empreintes et `W90_REF`, et rien d'autre.
+
 **Faits (F1–F7 et pilote, 78 exécutions ; à partir de F6, les tests sont écrits par Code) :**
 
 F1–F4 :
@@ -368,11 +370,12 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 - Tests (`tests/test_diagnostics.py`, 6) : M0 sans défaut et `frob_R` = nan (deux jauges) ; valeurs du tableau (σ, p_z, grille 60², rtol 10⁻³) ; bloc croisé au niveau du bruit ; rapport inchangé quand on déplace l'origine (centres + c). Mutations : S avec les centres (5 échecs), A hermitisé avant la mesure (2), indices appariés au lieu du sous-bloc (6), mauvais axes de réduction (4), transposée sans conjugaison (2).
 - **Budget sur ħv_cv (pour M2)** : ce que `hermitize` jette vaut δħv_cv = i(ε_c − ε_v)(V†A_anti V)_cv. Sur l'anneau de 2.33 eV : max |δħv_cv| = **7.2×10⁻³ eV·Å, soit 0.13 % de ħv_F** (2.4×10⁻³ eV·Å à 1 eV). Le budget de §2 (≲ 0.2 %) tient ; l'estimation de 0.6 % notée plus tôt prenait le maximum sur toute la zone et oubliait le facteur ½ de la partie anti-hermitienne.
 
-**F11 — `symmetry_report(tb, even, odd)`** → règles de sélection du miroir σ_h (z → −z), dans `diagnostics.py`. Plan du 2026-09-28 (Greg code) :
+**F11 — `symmetry_report(tb, even, odd)`** → règles de sélection du miroir σ_h (z → −z), dans `diagnostics.py`. **Fait (Greg, 2026-09-28)**, avec l'aide `extract_block(X, rows, cols)` (sous-bloc des deux derniers axes), que `hermiticity_report` utilise aussi :
 - `even` = WF paires sous σ_h (σ : [0, 1, 2]), `odd` = WF impaires (p_z : [3, 4]). H, x et y sont pairs, z est impair : un élément ⟨0m|O|Rn⟩ s'annule quand la parité totale (m, O, n) est impaire.
 - Retour : `H_mixed` = max_R |H_{pair,impair}(R)| ; `r_mixed` (3,) = max_R |r^α_{pair,impair}(R)| (x, y interdits, z permis) ; `rz_same` = max_R |r^z| dans les blocs pair-pair et impair-impair (interdit).
 - Rien à faire en k : la transformée est linéaire, un bloc nul en R l'est à tout k.
 - **Valeurs cibles (27×27, 2026-09-28)** : `H_mixed` = 5.5×10⁻¹⁰ eV (pour des |H| jusqu'à 15 eV) ; `r_mixed` = (8.4×10⁻¹², 7.9×10⁻¹², **0.2204**) Å ; `rz_same` = 7.9×10⁻¹² Å sans les centres (5.9×10⁻¹¹ avec : c'est leur cote z ; le miroir est le plan du graphène, donc on mesure r^z sans les centres, comme en F10).
+- Tests (`tests/test_diagnostics.py`, 5) : valeurs du 27×27 ; brisure détectée quand on ajoute à la main 10⁻³ à H_{σ,p_z}, à x_{σ,p_z} ou à z_{p_z,p_z} ; rapport inchangé quand le feuillet est déplacé en z₀ = 7.9 Å. C'est ce dernier test qui impose de retirer les centres : avec eux, `rz_same` vaudrait z₀. Mutations : centres gardés (1 échec), bloc pair-pair pour H (2), mauvais axes (2), composante x au lieu de z (2), blocs impair-impair oubliés (1).
 - **Conséquence** : pour la lumière dans le plan, σ et π sont découplés à ~10⁻¹¹ près, dans H comme dans v_x, v_y. Ça justifie `pz_block` (F14) et le choix c, v = π*, π ; le 0.220 Å de EM1 est bien en z seulement.
 
 **Critère de sortie** : toutes les vérifications de F8, avec les normes de F10 et F11 consignées.
@@ -383,7 +386,11 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 
 **But** : faire tourner F4 et F5, inchangés, sur le `_tb.dat` de référence, en trois modes (complet, centres seuls, sans Berry).
 
-**F12 — `kpath(B, points, n)`** → chemin Γ–K–M–Γ. Sert à inspecter ε et ħv_nn.
+**F12 — `kpath(B, points, n)`** → chemin Γ–K–M–Γ, dans `kgrid.py`. Sert à inspecter ε et ħv_nn.
+- `points` : liste de (étiquette, k réduit) ; n points en tout, répartis au prorata des longueurs (pas uniforme en |k|). Retour : `k` (Nk, 3) cartésien, `x` (Nk,) distance cumulée en Å⁻¹ (abscisse des figures), `ticks` et `labels` des coins.
+- Attendu (a = 2.4659 Å) : |ΓK| = 4π/3a = 1.6987 Å⁻¹, |KM| = 2π/3a = 0.8494, |MΓ| = 2π/(√3 a) = 1.4711.
+- En K exactement, ħv_nn de π et π* n'est pas défini (bandes dégénérées) ; ε l'est.
+- `utils/lattice.build_k_path` existe déjà (coordonnées réduites), mais écrase son argument `nk` par 100 : ne pas le réutiliser tel quel.
 
 **F13 — `fermi_velocity(tb, K, q=1e-3)`** → ħv_F moyenné sur les directions, par deux voies : |ħ∇ε| et (|ħv^x_cv|² + |ħv^y_cv|²)^{1/2}.
 
@@ -520,7 +527,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 |---|---|---|
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
 | M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (78 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
-| M1 — lecteur et diagnostics | en cours : F8 fait (lecteur `read_w90_tb`, 9 tests ; `make_wannier_tb`, 5 tests), F9 fait (`centres_only`, 6 tests), F10 fait (`hermiticity_report`, 6 tests) ; F11 à faire | 2026-09-28 |
+| M1 — lecteur et diagnostics | **fait** : F8 (`read_w90_tb`, `make_wannier_tb`), F9 (`centres_only`), F10 (`hermiticity_report`), F11 (`symmetry_report`) ; 118 tests en tout | 2026-09-28 |
 | M2 — v(k) réel | à faire | |
 | M3 — symétries et anneaux | à faire | |
 | EM2 — DFT directe et postw90 | après M3 | |

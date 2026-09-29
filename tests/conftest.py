@@ -4,12 +4,15 @@ Shared fixtures of the electron_photon tests (loaded by pytest for every test fi
 Most tests run in two gauges, shift_B = (0,0,0) and (1,0,0), through an indirect parametrization of
 the `tb` fixture: gauge-independent properties must hold in both. Reference values and the
 derivations behind the tolerances: memoire/EM/EM.md (M0, implementation notes). The real data of M1
-come from the 27 x 27 wannierisation tracked in wannier/27x27/ (fixtures w90_dir, tb_w90, eig_w90).
+come from the 27 x 27 wannierisation tracked in wannier/27x27/ (fixtures w90_dir, tb_w90, eig_w90);
+everything the tests know about these data is in W90_REF (fixture w90_ref).
 
 Run with:  .venv/bin/python -m pytest tests -v
 """
 
+import hashlib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import numpy as np
@@ -20,7 +23,32 @@ N = 100    # the k grid has N x N = 1e4 points: fast, yet covers the whole Brill
 
 HW = 2.33  # eV, 532 nm laser
 
+# Reference data: the 27 x 27 wannierisation of the thesis. The values of W90_REF belong to these
+# exact files (sha256 prefixes, checked by w90_dir): a new reference changes both, here only.
 W90_DIR = Path(__file__).resolve().parents[1] / "wannier" / "27x27" # repo root from this file
+W90_SHA256 = {"wannier_tb.dat": "baa17b88b1b69e51", "wannier.wout": "3db1203ed17c2558",
+              "wannier.eig": "8ed92c792c499689", "wannier_u.mat": "64f31f661b4d5c6c"}
+W90_REF = SimpleNamespace(
+    n_grid=27, nR=741, nW=5,
+    ndegen_counts={1: 717, 2: 24},
+    lattice=[[2.135490, -1.232926, 0], [2.135490, 1.232926, 0], [0, 0, 15.875316]], # a1, a2, a3, Angstrom
+    sigma=[0, 1, 2], pz=[3, 4],       # Wannier order: sigma bonds, then p_z of C1 and C2
+    bands_pi=(3, 4),                  # band indices of pi and pi* near K (ascending energies)
+    E_D=-4.238895,                    # eV, Dirac point at K (.eig)
+    froz_max=-1.74,                   # eV, top of the frozen window
+    nfrozen={4, 5},                   # number of frozen bands per k point
+    eig_tol=3e-5,                     # eV, interpolated vs .eig (measured 1.3e-5, use_ws_distance)
+    nn_R={(0, 0, 0), (-1, 0, 0), (0, -1, 0)}, # R of the three C1 -> C2 nearest-neighbour hops
+    a_cc=1.42366, t_nn=2.9089,        # Angstrom, eV: C1-C2 distance, |H_pzA,pzB| of those hops
+    r_defect_R=(2.54e-3, 1.65e-3),    # Angstrom, max |r(R) - r(-R)^dagger|, x y (EM1)
+    r_defect_K=(2.31e-3, 4.86e-3),    # Angstrom, max |A(K) - A(K)^dagger|, x y
+    rz_sigma_pz=0.220394,             # Angstrom, max |r^z| between sigma and p_z (allowed by the mirror)
+    ring_q_over_q0=(0.9, 1.35),       # bounds of q/q0 at 2.33 eV with the default t, a_cc
+    hermiticity={                     # hermiticity_report, grid 60^2: (max_R x y, frob_R, max_k x y)
+        'sigma': ((2.5423e-3, 1.6520e-3), 1.1977e-2, (6.9451e-3, 5.8033e-3)),
+        'pz':    ((1.2222e-3, 1.3698e-3), 2.5760e-2, (1.2815e-2, 1.4190e-2)),
+    },
+)
 
 @pytest.fixture
 def tb(request):
@@ -42,8 +70,19 @@ def grid(tb):
 
 @pytest.fixture(scope="session")
 def w90_dir():
-    """Directory of the tracked 27 x 27 wannierisation (tb.dat, .wout, .eig, u.mat)."""
+    """Directory of the 27 x 27 reference data, after checking the files are those W90_REF describes."""
+    for name, sha in W90_SHA256.items():
+        digest = hashlib.sha256((W90_DIR / name).read_bytes()).hexdigest()
+        if not digest.startswith(sha):
+            pytest.fail(f"reference data changed: {name} has sha256 {digest[:16]}, expected {sha}. "
+                        "Update W90_SHA256 and W90_REF in tests/conftest.py.", pytrace=False)
     return W90_DIR
+
+
+@pytest.fixture(scope="session")
+def w90_ref():
+    """Everything the tests know about the 27 x 27 reference data (W90_REF)."""
+    return W90_REF
 
 
 @pytest.fixture(scope="session")

@@ -13,7 +13,7 @@ of dependence:
     velocity_operator  fourier (H, dH, A) -> hermitize (A) -> velocity, chained by compute_velocity
     ring               resonant k points around K (eps_c - eps_v = hbar omega)
     kubo               sigma(omega)/sigma_0, block by block, driver `sigma_on_grid`
-    diagnostics        reports on a model: hermiticity_report (M1)
+    diagnostics        reports on a model: hermiticity_report, symmetry_report (M1)
 Plan, derivations and reference values: memoire/EM/EM.md.
 
 Conventions:
@@ -31,7 +31,7 @@ from .kgrid import GridTB, reciprocal, k_grid, make_grid_tb
 from .velocity_operator import dagger, hermitize, fourier, velocity, compute_velocity
 from .ring import ring
 from .kubo import gaussian_eta, kubo_accumulate, kubo_normalize, sigma_on_grid
-from .diagnostics import hermiticity_report
+from .diagnostics import hermiticity_report, symmetry_report
 
 __all__ = [
     "WannierTB", "make_graphene_tb", "make_wannier_tb", "centres_only",
@@ -39,5 +39,5 @@ __all__ = [
     "dagger", "hermitize", "fourier", "velocity", "compute_velocity",
     "ring",
     "gaussian_eta", "kubo_accumulate", "kubo_normalize", "sigma_on_grid",
-    "hermiticity_report",
+    "hermiticity_report", "symmetry_report",
 ]

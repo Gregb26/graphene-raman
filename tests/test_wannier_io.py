@@ -1,7 +1,7 @@
 """
 Tests of the Wannier90 `_tb.dat` reader `read_w90_tb` (io/wannier_io.py, F8 of the EM series) on the
-27 x 27 wannierisation tracked in wannier/27x27/ (fixtures w90_dir and eig_w90 of conftest.py).
-Reference values: memoire/EM/EM.md, section 2.
+27 x 27 wannierisation tracked in wannier/27x27/ (fixtures w90_dir, w90_ref and eig_w90 of
+conftest.py). Reference values: memoire/EM/EM.md, section 2.
 """
 
 import re
@@ -9,10 +9,6 @@ import re
 import pytest
 import numpy as np
 from electron_defect_interaction.io.wannier_io import read_w90_tb, read_w90_HR
-
-FROZ_MAX = -1.74 # eV, top of the frozen (inner) window of this wannierisation
-E_D = -4.238895  # eV, Dirac point of the .eig at K
-PZ_A, PZ_B = 3, 4 # WF 4 = p_z of C1, WF 5 = p_z of C2 (WF 1-3: sigma bonds)
 
 
 @pytest.fixture(scope="module")
@@ -36,45 +32,42 @@ def minus_index(R):
     return np.array([index[tuple(-r)] for r in R])
 
 
-def test_tb_shapes(w90):
+def test_tb_shapes(w90, w90_ref):
     HR, R, ndegen, rR, lattice = w90
+    nR, nW = w90_ref.nR, w90_ref.nW
 
-    assert HR.shape == (741, 5, 5) and HR.dtype == complex
-    assert R.shape == (741, 3) and np.issubdtype(R.dtype, np.integer)
-    assert ndegen.shape == (741,)
-    assert rR.shape == (741, 3, 5, 5) and rR.dtype == complex
+    assert HR.shape == (nR, nW, nW) and HR.dtype == complex
+    assert R.shape == (nR, 3) and np.issubdtype(R.dtype, np.integer)
+    assert ndegen.shape == (nR,)
+    assert rR.shape == (nR, 3, nW, nW) and rR.dtype == complex
     assert lattice.shape == (3, 3)
 
 
-def test_tb_lattice(w90):
+def test_tb_lattice(w90, w90_ref):
     """Lattice vectors in the columns of `lattice`, Angstrom (EM.md section 2)."""
     lattice = w90[-1]
 
-    assert np.allclose(lattice[:, 0], [2.135490, -1.232926, 0], rtol=0, atol=1e-6)
-    assert np.allclose(lattice[:, 1], [2.135490, 1.232926, 0], rtol=0, atol=1e-6)
-    assert np.allclose(lattice[:, 2], [0, 0, 15.875316], rtol=0, atol=1e-6)
+    for i, a_i in enumerate(w90_ref.lattice):
+        assert np.allclose(lattice[:, i], a_i, rtol=0, atol=1e-6)
 
 
-def test_tb_ndegen(w90):
-    """sum 1/ndegen = 27^2 (717 x 1, 24 x 2) and ndegen(-R) = ndegen(R)."""
+def test_tb_ndegen(w90, w90_ref):
+    """sum 1/ndegen = number of k points of the grid, and ndegen(-R) = ndegen(R)."""
     _, R, ndegen, _, _ = w90
 
-    assert np.isclose(np.sum(1/ndegen), 27**2, rtol=0, atol=1e-10)
-    assert np.sum(ndegen == 1) == 717 and np.sum(ndegen == 2) == 24
+    assert np.isclose(np.sum(1/ndegen), w90_ref.n_grid**2, rtol=0, atol=1e-10)
+    assert {int(d): int(np.sum(ndegen == d)) for d in np.unique(ndegen)} == w90_ref.ndegen_counts
     assert np.array_equal(ndegen[minus_index(R)], ndegen)
 
 
-def test_tb_H_hermitian_r_not(w90):
-    """
-    H_ij(R) = H_ji(-R)*, but r keeps its finite-difference defect (2.5e-3 Angstrom in x): the reader
-    does not hermitize.
-    """
+def test_tb_H_hermitian_r_not(w90, w90_ref):
+    """H_ij(R) = H_ji(-R)*, but r keeps its finite-difference defect: the reader does not hermitize."""
     HR, R, _, rR, _ = w90
     minus = minus_index(R)
 
     assert np.abs(HR - HR[minus].swapaxes(-1, -2).conj()).max() < 1e-12
     defect = np.abs(rR - rR[minus].swapaxes(-1, -2).conj()).max(axis=(0, 2, 3)) # (3,), x y z
-    assert np.allclose(defect[:2], [2.54e-3, 1.65e-3], rtol=0.02, atol=0)
+    assert np.allclose(defect[:2], w90_ref.r_defect_R, rtol=0.02, atol=0)
 
 
 def test_tb_centres(w90, centres):
@@ -87,20 +80,21 @@ def test_tb_centres(w90, centres):
     assert np.abs(diag.imag).max() < 1e-10
 
 
-def test_tb_row_column_order(w90, centres):
+def test_tb_row_column_order(w90, centres, w90_ref):
     """
     X_R[iR, m, n] = <0m|X|Rn>, m = first column. Eigenvalues cannot see a transposition (H(k) -> H(k)*),
-    hence a geometric test: the three largest |H_45(R)| join nearest neighbours (R = 0, -a1, -a2, at a_cc).
+    hence a geometric test: the three largest |H_{pzA,pzB}(R)| join nearest neighbours, at a_cc.
     """
     HR, R, _, _, lattice = w90
     R_cart = R @ lattice.T
+    A, B = w90_ref.pz # p_z of C1 and C2
 
-    top = np.argsort(np.abs(HR[:, PZ_A, PZ_B]))[::-1][:3]
-    dist = np.linalg.norm(centres[PZ_B] + R_cart[top] - centres[PZ_A], axis=1)
+    top = np.argsort(np.abs(HR[:, A, B]))[::-1][:3]
+    dist = np.linalg.norm(centres[B] + R_cart[top] - centres[A], axis=1)
 
-    assert {tuple(r) for r in R[top]} == {(0, 0, 0), (-1, 0, 0), (0, -1, 0)}
-    assert np.allclose(dist, 1.42366, rtol=0, atol=1e-5)
-    assert np.allclose(np.abs(HR[top, PZ_A, PZ_B]), 2.9089, rtol=0, atol=1e-4) # eV, ~t
+    assert {tuple(int(x) for x in r) for r in R[top]} == w90_ref.nn_R
+    assert np.allclose(dist, w90_ref.a_cc, rtol=0, atol=1e-5)
+    assert np.allclose(np.abs(HR[top, A, B]), w90_ref.t_nn, rtol=0, atol=1e-4) # eV, ~t
 
 
 def interpolated_bands(w90, k_red):
@@ -111,27 +105,28 @@ def interpolated_bands(w90, k_red):
     return np.linalg.eigvalsh(H_k)
 
 
-def test_tb_bands_match_eig(w90, eig_w90):
+def test_tb_bands_match_eig(w90, eig_w90, w90_ref):
     """
-    Interpolated bands = .eig in the frozen window at the 729 coarse points (1.3e-5 eV: use_ws_distance,
+    Interpolated bands = .eig in the frozen window at the coarse k points (residue: use_ws_distance,
     which Wannier90 applies and we do not).
     """
     k_red, E_dft = eig_w90
 
     eps = interpolated_bands(w90, k_red)
-    nfrozen = np.sum(E_dft < FROZ_MAX, axis=1)
-    assert set(nfrozen) == {4, 5}
+    nfrozen = np.sum(E_dft < w90_ref.froz_max, axis=1)
+    assert set(nfrozen) == w90_ref.nfrozen
 
     err = max(np.abs(eps[k, :n] - E_dft[k, :n]).max() for k, n in enumerate(nfrozen))
-    assert err < 3e-5
+    assert err < w90_ref.eig_tol
 
 
-def test_tb_dirac_point(w90):
-    """p_z bands degenerate at E_D at K = (2/3, 1/3, 0)."""
+def test_tb_dirac_point(w90, w90_ref):
+    """pi and pi* degenerate at E_D at K = (2/3, 1/3, 0)."""
     eps = interpolated_bands(w90, np.array([[2/3, 1/3, 0]]))[0]
+    v, c = w90_ref.bands_pi
 
-    assert abs(eps[4] - eps[3]) < 1e-6
-    assert np.allclose(eps[3:], E_D, rtol=0, atol=1e-5)
+    assert abs(eps[c] - eps[v]) < 1e-6
+    assert np.allclose(eps[[v, c]], w90_ref.E_D, rtol=0, atol=1e-5)
 
 
 def test_read_w90_HR_wrapper(w90, w90_dir):

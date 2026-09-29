@@ -1,7 +1,7 @@
 """
 Tests of the tight-binding model (tb_model): R-space Hermiticity, bonds, relabelling shift_B of the
 M0 graphene model; construction of the real 27 x 27 model by make_wannier_tb and its centres-only
-version centres_only (M1, fixtures tb_w90 and eig_w90 of conftest.py).
+version centres_only (M1, fixtures tb_w90, eig_w90 and w90_ref of conftest.py).
 """
 
 import pytest
@@ -10,8 +10,6 @@ from electron_defect_interaction.electron_photon import (centres_only, compute_v
                                                          hermitize, make_graphene_tb, make_grid_tb,
                                                          reciprocal, ring)
 
-E_D = -4.238895  # eV, Dirac point of the 27 x 27 data at K
-FROZ_MAX = -1.74 # eV, top of the frozen window of the 27 x 27 wannierisation
 HW = 2.33        # eV, 532 nm laser
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
@@ -82,61 +80,65 @@ def test_tb_shift_same_bonds():
     assert np.allclose(sort_by_angle(deltas), sort_by_angle(deltas_shifted), atol=1e-12)
 
 
-def test_wannier_tb_fields(tb_w90):
+def test_wannier_tb_fields(tb_w90, w90_ref):
     """R_cart, index and minus consistent with R_int; H Hermitian in R space."""
     tb = tb_w90
 
-    assert tb.H_R.shape == (741, 5, 5) and tb.r_R.shape == (741, 3, 5, 5)
+    nR, nW = w90_ref.nR, w90_ref.nW
+    assert tb.H_R.shape == (nR, nW, nW) and tb.r_R.shape == (nR, 3, nW, nW)
     assert np.allclose(tb.R_cart, tb.R_int @ tb.lattice.T, rtol=0, atol=1e-12)
     assert all(tb.index[tuple(R)] == iR for iR, R in enumerate(tb.R_int))
     assert np.array_equal(tb.R_int[tb.minus], -tb.R_int)
     assert np.allclose(tb.H_R, tb.H_R[tb.minus].swapaxes(-1, -2).conj(), rtol=0, atol=1e-12)
 
 
-def test_wannier_tb_bands_match_eig(tb_w90, eig_w90):
+def test_wannier_tb_bands_match_eig(tb_w90, eig_w90, w90_ref):
     """Cartesian chain (k_red @ B.T, compute_velocity) reproduces the .eig in the frozen window."""
     k_red, E_dft = eig_w90
     B = reciprocal(tb_w90.lattice)
 
     _, eps, _, _ = compute_velocity(tb_w90, k_red @ B.T, mode='berry')
 
-    nfrozen = np.sum(E_dft < FROZ_MAX, axis=1)
+    nfrozen = np.sum(E_dft < w90_ref.froz_max, axis=1)
     err = max(np.abs(eps[k, :n] - E_dft[k, :n]).max() for k, n in enumerate(nfrozen))
-    assert err < 3e-5
+    assert err < w90_ref.eig_tol
 
 
-def test_wannier_tb_dirac_point(tb_w90):
-    """The K of GridTB is the Dirac point of the real lattice: p_z bands degenerate at E_D."""
+def test_wannier_tb_dirac_point(tb_w90, w90_ref):
+    """The K of GridTB is the Dirac point of the real lattice: pi and pi* degenerate at E_D."""
     K = make_grid_tb(tb_w90, 3).K
+    v, c = w90_ref.bands_pi
 
     _, eps, _, _ = compute_velocity(tb_w90, K[None, :], mode='berry')
 
-    assert abs(eps[0, 4] - eps[0, 3]) < 1e-6
-    assert np.allclose(eps[0, 3:], E_D, rtol=0, atol=1e-5)
+    assert abs(eps[0, c] - eps[0, v]) < 1e-6
+    assert np.allclose(eps[0, [v, c]], w90_ref.E_D, rtol=0, atol=1e-5)
 
 
-def test_wannier_tb_berry_connection_raw(tb_w90):
+def test_wannier_tb_berry_connection_raw(tb_w90, w90_ref):
     """A(K) from the raw r is not Hermitian (EM.md section 2); hermitize fixes it."""
     K = make_grid_tb(tb_w90, 3).K
 
     A = fourier(tb_w90.r_R, tb_w90.R_cart, tb_w90.ndegen, K[None, :]) # (1, 3, nW, nW)
     defect = np.abs(A - dagger(A)).max(axis=(0, 2, 3)) # (3,), x y z
-    assert np.allclose(defect[:2], [2.31e-3, 4.86e-3], rtol=0.02, atol=0)
+    assert np.allclose(defect[:2], w90_ref.r_defect_K, rtol=0.02, atol=0)
 
     A_h = hermitize(A)
     assert np.abs(A_h - dagger(A_h)).max() < 1e-15
 
 
-def test_wannier_tb_ring(tb_w90):
+def test_wannier_tb_ring(tb_w90, w90_ref):
     """The default t, a_cc bracket the 2.33 eV ring on the real data; points on shell."""
     K = make_grid_tb(tb_w90, 3).K
+    v, c = w90_ref.bands_pi
+    lo, hi = w90_ref.ring_q_over_q0
 
-    k, _, q, q0 = ring(tb_w90, K, HW, mu=E_D)
+    k, _, q, q0 = ring(tb_w90, K, HW, mu=w90_ref.E_D)
     _, eps, _, _ = compute_velocity(tb_w90, k, mode='berry')
 
-    assert np.all(np.sum(eps < E_D, axis=1) == 4) # c = band 4, v = band 3 (0-based) everywhere
-    assert np.allclose(eps[:, 4] - eps[:, 3], HW, rtol=0, atol=1e-9)
-    assert 0.9 < q.min()/q0 and q.max()/q0 < 1.35
+    assert np.all(np.sum(eps < w90_ref.E_D, axis=1) == c) # occupied up to pi everywhere
+    assert np.allclose(eps[:, c] - eps[:, v], HW, rtol=0, atol=1e-9)
+    assert lo < q.min()/q0 and q.max()/q0 < hi
 
 
 def random_k(tb, n, seed=0):
@@ -208,7 +210,7 @@ def velocity_atomic_gauge(tb, k):
 
 def test_centres_only_atomic_gauge(tb_w90):
     """
-    Centres only = atomic gauge: |hbar v_mn|^2 agree (2e-12), while the full r differs by ~30 eV^2 Angstrom^2.
+    Centres only = atomic gauge: |hbar v_mn|^2 agree to rounding, while the full r clearly differs.
     Moduli only, the eigenvector phases are unrelated.
     """
     k = random_k(tb_w90, 200)

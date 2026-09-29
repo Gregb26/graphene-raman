@@ -1,5 +1,6 @@
 """
-Reciprocal lattice and k grids: `reciprocal`, `k_grid`, and the `GridTB` container of the callers.
+Reciprocal lattice, k grids and paths: `reciprocal`, `k_grid`, `kpath`, and the `GridTB` container
+of the callers.
 """
 
 import numpy as np
@@ -79,3 +80,49 @@ def make_grid_tb(tb, N):
     nk = k_red.shape[0]
 
     return GridTB(B=B, k_red=k_red, k_cart=k_cart, K=K, nk=nk)
+
+def kpath(B, points, nk):
+    """
+    Straight segments through the high-symmetry points `points` (e.g. G-K-M-G), about nk points spread
+    in proportion to the segment lengths (uniform step). Every vertex is sampled exactly, once.
+
+    Inputs:
+        B      : (3, 3) float, 1/Angstrom, B[:, j] = b_j
+        points : list of (label, k_red) pairs
+        nk     : int, approximate number of points
+    Returns:
+        k      : (Nk, 3) float, 1/Angstrom, Cartesian
+        x      : (Nk,) float, 1/Angstrom, distance along the path (abscissa of band plots)
+        ticks  : (n_points,) float, x of each vertex
+        labels : list of str
+    """
+
+    labels = [label for label, k_red in points]
+    k_cart = np.array([k_red @ B.T for label, k_red in points])
+    dk = np.diff(k_cart, axis=0) # displacement vector between each point, in cartesian coords
+    L = np.linalg.norm(dk, axis=1) # length between each point
+
+    L_total = L.sum() # total length of path
+    ni = np.array(nk * L / L_total).astype(int) # number of points between each point
+
+    ks, xs = [], []
+    x0 = 0
+    for i in range(len(L)):
+        t = np.linspace(0, 1, ni[i], endpoint=False)
+        ks.append(k_cart[i] + t[:, None]*dk[i])
+
+        xi = x0 + t*L[i]
+        xs.append(xi)
+        x0 += L[i]
+
+    # put into arrays 
+    k = np.concatenate(ks)
+    x = np.concatenate(xs)
+
+    # add last enpoint
+    k = np.append(k, [points[-1][1] @ B.T], axis=0)
+    x = np.append(x, L_total)
+
+    ticks = np.concatenate(([0.0], np.cumsum(L)))
+
+    return k, x, ticks, labels

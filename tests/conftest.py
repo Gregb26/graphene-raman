@@ -44,6 +44,8 @@ W90_REF = SimpleNamespace(
     r_defect_K=(2.31e-3, 4.86e-3),    # Angstrom, max |A(K) - A(K)^dagger|, x y
     rz_sigma_pz=0.220394,             # Angstrom, max |r^z| between sigma and p_z (allowed by the mirror)
     ring_q_over_q0=(0.9, 1.35),       # bounds of q/q0 at 2.33 eV with the default t, a_cc
+    hv_F=5.46919,                     # eV*Angstrom, fermi_velocity at q = 1e-3 (both ways)
+    hv_pi=(5.47029, 5.46809),         # eV*Angstrom, |hbar v_nn| of pi and pi* at q = 1e-3
     hermiticity={                     # hermiticity_report, grid 60^2: (max_R x y, frob_R, max_k x y)
         'sigma': ((2.5423e-3, 1.6520e-3), 1.1977e-2, (6.9451e-3, 5.8033e-3)),
         'pz':    ((1.2222e-3, 1.3698e-3), 2.5760e-2, (1.2815e-2, 1.4190e-2)),

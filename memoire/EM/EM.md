@@ -386,13 +386,21 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 
 **But** : faire tourner F4 et F5, inchangés, sur le `_tb.dat` de référence, en trois modes (complet, centres seuls, sans Berry).
 
-**F12 — `kpath(B, points, n)`** → chemin Γ–K–M–Γ, dans `kgrid.py`. Sert à inspecter ε et ħv_nn.
+**F12 — `kpath(B, points, n)`** → chemin Γ–K–M–Γ, dans `kgrid.py`. Sert à inspecter ε et ħv_nn. **Fait (Greg, 2026-09-28).**
 - `points` : liste de (étiquette, k réduit) ; n points en tout, répartis au prorata des longueurs (pas uniforme en |k|). Retour : `k` (Nk, 3) cartésien, `x` (Nk,) distance cumulée en Å⁻¹ (abscisse des figures), `ticks` et `labels` des coins.
 - Attendu (a = 2.4659 Å) : |ΓK| = 4π/3a = 1.6987 Å⁻¹, |KM| = 2π/3a = 0.8494, |MΓ| = 2π/(√3 a) = 1.4711.
 - En K exactement, ħv_nn de π et π* n'est pas défini (bandes dégénérées) ; ε l'est.
 - `utils/lattice.build_k_path` existe déjà (coordonnées réduites), mais écrase son argument `nk` par 100 : ne pas le réutiliser tel quel.
+- Tests : `tests/test_kgrid.py` (longueurs des segments ; |Δk| = Δx à chaque pas, sans doublon, pas uniforme à 10 % près ; chaque sommet échantillonné une fois, à son tick) et, sur les données réelles, `test_velocity_path_gradient_real` (`tests/test_velocity_operator.py`) : ħv_nn projeté sur la direction du chemin = dε_n/dx à **4×10⁻⁴ eV·Å** (différences centrées, 3000 points), dans les deux modes. On exclut les points voisins d'un sommet et les croisements de bandes, où les bandes triées par énergie ont un coude (écart de 5 eV·Å sinon). Mutations : distance du segment suivant mal initialisée (le bug de la première version, 4 échecs), `endpoint=True` (4), dernier sommet oublié (4), même nombre de points par segment (3), `k_red @ B` sans transposée (4).
 
-**F13 — `fermi_velocity(tb, K, q=1e-3)`** → ħv_F moyenné sur les directions, par deux voies : |ħ∇ε| et (|ħv^x_cv|² + |ħv^y_cv|²)^{1/2}.
+**F13 — `fermi_velocity(tb, K, mu, q=1e-3, ntheta=360, mode='berry')`** → ħv_F moyenné sur les directions, par deux voies : |ħ∇ε| (diagonale) et (|ħv^x_cv|² + |ħv^y_cv|²)^{1/2} (interbande). Dans `ring.py` (grandeurs autour de K). **Fait (Greg, 2026-09-28)** ; retour `{'intra_avg', 'inter_avg', 'pi', 'pi_star'}`, `mu` obligatoire (pas de constante des données dans `src`) :
+- Cercle de rayon q autour de K ; v et c choisis par l'énergie (μ = E_D).
+- Voie intrabande : |ħv_nn| dans le plan pour π et π*, moyennés sur θ, puis la moyenne des deux : l'asymétrie électron-trou est linéaire en q et s'annule dans la moyenne.
+- Voie interbande : pour un cône de Dirac, H = ħv_F σ·q et ⟨c|σ|v⟩ = i ẑ×q̂ à une phase près, donc |ħv_cv| = ħv_F.
+- **Valeurs cibles (27×27, 2026-09-28)**, q = 10⁻³ Å⁻¹ : π 5.4703, π* 5.4681, moyenne **5.4692 eV·Å** ; interbande 5.4692 (anisotropie ±0.13 %, ±0.27 % sans Berry). À q = 10⁻² : π 5.4803, π* 5.4583, moyenne 5.4693 (convergé) ; à q = 0.1 : distorsion trigonale de ±12 %.
+- ħv_F = 5.469 eV·Å ↔ **v_F = 8.31×10⁵ m/s** (ħ = 6.582×10⁻¹⁶ eV·s).
+- Piège rencontré : `.real` sur ħv_cv (élément hors diagonale, de phase arbitraire à chaque k) donnait 5.319 au lieu de 5.469 ; il faut |ħv_cv|². μ au-dessus de toutes les bandes lève `IndexError` (c = nW), pas l'assert : bruyant quand même.
+- Tests (`tests/test_ring.py`, 6) : M0 (les deux voies = 3ta_cc/2, π = π*, deux jauges) ; valeurs réelles ; asymétrie π/π* ×10 de q = 10⁻³ à 10⁻², moyenne stable à 10⁻⁵ ; voie intrabande identique dans les trois modes, interbande à 10⁻⁴ ; μ qui coupe π* sur le cercle → assert. Mutations : `.real` sur l'interbande (3 échecs), intrabande = π seul (2), v et c inversés (1), assert retiré (1), rayon oublié (4).
 
 - **Vérifications :**
   - ħv hermitien à ~10⁻¹³ **après** l'hermitisation de A (sans hermitisation : défaut d'environ 10⁻² eV·Å, à noter) ;
@@ -401,7 +409,10 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   - ħv_F plausible pour la PBE (v_F ≈ 0.8–0.85×10⁶ m/s, soit ħv_F ≈ 5.3–5.6 eV·Å, à comparer à la littérature).
 - **Sortie :** ħv_F (PBE) pour le texte.
 
-**Critère de sortie** : les trois modes tournent, ħv(k) est hermitien et ħv_F est consigné.
+**Critère de sortie** : les trois modes tournent, ħv(k) est hermitien et ħv_F est consigné. **Rempli le 2026-09-28** :
+- ħv hermitien à **1.4×10⁻¹³ eV·Å** dans les trois modes (500 k au hasard) ; avec A brut (sans `hermitize`), le défaut atteint **7×10⁻² eV·Å** sur toute la zone (et non ~10⁻²) : `test_velocity_hermitian_real` ;
+- diagonale = dε/dx le long de Γ–K–M–Γ à 4×10⁻⁴ eV·Å (F12) ;
+- les deux voies de F13 concordent à 10⁻⁵ ; **ħv_F (PBE) = 5.469 eV·Å, v_F = 8.31×10⁵ m/s**, dans la fourchette PBE attendue (5.3–5.6 eV·Å).
 
 ---
 
@@ -409,7 +420,10 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
 
 **But** : les contrôles physiques sur les données réelles, et les chiffres par anneau pour le texte.
 
-**F14 — `pz_block(tb)`** → `WannierTB` réduit aux WF 4–5.
+**F14 — `pz_block(tb, pz)`** → `WannierTB` réduit aux WF p_z (liste d'indices en argument, pas de constante des données dans `src`). Dans `tb_model.py`, comme `centres_only`.
+- `extract_block` est dans `diagnostics.py`, qui importe déjà `tb_model` : l'importer depuis `tb_model` ferait un import circulaire. Le déplacer dans `tb_model.py` (module le plus bas) et l'importer de là dans `diagnostics`.
+- Aperçu (2026-09-28) : sur un cercle q = 0.1 autour de K, ε et |ħv^{x,y}_cv|² du 2×2 = ceux du 5×5 à 6×10⁻¹⁵ eV et 2×10⁻¹³ eV²·Å² ; `fermi_velocity` et `ring` donnent les mêmes valeurs (5.46919 ; ⟨|ħv_cv|²⟩ = 31.443 eV²·Å² sur l'anneau de 2.33 eV).
+- **Piège** : loin de K, π croise des bandes σ, et son indice dans le 5×5 trié change : comparer `eps5[:, 3:]` à `eps2` sur toute la zone donne 4.4 eV d'écart, alors que chaque bande du 2×2 coïncide avec *une* bande du 5×5 à 10⁻¹⁴. Comparer près de K, ou apparier par l'énergie.
 - **Test :** v_cv (π→π*) dans le plan est identique entre la matrice 5×5 et le bloc 2×2, à la taille près du bloc croisé de H (F11). La lumière dans le plan ne mélange pas σ et π.
 
 **F6 (réutilisé) — anneaux** à 1.96, 2.33 et 2.54 eV (633, 532 et 488 nm) autour de K, avec c et v de part et d'autre de μ = E_D.
@@ -528,7 +542,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | EM1 — inventaire et r(R) | fait (rapport `EM1_rapport.md`) | 2026-09-25 |
 | M0 — modèle de liaisons fortes | **fait** : F1–F7 et pilote testés (78 exécutions), tableau de référence reproduit à 4.8×10⁻⁵ | 2026-09-28 |
 | M1 — lecteur et diagnostics | **fait** : F8 (`read_w90_tb`, `make_wannier_tb`), F9 (`centres_only`), F10 (`hermiticity_report`), F11 (`symmetry_report`) ; 118 tests en tout | 2026-09-28 |
-| M2 — v(k) réel | à faire | |
+| M2 — v(k) réel | **fait** : F12 (`kpath`), F13 (`fermi_velocity`) ; ħv_F = 5.469 eV·Å ; 134 tests en tout | 2026-09-28 |
 | M3 — symétries et anneaux | à faire | |
 | EM2 — DFT directe et postw90 | après M3 | |
 | M4 — σ(ω) et données de figure | à faire | |

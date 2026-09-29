@@ -5,7 +5,7 @@ node with Berry, isotropy, ring averages, and the effect of dropping the Berry t
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import compute_velocity, ring
+from electron_defect_interaction.electron_photon import centres_only, compute_velocity, fermi_velocity, make_grid_tb, ring
 
 @pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
 @pytest.mark.parametrize("hw", [0.1, 1.0, 2.33, 2.54])
@@ -126,3 +126,61 @@ def test_ring_without_berry(tb, grid):
     assert np.isclose(ratio_x, 1.125, rtol=1e-3, atol=0), '<|v_x|^2> without / with Berry off 1.125'
     assert np.isclose(ratio_norm.min(), 0.664, atol=1e-3), '|v_cv| without / with Berry: minimum off 0.664'
     assert np.isclose(ratio_norm.max(), 1.271, atol=1e-3), '|v_cv| without / with Berry: maximum off 1.271'
+
+
+@pytest.mark.parametrize("tb", [(0,0,0), (1,0,0)], indirect=True)
+def test_fermi_velocity_graphene(tb, grid):
+    """M0: both ways give 3 t a_cc / 2, and pi = pi* (no electron-hole asymmetry), in both gauges."""
+    res = fermi_velocity(tb, grid.K, 0.0)
+    hv_F = 3 * tb.t * tb.a_cc / 2
+
+    for key in ['intra_avg', 'inter_avg', 'pi', 'pi_star']:
+        assert np.isclose(res[key], hv_F, rtol=1e-5, atol=0), key
+
+
+@pytest.fixture(scope="module")
+def K_w90(tb_w90):
+    """Dirac point of the real lattice, 1/Angstrom."""
+    return make_grid_tb(tb_w90, 3).K
+
+
+def test_fermi_velocity_real(tb_w90, K_w90, w90_ref):
+    """Real data: the two ways agree on hbar v_F (EM.md, F13)."""
+    res = fermi_velocity(tb_w90, K_w90, w90_ref.E_D)
+
+    assert np.isclose(res['intra_avg'], w90_ref.hv_F, rtol=1e-5, atol=0)
+    assert np.isclose(res['inter_avg'], w90_ref.hv_F, rtol=1e-5, atol=0)
+    assert np.allclose([res['pi'], res['pi_star']], w90_ref.hv_pi, rtol=1e-5, atol=0)
+
+
+def test_fermi_velocity_electron_hole(tb_w90, K_w90, w90_ref):
+    """
+    The pi / pi* asymmetry grows linearly with q (x10 from q = 1e-3 to 1e-2), while their average,
+    hbar v_F, stays put (1e-5).
+    """
+    small = fermi_velocity(tb_w90, K_w90, w90_ref.E_D, q=1e-3)
+    large = fermi_velocity(tb_w90, K_w90, w90_ref.E_D, q=1e-2)
+    asym = lambda res: res['pi'] - res['pi_star']
+
+    assert np.isclose(asym(large) / asym(small), 10, rtol=0.01, atol=0)
+    assert np.isclose(large['intra_avg'], small['intra_avg'], rtol=1e-4, atol=0)
+
+
+def test_fermi_velocity_modes(tb_w90, K_w90, w90_ref):
+    """The intraband way ignores the Berry term (zero on the diagonal); the interband way barely feels it at K."""
+    full = fermi_velocity(tb_w90, K_w90, w90_ref.E_D, mode='berry')
+    others = [fermi_velocity(tb_w90, K_w90, w90_ref.E_D, mode='no_berry'),
+              fermi_velocity(centres_only(tb_w90), K_w90, w90_ref.E_D, mode='berry')]
+
+    for res in others:
+        assert np.isclose(res['intra_avg'], full['intra_avg'], rtol=1e-12, atol=0)
+        assert np.isclose(res['inter_avg'], full['inter_avg'], rtol=1e-4, atol=0)
+
+
+def test_fermi_velocity_mu_between_bands(tb_w90, K_w90, w90_ref):
+    """
+    mu must separate pi and pi* all around the circle: at q = 0.3, pi* spans E_D + 1.2 to 1.9 eV
+    (trigonal warping), so mu = E_D + 1.5 eV cuts it and the occupation check fails.
+    """
+    with pytest.raises(AssertionError):
+        fermi_velocity(tb_w90, K_w90, w90_ref.E_D + 1.5, q=0.3)

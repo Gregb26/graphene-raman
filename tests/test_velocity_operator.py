@@ -5,7 +5,8 @@ dagger/hermitize, and `velocity` (F5).
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import compute_velocity, dagger, fourier, hermitize, make_graphene_tb, velocity
+from electron_defect_interaction.electron_photon import (compute_velocity, dagger, fourier, hermitize, kpath,
+                                                         make_graphene_tb, reciprocal, velocity, centres_only)
 
 DK = 1e-5  # finite-difference step (1/Angstrom); truncation ~DK^2 and round-off ~eps/DK balance here
 
@@ -269,3 +270,52 @@ def test_velocity_gauge(grid):
 
     assert not np.allclose(np.abs(hv[:, 0, ...])**2, np.abs(hv_shifted[:, 0, ...])**2, atol=1e-10)
     assert np.allclose(np.abs(hv[:, 1, ...])**2, np.abs(hv_shifted[:, 1, ...])**2, atol=1e-10)
+
+
+@pytest.mark.parametrize("mode", ["berry", "no_berry"])
+def test_velocity_path_gradient_real(tb_w90, mode):
+    """
+    Real data (M2): hbar v_nn projected on the path direction = d eps_n / dx along G-K-M-G (central
+    differences, measured 4e-4 eV Angstrom). Excluded: points next to a vertex (the direction turns,
+    K is degenerate) and band crossings, where the sorted bands have kinks.
+    """
+    B = reciprocal(tb_w90.lattice)
+    path = [('G', (0, 0, 0)), ('K', (2/3, 1/3, 0)), ('M', (1/2, 0, 0)), ('G', (0, 0, 0))]
+    k, x, ticks, _ = kpath(B, path, 3000)
+
+    _, eps, _, hv = compute_velocity(tb_w90, k, mode)
+
+    vertices = np.array([np.array(p) @ B.T for _, p in path])
+    direction = np.diff(vertices, axis=0) / np.diff(ticks)[:, None] # unit vector of each segment
+    segment = np.clip(np.searchsorted(ticks, x, side='right') - 1, 0, len(ticks) - 2)
+    hv_diag = np.real(np.diagonal(hv, axis1=-2, axis2=-1)) # (Nk, 3, nW)
+    hv_along = np.einsum('kc,kcn->kn', direction[segment], hv_diag)
+    grad = np.gradient(eps, x, axis=0)
+
+    dx = np.diff(x).mean()
+    far = np.all(np.abs(x[:, None] - ticks[None, :]) > 3.5*dx, axis=1) # (Nk,)
+    gap = np.minimum(np.abs(np.diff(eps, axis=1, prepend=-np.inf)), np.abs(np.diff(eps, axis=1, append=np.inf)))
+    keep = far[:, None] & (gap > 0.05) # (Nk, nW)
+
+    assert keep.mean() > 0.9
+    assert np.abs(hv_along - grad)[keep].max() < 1e-3
+
+
+@pytest.mark.parametrize("mode", ["berry", "no_berry", "centres"])
+def test_velocity_hermitian_real(tb_w90, mode):
+    """
+    Real data (M2): hbar v is Hermitian to rounding in the three modes, once A is hermitized; with the
+    raw A, the defect reaches ~7e-2 eV Angstrom (EM.md, M2).
+    """
+    k = np.random.default_rng(0).random((500, 3)) * [1, 1, 0] @ reciprocal(tb_w90.lattice).T
+    model, chain_mode = (centres_only(tb_w90), 'berry') if mode == 'centres' else (tb_w90, mode)
+
+    _, _, _, hv = compute_velocity(model, k, chain_mode)
+    assert np.abs(hv - dagger(hv)).max() < 1e-12
+
+    if mode == 'berry':
+        H = fourier(tb_w90.H_R, tb_w90.R_cart, tb_w90.ndegen, k)
+        dH = fourier(tb_w90.H_R, tb_w90.R_cart, tb_w90.ndegen, k, deriv=True)
+        A_raw = fourier(tb_w90.r_R, tb_w90.R_cart, tb_w90.ndegen, k)
+        _, _, hv_raw = velocity(H, dH, A_raw)
+        assert np.abs(hv_raw - dagger(hv_raw)).max() > 1e-2

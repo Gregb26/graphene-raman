@@ -134,7 +134,7 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   approximation of r), `kgrid` (reciprocal lattice, k grids),
   `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
   `compute_velocity(tb, k, mode)`), `ring`
-  (resonant k points around K), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`), `diagnostics` (reports on a model:
+  (resonant k points around K, `fermi_velocity`), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`), `diagnostics` (reports on a model:
   `hermiticity_report`, `symmetry_report`). Tests (pytest) in
   `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py`, shared fixtures in `tests/conftest.py` (real data:
   `tb_w90`, `eig_w90`, `w90_ref` on the tracked `wannier/27x27/`; every data-specific value and the sha256 of the

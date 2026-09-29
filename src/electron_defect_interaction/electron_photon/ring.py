@@ -1,10 +1,11 @@
 """
-Resonant ring around a Dirac point: the k points where eps_c - eps_v = hbar omega (`ring`).
+Around a Dirac point: the resonant ring, k points where eps_c - eps_v = hbar omega (`ring`), and
+the Fermi velocity on a small circle (`fermi_velocity`).
 """
 
 import numpy as np
 
-from .velocity_operator import fourier
+from .velocity_operator import fourier, compute_velocity
 
 def _gap(tb, K, q, e, mu):
     """
@@ -96,3 +97,55 @@ def ring(tb, K, hw, mu=0.0, ntheta=720, tol=1e-12, maxsteps=100):
     assert q.shape == (ntheta,), 'wrong shape for q'
 
     return k, theta, q, q0
+
+def fermi_velocity(tb, K, mu, q=1e-3, ntheta=360, mode='berry'):
+    """
+    Fermi velocity on a circle of radius q around the Dirac point K (F13, M2), two ways. Intraband:
+    |hbar v_nn| of pi and pi*, averaged over directions, then over the two bands (the electron-hole
+    asymmetry, linear in q, cancels). Interband: |hbar v_cv|, equal to hbar v_F for a Dirac cone.
+    v and c are the bands just below and above mu, the same all around the circle (asserted).
+
+    Inputs:
+        tb     : WannierTB
+        K      : (3,) float, 1/Angstrom, Dirac point
+        mu     : float, eV, between pi and pi* (E_D for Wannier90 data)
+        q      : float, 1/Angstrom, radius of the circle
+        ntheta : int, number of directions
+        mode   : 'berry' or 'no_berry', passed to compute_velocity
+    Returns:
+        dict {'intra_avg', 'inter_avg', 'pi', 'pi_star'} of floats, eV*Angstrom
+    """
+
+    # compute circle of radius q around Dirac point K
+    theta = np.linspace(0, 2*np.pi, ntheta, endpoint=False) # (nt,)
+    k = K[None, :] + q*np.column_stack((np.cos(theta), np.sin(theta), np.zeros_like(theta))) # (nt, 3)
+
+    # compute eigenvalues and velocity operator on the circle
+    _, eps, _, hv = compute_velocity(tb, k, mode=mode) # (nt, nW), (nt, 3, nW, nW)
+    # compute number of occupied bands per point on the circle
+    n_occ = np.sum(eps < mu, axis=1) # (nt, )
+    assert np.all(n_occ == n_occ[0])
+
+    n = n_occ[0]
+    v = n - 1 # index of valence band on circle
+    c = n # conduction band
+
+    # intraband pi-pi
+    hv_xvv = hv[:, 0, v, v].real; hv_yvv = hv[:,1, v, v].real # (nt,)
+    hv_vv = np.sqrt(hv_xvv**2 + hv_yvv**2) # (nt, )
+    pi = np.mean(hv_vv)
+
+    # intraband pi_star-pi_star
+    hv_xcc = hv[:, 0, c, c].real; hv_ycc = hv[:,1, c, c].real # (nt,)
+    hv_cc = np.sqrt(hv_xcc**2 + hv_ycc**2) # (nt, )
+    pi_star = np.mean(hv_cc)
+
+    # intraband average
+    intra_avg = np.mean([pi, pi_star])
+
+    # interband pi-pi_star (same as pi_star-pi)
+    hv_xcv = hv[:, 0, c, v]; hv_ycv = hv[:,1, c, v] # (nt,)
+    hv_cv = np.sqrt(np.abs(hv_xcv)**2 + np.abs(hv_ycv)**2)
+    inter_avg = np.mean(hv_cv)
+
+    return {"intra_avg": intra_avg, "inter_avg": inter_avg, "pi": pi, "pi_star": pi_star}

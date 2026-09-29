@@ -1,0 +1,82 @@
+{
+ "hv_F_eV_A": {
+  "inter": 5.469187853771915,
+  "intra": 5.469189769939213
+ },
+ "v_F_m_s": 830915.9073211475,
+ "hw_froz_eV": 4.959491846968429,
+ "N_froz": 800,
+ "froz_max_eV": -1.74,
+ "E_D_eV": -4.238895,
+ "N": 1200,
+ "eta_eV": 0.04,
+ "sigma_over_sigma0_at_lasers": {
+  "full": {
+   "1.96": {
+    "xx": 1.263670657005831,
+    "yy": 1.263600631885802,
+    "xy": 6.86468526355429e-12
+   },
+   "2.33": {
+    "xx": 1.4055507562601337,
+    "yy": 1.4053613999615675,
+    "xy": 8.916403098790728e-12
+   },
+   "2.54": {
+    "xx": 1.5114783805368268,
+    "yy": 1.511351803583033,
+    "xy": 9.378663806163672e-12
+   }
+  },
+  "centres_only": {
+   "1.96": {
+    "xx": 1.2190264212903266,
+    "yy": 1.2189513993318155,
+    "xy": 7.401943634730744e-13
+   },
+   "2.33": {
+    "xx": 1.337239539530154,
+    "yy": 1.3370446083529552,
+    "xy": 8.582869229719042e-13
+   },
+   "2.54": {
+    "xx": 1.4257590134931601,
+    "yy": 1.4256300373679223,
+    "xy": 7.197565096034122e-13
+   }
+  },
+  "no_berry": {
+   "1.96": {
+    "xx": 1.3648103247360654,
+    "yy": 1.2189513993318157,
+    "xy": 7.930503202797557e-12
+   },
+   "2.33": {
+    "xx": 1.5547643032420513,
+    "yy": 1.3370446083529541,
+    "xy": 1.3787519060588898e-11
+   },
+   "2.54": {
+    "xx": 1.6943486809569483,
+    "yy": 1.425630037367922,
+    "xy": 1.7843682174067225e-11
+   }
+  }
+ },
+ "provenance": {
+  "date": "2026-09-29",
+  "commit": "a6bb02f",
+  "src_dirty": false,
+  "sha256": {
+   "src/electron_defect_interaction/electron_photon/__init__.py": "2a6a8232af94cf14",
+   "src/electron_defect_interaction/electron_photon/diagnostics.py": "f30168fd50c7d086",
+   "src/electron_defect_interaction/electron_photon/kgrid.py": "8270aa0b65ce72b3",
+   "src/electron_defect_interaction/electron_photon/kubo.py": "503fb3c8d22ae560",
+   "src/electron_defect_interaction/electron_photon/ring.py": "13309ff258411c79",
+   "src/electron_defect_interaction/electron_photon/tb_model.py": "cf10abf5d3500987",
+   "src/electron_defect_interaction/electron_photon/velocity_operator.py": "6426d59b981fc8b1",
+   "src/electron_defect_interaction/io/wannier_io.py": "28c0d26c257ccedf"
+  },
+  "data_sha256": "baa17b88b1b69e51"
+ }
+}

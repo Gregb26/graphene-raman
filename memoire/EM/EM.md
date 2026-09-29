@@ -509,6 +509,7 @@ Pièges NumPy et pytest rencontrés en M0 : `memoire/EM/notes_numpy_pytest.md`.
   - le mode sans Berry brise l'isotropie ;
   - concordance avec postw90 `kubo` (EM2).
 - **Sorties (npz)** : `em_sigma_{mode}_N{N}_eta{eta}.npz` (ω, σ_αβ, paramètres), `em_map_K.npz` (F19), `em_ring_stats.json` (F15), plus ħv_F et ħω_froz.
+- **Production faite (2026-09-29, local, 145 s, commit a6bb02f, `src` propre)** dans `memoire/EM/M4_sigma/` (`m4_prod.py`, README ; pilote dans `pilote/`) : `em_sigma_{full,centres_only,no_berry}_N1200_eta0.04.npz`, `em_map_K.npz` (h = 0.35 Å⁻¹, nq = 300, trois variantes, 4.1 Mo), `em_ring_stats.json`, `em_scalars.json` (ħv_F = 5.46919 eV·Å, v_F = 8.31×10⁵ m/s, ħω_froz = 4.9595 eV à N = 800, σ aux lasers, sha256 des modules). La production redonne le pilote à l'identique (écart 0).
 
 **Critère de sortie** : σ(ω) convergé et concordant avec postw90, chiffres consignés.
 
@@ -579,7 +580,7 @@ Mode technicien : skill `technicien`, avec les mots-clés « explique » (par d�
 | M2 — v(k) réel | **fait** : F12 (`kpath`), F13 (`fermi_velocity`) ; ħv_F = 5.469 eV·Å ; 134 tests en tout | 2026-09-28 |
 | M3 — symétries et anneaux | **fait** : F14 (`pz_block`), F15 (`ring_stats`), F17 (`ring_kpoints_crystal`) ; F16 reportée ; 160 tests en tout | 2026-09-29 |
 | EM2 — DFT directe et postw90 | à préparer (liste de k prête) | |
-| M4 — σ(ω) et données de figure | en cours : pilote fait (N = 1200, η = 0.04 eV retenus), F18 (`frozen_window_limit`), F19 (`map_around_K`) faits ; 174 tests ; reste les npz de production et la concordance postw90 (EM2) | 2026-09-29 |
+| M4 — σ(ω) et données de figure | en cours : pilote et production faits (`memoire/EM/M4_sigma/`, N = 1200, η = 0.04 eV), F18, F19 faits ; 174 tests ; reste la concordance postw90 (EM2) | 2026-09-29 |
 | EM3 — figure et chiffres | après M4 | |
 | P28 — texte | après validation complète | |
 

@@ -80,15 +80,15 @@ if [ -z "${SLURM_JOB_ID:-}" ]; then
   L=(); IDS=()
   sub() { local name=$1; shift; local j; j=$("$@") || { echo "sbatch a échoué pour $name (déjà soumis : ${L[*]})"; exit 1; }; L+=("$j $name"); IDS+=("$j"); echo "soumis : $j ($name)"; }
   for S in 5x5 6x6 7x7 8x8 9x9 12x12; do
-    sub "specwd_$S" env GRIDS=60,120,240 ETAS=0.05,0.02,0.01 RCUTS=0,1,2,3,4 sbatch "${C[@]}" --job-name="specwd_$S" "$PROJ/scripts/submit_spectral_wannier_dense.sh" "$S" prod
+    sub "specwd_$S" env GRIDS=60,120,240 ETAS=0.05,0.02,0.01 RCUTS=0,1,2,3,4 sbatch "${C[@]}" --job-name="specwd_$S" "$PROJ/scripts/slurm/submit_spectral_wannier_dense.sh" "$S" prod
   done
-  sub nkint     sbatch "${C[@]}" --job-name=nkint "$PROJ/scripts/submit_nkint_check.sh" 9x9
-  sub resigma0123 sbatch "${C[@]}" --job-name=resigma "$PROJ/scripts/submit_rcut_resigma.sh" 9x9 0,1,2,3
-  sub resigma4  sbatch "${C[@]}" --job-name=resigma "$PROJ/scripts/submit_rcut_resigma.sh" 9x9 4
-  sub post_loc  sbatch "${C[@]}" --job-name=post_loc "$PROJ/scripts/submit_post.sh" locality
-  sub post_ana  env GOLDEN_RESULT="1.80e-13,r6golden_21852238" sbatch "${C[@]}" --job-name=post_ana "$PROJ/scripts/submit_post.sh" analyze
+  sub nkint     sbatch "${C[@]}" --job-name=nkint "$PROJ/scripts/slurm/submit_nkint_check.sh" 9x9
+  sub resigma0123 sbatch "${C[@]}" --job-name=resigma "$PROJ/scripts/slurm/submit_rcut_resigma.sh" 9x9 0,1,2,3
+  sub resigma4  sbatch "${C[@]}" --job-name=resigma "$PROJ/scripts/slurm/submit_rcut_resigma.sh" 9x9 4
+  sub post_loc  sbatch "${C[@]}" --job-name=post_loc "$PROJ/scripts/slurm/submit_post.sh" locality
+  sub post_ana  env GOLDEN_RESULT="1.80e-13,r6golden_21852238" sbatch "${C[@]}" --job-name=post_ana "$PROJ/scripts/slurm/submit_post.sh" analyze
   for S in 9x9 6x6 12x12; do
-    sub "post_res${S%%x*}" sbatch "${C[@]}" --job-name="post_res${S%%x*}" "$PROJ/scripts/submit_post.sh" resonance "$S"
+    sub "post_res${S%%x*}" sbatch "${C[@]}" --job-name="post_res${S%%x*}" "$PROJ/scripts/slurm/submit_post.sh" resonance "$S"
   done
   CW=(--parsable --chdir="$WORK" --output="$RESD/logs/%x_%j.out" --error="$RESD/logs/%x_%j.err" ${DEP:+--dependency=$DEP} --export=ALL,GRAPHENE_RAMAN="$PROJ")
   sub r10ved sbatch "${CW[@]}" --job-name=r10ved --nodes=1 --ntasks=1 --cpus-per-task=16 --mem=64G --time=01:00:00 "$WORK/submit_r10.sh" p_ved
@@ -129,24 +129,24 @@ case "$TASK" in
     rc=$r1; [ $r2 -gt $rc ] && rc=$r2; [ $r3 -gt $rc ] && rc=$r3; exit $rc ;;
   p_ved)
     echo "[$(date)] results_dir = $RESD"
-    run scripts/analyze_Ved.py 5x5,6x6,7x7,8x8,9x9,10x10,11x11,12x12
+    run scripts/t/analyze_Ved.py 5x5,6x6,7x7,8x8,9x9,10x10,11x11,12x12
     cp -p "$PROJ/results/M2/ks_reconstruction.npz" "$RESD/ks_reconstruction.npz" && chmod u+w "$RESD/ks_reconstruction.npz"
     m1=$(md5sum < "$PROJ/results/M2/ks_reconstruction.npz" | cut -d' ' -f1); m2=$(md5sum < "$RESD/ks_reconstruction.npz" | cut -d' ' -f1)
     echo "[$(date)] ks_reconstruction.npz copié de results/M2 : md5 $m1 / $m2"; [ "$m1" = "$m2" ] || { echo "md5 différent : STOP"; exit 2; }
-    run scripts/sampling_table.py
+    run scripts/t/sampling_table.py
     echo "[$(date)] p_ved terminé" ;;
   p_c14)
-    run scripts/resonance_metrics.py --size 9x9 --shift-L-meV 9.05,-9.05 --out "$RESD/resonance_9x9_shiftL.npz"
+    run scripts/t/resonance_metrics.py --size 9x9 --shift-L-meV 9.05,-9.05 --out "$RESD/resonance_9x9_shiftL.npz"
     echo "[$(date)] p_c14 terminé" ;;
   c1f)
     "$PY" -u "$DRV" c1post || { echo "[$(date)] c1post ÉCHEC (porte de m_rcut_resigma.csv ou lignes de tab:tests_M)"; exit 3; }
-    run scripts/make_figures.py --outdir "$WORK/fig"
-    run scripts/level2_families.py
-    run scripts/nkint_check_post.py --size 9x9 --nk 150,300,450,600
-    run scripts/make_figures_memoire.py --outdir "$WORK/fig"
+    run scripts/fig/make_figures.py --outdir "$WORK/fig"
+    run scripts/t/level2_families.py
+    run scripts/t/nkint_check_post.py --size 9x9 --nk 150,300,450,600
+    run scripts/fig/make_figures_memoire.py --outdir "$WORK/fig"
     # chapitre 5 : options de production de NOTES_EPW (chaîne mv0.02), comme submit_post.sh figures
-    run scripts/epw_ed_vs_ep.py --selfen results/epw/selfen_240_dg0.02_mv0.02_T300.npz --tag 24k24q_mv0.02
-    run scripts/make_figures_epw.py --outdir "$WORK/fig" --prod-tag 240_dg0.02_mv0.02 --phself-tag path_1200_dg0.02_mv0.02 --val-tag 24k24q_mv0.02 \
+    run scripts/t/epw_ed_vs_ep.py --selfen results/epw/selfen_240_dg0.02_mv0.02_T300.npz --tag 24k24q_mv0.02
+    run scripts/fig/make_figures_epw.py --outdir "$WORK/fig" --prod-tag 240_dg0.02_mv0.02 --phself-tag path_1200_dg0.02_mv0.02 --val-tag 24k24q_mv0.02 \
         --sel-suffix _mv0.02 --control --kohn-val-tags 24k24q,24k24q_mv0.02 --dfpt-tag 24k24q
     echo "[$(date)] c1f terminé" ;;
   *) echo "tâche inconnue $TASK"; exit 1 ;;

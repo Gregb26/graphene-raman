@@ -5,7 +5,7 @@
 - Statut : PRODUCTION (2026-09-29), calcul local (< 1 s), aucun `.save` ; seul emplacement (pas de répertoire de travail hors dépôt).
 - `make_em3_data.py` → `em2_postw90_sigma_ti.npz` (run `k1201_ti` d'EM2, lecteur `read_postw90` d'`EM2/em2_B_compare.py`, g_s = 2),
   `em3_ring_2p33.npz` (`ring`, 720 angles, trois variantes), `em_table.md`, `em_table.csv`, `make_em3_data.log` (quatre contrôles bloquants).
-- Figure : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` (lit aussi `EM2/em2_A.npz` et `M4_sigma/`).
+- Figure : `scripts/fig/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` (lit aussi `EM2/em2_A.npz` et `M4_sigma/`).
 - Rapport : `EM3_rapport.md` (contrôles, figure, légende proposée pour P28, écarts au prompt).
-- Relancer : `.venv/bin/python campagnes/EM/EM3/make_em3_data.py && .venv/bin/python scripts/make_figures_em.py`.
+- Relancer : `.venv/bin/python campagnes/EM/EM3/make_em3_data.py && .venv/bin/python scripts/fig/make_figures_em.py`.
 - Suite : P28 (texte du mémoire), sur décision de Greg.

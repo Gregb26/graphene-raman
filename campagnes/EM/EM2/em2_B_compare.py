@@ -10,7 +10,7 @@ berry.tex eq. sig-H, berry.F90): the thesis convention (M4, kubo.py) includes g_
 
 Usage: python em2_B_compare.py DIR [DIR ...]   (postw90/DIR/, e.g. k301 k301_nows k1201)
 The first DIR is the reference of the pairwise differences; em2_postw90_sigma.npz (hw, sigma (nw, 3, 3) in
-sigma/sigma_0, format of scripts/make_figures_em.py) is written from k1201 (default postw90 settings) only
+sigma/sigma_0, format of scripts/fig/make_figures_em.py) is written from k1201 (default postw90 settings) only
 when k1201 is among the DIRs. Also compares each DIR with em2_B_ours.npz (same grid and prefactor) when it exists.
 """
 

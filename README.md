@@ -82,7 +82,7 @@ imported by the $M$ kernels), then
 
 Raw DFT data (wavefunctions, potentials) and the $M$ matrices themselves are
 **not** in this repository: on the cluster, `data/` holds symlinks to the
-storage, rebuilt with `scripts/link_data.sh`. Committed npz/csv files under
+storage, rebuilt with `scripts/m/link_data.sh`. Committed npz/csv files under
 `results/` contain the final production quantities. Everything else is
 regenerable from the scripts given the QE outputs.
 

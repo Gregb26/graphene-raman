@@ -1,6 +1,6 @@
 """EPW phonselfen post-processing (read-only).
 EPW's gamma___ / 'Phonon linewidth (meV)' in linewidth.phself.<T>K is documented in selfen.f90 (selfen_phon_q) as Im Pi_qnu, a
-HALF width. P7 (scripts/epw_d2_extract.py, 2026-09-11) showed EMPIRICALLY that for graphene this number is 2.0 x the Dirac-cone Im Pi
+HALF width. P7 (scripts/epw/epw_d2_extract.py, 2026-09-11) showed EMPIRICALLY that for graphene this number is 2.0 x the Dirac-cone Im Pi
 built from EPW's own g and v_F at Gamma (brute-force checked, sin^2/cos^2 vertex structure confirmed on the q-zoom), and that it
 coincides with the literature FWHM (10.8 cm^-1 at Gamma, 21.3 at K) while <D^2> matches Piscanec 2004 to 1-5 %. Convention adopted:
   gamma_epw  = raw EPW value (kept),  gamma_fwhm = gamma_epw (numerically the FWHM),  gamma_hwhm = gamma_epw / 2.

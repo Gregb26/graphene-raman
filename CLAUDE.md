@@ -61,15 +61,15 @@ Work is conducted in French; code and docstrings are in English.
 .venv/bin/python -m pytest tests                       # .venv/bin/pytest has a dead shebang: always use `python -m pytest`
 # 2. Standalone validation scripts (chain M / chain T): they print PASS/FAIL and exit 0/1, run from the repo root.
 #    Local data paths live in scripts/_paths.py (override the data root with EDI_DATA).
-.venv/bin/python scripts/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline (local 5x5 data)
-.venv/bin/python scripts/test_wannier.py               # Wannier interpolation pipeline
-.venv/bin/python scripts/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
-.venv/bin/python scripts/test_local_tmatrix.py         # synthetic golden test of the local t-matrix
-.venv/bin/python scripts/test_local_rcut.py            # R_cut, extract_V_loc, mwr_locality (synthetic)
-.venv/bin/python scripts/test_local_green_batch.py     # local_green_batch / scattering_rate_fast (wannier/27x27)
-.venv/bin/python scripts/validate_wannier_bands.py     # Wannier vs DFT bands (coarse grid) + figures
-.venv/bin/python scripts/compare_bands_qe.py           # Wannier vs DFT along a k-path (needs bands.dat)
-.venv/bin/python scripts/compare_bands_w90_qe.py       # Wannier90 .dat vs QE bands.dat (argparse)
+.venv/bin/python scripts/validation/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline (local 5x5 data)
+.venv/bin/python scripts/validation/test_wannier.py               # Wannier interpolation pipeline
+.venv/bin/python scripts/validation/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
+.venv/bin/python scripts/validation/test_local_tmatrix.py         # synthetic golden test of the local t-matrix
+.venv/bin/python scripts/validation/test_local_rcut.py            # R_cut, extract_V_loc, mwr_locality (synthetic)
+.venv/bin/python scripts/validation/test_local_green_batch.py     # local_green_batch / scattering_rate_fast (wannier/27x27)
+.venv/bin/python scripts/validation/validate_wannier_bands.py     # Wannier vs DFT bands (coarse grid) + figures
+.venv/bin/python scripts/validation/compare_bands_qe.py           # Wannier vs DFT along a k-path (needs bands.dat)
+.venv/bin/python scripts/validation/compare_bands_w90_qe.py       # Wannier90 .dat vs QE bands.dat (argparse)
 #    Cluster only (scratch paths, M matrices): test_local_tmatrix_real.py (real golden test), test_pad_vs_full_supercell.py.
 
 # Repo root: never hard-code the folder path (renamed ab-initio-defects -> graphene-raman on 2026-09-24).
@@ -79,8 +79,8 @@ Work is conducted in French; code and docstrings are in English.
 #   Wannier manifests store paths relative to the manifest directory.
 
 # Production of M (rorqual, SLURM; MPICH srun). Each stage is a fresh process; outputs go to matrices_dir (results/M2).
-sbatch scripts/submit_M.sh                             # coarse M: compute_M.py --stage ml (MPI) -> nl -> combine
-sbatch scripts/submit_M_dense.sh 9x9                   # dense M on the (p*N)^2 grid: compute_M_dense_stages.py ml -> nl -> combine
+sbatch scripts/slurm/submit_M.sh                             # coarse M: compute_M.py --stage ml (MPI) -> nl -> combine
+sbatch scripts/slurm/submit_M_dense.sh 9x9                   # dense M on the (p*N)^2 grid: compute_M_dense_stages.py ml -> nl -> combine
 # Chain T (rorqual): compute_spectral_wannier.py, rcut_resigma.py, resonance_metrics.py, resonance_criteria.py, ... through
 # scripts/submit_*.sh and campagnes/R/R10_plateau/submit_r10.sh. Figures (local): scripts/make_figures{,_memoire,_epw,_em}.py.
 ```
@@ -147,7 +147,7 @@ paths such as `figures/memoire.mplstyle` or `wannier/27x27`). The former `script
 - **defects/alignment.py** — potential alignment: `vacancy_site`, `far_atom_alignment`, `true_min_image_dist`,
   `atom_sphere_shifts` (source of the C_N; the values are frozen in `config/production.json`).
 - **defects/deltav_pw.py**, **wavefunctions/sc_projection.py** — gate A.2 (ΔV applied to pure Bloch states vs M/N_cells),
-  used by `scripts/gate_M_normalization.py`.
+  used by `scripts/m/gate_M_normalization.py`.
 - **defects/non_local.py** — M^NL: `compute_M_NL` (serial), `compute_M_NL_mpi` (distributes the bra
   k'-index, Allreduce); helpers `build_K_vectors`, `compute_phase`, `compute_angular_part`. The
   pseudopotential path argument is `pseudo_path`; the reader is `pseudo_reader` (default `read_upf`).
@@ -195,7 +195,7 @@ Index convention everywhere: `M[bra_band, k', ket_band, k]`, shape `(nband, nk, 
 ## Data / supercells (local mirror of the cluster runs)
 
 Under `data/graphene/` (this whole dir is git-ignored; real files locally, symlinks to the scratch on rorqual via
-`scripts/link_data.sh`):
+`scripts/m/link_data.sh`):
 
 - `unit_cell/qe/defect_unit_cell_{5x5,11x11,12x12}.save/` — unit cells on the full MP grid (`wfc*.hdf5`, `C.upf`,
   `data-file-schema.xml`). Local naming is `defect_unit_cell_<N>.save` (`scripts/_paths.py`); on the cluster it is
@@ -213,18 +213,18 @@ paths are not inspectable from this checkout — confirm names before launching.
 
 ## Validation tests & state
 
-- **scripts/test_ks_reconstruction.py** — Test A reconstructs H_mn(k)=T+⟨ψ|V_loc|ψ⟩+V^NL and checks
+- **scripts/validation/test_ks_reconstruction.py** — Test A reconstructs H_mn(k)=T+⟨ψ|V_loc|ψ⟩+V^NL and checks
   it equals diag(eps) from the XML (validates qe_io, kinetic term, get_pot, UPF projectors); Test B
   is the null-defect check (defect = pristine ⇒ M=0). **PASS** (reconstruction ~1e-8 Ha).
-- **scripts/test_wannier.py** — 5 tests: parser properties (U unitary, U_dis isometry+projector),
+- **scripts/validation/test_wannier.py** — 5 tests: parser properties (U unitary, U_dis isometry+projector),
   Wannier-gauge FT round-trip (exact), full pipeline gauge-invariant spectrum, fine-grid smoke
   test, and a round-trip on a real M (skipped locally: no M file, no `_hr.dat`). Runs on the local 11×11 data.
-- **scripts/validate_wannier_bands.py** — Wannier-interpolated bands vs QE DFT eigenvalues on the
+- **scripts/validation/validate_wannier_bands.py** — Wannier-interpolated bands vs QE DFT eigenvalues on the
   coarse 5×5 grid (with/without ndegen contrast) + Γ–K–M–Γ Dirac-cone figure. **PASS**.
-- **scripts/compare_bands_qe.py** — Wannier vs DFT along a continuous k-path from a `bands.x`
+- **scripts/validation/compare_bands_qe.py** — Wannier vs DFT along a continuous k-path from a `bands.x`
   `bands.dat`. Median agreement ~21 meV. Aligns each band structure on its own Dirac point.
 
-- **scripts/test_local_tmatrix.py**, **test_local_rcut.py** (synthetic), **test_local_green_batch.py** (H of `wannier/27x27`),
+- **scripts/validation/test_local_tmatrix.py**, **test_local_rcut.py** (synthetic), **test_local_green_batch.py** (H of `wannier/27x27`),
   **test_local_tmatrix_real.py** (real golden test: local t = dense `compute_T` × N_cells; cluster only) — chain T.
 - **tests/** (pytest, 199 tests) — EM series, `matrix_io`, and the R8/R9/R10 functions of chain T on synthetic data. Not covered
   by pytest: `compute_ML_*`, `non_local`, `wannier_interpolate`, `scattering_rate(_fast)` (covered by the standalone scripts).
@@ -272,10 +272,10 @@ The standalone scripts take their data paths from `scripts/_paths.py` or module 
    supercells → `Vks_*` files.
 3. **(For interpolation) Wannier90**: `pw2wannier90.x` + `wannier90.x` on the unit cell to produce
    `wannier_u.mat`, `wannier_u_dis.mat`, `wannier_tb.dat` (and `_hr.dat`).
-4. **Matrix**: `scripts/compute_M.py` (coarse grid; stages `ml` (MPI), `nl`, `combine`; launcher `submit_M.sh`) or
-   `scripts/compute_M_dense_stages.py` (dense (pN)² grid by zero-padding; launcher `submit_M_dense.sh`), pointing at the
+4. **Matrix**: `scripts/m/compute_M.py` (coarse grid; stages `ml` (MPI), `nl`, `combine`; launcher `submit_M.sh`) or
+   `scripts/m/compute_M_dense_stages.py` (dense (pN)² grid by zero-padding; launcher `submit_M_dense.sh`), pointing at the
    `.save` dirs, the `Vks_*` potentials and `C.upf`. Output is `M[bra_band, k', ket_band, k]` in Hartree with its JSON
-   sidecar, v2 normalization (M = N_cells·M^L(supercell norm) + M^NL; gate: `scripts/gate_M_normalization.py`), in
+   sidecar, v2 normalization (M = N_cells·M^L(supercell norm) + M^NL; gate: `scripts/m/gate_M_normalization.py`), in
    `matrices_dir`.
 5. **Validate**: `test_ks_reconstruction.py` (sanity on the unit cell / null defect). For bands,
    `validate_wannier_bands.py` and, if a `bands.x` `bands.dat` is available, `compare_bands_qe.py`.
@@ -287,7 +287,7 @@ The standalone scripts take their data paths from `scripts/_paths.py` or module 
 ## Figures du mémoire (conventions obligatoires)
 
 - Style : `figures/memoire.mplstyle`, chargé par `plt.style.use("figures/memoire.mplstyle")` dans
-  `scripts/make_figures.py` et dans tout script de figure. Palette fixe dans `scripts/_palette.py`
+  `scripts/fig/make_figures.py` et dans tout script de figure. Palette fixe dans `scripts/_palette.py`
   (2026-09-21) : **principale = bleu marine #000080** (`\definecolor{darkblue}{rgb}{0,0,0.5}`, couleur des
   hyperliens du mémoire), portée par la grandeur de production de chaque figure (9×9, matrice T, EPW,
   240² à 300 K, chaîne degauss 0.02) ; orange #eb6834 pour le contraste (Born, DFPT direct, Γ^ed au ch. 5),
@@ -302,7 +302,9 @@ The standalone scripts take their data paths from `scripts/_paths.py` or module 
   dans une même figure. Les panneaux sont étiquetés (a), (b), …
 - Taille : `figure.figsize` du style (6.5 × 4.0 po) pour une figure pleine largeur ; deux panneaux
   côte à côte = largeur 6.5 po, hauteur ajustée. Sauvegarde en PDF (vectoriel, pour LaTeX) et PNG
-  (prévisualisation) dans `figures/`.
+  (prévisualisation) dans `figures/<chapitre>/` (depuis le 2026-09-30 : `electron/` (ch. 2), `electron_defect/` (ch. 4),
+  `electron_phonon/` (ch. 5, dont `fig_epw_phonons` du ch. 2), `electron_photon/` (§2.5) ; défauts `--outdir` des quatre
+  `scripts/fig/make_figures*.py`) ; le style reste `figures/memoire.mplstyle`.
 - Données : lues uniquement dans le `results_dir` de `config/production.json` (`results/M2_plateau/` depuis R10, 2026-09-30 ;
   matrices M2 dans `results/M2/` = `matrices_dir` ; `results/M/` (v1) et `results/M2/` (v2 non aligné) gelés, `results_dir_frozen`)
   ou dans les `.save`, jamais dans les logs ;
@@ -328,7 +330,7 @@ Les super-cellules 6×6 et 12×12 existantes ont la lacune sur le sous-réseau B
 reliés par l'inversion (ou le miroir) du réseau en nid d'abeille : mêmes Γ, mêmes M à une permutation
 près des fonctions de Wannier pz(A) ↔ pz(B) et à une rotation près de la ZB. Aucun run « A » n'est
 refait ; les scripts rapportent l'on-site pz–pz du sous-réseau de la lacune, et chaque manifest de M
-porte `vacancy_sublattice` (scripts/tag_vacancy_sublattice.py). Tous les runs de super-cellule (5–12)
+porte `vacancy_sublattice` (scripts/m/tag_vacancy_sublattice.py). Tous les runs de super-cellule (5–12)
 utilisent `assume_isolated='2D'` (vérifié dans les scf.out : « running with the 2D cutoff »).
 
 ## Chapitre 5 — couplage électron-phonon (EPW)
@@ -339,7 +341,7 @@ les liens symboliques `graphene/qe/epw/NOTES_EPW.md` et `graphene/qe/epw/CLAUDE.
 degauss 0.002 et 0.02 Ry, décisions arbitrées, conventions Γ^ep = 2 Im Σ, chemin q cartésien dans ph.x, piège OOM d'epw1,
 sélection A1'/E2g par caractère jamais par index. Le volet t/Γ (chapitre 4) a son pendant dans `notes/NOTES_TGAMMA.md`.
 Scripts versionnés ici : `scripts/epw_*.py` (pp_save, extract_gkk, validate, selfen_post, phself_post, d2_extract, ring_check,
-dfpt_path_freq, phdos_extract, ed_vs_ep), `scripts/submit_epw_p{1_post,2_post_mv}.sh`, `scripts/make_figures_epw.py` (à lancer
+dfpt_path_freq, phdos_extract, ed_vs_ep), `scripts/submit_epw_p{1_post,2_post_mv}.sh`, `scripts/fig/make_figures_epw.py` (à lancer
 avec les options de production de `submit_post.sh`, sinon l'ancienne chaîne 0.002 est tracée) ; post-traitement dans
 `electron_phonon/` ; résultats dans `results/epw/` (npz commis, logs non). **Production du ch. 5 = chaîne `24k-24q_mv0.02`
 (degauss 0.02 Ry ; tranché par Greg le 2026-09-30)** ; la chaîne 0.002 (`NOTES_EPW.md` §1c–1f, npz sans suffixe) est l'ancienne.
@@ -354,7 +356,7 @@ est `src/electron_defect_interaction/electron_photon/` (un module par responsabi
 dans le module de leur rôle, pas dans un module par étape ; la lecture de fichiers reste dans `io/`) ; les campagnes de calcul EM vont sous `campagnes/EM/<campagne>/`.
 Les étapes M0–M4 sont codées par Greg lui-même en mode technicien (skill `technicien`) : n'écrire ni ne
 modifier son code sans « écris-le » ou demande explicite. Données de production : `campagnes/EM/M4_sigma/` (calcul local,
-`m4_prod.py`, pilote de convergence dans `pilote/`) ; figure : `scripts/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` ;
+`m4_prod.py`, pilote de convergence dans `pilote/`) ; figure : `scripts/fig/make_figures_em.py` → `figures/fig_em_coupling.{pdf,png}` ;
 prompt d'EM2 : `campagnes/EM/EM2_prompt.md` ; données de la figure (anneau de 2.33 eV, postw90 `transl_inv`) et tableau des chiffres : `campagnes/EM/EM3/`.
 
 ## Campagnes de calcul (règle du 2026-09-17, `admin/CLEANUP.md` ; précisée le 2026-09-23)

@@ -18,7 +18,7 @@ fichiers déjà sur `/project`.
 ## Reconstruction
 
 ```
-cd graphene/qe/defects/R6_production_corrigee && sbatch submit_r6.sh assemble    # scripts/assemble_M2.py ; 16 cœurs, ≈ 11 min (job 21820490)
+cd graphene/qe/defects/R6_production_corrigee && sbatch submit_r6.sh assemble    # scripts/m/assemble_M2.py ; 16 cœurs, ≈ 11 min (job 21820490)
 cd $GRAPHENE_RAMAN/results/M2 && md5sum -c MD5SUMS_2026-09-25.txt                # attendu : 43 OK
 ```
 
@@ -27,7 +27,7 @@ cd $GRAPHENE_RAMAN/results/M2 && md5sum -c MD5SUMS_2026-09-25.txt               
 repasser la porte : `sbatch submit_r6.sh gate` (demande les `.save` de maille du scratch).
 
 Produits dérivés (`specwd_*`, `resonance_*`, `*.csv`…) : suivis par git (exceptions `.gitignore`) ; ils se refont avec
-`scripts/submit_post.sh` et les autres `submit_*` (enchaînement : `R6_production_corrigee/etape3/runbook_3.sh`). Non suivis :
+`scripts/slurm/submit_post.sh` et les autres `submit_*` (enchaînement : `R6_production_corrigee/etape3/runbook_3.sh`). Non suivis :
 `resigma_9x9_*.npz` (`submit_rcut_resigma.sh`, `submit_nkint_check.sh`) et `logs/`.
 
 Mise à jour du 2026-09-30 (ménage, étape D) : depuis R10, ce répertoire garde le rôle `matrices_dir` (M2 brutes, lecture seule) ; ses

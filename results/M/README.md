@@ -21,4 +21,4 @@ Mise à jour du 2026-09-30 (ménage, étape D) : depuis R10 la production est `r
 matrices M2 sont dans `results/M2/` (`matrices_dir`) ; ce répertoire est `results_dir_frozen[0]`. Retiré ici :
 `ved_analysis.npz` (identique octet pour octet à `results/M2/ved_analysis.npz`, il ne dépend pas de M). Les `M_ed_*.npy` v1
 qui restent en local ne sont pas versionnés ; sur rorqual, `results/M/` garde aussi les parties L et NL v1 dont
-`scripts/assemble_M2.py` a besoin pour reconstruire les M2 (voir `results/M2/README.md`).
+`scripts/m/assemble_M2.py` a besoin pour reconstruire les M2 (voir `results/M2/README.md`).

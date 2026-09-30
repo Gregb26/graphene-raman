@@ -481,7 +481,7 @@ mémoire) à faire. `EM2_prompt.md` (prompt EM2), `notes_numpy_pytest.md` (pièg
 |---|---|---|---|---|---|---|
 | EM1 | `EM1_tb` | r(R) et `_tb.dat` de la wannierisation 27×27 (`restart = plot`) | PRODUCTION 2026-09-25 | `em1_check.py` (aucun import du paquet) | données §2.5 (`wannier/27x27/wannier_tb.dat`) | figé ; README l. 14 et rapport l. 5 à corriger sur rorqual puis `cp -p` (mémoire persistante) |
 | EM2 | `EM2` | DFT directe (`bands.x lp`) et postw90 `kubo` vs M4 | PRODUCTION 2026-09-29 | `em2_kpoints.py`, `em2_A_compare.py`, `em2_A_figure.py`, `em2_B_ours.py` (`kgrid`, `kubo`), `em2_B_compare.py` (aucun), `em2_B_decompose.py`, `em2_B_figure.py` (importent `em2_B_compare`) ; `REPO` exige `PROJECTS` ou `GRAPHENE_RAMAN` | `em2_A_anneaux`, `em2_B_sigma` (validation §2.5) ; `em2_A.npz`, `em2_postw90_sigma.npz` | figé ; `__pycache__` local ignoré |
-| EM3 | `EM3` | données de la figure et tableau du §2.5 (anneau 2,33 eV, `transl_inv`) | PRODUCTION 2026-09-29 (local, < 1 s) | `make_em3_data.py` (importe `EM2/em2_B_compare`) | `em3_ring_2p33.npz`, `em2_postw90_sigma_ti.npz`, `em_table.{md,csv}` → `scripts/make_figures_em.py` → `fig_em_coupling` | actif |
+| EM3 | `EM3` | données de la figure et tableau du §2.5 (anneau 2,33 eV, `transl_inv`) | PRODUCTION 2026-09-29 (local, < 1 s) | `make_em3_data.py` (importe `EM2/em2_B_compare`) | `em3_ring_2p33.npz`, `em2_postw90_sigma_ti.npz`, `em_table.{md,csv}` → `scripts/fig/make_figures_em.py` → `fig_em_coupling` | actif |
 | M4_sigma | `M4_sigma` (+ `pilote/`) | σ(ω) trois variantes, carte K, statistiques d'anneaux | PRODUCTION 2026-09-29 (local, ~4 min) | `m4_prod.py`, `make_table.py` → `em_table.tex` ; `pilote/{sweep,check_equiv,convergence}.py` | `em_sigma_*_N1200_eta0.04.npz`, `em_map_K.npz`, `em_table.tex` → mémoire §2.5 | actif (fermé) ; `em_table.csv` diffère de celui d'EM3 |
 | B | `B_sigma_complex` | σ complexe (perspective B) | PRODUCTION 2026-09-29 (local, 3 min) | `b_prod.py`, `b_figure.py` (`_palette`) | `b_sigma_complex.{pdf,png,npz}` → hors mémoire | figé |
 
@@ -672,7 +672,7 @@ selfen_post,phself_post,d2_extract,ring_check,dfpt_path_freq,phdos_extract,ed_vs
 NOTES_EPW_REPERES.md.
 
 **§2.5 (électron-photon)** — `src/…/electron_photon/*.py` ; `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,
-diagnostics,wannier_io}.py` + `conftest.py` ; `campagnes/EM/{EM.md,EM1_tb,EM2,EM3,M4_sigma}` ; `scripts/make_figures_em.py` ;
+diagnostics,wannier_io}.py` + `conftest.py` ; `campagnes/EM/{EM.md,EM1_tb,EM2,EM3,M4_sigma}` ; `scripts/fig/make_figures_em.py` ;
 `wannier/27x27` ; `io/wannier_io.read_w90_tb`.
 
 Hors dépôt mais nécessaires au ch. 2 : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`,
@@ -686,10 +686,10 @@ Hors dépôt mais nécessaires au ch. 2 : `~/projects/qe_pp` (`plot_ebands_edos.
 
 | Fichier | Décision | Fait |
 |---|---|---|
-| `scripts/test_local_tmatrix_real.py` | réparer | lit les M dans `matrices_dir` ; sort en code 0 (PASS) ou 1 (FAIL) ; non rejouable en local (scratch, nommage cluster), syntaxe vérifiée seulement |
-| `scripts/tag_vacancy_sublattice.py` | réparer | cherche les sidecars dans `matrices_dir` |
-| `scripts/submit_M.sh`, `submit_M_dense.sh` | réparer | écrivent les `M_*` dans `matrices_dir` (`MAT`), plus dans `results_dir` ; `bash -n` OK ; non soumis |
-| `scripts/submit_golden_dense.sh` | réparer | code de sortie = celui du test d'or ; l'appel à `check_M_dense_vs_coarse.py` (obsolète) est retiré, `analyze_M.py` fait ce contrôle |
+| `scripts/validation/test_local_tmatrix_real.py` | réparer | lit les M dans `matrices_dir` ; sort en code 0 (PASS) ou 1 (FAIL) ; non rejouable en local (scratch, nommage cluster), syntaxe vérifiée seulement |
+| `scripts/m/tag_vacancy_sublattice.py` | réparer | cherche les sidecars dans `matrices_dir` |
+| `scripts/slurm/submit_M.sh`, `submit_M_dense.sh` | réparer | écrivent les `M_*` dans `matrices_dir` (`MAT`), plus dans `results_dir` ; `bash -n` OK ; non soumis |
+| `scripts/slurm/submit_golden_dense.sh` | réparer | code de sortie = celui du test d'or ; l'appel à `check_M_dense_vs_coarse.py` (obsolète) est retiré, `analyze_M.py` fait ce contrôle |
 | `check_ML_coarse_kernel.py`, `check_M_dense_vs_coarse.py`, `check_onsite_and_NL.py` | obsolètes (absorbés par `analyze_M.py`, `mwr_locality_coarse_vs_dense.py`) | non modifiés ; iront dans `scripts/_obsolete/` à l'étape A |
 | `_mcheck.py`, `_normtest.py`, `validate_ML_grid_7x7.py`, `check_M_dense_nb20_vs_nb16.py` | obsolètes (non rejouables) | idem |
 | `campagnes/R/R9_controles/r9_driver.py`, `campagnes/R/R6_production_corrigee/etape3/r6_compare_v1_v2.py`, dérives de sens R4/R5/R6 | **en suspens** : politique des campagnes figées à arbitrer (archives rejouables à leur commit, pas à HEAD ?) | rien |
@@ -797,6 +797,23 @@ venv ; réécrit le `.pth` et `direct_url.json`, ne touche aucun fichier suivi),
 **Arbitrage (Greg, 2026-09-30)** : une étape à la fois, GO explicite par étape ; périmètre = réorganisation seulement
 (tableau « points hors étapes » en fin de section) ; git en lecture seule pour Claude, Greg commite.
 
+### Étape A — EXÉCUTÉE le 2026-09-30 (GO de Greg sur les trois choix : suppression des obsolètes, découpage `m/`/`t/`, `epw_ed_vs_ep` dans `t/`)
+
+Fait : `scripts/{m,t,epw,fig,validation,slurm}/` (7 + 14 + 9 + 4 + 12 + 11 fichiers), helpers `_palette.py`, `_bands.py`, `_paths.py`
+gardés à la racine de `scripts/` (les pilotes de `campagnes/` les importent par `sys.path`), index `scripts/README.md` ; **21 scripts
+obsolètes supprimés** (liste dans l'index ; dernier commit qui les contient : `d9a3588`). Réparations : racine déduite de `__file__` un
+niveau plus bas (`assemble_M2`, `gate_M_normalization`, `finalize_wannier`, `make_figures_em`, trois `epw_*`) ; `sys.path` vers les
+helpers dans les 4 `make_figures*` et 5 scripts de validation ; `ks_reconstruction_all` → `validation/test_ks_reconstruction` ;
+`run_test_A_batch` ; tous les appels `scripts/<nom>` réécrits dans les 11 lanceurs, `link_data.sh`, `submit_r10.sh`, `r9_driver.py`
+(+ `scripts/m` dans son `sys.path`), `em2_B_compare.py`, `src/` (3 docstrings), les README de `results/`, `campagnes/README.md`,
+CLAUDE.md, README, les trois NOTES, `EM.md`, `PROVENANCE.md` du mémoire. **Greg a réorganisé `figures/` entre-temps** (`e03e706` :
+`electron/`, `electron_defect/`, `electron_phonon/`, `electron_photon/`) : les défauts `--outdir` des quatre `make_figures*` pointent
+maintenant sur le bon sous-dossier, CLAUDE.md mis à jour. Vérifié : `bash -n` des lanceurs, `py_compile`, tests autonomes locaux
+(PASS), `make_figures_em.py` régénère `fig_em_coupling.png` au md5 identique, `ch4_chiffres.py check`, pytest 199. Reste : sur rorqual,
+`sbatch scripts/slurm/<lanceur>.sh` au lieu de `scripts/<lanceur>.sh`.
+
+Proposition d'origine, pour mémoire :
+
 ### Étape A — `scripts/` en sous-dossiers (81 → 6 familles)
 
 | Sous-dossier | Contenu | Précautions |
@@ -893,7 +910,7 @@ avec le chemin d'arrivée et le commit source de ce dépôt.
 | `analyse/` (« copie figée du repo graphene-raman ») | `src/electron_defect_interaction/` (sans les orphelins du §2), `config/production.json`, `tests/`, les scripts de production des chaînes M et T et EPW (§4.1 à §4.3, §4.5 hors obsolètes), `campagnes/R/R10_plateau/r10_driver.py`, `campagnes/R/R8_kaasbjerg/r8_driver.py`, `campagnes/M/ch4/ch4_chiffres.py`, `campagnes/EM/{M4_sigma,EM3,EM2}/*.py` | noter le commit d'origine dans le README ; `pyproject.toml` pour l'installation |
 | `calculs/` (un dossier par calcul) | hors dépôt pour l'essentiel : `graphene/qe/defects/{super_cell,unit_cell}` (scf, nscf denses, pp.x, Wannier90), `graphene/qe/epw/24k-24q{,_mv0.02}`, `graphene/qe/electron_photon/{EM1_tb,EM2}` sur rorqual ; depuis ce dépôt : `scripts/submit_*.sh` actifs, `campagnes/R/R10_plateau/submit_r10.sh`, `campagnes/EM/EM1_tb/wannier.win`, `campagnes/EM/EM2/{bands.in,bands_pp.in,submit_*.sh,postw90/}` ; l'annexe D du mémoire (`annexes/paramètres.tex`) liste les paramètres | les inputs QE ne sont pas versionnés ici : à prendre dans les répertoires de travail |
 | `donnees/` | `results/M2_plateau/*` (npz, csv, MD5SUMS, README), `results/epw/*.npz` (chaîne `_mv0.02` + celles que `fig_epw_kohn_degauss` lit), `campagnes/EM/M4_sigma/{em_scalars.json,em_sigma_*.npz,em_map_K.npz,em_table.tex}`, `campagnes/EM/EM3/*.npz`, `campagnes/EM/EM2/em2_A.npz`, `campagnes/R/R8_kaasbjerg/out/` (figures R8), `campagnes/M/ch4/{table_v1_final.md,alignement_regions.*}`, `wannier/27x27` (ou les 5 grilles de production) | ~60 Mo de npz ; `results/M2/*.npy` (matrices) restent sur rorqual/nearline |
-| `scripts_figures/` | `scripts/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |
+| `scripts_figures/` | `scripts/fig/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |
 | `memoire/figures/` | réinstaller les 8 figures R10 qui diffèrent ; ajouter les 5 figures R8, `fig_em_coupling`, éventuellement `alignement_regions`, et les figures de `article/` et `memoire/` retenues à l'arbitrage (tableau « Figures hors de `figures/` », §8) | voir §8 ; chaque figure retenue entraîne son pilote (`scripts_figures/` ou `analyse/`) et ses données (`donnees/`) |
 | `requirements.txt` du mémoire | le régénérer depuis un venv qui fait tourner `analyse/` et `scripts_figures/` (numpy, scipy, h5py, matplotlib, plus `mpi4py` si les noyaux de M sont copiés ; LaTeX pour `text.usetex`) | l'actuel est un gel généraliste (abipy, torch, netCDF4) sans rapport avec ces scripts |
 

@@ -160,7 +160,7 @@ def ldos_from_eigenpairs(e, v, idx, egrid, eta):
         rho_i(E) = sum_n |<i|n>|^2 L_eta(E - eps_n),     L_eta(x) = (eta/pi) / (x^2 + eta^2),
 
     i.e. -(1/pi) Im G^R_ii(E + i eta) with G^R = (E + i eta - H)^-1 written on the eigenpairs (eps_n, |n>); the Lorentzian is the
-    one of scripts/resonance_metrics.py (half-width eta, unit area), so each state carries weight |<i|n>|^2.
+    one of scripts/t/resonance_metrics.py (half-width eta, unit area), so each state carries weight |<i|n>|^2.
     Inputs:
         e: (n,) eigenvalues eps_n.
         v: (n_basis, n) eigenvectors as columns (v[:, j] = |j>), e.g. numpy.linalg.eigh; only the rows idx are used.

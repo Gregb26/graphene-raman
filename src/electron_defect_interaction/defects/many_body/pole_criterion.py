@@ -1,7 +1,7 @@
 """
 pole_criterion.py
     Pole criterion of the local t-matrix, as a function (R4, 2026-09-25). The production script
-    scripts/resonance_criteria.py evaluates, inline (lines 39-54), for A(e) = 1 - V_loc g0(e):
+    scripts/t/resonance_criteria.py evaluates, inline (lines 39-54), for A(e) = 1 - V_loc g0(e):
         |det A| relative to its maximum on the window, the eigenvalue of A closest to zero, local minima.
     This module reproduces those lines (same products, same numpy calls) for an arbitrary sub-block of
     indices (parity blocks), adds the right eigenvector of the smallest eigenvalue, sign changes of Re lambda

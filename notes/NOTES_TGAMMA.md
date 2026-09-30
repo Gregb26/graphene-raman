@@ -29,9 +29,9 @@ Rapport R10 : `graphene/qe/defects/R10_plateau/R10_rapport.md` (copie `campagnes
 
 ## 0. Ce que le script fait, dans l'ordre (chaîne de production, taille de référence 9×9)
 
-Scripts : `scripts/compute_spectral_wannier.py` (carte niveau 1 : R_cut × grille × η), `scripts/resonance_metrics.py`
-(Γ(ε), Born, δρ, T̄ en K), `scripts/resonance_criteria.py` (det, valeurs propres, règle de somme, Γ à c = 0,1 %),
-`scripts/rcut_resigma.py` (Re/Im Σ par R_cut). Tous chargent `config/production.json` (`config.py:10–19`, clés
+Scripts : `scripts/t/compute_spectral_wannier.py` (carte niveau 1 : R_cut × grille × η), `scripts/t/resonance_metrics.py`
+(Γ(ε), Born, δρ, T̄ en K), `scripts/t/resonance_criteria.py` (det, valeurs propres, règle de somme, Γ à c = 0,1 %),
+`scripts/t/rcut_resigma.py` (Re/Im Σ par R_cut). Tous chargent `config/production.json` (`config.py:10–19`, clés
 obligatoires l. 13) et passent la porte de jauge avant toute lecture.
 
 1. **Config figée** (`config/production.json`, 2026-09-05) → 2. **porte de jauge** sha256 (`wannier_provenance.py:42–68`) →
@@ -81,10 +81,10 @@ dérivé de quelques lignes ; carte à jour de la chaîne, fonction par fonction
 | Grille de ρ₀ | 900×900 (`--rho0-grid`), ρ₀ par cellule et par spin ; `rho0_240` (sur la grille de sortie) aussi stocké | `resonance_metrics.py:18, 80–82` |
 | Concentration | c = 1 % par cellule pour ρ_dis = ρ₀ + c δρ ; c = 0,1 % pour la comparaison Kaasbjerg | `config/production.json` clé `defect_concentration_for_dos` ; `resonance_metrics.py:83` ; `resonance_criteria.py:19` |
 | Born | t_B = V + V g₀ V (deux premiers termes) → Γ_Born = −2 Im ⟨V g₀ V⟩ (le terme du 1er ordre est réel) | `resonance_metrics.py:60` |
-| Alignement du potentiel (ΔV_PA^(N) = C_N) | **Alignement de Kumagai–Oba** (Kumagai et Oba, PRB 89, 195205, 2014 ; région élargie, `campagnes/M/ch4/alignement_regions.md`) : C_N = moyenne des potentiels de site ΔV (sphères de 1,0 Å, `alignment.atom_sphere_shifts`) sur les atomes à distance vraie ≥ 0,75 r_max de la lacune (image minimale) ; rms de ces potentiels = incertitude ; **9×9 : C_9 = −25,1437 meV, rms 9,05 meV, 53 atomes** (13 tailles : 5×5 −57,5626 ; 6×6 −50,5091 ; 7×7 −26,9143 ; 8×8 −14,4103 ; 9×9 −25,1437 ; 10×10 −9,3417 ; 11×11 −9,5507 ; 12×12 −18,6896 ; 15×15 −16,2185 ; 18×18 −15,0621 ; 21×21 −14,2343 ; 24×24 −13,4815 ; 27×27 −13,0058 meV). Application en base de Wannier : M_W(R, R) − C_N·𝕀₅ sur les N² mailles de la boîte (approximation (i), exacte à 0,06 meV à 9×9, R9 A.2 ; `local_tmatrix.defect_mwr`) ; étiquettes hors grille par images de Wigner-Seitz (`ws_images`, `ws_phase`). **La production n'a jamais soustrait la moyenne de ΔV** (`subtract_mean=False`, `scripts/compute_M.py:118`). C14 = ±rms (±9,05 meV) autour du V_loc aligné (§3) [v1 : décalage G ≈ 0 = moyenne diagonale de M^L, 67,0 meV, Γ_T recalculé avec M − ⟨M^L⟩·1] | `config/production.json` bloc `alignment` (`C_N_eV`, `source` = `campagnes/R/R10_plateau/a/a1_results.json`, md5 3d98bbd2…) ; `defects/alignment.py` (`atom_sphere_shifts`, `true_min_image_dist`) ; `local_tmatrix.py` (`defect_mwr`) ; `wannier_interpolation.py` (`ws_images`, `ws_phase`, `Mwr_to_Mwk(ws=)`) ; ligne « [align] » des journaux `results/M2_plateau/logs/` ; R10 A.1 |
+| Alignement du potentiel (ΔV_PA^(N) = C_N) | **Alignement de Kumagai–Oba** (Kumagai et Oba, PRB 89, 195205, 2014 ; région élargie, `campagnes/M/ch4/alignement_regions.md`) : C_N = moyenne des potentiels de site ΔV (sphères de 1,0 Å, `alignment.atom_sphere_shifts`) sur les atomes à distance vraie ≥ 0,75 r_max de la lacune (image minimale) ; rms de ces potentiels = incertitude ; **9×9 : C_9 = −25,1437 meV, rms 9,05 meV, 53 atomes** (13 tailles : 5×5 −57,5626 ; 6×6 −50,5091 ; 7×7 −26,9143 ; 8×8 −14,4103 ; 9×9 −25,1437 ; 10×10 −9,3417 ; 11×11 −9,5507 ; 12×12 −18,6896 ; 15×15 −16,2185 ; 18×18 −15,0621 ; 21×21 −14,2343 ; 24×24 −13,4815 ; 27×27 −13,0058 meV). Application en base de Wannier : M_W(R, R) − C_N·𝕀₅ sur les N² mailles de la boîte (approximation (i), exacte à 0,06 meV à 9×9, R9 A.2 ; `local_tmatrix.defect_mwr`) ; étiquettes hors grille par images de Wigner-Seitz (`ws_images`, `ws_phase`). **La production n'a jamais soustrait la moyenne de ΔV** (`subtract_mean=False`, `scripts/m/compute_M.py:118`). C14 = ±rms (±9,05 meV) autour du V_loc aligné (§3) [v1 : décalage G ≈ 0 = moyenne diagonale de M^L, 67,0 meV, Γ_T recalculé avec M − ⟨M^L⟩·1] | `config/production.json` bloc `alignment` (`C_N_eV`, `source` = `campagnes/R/R10_plateau/a/a1_results.json`, md5 3d98bbd2…) ; `defects/alignment.py` (`atom_sphere_shifts`, `true_min_image_dist`) ; `local_tmatrix.py` (`defect_mwr`) ; `wannier_interpolation.py` (`ws_images`, `ws_phase`, `Mwr_to_Mwk(ws=)`) ; ligne « [align] » des journaux `results/M2_plateau/logs/` ; R10 A.1 |
 | δρ | δρ(ε) = (1/π) Im Tr[t(ε) dg₀/dε] par défaut et par spin ; contrôle Lloyd δρ = −(1/π) d/dε Im ln det[1 − g₀V] | `resonance_metrics.py:62` ; `resonance_criteria.py:57–66` |
 | T̄ en K | paire π (bandes 3, 4 de 5), trace/2 de ⟨n K\| t \|n′ K⟩ | `resonance_metrics.py:86–90` |
-| Test d'or | η = 0,10 eV, k_int = k_out = grille grossière, R_local = boîte MP-duale complète (exact) ; seuil rel < 1e-8 et Γ ≥ −1e-8 | `scripts/test_local_tmatrix_real.py:20, 53, 59, 61` |
+| Test d'or | η = 0,10 eV, k_int = k_out = grille grossière, R_local = boîte MP-duale complète (exact) ; seuil rel < 1e-8 et Γ ≥ −1e-8 | `scripts/validation/test_local_tmatrix_real.py:20, 53, 59, 61` |
 | Coût (16 cœurs) | final (R10 C) : cartes niveau 1 `specwd_<S>` 1 h 17 / 2 h 01 / 2 h 47 / 2 h 38 / **1 h 01** / 1 h 11 (5, 6, 7, 8, 9, 12 ; R_cut 0–4) ; `post_res9` (métriques + critères 9×9) 39 min 45 ; `post_res6` 6 h 25 ; `post_res12` 2 h 20 ; `nkint` 11 min 33 ; `resigma` 2 min 47 + 8 min 14 ; C14 3 min 36 ; test d'or 5×5 dense non rejoué (D12 : recopié de R6, 1 h 52) [v1 : carte (36 combinaisons) 1 h 15 ; 7 min 39 ; 1 h 34 ; test ne_per_eta 3 min 35] | R10_rapport.md, table « Rapport — C » (jobs 22058839–44, 22058850–52, 22058845–47, 22058854) [v1 : 20294202, 20421370, 20414406, 20684497] |
 
 ## 2. Valeurs de production (9×9, R_cut 3, 240², η 0,02, N_k^int 300²) — final (R10, `results/M2_plateau/`)
@@ -114,19 +114,19 @@ Type : **P** = porte bloquante (le code refuse, `raise`), **T** = test PASS/FAIL
 | C3 | Cohérence des grilles k : U/U_dis réordonnés sur la grille de M, point sans correspondant ⇒ erreur ; grille MP complète non décalée | P | `wannier_interpolation.py:142–183` (`_match_kpoint_order`, `_infer_mp_grid`) | tol 1e-5 ; N₁N₂N₃ ≠ nk ⇒ `ValueError` | implicite dans chaque run |
 | C4 | Garde-fou a : défaut centré (‖M_W(R,0)‖ maximal en R = 0) | P | `local_tmatrix.py:36–51` ; `compute_spectral_wannier.py:83` ; `resonance_metrics.py:35` | argmax ≠ R₀ ⇒ `AssertionError` | passé (valeurs §2) |
 | C5 | Garde-fou b : hermiticité de V_loc | P (symétrise + journalise) | `local_tmatrix.py:54–76` | résidu > 1e-10 ⇒ message | v2 : 1,3e-14 (golden 5×5 dense M2, 2026-09-26) [v1 : 2,3e-15 – 4,0e-15, logs golden 2026-09-05/07] |
-| C6 | **Test d'or** : matrice t locale = matrice T dense (`compute_T`) sur la même grille grossière, même sous-espace 5 WF | T, bloquant avant production | `scripts/test_local_tmatrix_real.py` ; `scripts/test_local_tmatrix.py` (synthétique) ; `scripts/test_local_rcut.py` (support tronqué ⇒ écart) | rel < 1e-8 et Γ ≥ −1e-8 | v2 : PASS 5×5 dense 1,80e-13 (M2, job 21852238, 2026-09-26, `results/M2/logs/r6golden_21852238.out`) ; 6×6 et 12×12 non rejoués avec M2 [v1 : 5×5 dense 2,3e-14 (2026-09-05, après le correctif d'unités), 6×6 6,06e-9, 12×12 3,68e-9 (2026-09-07) ; logs `golden_dense_20294198/20444392/20435998.out`] |
+| C6 | **Test d'or** : matrice t locale = matrice T dense (`compute_T`) sur la même grille grossière, même sous-espace 5 WF | T, bloquant avant production | `scripts/validation/test_local_tmatrix_real.py` ; `scripts/validation/test_local_tmatrix.py` (synthétique) ; `scripts/validation/test_local_rcut.py` (support tronqué ⇒ écart) | rel < 1e-8 et Γ ≥ −1e-8 | v2 : PASS 5×5 dense 1,80e-13 (M2, job 21852238, 2026-09-26, `results/M2/logs/r6golden_21852238.out`) ; 6×6 et 12×12 non rejoués avec M2 [v1 : 5×5 dense 2,3e-14 (2026-09-05, après le correctif d'unités), 6×6 6,06e-9, 12×12 3,68e-9 (2026-09-07) ; logs `golden_dense_20294198/20444392/20435998.out`] |
 | C7 | Positivité Γ_nk ≥ 0 | P | `local_tmatrix.py:269–271` ; `rcut_resigma.py:55` | min Γ < −1e-8 ⇒ `AssertionError` | v2 : min Γ_loc = +0,2646 eV (golden 5×5 dense M2) ; jamais déclenché [v1 : +0,26 eV] |
-| C8 | g₀ batché = g₀ de référence (restructuration exacte) et évaluation « point d'énergie le plus proche » vs état par état | T | `scripts/test_local_green_batch.py:15` | rel < 1e-12 | ≤ 1,21e-14 pour R_cut 0–3 (rejoué 2026-09-18, grille 90², 7 énergies ; ne dépend pas de M) ; nearest-grid vs exact : 5,4e-3 avec ne_per_eta 8 (cas synthétique) |
+| C8 | g₀ batché = g₀ de référence (restructuration exacte) et évaluation « point d'énergie le plus proche » vs état par état | T | `scripts/validation/test_local_green_batch.py:15` | rel < 1e-12 | ≤ 1,21e-14 pour R_cut 0–3 (rejoué 2026-09-18, grille 90², 7 énergies ; ne dépend pas de M) ; nearest-grid vs exact : 5,4e-3 avec ne_per_eta 8 (cas synthétique) |
 | C9 | Pas de la grille d'énergie ne_per_eta | C | `rcut_resigma.py --npe` (9e0d1a9, 2026-09-09) | — | v1 seulement (non rejoué avec M2 ni avec l'alignement) : ne_per_eta 2 → 32 : médiane Γ 2 476,19 → 2 474,33 meV (0,08 %), E_res inchangé (E_res retiré, R10 B.1) ; log `npe_test_20684497.out` |
 | C10 | R_cut (support de V_loc) | C | carte niveau 1 R_cut 0–3 (0–4 depuis R6) ; `rcut_resigma.py` R_cut 0–4 | plateau ≤ 5 % (énoncé `compute_spectral_wannier.py:118`) | final, 9×9 : 3 013,96 / 3 273,25 / 3 222,08 / **3 189,01** / 3 200,00 meV (R_cut 0…4) ; écart médian par état à R_cut 4 : 9,79 / 4,52 / 1,98 / **0,66 %** ; Re Σ médian 29,5 / 761,8 / 737,2 / 605,1 / 696,7 meV (`results/M2_plateau/m_rcut_resigma.csv`, `rel_med_dGamma`, `med_ReSigma_meV`) [v1 : 2 596,9 / 2 488,9 / 2 466,8 / 2 473,5 / 2 468,0 ; 10,0 / 4,6 / 1,5 / 0,63 % ; Re Σ 515 / 694 / 723 / 722 / 720] |
 | C11 | Grille de sortie × η (plateau conjoint) | C | carte niveau 1 (grilles 60/120/240, η 0,05/0,02/0,01) | ≤ 5 % quand η/2 et grille ×2 | final, 9×9, R_cut 3 (`results/M2_plateau/level1_summary.csv`) : 120² → 240² : 3 200,71 → 3 189,01 (η 0,02 ; 0,37 %, arithmétique), 3 208,42 → 3 202,75 (η 0,01 ; 0,18 %) ; η 0,02 → 0,01 à 240² : 3 189,01 → 3 202,75 (0,43 %) ; 0,05 → 0,02 : 3 232,61 → 3 189,01 (1,37 %) [v1 : 0,07 % ; 0,3 % ; 0,001 % ; 0,74 %] |
-| C12 | Taille de super-cellule N (niveau 2, familles N mod 3) | C | `scripts/level2_families.py`, `results/M2_plateau/level2_summary.csv`, `level2_families.csv` | N ≥ 7 (config l. 6) | final, 5/6/7/8/9/12 : 2 997,14 / 3 149,15 / 2 942,85 / 2 974,18 / 3 189,01 / 3 264,51 meV ; (max − min)/moyenne, arithmétique (= R9 clôture R.4) : famille 3m (6, 9, 12) 3,60 %, non-3m (5, 7, 8) 1,83 %, 7–9 : 8,11 % [v1 : 2 524,3 / 2 509,2 / 2 487,5 / 2 478,5 / 2 473,5 / 2 458,7 ; 0,56 % ; 2,0 % ; 1,84 %] |
+| C12 | Taille de super-cellule N (niveau 2, familles N mod 3) | C | `scripts/t/level2_families.py`, `results/M2_plateau/level2_summary.csv`, `level2_families.csv` | N ≥ 7 (config l. 6) | final, 5/6/7/8/9/12 : 2 997,14 / 3 149,15 / 2 942,85 / 2 974,18 / 3 189,01 / 3 264,51 meV ; (max − min)/moyenne, arithmétique (= R9 clôture R.4) : famille 3m (6, 9, 12) 3,60 %, non-3m (5, 7, 8) 1,83 %, 7–9 : 8,11 % [v1 : 2 524,3 / 2 509,2 / 2 487,5 / 2 478,5 / 2 473,5 / 2 458,7 ; 0,56 % ; 2,0 % ; 1,84 %] |
 | C13 | Born vs matrice T | K | `resonance_metrics.py:60` | — | final : Born/T médian 45,846 sur ±3 eV (min 1,050, max 202,851 ; compléments 5.4) [v1 : 3,30] |
 | C14 | Sensibilité à l'alignement du potentiel : **C = ±rms du plateau de Kumagai–Oba (±9,05 meV à 9×9) ajouté uniformément au V_loc aligné** (R10 D10) | K | `resonance_metrics.py --shift-L-meV 9.05,-9.05` (V_loc + C·1 sur la boîte) | — | final : médiane des états 3 188,35 → 3 237,29 (+9,05 meV) / 3 157,07 (−9,05 meV) ; pic de la courbe Γ_T −0,180 eV inchangé ; écart relatif de la courbe Γ_T : max 6,36e-2 / 6,10e-2, médian 1,37e-2 / 1,24e-2 (`results/M2_plateau/resonance_9x9_shiftL.npz` ; R10 C.1). Retirés : la variante « M − ⟨M^L⟩·1 » (décalage 5 427,3 meV en v2) et C = ±25 meV autour du V_loc non aligné (R6 3.5) [v1 : décalage 67,0 meV ⇒ 6,4e-4 (médian 1,8e-4)] |
 | C15 | Règle de somme de Friedel, deux formules (Tr[t g₀′] vs Lloyd) | K | `resonance_criteria.py:57–75` ; R6 : par bloc (`--blocks full,pi,sigma`) | — | final : −1,0005 / −1,0005 états sur toute la bande (π −0,9981, σ −0,0024) ; +0,702 dans ±3 eV [v1 : −0,0569 / −0,0569 ; +1,78] |
 | C16 | Critère de résonance (det, valeur propre minimale) et position du pic | K | `resonance_criteria.py:41–55` ; R6 : par bloc, `--flag-eV` | — | final : minimum global à −0,785 eV (det) / −0,787 eV (\|λ\| = 0,0019), porté par le bloc σ ; bloc π sans zéro (min \|λ\| 0,3440 à −0,127 eV) ; pic de la courbe Γ_T −0,180 eV ; E_res(argmax Γ) retiré (R10 B.1 ; valeur −0,175 eV) [v1 : minimum unique à −2,530 eV ; E_res −1,24 eV] |
 | C17 | K sur la grille de sortie et dégénérescence π/π* en K | K | `resonance_metrics.py:86` ; `config/production.json` clé `K_red` | — | k_out[38480] = (2/3, 1/3), E(π) = E(π*) = E_D |
-| C18 | **Porte A.2 (R6)** : ΔV^L (grille) et ΔV^NL (projecteur KB de l'atome retiré) appliqués directement aux états de Bloch purs repliés, comparés à M2/N_cells | P | `scripts/gate_M_normalization.py` (`defects/deltav_pw.py`, `wavefunctions/sc_projection.py`) | max \|écart\| ≤ 1e-6 eV, sinon refus | 14 M2 OK (8 grossiers ≤ 3,3e-14 eV, 6 denses ≤ 1,2e-8 eV ; job 21820491, 2026-09-25) ; M v1 refusé (M^L = N_cells × direct, rapport 81,000000) |
+| C18 | **Porte A.2 (R6)** : ΔV^L (grille) et ΔV^NL (projecteur KB de l'atome retiré) appliqués directement aux états de Bloch purs repliés, comparés à M2/N_cells | P | `scripts/m/gate_M_normalization.py` (`defects/deltav_pw.py`, `wavefunctions/sc_projection.py`) | max \|écart\| ≤ 1e-6 eV, sinon refus | 14 M2 OK (8 grossiers ≤ 3,3e-14 eV, 6 denses ≤ 1,2e-8 eV ; job 21820491, 2026-09-25) ; M v1 refusé (M^L = N_cells × direct, rapport 81,000000) |
 | — | **Grille interne N_k^int** | C (depuis P13) | `rcut_resigma.py --nk-int` ; `submit_nkint_check.sh` ; `nkint_check_post.py` | 5 % | final, 300 → 600 : médiane −0,09 %, Re Σ médian −0,03 %, Γ_T(E_D) +4,82 % (arithmétique sur `results/M2_plateau/nkint_check_9x9.csv`) [v1 : −0,14 % ; +5,36 %] ; §6e |
 
 ## 4. Points ouverts constatés le 2026-09-18
@@ -137,9 +137,9 @@ Type : **P** = porte bloquante (le code refuse, `raise`), **T** = test PASS/FAIL
 ne_per_eta) utilise 300² = 90 000 points ; c'est aussi le défaut codé en dur de `scattering_rate` /
 `scattering_rate_fast`. Aucun log ni npz ne porte une autre valeur. Le plateau grille × η (C11) porte sur la grille de
 **sortie** et ne teste pas la somme interne de g₀. Près de E_D, la grille interne ne contient que 4 états dans ±η (les
-deux K), 52 dans ±0,1 eV ; le pic de Γ_T/ρ₀ est justement à −0,015 eV. Pour chiffrer : `scripts/rcut_resigma.py`
+deux K), 52 dans ±0,1 eV ; le pic de Γ_T/ρ₀ est justement à −0,015 eV. Pour chiffrer : `scripts/t/rcut_resigma.py`
 accepte désormais `--nk-int` (même mécanisme que `--npe`, valeur inscrite dans le npz) et
-`scripts/submit_nkint_check.sh 9x9 "150 300 450 600"` enchaîne les quatre valeurs à R_cut 3 (≈ 4 × (1 → 4) × 1 min de g₀,
+`scripts/slurm/submit_nkint_check.sh 9x9 "150 300 450 600"` enchaîne les quatre valeurs à R_cut 3 (≈ 4 × (1 → 4) × 1 min de g₀,
 3 h demandées, 64 G). **Fait le 2026-09-18 (P13, job 21337627) : voir §6.**
 2. **R_cut est une norme sur les indices réduits, pas une distance cartésienne.** Le disque i² + j² ≤ 9 (29 mailles) va
 jusqu'à 3a le long de a₁ ou a₂ mais jusqu'à 2√3 a ≈ 3,46a le long de a₁ + a₂, et exclut (3, −3) dont |R| = 3a. Si le
@@ -171,24 +171,24 @@ lieu de « ~1e-10 ») — sortie :
 [5x5] positivity min Gamma(local) = 6.596e-01
 RESULT: PASS
 ```
-(`scripts/test_local_tmatrix_real.py` ; `test_local_rcut.py` corrigé de même, « must be ~1e-8 » → « seuil 1e-8 » ; `test_local_tmatrix.py` n'avait pas de message trompeur.)
+(`scripts/validation/test_local_tmatrix_real.py` ; `test_local_rcut.py` corrigé de même, « must be ~1e-8 » → « seuil 1e-8 » ; `test_local_tmatrix.py` n'avait pas de message trompeur.)
 
-- `scripts/rcut_resigma.py` : option `--nk-int` (2 lignes, même patron que `--npe` ; défaut = config figée, valeur
+- `scripts/t/rcut_resigma.py` : option `--nk-int` (2 lignes, même patron que `--npe` ; défaut = config figée, valeur
   inscrite dans le npz et le log).
-- `scripts/submit_nkint_check.sh` : job de balayage N_k^int (lancé : job 21337627, §6).
-- `scripts/nkint_check_post.py` : post-traitement du balayage (tableaux de §6, `results/M/nkint_check_9x9.csv`).
+- `scripts/slurm/submit_nkint_check.sh` : job de balayage N_k^int (lancé : job 21337627, §6).
+- `scripts/t/nkint_check_post.py` : post-traitement du balayage (tableaux de §6, `results/M/nkint_check_9x9.csv`).
 - `NOTES_TGAMMA.md` : ce document.
 
 ## 6. Balayage de la grille interne N_k^int (P13, 2026-09-18)
 
-Job Slurm 21337627 (`scripts/submit_nkint_check.sh 9x9 "150 300 450 600"`, rc32615, 16 cœurs, 64 G demandés, MaxRSS 14906672K,
+Job Slurm 21337627 (`scripts/slurm/submit_nkint_check.sh 9x9 "150 300 450 600"`, rc32615, 16 cœurs, 64 G demandés, MaxRSS 14906672K,
 départ 08:27:19, fin 09:04:59 EDT, 37 min 40 ; 8 à 10 min par valeur, dominées par le chargement de M et la rotation, pas par g₀).
-Chaîne identique à la production : `scripts/rcut_resigma.py --nk-int N` (option ajoutée ce jour, l. 20 et 22 ; `nk_int` inscrit
+Chaîne identique à la production : `scripts/t/rcut_resigma.py --nk-int N` (option ajoutée ce jour, l. 20 et 22 ; `nk_int` inscrit
 dans le npz l. 41 et dans le log l. 34), R_cut 3, grille de sortie 240², η 0,02, fenêtre ±3 eV, ne_per_eta 8, portes C1–C7
 actives (« [gauge] provenance OK », recentrage R_d = [4, 4, 0], positivité l. 55). `config/production.json` inchangé (nk_int 300).
 Dry run préalable (nœud de connexion, nk_int 60, grille 30, 17 s) : valeur présente dans le log et le npz.
 Sources : `results/M/resigma_9x9_rc3_nk{150,300,450,600}.npz` (clés `Sigma_rc3`, `E_out`, `E_D`, `nk_int` ; non commis),
-log `results/M/logs/nkint_21337627.out`, post-traitement `scripts/nkint_check_post.py` → `results/M/nkint_check_9x9.csv` (commis).
+log `results/M/logs/nkint_21337627.out`, post-traitement `scripts/t/nkint_check_post.py` → `results/M/nkint_check_9x9.csv` (commis).
 Définitions : médiane **sur les états** de |Γ| (Γ = −2 Im Σ_nk, V_loc intensif ⇒ Γ N_cells ; §4.3), Re Σ médian sur les mêmes
 états, E_res = argmax de Γ sur les états à |ε − E_D| ≤ 1,5 eV (`rcut_resigma.py:56`), Γ_T(E_D) = moyenne des 4 états dont
 ε = E_D exactement (les deux K × π, π* ; il n'y a pas d'autre état dans ±η sur 240²). Écarts relatifs à nk_int = 600.
@@ -227,7 +227,7 @@ Re Σ à K : 2 498 – 2 539 / 2 504 – 2 545 / 2 505 – 2 546 / 2 505 – 2 5
 
 ### 6d. Même balayage avec M2 (R6, job 21857278, 2026-09-26, 7 min)
 
-`scripts/submit_nkint_check.sh 9x9`, mêmes options ; sources `results/M2/resigma_9x9_rc3_nk{150,300,450,600}.npz`, post-traitement
+`scripts/slurm/submit_nkint_check.sh 9x9`, mêmes options ; sources `results/M2/resigma_9x9_rc3_nk{150,300,450,600}.npz`, post-traitement
 `nkint_check_post.py` (job post_fig 21872955) → `results/M2/nkint_check_9x9.csv`. Écarts relatifs à nk_int = 600.
 
 | nk_int | médiane Γ N_cells (meV) | écart | Re Σ médian (meV) | écart | E_res − E_D (eV) | Γ_T(E_D) (meV, 4 états à K) | écart |
@@ -256,7 +256,7 @@ Constats (seuil 5 %) : médiane de la fenêtre 300 → 600 : −0,10 % ; Γ_T(E_
 
 ### 6e. Même balayage, final (R10 C, job 22058845 `nkint`, 2026-09-29, 11 min 33)
 
-`scripts/submit_nkint_check.sh 9x9`, mêmes options, V_loc aligné (Kumagai–Oba, C_9 = −25,1437 meV) ; sources `results/M2_plateau/resigma_9x9_rc3_nk{150,300,450,600}.npz`,
+`scripts/slurm/submit_nkint_check.sh 9x9`, mêmes options, V_loc aligné (Kumagai–Oba, C_9 = −25,1437 meV) ; sources `results/M2_plateau/resigma_9x9_rc3_nk{150,300,450,600}.npz`,
 post-traitement `nkint_check_post.py` (C1f, job 22058855) → `results/M2_plateau/nkint_check_9x9.csv`. Écarts relatifs à nk_int = 600 (arithmétique sur le csv).
 
 | nk_int | médiane Γ N_cells (meV) | écart | Re Σ médian (meV) | écart | E_res − E_D (eV, retiré) | Γ_T(E_D) (meV, 4 états à K) | écart |
@@ -282,7 +282,7 @@ zone ±0,3 eV : +0,20 % (Γ), −1,31 % (Re Σ). Le run nk 300 reproduit la prod
 
 - **Cause** : dans tous les M de production, M^L venait d'états de Bloch normalisés sur la super-cellule et M^NL sur la maille (R5-A.2) :
   M^L était N_cells = N² fois trop petit. Noyau corrigé par Greg (`local_R.py`, commits 99d64da, a223687) ; M^L grossiers 5, 6, 7, 8, 9
-  recalculés ; les autres M réassemblés, M2 = N_cells·M^L + M^NL (`scripts/assemble_M2.py`, sidecar `assembled_from`, `N_cells`,
+  recalculés ; les autres M réassemblés, M2 = N_cells·M^L + M^NL (`scripts/m/assemble_M2.py`, sidecar `assembled_from`, `N_cells`,
   `M_normalization = v2`). 11×11 exclu (`.save` de maille écrasé).
 - **Portes** : C18 (porte A.2) sur chaque M2 ; C6 (test d'or 5×5 dense avec M2) ; porte de niveau 1 (R6 §3.3 : même critère que le gel du
   2026-09-05 sur les six tailles) : OK, `config/production.json` inchangé hors clés `M_normalization` et `results_dir`.

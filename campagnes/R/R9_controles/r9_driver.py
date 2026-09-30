@@ -46,7 +46,7 @@ WORK = os.path.dirname(os.path.abspath(__file__))
 GQ = os.path.dirname(os.path.dirname(WORK))                                   # .../graphene/qe
 PROJ = os.environ.get("GRAPHENE_RAMAN") or os.path.join(os.path.dirname(os.path.dirname(GQ)), "graphene-raman")
 sys.path.insert(0, os.path.join(PROJ, "src"))
-sys.path.insert(0, os.path.join(PROJ, "scripts"))                              # compute_M_dense_stages.paths (mêmes entrées que la production)
+sys.path.insert(0, os.path.join(PROJ, "scripts")); sys.path.insert(0, os.path.join(PROJ, "scripts", "m"))   # _bands, _palette ; compute_M_dense_stages (scripts/m/ depuis le 2026-09-30)                              # compute_M_dense_stages.paths (mêmes entrées que la production)
 os.chdir(PROJ)                                                                 # chemins data/... relatifs au dépôt
 
 from electron_defect_interaction.config import load_production, dense_paths, results_dir, HA2EV  # noqa: E402

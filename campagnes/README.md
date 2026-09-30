@@ -12,7 +12,7 @@ git (`git show 32efd9e:article/<campagne>/<fichier>`, `32efd9e:memoire/…` pour
 | `R/R2_size_series` | relaxations 5×5…12×12 | archive (PRODUCTION, miroir md5) | article | non |
 | `R/R4_quasi_lie` | états π/σ de la lacune 9×9, DFT vs chaîne M → Wannier → T (v1) | archive (TEST) | article | `r4_driver.py` gardé seulement pour R7 |
 | `R/R5_base_vs_M` | base ou M ? constat A.2 (facteur N_cells) | archive (TEST) | article | modules gardés seulement pour R7 |
-| `R/R6_production_corrigee` | M2 = N_cells·M^L + M^NL, porte A.2, régénération du ch. 4 | archive (PRODUCTION ; produits remplacés par R10) | mémoire (provenance de v2) | non (`scripts/assemble_M2.py`) |
+| `R/R6_production_corrigee` | M2 = N_cells·M^L + M^NL, porte A.2, régénération du ch. 4 | archive (PRODUCTION ; produits remplacés par R10) | mémoire (provenance de v2) | non (`scripts/m/assemble_M2.py`) |
 | `R/R7_tailles_3m` | famille 3m 15…27, état π et doublet σ vs taille ; R7c relaxations | archive (PRODUCTION, miroir md5) | mémoire (2 figures) + article | `r7_driver.py tables` |
 | `R/R8_kaasbjerg` | DOS et A_k moyennées sur le désordre (Kaasbjerg Fig. 13/14) | **vivante** (TEST) | mémoire (5 figures) + article (étape 6) | `r8_driver.py`, `submit_r8.sh` |
 | `R/R9_controles` | alignement C_N, résonance vs N_k^int, chaîne repliée, Kaasbjerg, audit | archive (TEST, clos 2026-09-29) | mémoire (4 figures de contrôle) | `r9_driver.py` (figures depuis json) |

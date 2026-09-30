@@ -12,6 +12,7 @@ __pycache__/
 # Folders
 data/
 jobs/
+article/
 
 # Computed data (never commit matrices / DFT outputs)
 *.npy

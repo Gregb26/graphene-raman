@@ -9,9 +9,12 @@ Sous-commandes (toutes locales, quelques secondes, aucun calcul QE ni t/Γ) :
            lignes retirées) ;
   regions  partie 2 : memoire/ch4/alignement_regions.{md,npz,pdf,png} (régions d'échantillonnage (A) ≥ 0,75 r_max,
            (B) Kumagai–Oba 2D ≥ N·a/2, (C) Kumagai–Oba 3D min(N·a/2, c/2), (D) site unique) ;
-  notes    partie 3 : écrit memoire/ch4/NOTES_TGAMMA.diff (git diff de NOTES_TGAMMA.md, modifié à la main) et vérifie
-           que les valeurs finales citées dans NOTES_TGAMMA.md §2 sont celles des sources ;
-  tex      partie 4 : memoire/ch4/defauts_nombres.md (tous les nombres de memoire/défauts.tex, appariés à la table) ;
+  notes    partie 3 : vérifie que les valeurs finales citées dans NOTES_TGAMMA.md sont celles des sources ; écrit le diff
+           non commité de NOTES_TGAMMA.md dans NOTES_TGAMMA_partie5.diff (NOTES_TGAMMA.diff = diff de la partie 3) ;
+  tex      parties 4 et 5.5 : memoire/ch4/defauts_nombres.md (tous les nombres de memoire/défauts.tex, appariés à la table
+           principale et aux compléments ; pourcentages × 100, notation scientifique entière, entiers courts en tabular) ;
+  (la sous-commande table ajoute la section « Compléments » de la partie 5 : 5.1 tab:rcut_M, 5.2 niveau 1,
+   5.3 tab:échantillonnage, 5.4 scalaires lus sur les courbes des npz, avec porte sur les valeurs publiées v1 / v2)
   all      table, regions, tex, notes.
 
 Nomenclature (donnée une fois dans table_v1_final.md) : « non aligné » = tel quel (results/M2) ; « alignement à site
@@ -645,6 +648,9 @@ def cmd_table(args=None):
            "## Écarts entre les deux tables sources (rapportés, non corrigés)", ""] + [f"- {n}" for n in notes] + ["", "## Chiffres nouveaux", "",
            "Chaque section nomme la source (fichier : clé ou ligne), l'alignement et l'E_D utilisés.", ""]
     txt += [sec_a(), "", sec_b(), "", sec_c(), "", sec_d(), "", sec_e(), "", sec_f(), "", sec_g(), "", sec_h(), "", sec_i(), "", sec_j(), "", sec_k(), "", sec_l(), "", sec_retires(), ""]
+    ctxt, _, ok4, _ = complements()
+    txt += [ctxt]
+    print(f"[table] compléments 5.1–5.4 ajoutés ; porte 5.4 : {'PASS' if ok4 else 'REFUSÉE (STOP sur 5.4)'}")
     (HERE / "table_v1_final.md").write_text("\n".join(txt), encoding="utf-8")
     print(f"[table] {HERE / 'table_v1_final.md'} : {counts} ; statuts {dict(cs)} ; {len(notes)} écarts entre tables")
     return rows, counts
@@ -758,10 +764,11 @@ def make_regions_figure(store):
 # partie 3 : diff de NOTES_TGAMMA.md et vérification des valeurs finales citées
 # ----------------------------------------------------------------------------------------------------------------------
 def cmd_notes(args=None):
+    # NOTES_TGAMMA.diff = diff de la partie 3 (commité, jamais réécrit) ; les modifications non commitées vont dans NOTES_TGAMMA_partie5.diff
     diff = subprocess.run(["git", "-C", str(ROOT), "diff", "--no-color", "--", "NOTES_TGAMMA.md"], capture_output=True, text=True).stdout
-    if not diff.strip():
-        diff = subprocess.run(["git", "-C", str(ROOT), "diff", "--no-color", "HEAD~1", "--", "NOTES_TGAMMA.md"], capture_output=True, text=True).stdout
-    (HERE / "NOTES_TGAMMA.diff").write_text(diff, encoding="utf-8")
+    dfile = HERE / "NOTES_TGAMMA_partie5.diff"
+    if diff.strip():
+        dfile.write_text(diff, encoding="utf-8")
     txt = open(ROOT / "NOTES_TGAMMA.md", encoding="utf-8").read()
     checks = []
     def l1(p):
@@ -785,6 +792,11 @@ def cmd_notes(args=None):
     checks.append(("nkint_check_9x9.csv : G_ED nk 300", f"{float(nk[300]['G_ED']):.2f}"))
     s = npz(M2P / "resonance_9x9_shiftL.npz")
     checks.append(("shiftL : median_GT_states_shiftp9_05_meV", f"{float(s['median_GT_states_shiftp9_05_meV']):.2f}"))
+    _, _, ok4, sc = complements()
+    if ok4:
+        checks.append(("5.4 Born/T min (final)", sc["final"]["BT_min"]))
+        checks.append(("5.4 Born/T max (final)", sc["final"]["BT_max"]))
+        checks.append(("5.4 ħ/Γ (final)", sc["final"]["tau"]))
     bad = []
     for lab, val in checks:
         v = val.replace(".", ",")
@@ -798,91 +810,266 @@ def cmd_notes(args=None):
         print(f"[notes] {'OK ' if ok else 'ABSENT'} {lab} = {val}")
         if not ok:
             bad.append(lab)
-    print(f"[notes] diff : {HERE / 'NOTES_TGAMMA.diff'} ({len(diff.splitlines())} lignes) ; {len(checks) - len(bad)}/{len(checks)} valeurs finales retrouvées dans NOTES_TGAMMA.md")
+    print(f"[notes] diff non commité : {dfile if diff.strip() else 'aucun'} ({len(diff.splitlines())} lignes) ; {len(checks) - len(bad)}/{len(checks)} valeurs finales retrouvées dans NOTES_TGAMMA.md")
     return bad
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# partie 4 : nombres de défauts.tex
+# partie 5 : compléments (5.1 tab:rcut_M, 5.2 niveau 1, 5.3 tab:échantillonnage, 5.4 scalaires lus sur les courbes)
+# ----------------------------------------------------------------------------------------------------------------------
+RES3 = (("v1", ROOT / "results" / "M"), ("non aligné", M2), ("final", M2P))
+
+
+def pct(s):
+    """Fraction du csv → pourcentage exact (décalage de la virgule, aucun arrondi) : '4.0851e-01' → '40.851'."""
+    from decimal import Decimal
+    return format(Decimal(s).scaleb(2), "f")
+
+
+def compl_5_1():
+    data = {}
+    dups = {}
+    for lab, d in RES3:
+        with open(d / "m_rcut_convergence.csv", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        from collections import Counter
+        c = Counter((r["size"], r["R_cut"]) for r in rows)
+        dups[lab] = (len(rows), [k for k, v in c.items() if v > 1])
+        data[lab] = {(r["size"], int(r["R_cut"])): r for r in rows}
+    rows, idx = [], []
+    for S in ("9x9", "12x12"):
+        for rc in range(7):
+            r = {lab: data[lab].get((S, rc)) for lab, _ in RES3}
+            sv = [pct(r[lab]["sv_mismatch_pi_blocks"]) if r[lab] else "—" for lab, _ in RES3]
+            dg = [pct(r[lab]["diag_max_dM_over_max"]) if r[lab] else "—" for lab, _ in RES3]
+            rows.append([S, rc, r["final"]["n_sites"]] + sv + dg)
+            idx.append({"g": f"5.1 tab:rcut_M {S} R_cut {rc} π–π* (%)", "v1": sv[0], "v2": sv[1], "final": sv[2]})
+            idx.append({"g": f"5.1 tab:rcut_M {S} R_cut {rc} diag (%)", "v1": dg[0], "v2": dg[1], "final": dg[2]})
+    eq = [f"{S} R_cut {rc}" for (S, rc), r in sorted(data["final"].items()) if r["max_dM_over_maxM"] == r["diag_max_dM_over_max"]]
+    out = ["### 5.1 tab:rcut_M du mémoire : π–π* (`sv_mismatch_pi_blocks`) et diag (`diag_max_dM_over_max`), en %", "",
+           "Sources : `results/M/m_rcut_convergence.csv` (v1), `results/M2/m_rcut_convergence.csv` (non aligné), `results/M2_plateau/m_rcut_convergence.csv` (final) ; grille fine 60² ; "
+           "% = fraction du csv × 100 (décalage de la virgule, chiffres du csv conservés).", "",
+           md_table(["taille", "R_cut", "cellules", "π–π* v1", "π–π* non aligné", "π–π* final", "diag v1", "diag non aligné", "diag final"], rows), "",
+           "Lignes en double : " + " ; ".join(f"{lab} : {n} lignes, couples (taille, R_cut) répétés : {d if d else 'aucun'}" for lab, (n, d) in dups.items()) +
+           ". **Aucune ligne en double dans les trois csv** (le csv v1 est seulement écrit en deux blocs : 9×9 et 12×12 R_cut 0–3, puis 9×9 et 12×12 R_cut 4–6). "
+           "Colonnes égales dans le csv final (`max_dM_over_maxM` = `diag_max_dM_over_max`) : " + (", ".join(eq) or "aucune") +
+           " ; `diag_max_dM_over_max` = `diag_abs_mismatch` sur toutes les lignes des trois csv."]
+    return "\n".join(out), idx
+
+
+def compl_5_2():
+    def l1(p):
+        with open(p, encoding="utf-8") as f:
+            return {(r["size"], int(r["R_cut"])): r["median_Gamma_Ncells_meV"] for r in csv.DictReader(f) if int(r["grid"]) == 240 and float(r["eta_eV"]) == 0.02}
+    data = {lab: l1(d / "level1_summary.csv") for lab, d in RES3}
+    rows, idx = [], []
+    for S in ("6x6", "9x9", "12x12", "5x5", "7x7", "8x8"):
+        N = int(S.split("x")[0])
+        for rc in range(5):
+            v = [data[lab].get((S, rc), "—") for lab, _ in RES3]
+            cite = "oui" if (rc <= 3 or S == "9x9") else "non (« --- » dans le mémoire)"
+            rows.append([S, N % 3, rc] + v + [cite])
+            idx.append({"g": f"5.2 niveau 1 {S} R_cut {rc} médiane Γ·N_cells (meV)", "v1": v[0], "v2": v[1], "final": v[2]})
+    extra = "—"
+    p = ROOT / "results" / "M" / "m_rcut_resigma.csv"
+    if p.exists():
+        with open(p, encoding="utf-8") as f:
+            rr = {int(r["R_cut"]): r["med_Gamma_meV"] for r in csv.DictReader(f)}
+        extra = rr.get(4, "—")
+        idx.append({"g": "5.2 niveau 1 9x9 R_cut 4 (v1, m_rcut_resigma.csv)", "v1": extra, "v2": "—", "final": "—"})
+    out = ["### 5.2 Tableau niveau 1 du mémoire (tab:convergence_gamma, `memoire/défauts.tex` l.664–670) : médiane Γ·N_cells (meV), 240², η 0,02, N_k^int 300", "",
+           "Sources : `level1_summary.csv` de `results/M` (v1), `results/M2` (non aligné), `results/M2_plateau` (final), colonne `median_Gamma_Ncells_meV` ; ordre des tailles = celui du mémoire.", "",
+           md_table(["taille", "N mod 3", "R_cut", "v1", "non aligné", "final", "cité dans le mémoire"], rows), "",
+           f"`results/M/level1_summary.csv` n'a aucune ligne R_cut 4 (carte v1 à R_cut 0–3). Le point 9×9, R_cut 4 du mémoire (2468) est dans `results/M/m_rcut_resigma.csv` : med_Gamma_meV = {extra}."]
+    return "\n".join(out), idx
+
+
+def compl_5_3():
+    from decimal import Decimal
+    C = jload(CFG)["alignment"]["C_N_eV"]
+    rows, idx = [], []
+    with open(M2P / "sampling_table.csv", encoding="utf-8") as f:
+        tab = {int(r["N"]): r for r in csv.DictReader(f)}
+    for N in (6, 9, 12, 5, 7, 8, 10, 11):
+        r = tab[N]
+        cn = C[f"{N}x{N}"] * 1e3
+        raw = r["Ved_radial_1.42A_meV"]
+        al = float(Decimal(raw)) - cn
+        rows.append([N, r["N_mod_3"], r["dE_F_meV"], raw, f"{cn:.4f}", f"{al:+.4f}"])
+        idx.append({"g": f"5.3 tab:échantillonnage N = {N} ΔE_F (meV)", "v1": r["dE_F_meV"], "v2": r["dE_F_meV"], "final": r["dE_F_meV"]})
+        idx.append({"g": f"5.3 tab:échantillonnage N = {N} V̄^L(a_CC) (meV)", "v1": raw, "v2": raw, "final": f"{al:+.4f}"})
+    same = md5(M2P / "sampling_table.csv") == md5(M2 / "sampling_table.csv") == md5(ROOT / "results" / "M" / "sampling_table.csv")
+    out = ["### 5.3 tab:échantillonnage : ΔE_F et V̄^L_ed(a_CC), 8 tailles (meV)", "",
+           f"Sources : `results/M2_plateau/sampling_table.csv` (colonnes `dE_F_meV`, `Ved_radial_1.42A_meV` ; fichier identique dans `results/M` et `results/M2` : {'md5 égaux' if same else 'md5 DIFFÉRENTS'}) ; "
+           "C_N : `config/production.json` alignment.C_N_eV (× 10³, 4 décimales). Colonne arithmétique : aligné = non aligné − C_N. ΔE_F ne dépend pas de l'alignement.", "",
+           md_table(["N", "N mod 3", "ΔE_F", "V̄^L(a_CC) non aligné", "C_N", "V̄^L(a_CC) aligné = non aligné − C_N"], rows)]
+    return "\n".join(out), idx
+
+
+def curve_scalars(res_path, crit_path):
+    """Mêmes définitions que `r6_compare_v1_v2.py` (rstats, cstats) pour les lignes 73, 74, 98, 99 de table_v1_v2.md."""
+    R, Cr = npz(res_path), npz(crit_path)
+    eg, ED = R["eg"], float(R["E_D"])
+    m = np.abs(eg - ED) <= 3.0
+    ratio = R["Gamma_Born"][m] / R["Gamma_T"][m]
+    x, g = Cr["x_c"], Cr["Gamma_c"] * 1e3
+    return {"BT_min": f"{float(np.nanmin(ratio)):.3f}", "BT_max": f"{float(np.nanmax(ratio)):.3f}",
+            "Gc": f"{float(np.nanmin(g)):.2f} ({float(x[np.nanargmin(g)]):+.2f}) / {float(np.nanmax(g)):.2f} ({float(x[np.nanargmax(g)]):+.2f}) / {float(np.interp(0, x, g)):.2f}",
+            "tau": f"{658.2 / float(np.interp(-0.3, x, g)):.0f} / {658.2 / float(np.interp(0.3, x, g)):.0f}"}
+
+
+def compl_5_4():
+    pub = {r["line"]: r for r in parse_table(TAB_R6)}
+    keys = (("BT_min", 73, "Born/T min sur ±3 eV"), ("BT_max", 74, "Born/T max sur ±3 eV"),
+            ("Gc", 98, "Γ_T à c = 0,1 % sur ±1 eV : min (à) / max (à) / E_D (meV)"), ("tau", 99, "ħ/Γ à ∓0,3 eV, c = 0,1 % (fs)"))
+    sc = {lab: curve_scalars(d / "resonance_9x9.npz", d / "resonance_criteria_9x9.npz") for lab, d in RES3}
+    gate, ok = [], True
+    for k, line, glab in keys:
+        for lab, col in (("v1", "c1"), ("non aligné", "c2")):
+            same = sc[lab][k] == pub[line][col]
+            ok &= same
+            gate.append([f"R6 l.{line}", glab, lab, pub[line][col], sc[lab][k], "OK" if same else "DIFFÉRENT"])
+    out = ["### 5.4 Scalaires lus sur les courbes des npz (définitions de `table_v1_v2.md` l.73, 74, 98, 99)", "",
+           "Lecture : Born/T = Γ_Born/Γ_T de `resonance_9x9.npz` (`eg`, `Gamma_Born`, `Gamma_T`) sur |ε − E_D| ≤ 3 eV, min et max ; Γ_T à c = 0,1 % = `Gamma_c` × 10³ de `resonance_criteria_9x9.npz` "
+           "(`x_c` sur ±1 eV) : min (position), max (position), interpolation linéaire à 0 ; ħ/Γ = 658,2 meV·fs / Γ interpolé à −0,3 et +0,3 eV — code de `article/R6_production_corrigee/etape3/r6_compare_v1_v2.py` (rstats, cstats).", "",
+           f"**Porte** (la même lecture sur les npz v1 et non alignés redonne les valeurs publiées à la dernière décimale) : **{'PASS' if ok else 'REFUSÉE'}**.", "",
+           md_table(["ligne publiée", "grandeur", "npz", "publié", "relu", "verdict"], gate)]
+    idx = []
+    if not ok:
+        out += ["", "**STOP sur 5.4** : la porte est refusée, aucune valeur finale n'est donnée."]
+        return "\n".join(out), idx, ok, sc
+    rows = []
+    for k, line, glab in keys:
+        st, diff = statut(sc["v1"][k], sc["final"][k])
+        src = "`results/M2_plateau/resonance_9x9.npz` : eg, Gamma_Born, Gamma_T" if k.startswith("BT") else "`results/M2_plateau/resonance_criteria_9x9.npz` : x_c, Gamma_c"
+        rows.append([glab, sc["v1"][k], sc["non aligné"][k], sc["final"][k], diff, st, src, f"R6 l.{line} (sans équivalent final dans la table principale)"])
+        idx.append({"g": f"5.4 {glab}", "v1": sc["v1"][k], "v2": sc["non aligné"][k], "final": sc["final"][k]})
+    out += ["", "Valeurs finales (même lecture sur les npz de `results/M2_plateau`) :", "",
+            md_table(["grandeur", "v1", "non aligné (v2)", "final", "final − v1", "statut", "source finale", "lieu"], rows)]
+    return "\n".join(out), idx, ok, sc
+
+
+def complements():
+    t1, i1 = compl_5_1()
+    t2, i2 = compl_5_2()
+    t3, i3 = compl_5_3()
+    t4, i4, ok4, sc = compl_5_4()
+    txt = ["## Compléments (partie 5, 2026-09-30)", "",
+           "Mêmes règles : valeurs copiées ou lues sur les fichiers de `results/` ; colonnes arithmétiques seulement là où c'est dit.", "", t1, "", t2, "", t3, "", t4, ""]
+    return "\n".join(txt), i1 + i2 + i3 + i4, ok4, sc
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# partie 4 (appariement refait en 5.5) : nombres de défauts.tex
 # ----------------------------------------------------------------------------------------------------------------------
 TEX_STRIP = [r"\\(?:label|ref|eqref|pageref|cite[tp]?|autoref|cref|Cref|nameref|hyperref)\*?(?:\[[^\]]*\])?\{[^}]*\}", r"\\includegraphics(?:\[[^\]]*\])?\{[^}]*\}",
-             r"\\(?:begin|end)\{[^}]*\}", r"\\(?:h|v)space\*?\{[^}]*\}", r"\\(?:input|include)\{[^}]*\}", r"\\(?:sisetup|num|SI)\{[^}]*\}"]
+             r"\\(?:begin|end)\{[^}]*\}(?:\{[^}]*\})?", r"\\(?:h|v)space\*?\{[^}]*\}", r"\\(?:input|include)\{[^}]*\}", r"\\multicolumn\{\d+\}\{[^}]*\}"]
+PCT = "％"  # marqueur interne de « \% »
+TEX_SCI = r"(?:\d+(?:[.,]\d+)?\s*(?:\\times|\\cdot|×)\s*)?10\^\{?\s*[-+−]?\d+\s*\}?"
+TEX_PLAIN = r"\d+(?:[.,]\d+)?(?:e[-+]?\d+)?"
+TEX_NUM = re.compile(r"(?<![\w\^_{\\.,])[-+−]?(?:" + TEX_SCI + "|" + TEX_PLAIN + ")")
 
 
 def tex_numbers(path):
-    out = []
+    """(ligne, nombre, contexte, est_pourcentage, dans_tabular) pour chaque nombre du fichier."""
+    out, in_tab = [], False
     for i, raw in enumerate(open(path, encoding="utf-8"), 1):
-        l = raw.split("%")[0] if not raw.lstrip().startswith("%") else ""
-        l = l.replace("\\%", "")
+        if "\\begin{tabular" in raw:
+            in_tab = True
+        l = "" if raw.lstrip().startswith("%") else re.split(r"(?<!\\)%", raw)[0]
+        l = l.replace("\\%", PCT)
+        l = l.replace("---", " — ").replace("--", " – ")  # tirets LaTeX : « 2--32 » n'est pas un nombre négatif
         for pat in TEX_STRIP:
             l = re.sub(pat, " ", l)
-        for m in re.finditer(r"(?<![\w\^_{\\])[-+−]?\d+(?:[.,]\d+)?(?:\s*(?:\\times|×|e)\s*10\^\{?[-+−]?\d+\}?|e[-+]?\d+)?", l):
-            s = m.group(0)
-            if re.fullmatch(r"(19|20)\d\d", s.strip()):  # année
+        for m in TEX_NUM.finditer(l):
+            s = m.group(0).strip()
+            if re.fullmatch(r"(19|20)\d\d", s):  # année
                 continue
-            if m.start() > 0 and l[m.start() - 1] in "^_":
-                continue
-            pre = l[max(0, m.start() - 60):m.start()].split()[-8:]
-            post = l[m.end():m.end() + 60].split()[:8]
-            out.append((i, s.strip(), " ".join(pre) + " ⟦" + s.strip() + "⟧ " + " ".join(post)))
+            is_pct = re.match(r"^\s*\$?\s*(?:~|\\,|\;|\s)*" + PCT, l[m.end():]) is not None
+            pre = l[max(0, m.start() - 60):m.start()].replace(PCT, "\\%").split()[-8:]
+            post = l[m.end():m.end() + 60].replace(PCT, "\\%").split()[:8]
+            out.append((i, s, " ".join(pre) + " ⟦" + s + "⟧ " + " ".join(post), is_pct, in_tab))
+        if "\\end{tabular" in raw:
+            in_tab = False
     return out
 
 
 def tex_value(s):
-    t = s.replace("−", "-").replace(",", ".").replace(" ", "")
-    m = re.match(r"([-+]?\d+(?:\.\d+)?)(?:(?:\\times|×|e)10\^\{?([-+]?\d+)\}?|e([-+]?\d+))?$", t)
+    """Valeur, tolérance (½ unité de la dernière décimale, à l'échelle de l'exposant), nombre de décimales, notation scientifique ?"""
+    t = s.replace("−", "-").replace(",", ".").replace(" ", "").replace("{", "").replace("}", "")
+    m = re.match(r"^([-+]?)(?:(\d+(?:\.\d+)?)(?:\\times|\\cdot|×))?10\^([-+]?\d+)$", t)
+    if m:
+        man = m.group(2) or "1"
+        e = int(m.group(3))
+        d = len(man.split(".")[1]) if "." in man else 0
+        v = float(man) * 10.0 ** e * (-1 if m.group(1) == "-" else 1)
+        return v, 0.5 * 10.0 ** (e - d), d, True
+    m = re.match(r"^([-+]?\d+(?:\.\d+)?)(?:e([-+]?\d+))?$", t)
     if not m:
-        return None, 0
-    v = float(m.group(1))
-    e = m.group(2) or m.group(3)
-    if e:
-        v *= 10 ** int(e)
+        return None, 0.0, 0, False
+    e = int(m.group(2)) if m.group(2) else 0
     d = len(m.group(1).split(".")[1]) if "." in m.group(1) else 0
-    return v, d
+    return float(m.group(1)) * 10.0 ** e, 0.5 * 10.0 ** (e - d), d, bool(m.group(2))
 
 
 def cmd_tex(args=None):
     tex = ROOT / "memoire" / "défauts.tex"
     rows, _, _ = build_main_rows()
-    index = []  # (valeur, texte, ligne de table, colonne)
+    _, crow, _, _ = complements()
+    index = []  # (valeur, étiquette de ligne, colonne)
     for n, r in enumerate(rows, 1):
         for col in ("v1", "final", "v2"):
             for v in parse_numbers(r[col]):
-                index.append((v, r["g"], n, col))
+                index.append((v, f"table l.{n}", col))
+    for r in crow:
+        for col in ("v1", "final", "v2"):
+            for v in parse_numbers(r[col]):
+                index.append((v, "compl. " + r["g"], col))
     nums = tex_numbers(tex)
     cited = set()
-    out_rows, n_ok, n_short = [], 0, 0
-    for line, s, ctx in nums:
-        v, d = tex_value(s)
-        hit = []
-        short = v is not None and d == 0 and abs(v) < 100 and "e" not in s.lower() and "\\times" not in s
-        if short:
+    out_rows, n_ok, n_short, unmatched = [], 0, 0, []
+    for line, s, ctx, is_pct, in_tab in nums:
+        v, tol, d, sci = tex_value(s)
+        if v is not None and d == 0 and not sci and abs(v) < 100 and not in_tab:
             n_short += 1
-            out_rows.append([line, esc(s), esc(ctx), "non comparé (entier court < 100)"])
+            out_rows.append([line, s + (" %" if is_pct else ""), ctx, "non comparé (entier court < 100, hors tabular)"])
             continue
+        hit = []
         if v is not None:
-            tol = 0.5 * 10 ** (-d) + 1e-12
-            for val, g, n, col in index:
-                if abs(val - v) <= tol or (v != 0 and abs(val - v) <= 1e-6 * abs(v)):
-                    hit.append((n, col))
-            for val, g, n, col in index:  # meV ↔ eV
-                if v != 0 and (abs(val - v * 1e3) <= 1e-6 * abs(v * 1e3) or abs(val - v * 1e-3) <= 1e-6 * abs(v * 1e-3)):
-                    hit.append((n, col + " (×10³)"))
-        hit = sorted(set(hit))
+            rtol = 1e-6 * abs(v)
+            for val, lab, col in index:
+                if abs(val - v) <= tol + 1e-15 or abs(val - v) <= rtol:
+                    hit.append((lab, col))
+                elif is_pct and (abs(val * 100 - v) <= tol + 1e-15):
+                    hit.append((lab, col + " (×100)"))
+                elif v != 0 and (abs(val - v * 1e3) <= 1e-6 * abs(v * 1e3) or abs(val - v * 1e-3) <= 1e-6 * abs(v * 1e-3)):
+                    hit.append((lab, col + " (×10³)"))
+        hit = sorted(set(hit), key=lambda h: (not h[0].startswith("compl."), h))
         if hit:
             n_ok += 1
-            cited.update(n for n, _ in hit)
-        out_rows.append([line, esc(s), esc(ctx), (" ; ".join(f"table l.{n} ({col})" for n, col in hit[:6]) + (" …" if len(hit) > 6 else "")) if hit else "non apparié"])
-    never = [n for n in range(1, len(rows) + 1) if n not in cited]
+            cited.update(h[0] for h in hit)
+        else:
+            unmatched.append((line, s + (" %" if is_pct else ""), ctx))
+        out_rows.append([line, s + (" %" if is_pct else ""), ctx, (" ; ".join(f"{lab} ({col})" for lab, col in hit[:6]) + (f" … (+{len(hit) - 6})" if len(hit) > 6 else "")) if hit else "non apparié"])
+    never = [n for n in range(1, len(rows) + 1) if f"table l.{n}" not in cited]
+    n_un = len(unmatched)
     txt = [f"# Nombres cités dans `memoire/défauts.tex` (lecture seule ; {len(nums)} nombres)", "",
-           f"Date : {date.today().isoformat()} ; HEAD `{head()}` ; md5 défauts.tex {md5(tex)}. Généré par `ch4_chiffres.py tex`. Exclusions : commentaires, \\label, \\ref, \\eqref, \\cite, \\includegraphics, années (19xx/20xx), indices et exposants (précédés de ^ ou _). "
-           "Appariement : le nombre du texte (virgule = point décimal) est comparé à tous les nombres des colonnes v1, final, non aligné de la table principale de `table_v1_final.md` (numéro de ligne = rang dans cette table) ; tolérance ½ unité de la dernière décimale du texte ; "
-           "les correspondances à un facteur 10³ (meV ↔ eV) sont marquées « (×10³) ». Les entiers sans décimale inférieurs à 100 (tailles N, exposants, nombres de bandes…) ne sont pas comparés : ils s'apparieraient à des dizaines de lignes par coïncidence.", "",
-           f"Comptes : appariés {n_ok} ; non appariés {len(nums) - n_ok - n_short} ; entiers courts non comparés {n_short} ; lignes de la table principale jamais citées {len(never)} / {len(rows)}.", "",
-           md_table(["ligne tex", "nombre", "contexte (± 8 mots)", "ligne(s) de table_v1_final.md"], out_rows), "",
+           f"Date : {date.today().isoformat()} ; HEAD `{head()}` ; md5 défauts.tex {md5(tex)}. Généré par `ch4_chiffres.py tex` (appariement refait en partie 5.5). Exclusions : commentaires, \\label, \\ref, \\eqref, \\cite, "
+           "\\includegraphics, \\multicolumn, années (19xx/20xx), indices et exposants (précédés de ^ ou _). "
+           "Appariement : le nombre du texte (virgule = point décimal) est comparé à tous les nombres des colonnes v1, final, non aligné de la table principale de `table_v1_final.md` (« table l.N » = rang dans cette table) "
+           "et de sa section « Compléments » (« compl. 5.x … ») ; tolérance ½ unité de la dernière décimale du texte. "
+           "(i) Un nombre suivi de « \\% » est aussi comparé aux fractions de la table × 100, marqué « (×100) ». "
+           "(ii) La notation scientifique est lue en entier (mantisse × 10^exposant, « 10^{-12} » = 1e-12) et la tolérance suit l'exposant. "
+           "(iii) Les entiers sans décimale inférieurs à 100 sont comparés quand ils sont dans un environnement `tabular`, et non comparés ailleurs. "
+           "Les correspondances à un facteur 10³ (meV ↔ eV) sont marquées « (×10³) ». Un nombre peut s'apparier à plusieurs lignes par coïncidence (N, N mod 3, R_cut, 0.5, 3.10…) : correspondances mécaniques, pas des identifications ; "
+           "les lignes des compléments sont listées en premier.", "",
+           f"Comptes : appariés {n_ok} ; non appariés {n_un} ; entiers courts hors tabular non comparés {n_short} ; lignes de la table principale jamais citées {len(never)} / {len(rows)}.", "",
+           md_table(["ligne tex", "nombre", "contexte (± 8 mots)", "ligne(s) appariée(s)"], out_rows), "",
+           f"## Non appariés restants ({n_un})", "", md_table(["ligne tex", "nombre", "contexte (± 8 mots)"], [list(u) for u in unmatched]), "",
            "## Lignes de la table principale jamais citées", "", ", ".join(f"l.{n} ({rows[n - 1]['g'][:60]})" for n in never)]
     (HERE / "defauts_nombres.md").write_text("\n".join(txt), encoding="utf-8")
-    print(f"[tex] {len(nums)} nombres ; appariés {n_ok} ; non appariés {len(nums) - n_ok - n_short} ; entiers courts non comparés {n_short} ; lignes jamais citées {len(never)}/{len(rows)}")
+    print(f"[tex] {len(nums)} nombres ; appariés {n_ok} ; non appariés {n_un} ; entiers courts hors tabular non comparés {n_short} ; lignes jamais citées {len(never)}/{len(rows)}")
+
 
 
 def main():

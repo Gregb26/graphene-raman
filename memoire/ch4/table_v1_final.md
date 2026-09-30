@@ -1,6 +1,6 @@
 # Chiffres du chapitre 4 — table v1 → final
 
-Date : 2026-09-30 ; HEAD `66602ed` ; md5 `article/R6_production_corrigee/etape3/table_v1_v2.md` f8972c4de041dbd79e70b2899aa4f941 ; `article/R10_plateau/c/table_v2_plateau.md` 807bb352fcb989f01d94481955fe4c10 ; `results/M2_plateau/MD5SUMS_2026-09-30.txt` 9c29daedb9c417ba795bb39c0ed71bee. Généré par `memoire/ch4/ch4_chiffres.py table` (ne pas éditer à la main).
+Date : 2026-09-30 ; HEAD `90d2022` ; md5 `article/R6_production_corrigee/etape3/table_v1_v2.md` f8972c4de041dbd79e70b2899aa4f941 ; `article/R10_plateau/c/table_v2_plateau.md` 807bb352fcb989f01d94481955fe4c10 ; `results/M2_plateau/MD5SUMS_2026-09-30.txt` 9c29daedb9c417ba795bb39c0ed71bee. Généré par `memoire/ch4/ch4_chiffres.py table` (ne pas éditer à la main).
 
 ## Nomenclature
 
@@ -629,3 +629,110 @@ Sources : `results/M2/ed_vs_ep_24k24q_mv0.02.npz`, `results/M2_plateau/ed_vs_ep_
 4. **C14 à 67 meV et à ±25 meV** : table principale, R6 l.75 et l.117–124 (statut « retiré ») ; remplacé par C14 à ±9,05 meV (section i).
 5. **Zéro de det à −2,530 eV présenté comme état π** : table principale, R6 l.89–90 (v1) ; R4 D3 (`article/R4_quasi_lie/R4_rapport.md` l.669–675) : vecteur propre 100 % bloc σ, doublet E des trois sp² de l'atome retiré ; remplacé par le pôle σ du critère par bloc (final −0,785/−0,787 eV).
 6. **Test « convention intensive » six tailles** : table principale, R6 l.112 / R10 l.180 (v1 2,7e-2, v2 7,7e-2 « À VOIR ») ; remplacé par les lignes par famille (section g).
+
+## Compléments (partie 5, 2026-09-30)
+
+Mêmes règles : valeurs copiées ou lues sur les fichiers de `results/` ; colonnes arithmétiques seulement là où c'est dit.
+
+### 5.1 tab:rcut_M du mémoire : π–π* (`sv_mismatch_pi_blocks`) et diag (`diag_max_dM_over_max`), en %
+
+Sources : `results/M/m_rcut_convergence.csv` (v1), `results/M2/m_rcut_convergence.csv` (non aligné), `results/M2_plateau/m_rcut_convergence.csv` (final) ; grille fine 60² ; % = fraction du csv × 100 (décalage de la virgule, chiffres du csv conservés).
+
+| taille | R_cut | cellules | π–π* v1 | π–π* non aligné | π–π* final | diag v1 | diag non aligné | diag final |
+|---|---|---|---|---|---|---|---|---|
+| 9x9 | 0 | 1 | 40.851 | 31.515 | 31.708 | 40.851 | 25.913 | 31.708 |
+| 9x9 | 1 | 5 | 23.589 | 18.945 | 18.508 | 17.113 | 22.987 | 15.005 |
+| 9x9 | 2 | 13 | 7.1884 | 13.431 | 6.6075 | 4.8084 | 12.302 | 4.6200 |
+| 9x9 | 3 | 29 | 2.5718 | 8.8431 | 2.5737 | 2.0915 | 7.2103 | 1.7074 |
+| 9x9 | 4 | 49 | 1.5807 | 5.7559 | 1.9846 | 1.3997 | 4.7705 | 1.4106 |
+| 9x9 | 5 | 81 | 1.0844 | 1.3976 | 1.1040 | 1.0836 | 1.5671 | 1.1945 |
+| 9x9 | 6 | 113 | 0.99708 | 0.85302 | 0.91728 | 0.96235 | 0.96803 | 1.0052 |
+| 12x12 | 0 | 1 | 97.203 | 99.342 | 99.271 | 72.972 | 85.345 | 86.782 |
+| 12x12 | 1 | 5 | 18.404 | 19.948 | 18.948 | 18.245 | 24.005 | 18.925 |
+| 12x12 | 2 | 13 | 11.813 | 14.949 | 12.521 | 11.480 | 13.805 | 12.506 |
+| 12x12 | 3 | 29 | 3.0806 | 12.429 | 3.2908 | 2.3921 | 9.9701 | 3.0979 |
+| 12x12 | 4 | 49 | 1.6892 | 10.364 | 2.5296 | 1.4996 | 8.3664 | 1.5291 |
+| 12x12 | 5 | 81 | 1.2730 | 6.9336 | 1.6202 | 1.2249 | 5.9197 | 0.85068 |
+| 12x12 | 6 | 113 | 1.1745 | 3.8144 | 1.1178 | 1.1327 | 3.6342 | 0.86769 |
+
+Lignes en double : v1 : 14 lignes, couples (taille, R_cut) répétés : aucun ; non aligné : 14 lignes, couples (taille, R_cut) répétés : aucun ; final : 14 lignes, couples (taille, R_cut) répétés : aucun. **Aucune ligne en double dans les trois csv** (le csv v1 est seulement écrit en deux blocs : 9×9 et 12×12 R_cut 0–3, puis 9×9 et 12×12 R_cut 4–6). Colonnes égales dans le csv final (`max_dM_over_maxM` = `diag_max_dM_over_max`) : 12x12 R_cut 0, 12x12 R_cut 1, 12x12 R_cut 2, 12x12 R_cut 3, 9x9 R_cut 0 ; `diag_max_dM_over_max` = `diag_abs_mismatch` sur toutes les lignes des trois csv.
+
+### 5.2 Tableau niveau 1 du mémoire (tab:convergence_gamma, `memoire/défauts.tex` l.664–670) : médiane Γ·N_cells (meV), 240², η 0,02, N_k^int 300
+
+Sources : `level1_summary.csv` de `results/M` (v1), `results/M2` (non aligné), `results/M2_plateau` (final), colonne `median_Gamma_Ncells_meV` ; ordre des tailles = celui du mémoire.
+
+| taille | N mod 3 | R_cut | v1 | non aligné | final | cité dans le mémoire |
+|---|---|---|---|---|---|---|
+| 6x6 | 0 | 0 | 2611.4029 | 2995.9157 | 3011.1803 | oui |
+| 6x6 | 0 | 1 | 2536.6293 | 3155.8267 | 3242.6703 | oui |
+| 6x6 | 0 | 2 | 2511.8726 | 3109.0882 | 3186.3363 | oui |
+| 6x6 | 0 | 3 | 2509.2036 | 3155.9796 | 3149.1500 | oui |
+| 6x6 | 0 | 4 | — | 3206.6405 | 3161.1535 | non (« --- » dans le mémoire) |
+| 9x9 | 0 | 0 | 2596.9154 | 3009.7276 | 3013.9562 | oui |
+| 9x9 | 0 | 1 | 2488.8991 | 3223.7371 | 3273.2515 | oui |
+| 9x9 | 0 | 2 | 2466.8378 | 3170.2095 | 3222.0766 | oui |
+| 9x9 | 0 | 3 | 2473.5466 | 3132.5968 | 3189.0136 | oui |
+| 9x9 | 0 | 4 | — | 3147.4740 | 3199.9967 | oui |
+| 12x12 | 0 | 0 | 2585.1923 | 3012.7732 | 3016.8913 | oui |
+| 12x12 | 0 | 1 | 2475.3196 | 3262.2761 | 3299.4530 | oui |
+| 12x12 | 0 | 2 | 2453.8468 | 3208.2824 | 3268.5115 | oui |
+| 12x12 | 0 | 3 | 2458.7355 | 3162.7806 | 3264.5060 | oui |
+| 12x12 | 0 | 4 | — | 3161.4916 | 3283.1683 | non (« --- » dans le mémoire) |
+| 5x5 | 2 | 0 | 2627.5712 | 2924.3692 | 2936.1437 | oui |
+| 5x5 | 2 | 1 | 2553.6336 | 2950.6992 | 2966.1883 | oui |
+| 5x5 | 2 | 2 | 2534.0139 | 3089.9575 | 2967.5634 | oui |
+| 5x5 | 2 | 3 | 2524.3006 | 3288.8973 | 2997.1354 | oui |
+| 5x5 | 2 | 4 | — | 3302.7391 | 2997.0730 | non (« --- » dans le mémoire) |
+| 7x7 | 1 | 0 | 2602.9720 | 2925.5822 | 2929.2014 | oui |
+| 7x7 | 1 | 1 | 2508.3428 | 2935.0598 | 2947.9510 | oui |
+| 7x7 | 1 | 2 | 2492.0954 | 2982.4421 | 2946.2803 | oui |
+| 7x7 | 1 | 3 | 2487.4561 | 3052.0301 | 2942.8454 | oui |
+| 7x7 | 1 | 4 | — | 3146.1805 | 2953.2845 | non (« --- » dans le mémoire) |
+| 8x8 | 2 | 0 | 2597.6349 | 2939.4219 | 2939.0479 | oui |
+| 8x8 | 2 | 1 | 2497.4444 | 2981.0770 | 2991.2716 | oui |
+| 8x8 | 2 | 2 | 2474.8065 | 2988.9258 | 2976.2448 | oui |
+| 8x8 | 2 | 3 | 2478.4724 | 3020.4216 | 2974.1813 | oui |
+| 8x8 | 2 | 4 | — | 3084.4304 | 2991.2441 | non (« --- » dans le mémoire) |
+
+`results/M/level1_summary.csv` n'a aucune ligne R_cut 4 (carte v1 à R_cut 0–3). Le point 9×9, R_cut 4 du mémoire (2468) est dans `results/M/m_rcut_resigma.csv` : med_Gamma_meV = 2468.003090813311.
+
+### 5.3 tab:échantillonnage : ΔE_F et V̄^L_ed(a_CC), 8 tailles (meV)
+
+Sources : `results/M2_plateau/sampling_table.csv` (colonnes `dE_F_meV`, `Ved_radial_1.42A_meV` ; fichier identique dans `results/M` et `results/M2` : md5 égaux) ; C_N : `config/production.json` alignment.C_N_eV (× 10³, 4 décimales). Colonne arithmétique : aligné = non aligné − C_N. ΔE_F ne dépend pas de l'alignement.
+
+| N | N mod 3 | ΔE_F | V̄^L(a_CC) non aligné | C_N | V̄^L(a_CC) aligné = non aligné − C_N |
+|---|---|---|---|---|---|
+| 6 | 0 | -20.5 | +8.2 | -50.5091 | +58.7091 |
+| 9 | 0 | -2.4 | +43.3 | -25.1437 | +68.4437 |
+| 12 | 0 | +2.5 | +51.1 | -18.6896 | +69.7896 |
+| 5 | 2 | -235.8 | -364.4 | -57.5626 | -306.8374 |
+| 7 | 1 | -866.1 | -400.1 | -26.9143 | -373.1857 |
+| 8 | 2 | -583.3 | -269.9 | -14.4103 | -255.4897 |
+| 10 | 1 | -508.7 | -297.7 | -9.3417 | -288.3583 |
+| 11 | 2 | -209.3 | -253.9 | -9.5507 | -244.3493 |
+
+### 5.4 Scalaires lus sur les courbes des npz (définitions de `table_v1_v2.md` l.73, 74, 98, 99)
+
+Lecture : Born/T = Γ_Born/Γ_T de `resonance_9x9.npz` (`eg`, `Gamma_Born`, `Gamma_T`) sur |ε − E_D| ≤ 3 eV, min et max ; Γ_T à c = 0,1 % = `Gamma_c` × 10³ de `resonance_criteria_9x9.npz` (`x_c` sur ±1 eV) : min (position), max (position), interpolation linéaire à 0 ; ħ/Γ = 658,2 meV·fs / Γ interpolé à −0,3 et +0,3 eV — code de `article/R6_production_corrigee/etape3/r6_compare_v1_v2.py` (rstats, cstats).
+
+**Porte** (la même lecture sur les npz v1 et non alignés redonne les valeurs publiées à la dernière décimale) : **PASS**.
+
+| ligne publiée | grandeur | npz | publié | relu | verdict |
+|---|---|---|---|---|---|
+| R6 l.73 | Born/T min sur ±3 eV | v1 | 0.677 | 0.677 | OK |
+| R6 l.73 | Born/T min sur ±3 eV | non aligné | 1.106 | 1.106 | OK |
+| R6 l.74 | Born/T max sur ±3 eV | v1 | 16.453 | 16.453 | OK |
+| R6 l.74 | Born/T max sur ±3 eV | non aligné | 211.720 | 211.720 | OK |
+| R6 l.98 | Γ_T à c = 0,1 % sur ±1 eV : min (à) / max (à) / E_D (meV) | v1 | 0.63 (+0.24) / 5.55 (-1.00) / 1.27 | 0.63 (+0.24) / 5.55 (-1.00) / 1.27 | OK |
+| R6 l.98 | Γ_T à c = 0,1 % sur ±1 eV : min (à) / max (à) / E_D (meV) | non aligné | 2.25 (+1.00) / 37.84 (-0.18) / 7.79 | 2.25 (+1.00) / 37.84 (-0.18) / 7.79 | OK |
+| R6 l.99 | ħ/Γ à ∓0,3 eV, c = 0,1 % (fs) | v1 | 419 / 1025 | 419 / 1025 | OK |
+| R6 l.99 | ħ/Γ à ∓0,3 eV, c = 0,1 % (fs) | non aligné | 24 / 230 | 24 / 230 | OK |
+
+Valeurs finales (même lecture sur les npz de `results/M2_plateau`) :
+
+| grandeur | v1 | non aligné (v2) | final | final − v1 | statut | source finale | lieu |
+|---|---|---|---|---|---|---|---|
+| Born/T min sur ±3 eV | 0.677 | 1.106 | 1.050 | +0.373 | remplacé | `results/M2_plateau/resonance_9x9.npz` : eg, Gamma_Born, Gamma_T | R6 l.73 (sans équivalent final dans la table principale) |
+| Born/T max sur ±3 eV | 16.453 | 211.720 | 202.851 | +186.398 | remplacé | `results/M2_plateau/resonance_9x9.npz` : eg, Gamma_Born, Gamma_T | R6 l.74 (sans équivalent final dans la table principale) |
+| Γ_T à c = 0,1 % sur ±1 eV : min (à) / max (à) / E_D (meV) | 0.63 (+0.24) / 5.55 (-1.00) / 1.27 | 2.25 (+1.00) / 37.84 (-0.18) / 7.79 | 2.48 (+1.00) / 40.58 (-0.18) / 8.47 | +1.85 / +0.76 / +35.03 / +0.82 / +7.20 | remplacé | `results/M2_plateau/resonance_criteria_9x9.npz` : x_c, Gamma_c | R6 l.98 (sans équivalent final dans la table principale) |
+| ħ/Γ à ∓0,3 eV, c = 0,1 % (fs) | 419 / 1025 | 24 / 230 | 26 / 212 | -393 / -813 | remplacé | `results/M2_plateau/resonance_criteria_9x9.npz` : x_c, Gamma_c | R6 l.99 (sans équivalent final dans la table principale) |

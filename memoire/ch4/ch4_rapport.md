@@ -331,3 +331,73 @@ index 77b0550..c678547 100644
  | B σ(ω) complexe 27×27 (perspective B d'EM.md, hors mémoire) | `memoire/EM/B_sigma_complex/` (seul emplacement : calcul local de 3 min) | PRODUCTION | aucun `.save` ; tout se relance avec `b_prod.py` |
 +| Chiffres du ch. 4 : table v1 → final, régions d'alignement, NOTES_TGAMMA au final, nombres de défauts.tex (2026-09-30) | `memoire/ch4/` (seul emplacement : calcul local de quelques secondes, pas de répertoire de travail hors dépôt) | PRODUCTION | aucun `.save` ; tout se relance avec `ch4_chiffres.py all` |
 ```
+
+## Partie 5 — compléments (2026-09-30, après le commit 90d2022 de Greg)
+
+Même cadre : chiffres copiés ou lus sur les fichiers de `results/`, colonnes arithmétiques seulement, aucune autre modification. Fichiers modifiés :
+`memoire/ch4/ch4_chiffres.py` (fonctions `compl_5_1` … `compl_5_4`, `complements`, appariement du tex refait), `table_v1_final.md` (section
+« Compléments » ajoutée en fin de fichier ; la table principale et les sections a–l sont inchangées, seul l'en-tête porte le nouveau HEAD),
+`defauts_nombres.md` (refait), `NOTES_TGAMMA.md` (trois lignes), `README.md`, ce rapport ; nouveau : `NOTES_TGAMMA_partie5.diff`.
+`alignement_regions.*` inchangés (contenu de HEAD). `défauts.tex` non modifié (md5 70140bc016e0c2d6f73cfa1235815129, identique à la partie 4).
+
+- **5.1 tab:rcut_M** : `sv_mismatch_pi_blocks` (π–π*) et `diag_max_dM_over_max` (diag) des trois `m_rcut_convergence.csv`, 9×9 et 12×12, R_cut 0…6, en %
+  (fraction × 100 par décalage de la virgule). Exemple 9×9 R_cut 3 : π–π* 2,5718 (v1) / 8,8431 (non aligné) / 2,5737 (final) ; diag 2,0915 / 7,2103 / 1,7074.
+  **Lignes en double : aucune** dans les trois csv (14 lignes, 14 couples (taille, R_cut) distincts chacun ; le csv v1 est écrit en deux blocs, R_cut 0–3
+  puis 4–6). Ce qui est égal dans le csv final, ce sont des colonnes : `max_dM_over_maxM` = `diag_max_dM_over_max` pour 12×12 R_cut 0–3 et 9×9 R_cut 0 ;
+  `diag_max_dM_over_max` = `diag_abs_mismatch` sur toutes les lignes des trois csv.
+- **5.2 niveau 1** (`défauts.tex` l.664–670) : 6 tailles × R_cut 0…4 à 240², η 0,02, depuis les trois `level1_summary.csv` (30 lignes). Constat :
+  `results/M/level1_summary.csv` n'a aucune ligne R_cut 4 ; le point 9×9, R_cut 4 du mémoire (2468) est dans `results/M/m_rcut_resigma.csv`
+  (med_Gamma_meV 2468.003090813311), rapporté à côté.
+- **5.3 tab:échantillonnage** : ΔE_F et `Ved_radial_1.42A_meV` de `sampling_table.csv` (md5 égaux dans les trois répertoires), 8 tailles ; colonne arithmétique
+  aligné = non aligné − C_N (C_N de `config/production.json`) : 6 +58,7091 ; 9 +68,4437 ; 12 +69,7896 ; 5 −306,8374 ; 7 −373,1857 ; 8 −255,4897 ;
+  10 −288,3583 ; 11 −244,3493 meV.
+- **5.4 scalaires lus sur les courbes** (définitions de `r6_compare_v1_v2.py`, rstats et cstats) : **porte PASS**, les 8 valeurs publiées (l.73, 74, 98, 99 ;
+  v1 et non aligné) sont redonnées à la dernière décimale. Final : Born/T min 1,050, max 202,851 (±3 eV) ; Γ_T à c = 0,1 % sur ±1 eV : min 2,48 meV (+1,00 eV),
+  max 40,58 meV (−0,18 eV), 8,47 meV à E_D ; ħ/Γ à ∓0,3 eV : 26 / 212 fs. Dans la table principale, les lignes R6 l.73, 74, 98, 99 restent « sans équivalent
+  final » (non modifiées) ; les valeurs sont dans la section « Compléments ».
+- **5.5 `defauts_nombres.md`** : 606 nombres (la notation scientifique et les seuils « 10^{-12} » comptent maintenant pour un nombre entier ; les tirets
+  « 2--32 » ne donnent plus de signe) ; **appariés 234, non appariés 63, entiers courts hors tabular non comparés 309** ; lignes de la table principale jamais
+  citées 22/207 (partie 4 : 553 nombres, 87 / 67 / 399, 59/207). L'index d'appariement comprend la table principale et les compléments 5.1–5.4. Non appariés
+  restants (section dédiée du fichier) : paramètres (300², 100 Ry, 2.466 Å, centres et étalements de Wannier, a_CC 1.42, A_cell 5.27, E_D −4.239),
+  23.9 et 34.2 eV Å² (carte de M̃_π, absents des tables sources), nombres de cellules 49 et 113, seuils des tests (10^{-12}, 10^{-5}, −10^{-8}), test d'or
+  grossier 5×10^{-14} / 5.1×10^{-14} / 6.1×10^{-9} / 3.7×10^{-9}, erreurs n_e (8×10^{-4}, 5×10^{-3}), grille interne 1.4×10^{-3}, ordres de grandeur du
+  texte (10^9, 10^{23}, 10^{14}, 2×10^{13}), 4.3 %, −1.05 et −0.70 eV. Les entiers des `tabular` (N, N mod 3, R_cut) s'apparient souvent par coïncidence.
+- **NOTES_TGAMMA.md** : seules les grandeurs de 5.4 y figuraient déjà comme « non publiées » : §2 ligne « médiane de la courbe » (Born/T min et max), §2 ligne
+  « Γ_T à c = 0,1 % » (min, max, E_D, ħ/Γ), §3 C13. tab:rcut_M et tab:échantillonnage n'y figurent pas ; les médianes de niveau 1 de 5.2 y sont déjà en valeurs
+  finales (C10, C12). Contrôle `notes` : 15/15 valeurs finales retrouvées. Diff ci-dessous (annexe C) et dans `NOTES_TGAMMA_partie5.diff`.
+
+**STOP — Greg relit et commit.**
+
+## Annexe C — diff de `NOTES_TGAMMA.md`, partie 5 (`git diff` contre 90d2022)
+
+```diff
+diff --git a/NOTES_TGAMMA.md b/NOTES_TGAMMA.md
+index c678547..e973270 100644
+--- a/NOTES_TGAMMA.md
++++ b/NOTES_TGAMMA.md
+@@ -84,13 +84,13 @@ sur une grille d'énergie de pas η/ne_per_eta (`resonance_metrics.py:55`) →
+ | quantité | valeur | source |
+ |---|---|---|
+ | médiane de \|Γ\|·N_cells sur les 41 266 états (carte niveau 1) | **3 189,01 meV** (Γ par défaut, ×81 = intensif) [v1 : 2 473,55] | `results/M2_plateau/level1_summary.csv` l. « 9x9,3,240,0.02 » (3189.0136) ; `specwd_9x9_prod.npz` (job 22058843, 2026-09-29) |
+-| médiane de la **courbe** Γ_T(ε) (moyenne lorentzienne) sur ±3 eV | 3 771,46 meV — **autre médiane** que la précédente (courbe vs états) ; Γ_Born : 1,7944e+05 meV ; Born/T médian 45,846 (min et max non publiés par R10) [v1 : 2 343,59 ; 7 405,83 ; 3,302 (0,677, 16,45)] | `article/R10_plateau/c/table_v2_plateau.md` l.101–103 (`resonance_9x9.npz`) |
++| médiane de la **courbe** Γ_T(ε) (moyenne lorentzienne) sur ±3 eV | 3 771,46 meV — **autre médiane** que la précédente (courbe vs états) ; Γ_Born : 1,7944e+05 meV ; Born/T médian 45,846 (min 1,050, max 202,851 sur ±3 eV, lus sur les courbes `Gamma_Born`/`Gamma_T` du npz) [v1 : 2 343,59 ; 7 405,83 ; 3,302 (0,677, 16,45)] | `article/R10_plateau/c/table_v2_plateau.md` l.101–103 (`resonance_9x9.npz`) ; min/max : `memoire/ch4/table_v1_final.md`, compléments 5.4 (porte : relecture v1 et non alignée = valeurs publiées) |
+ | Re Σ médian, R_cut 3 | **+605,08 meV** ; \|Re Σ\|/Γ médian 0,2173 [v1 : 722,3 ; 0,227] (valeur non alignée : §8) | `results/M2_plateau/m_rcut_resigma.csv` (med_ReSigma_meV 605.0832…, med_absReSigma_over_Gamma 0.21732…) |
+ | position de résonance E_res − E_D (argmax des états à ±1,5 eV) — **retiré du ch. 4 (R10 B.1 : argmax discret sur une couronne de la grille de sortie ; gardé ici pour la traçabilité)** | −0,175 eV (R_cut 2, 3, 4 à η 0,01/0,02 ; R_cut 0 à η 0,01/0,02 ; −0,181 à R_cut 0 et 4, η 0,05) ; −0,227 (R_cut 1) ; contre la grille de sortie (N_k^int 900) : −0,134 / −0,175 / −0,175 / −0,172 eV à 120² / 240² / 480² / 960² (non aligné : −0,227 / −0,202 / −0,200 / −0,191) [v1 : −1,238 ; −1,183 (η 0,01) ; −1,292 (R_cut 2 et 4)] | `results/M2_plateau/level1_summary.csv` (argmax_E_minus_ED_eV) ; `article/R10_plateau/b/b_results.json` B1 |
+ | pics des courbes (ε − E_D) | Γ_T : −0,180 eV ; Γ_Born : +1,695 eV ; Γ_T/ρ₀ : −0,170 eV ; δρ : −0,787 eV ; ρ_dis : +1,710 eV ; \|T̄\| : −0,170 ; −Im T̄ : −0,172 ; min \|Re T̄\| : −2,140 ; Re T̄(E_D) = 12,624 eV, Im T̄(E_D) = −2,119 eV ; zéros de Re T̄ : −2,1425, −2,130, −2,095, −2,070, −2,0475, −2,005, −2,000, −0,210 [v1 : −1,24 ; +1,695 ; −0,015 ; −2,53 ; −2,53 ; −0,905 ; −1,29 ; −2,145 ; 2,521 / −0,091 ; aucun zéro] | `results/M2_plateau/resonance_9x9.npz` (`peak_*`, `ReTbar_at_ED`, `ImTbar_at_ED`, `Tbar_zero_crossings`) |
+ | critère det / valeur propre | matrice complète (dim 145) : min de \|det[1 − Vg₀]\|/max = 1,261e-4 à −0,785 eV ; min_i \|λ_i\| = 0,0019 à −0,787 eV. Bloc σ (dim 87) : 4,379e-4 à −0,7875 eV, \|λ\| = 0,00186. Bloc π (dim 58) : aucun zéro, min \|det\|/max 1,706e-2 à −0,170 eV, min \|λ\| = 0,3440 à −0,127 eV [v1 : 2,09e-4 à −2,530 eV ; 0,0108 (λ = +0,0003 + 0,0108 i) ; secondaires −2,19 … −1,97 eV] | `article/R10_plateau/c/table_v2_plateau.md` l.115–117 ; `results/M2_plateau/resonance_criteria_9x9.npz` (`sigma_flag_at`, `sigma_flag_minlam`, `sigma_flag_det_rel`, `dim_pi`, `dim_sigma`) |
+ | règle de somme de Friedel | ∫δρ sur toute la bande = **−1,0005** états (Tr[t g₀′]) et −1,0005 (Lloyd) ; bloc π −0,9981, bloc σ −0,0024 ; dans ±3 eV : +0,702 (π −0,256, σ +0,958) ; écart ponctuel max et cumuls aux bords non publiés par R10 [v1 : −0,0569 ; +1,782 ; 0,614 ; −2,190 / −0,409] | `results/M2_plateau/resonance_criteria_9x9.npz` (`sumrule`, `sumrule_lloyd`, `sumrule_window`, `*_pi`, `*_sigma`) |
+-| Γ_T à c = 0,1 % sur ±1 eV | courbe finale dans le npz (`x_c`, `Gamma_c`, c_compare 0,001) ; min / max / valeur à E_D et ħ/Γ non publiés par R10 [v1 : 0,63 (+0,24) ; 5,55 (−1,00) ; 1,27 ; 419 / 1 025 fs] | `results/M2_plateau/resonance_criteria_9x9.npz` |
++| Γ_T à c = 0,1 % sur ±1 eV | min 2,48 meV (+1,00 eV), max 40,58 meV (−0,18 eV), 8,47 meV à E_D ; ħ/Γ à ∓0,3 eV : 26 / 212 fs (lus sur la courbe `x_c`, `Gamma_c` du npz, c_compare 0,001, mêmes définitions que R6) [v1 : 0,63 (+0,24) ; 5,55 (−1,00) ; 1,27 ; 419 / 1 025 fs] | `results/M2_plateau/resonance_criteria_9x9.npz` ; `memoire/ch4/table_v1_final.md`, compléments 5.4 (porte : relecture v1 et non alignée = valeurs publiées) |
+ | localité de M_W (9×9 dense) | ‖M_W(0, 0)‖ = 41,927 eV ; p_z–p_z sur le site de la lacune 31,546 eV, p_z de l'autre sous-réseau 0,640 eV ; ‖M_W(R, 0)‖ hors site inchangés par l'alignement (seule la diagonale sur site change : \|R\| = a : 1,963 / 1,388 / 1,501 ; √3 a : 0,137 / 0,639 / 0,122 …) ; abscisse maximale 15,588 a (images de Wigner-Seitz, contre 22,517 a avec les étiquettes brutes) [v1 : 9,365 ; 6,617 ; 0,044 ; a : 0,658 / 0,460 / 0,437 ; √3 a : 0,165 / 0,079 / 0,035 / 0,029 ; 2a : 0,082 / 0,081 — le texte du 2026-09-18 rangeait 0,460 dans la 2ᵉ couronne] | `results/M2_plateau/mwr_locality.npz` (`9x9_dense_onsite_norm`, `9x9_dense_onsite_pzvac`, `9x9_dense_onsite_pzB`, `9x9_dense_dist`, `9x9_dense_w`) ; table R10 l.72–74 |
+ | recentrage | R_d = [4, 4, 0] sur la boîte 27×27 (cohérent avec s_red = 13/27 = 4·3 + 1, p = 3) ; inchangé ; C_N soustrait sur les 81 mailles de la boîte (étiquettes brutes de `Mwk_to_Mwr`) puis recentrage (`defect_mwr`) | lignes « [align] » et « [recenter] » des journaux `results/M2_plateau/logs/` ; R10 C.1 |
+ 
+@@ -113,7 +113,7 @@ Type : **P** = porte bloquante (le code refuse, `raise`), **T** = test PASS/FAIL
+ | C10 | R_cut (support de V_loc) | C | carte niveau 1 R_cut 0–3 (0–4 depuis R6) ; `rcut_resigma.py` R_cut 0–4 | plateau ≤ 5 % (énoncé `compute_spectral_wannier.py:118`) | final, 9×9 : 3 013,96 / 3 273,25 / 3 222,08 / **3 189,01** / 3 200,00 meV (R_cut 0…4) ; écart médian par état à R_cut 4 : 9,79 / 4,52 / 1,98 / **0,66 %** ; Re Σ médian 29,5 / 761,8 / 737,2 / 605,1 / 696,7 meV (`results/M2_plateau/m_rcut_resigma.csv`, `rel_med_dGamma`, `med_ReSigma_meV`) [v1 : 2 596,9 / 2 488,9 / 2 466,8 / 2 473,5 / 2 468,0 ; 10,0 / 4,6 / 1,5 / 0,63 % ; Re Σ 515 / 694 / 723 / 722 / 720] |
+ | C11 | Grille de sortie × η (plateau conjoint) | C | carte niveau 1 (grilles 60/120/240, η 0,05/0,02/0,01) | ≤ 5 % quand η/2 et grille ×2 | final, 9×9, R_cut 3 (`results/M2_plateau/level1_summary.csv`) : 120² → 240² : 3 200,71 → 3 189,01 (η 0,02 ; 0,37 %, arithmétique), 3 208,42 → 3 202,75 (η 0,01 ; 0,18 %) ; η 0,02 → 0,01 à 240² : 3 189,01 → 3 202,75 (0,43 %) ; 0,05 → 0,02 : 3 232,61 → 3 189,01 (1,37 %) [v1 : 0,07 % ; 0,3 % ; 0,001 % ; 0,74 %] |
+ | C12 | Taille de super-cellule N (niveau 2, familles N mod 3) | C | `scripts/level2_families.py`, `results/M2_plateau/level2_summary.csv`, `level2_families.csv` | N ≥ 7 (config l. 6) | final, 5/6/7/8/9/12 : 2 997,14 / 3 149,15 / 2 942,85 / 2 974,18 / 3 189,01 / 3 264,51 meV ; (max − min)/moyenne, arithmétique (= R9 clôture R.4) : famille 3m (6, 9, 12) 3,60 %, non-3m (5, 7, 8) 1,83 %, 7–9 : 8,11 % [v1 : 2 524,3 / 2 509,2 / 2 487,5 / 2 478,5 / 2 473,5 / 2 458,7 ; 0,56 % ; 2,0 % ; 1,84 %] |
+-| C13 | Born vs matrice T | K | `resonance_metrics.py:60` | — | final : Born/T médian 45,846 sur ±3 eV (min et max non publiés) [v1 : 3,30] |
++| C13 | Born vs matrice T | K | `resonance_metrics.py:60` | — | final : Born/T médian 45,846 sur ±3 eV (min 1,050, max 202,851 ; compléments 5.4) [v1 : 3,30] |
+ | C14 | Sensibilité à l'alignement du potentiel : **C = ±rms du plateau de Kumagai–Oba (±9,05 meV à 9×9) ajouté uniformément au V_loc aligné** (R10 D10) | K | `resonance_metrics.py --shift-L-meV 9.05,-9.05` (V_loc + C·1 sur la boîte) | — | final : médiane des états 3 188,35 → 3 237,29 (+9,05 meV) / 3 157,07 (−9,05 meV) ; pic de la courbe Γ_T −0,180 eV inchangé ; écart relatif de la courbe Γ_T : max 6,36e-2 / 6,10e-2, médian 1,37e-2 / 1,24e-2 (`results/M2_plateau/resonance_9x9_shiftL.npz` ; R10 C.1). Retirés : la variante « M − ⟨M^L⟩·1 » (décalage 5 427,3 meV en v2) et C = ±25 meV autour du V_loc non aligné (R6 3.5) [v1 : décalage 67,0 meV ⇒ 6,4e-4 (médian 1,8e-4)] |
+ | C15 | Règle de somme de Friedel, deux formules (Tr[t g₀′] vs Lloyd) | K | `resonance_criteria.py:57–75` ; R6 : par bloc (`--blocks full,pi,sigma`) | — | final : −1,0005 / −1,0005 états sur toute la bande (π −0,9981, σ −0,0024) ; +0,702 dans ±3 eV [v1 : −0,0569 / −0,0569 ; +1,78] |
+ | C16 | Critère de résonance (det, valeur propre minimale) et position du pic | K | `resonance_criteria.py:41–55` ; R6 : par bloc, `--flag-eV` | — | final : minimum global à −0,785 eV (det) / −0,787 eV (\|λ\| = 0,0019), porté par le bloc σ ; bloc π sans zéro (min \|λ\| 0,3440 à −0,127 eV) ; pic de la courbe Γ_T −0,180 eV ; E_res(argmax Γ) retiré (R10 B.1 ; valeur −0,175 eV) [v1 : minimum unique à −2,530 eV ; E_res −1,24 eV] |
+```

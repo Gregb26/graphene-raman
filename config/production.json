@@ -2,8 +2,34 @@
   "_comment": "Frozen production parameters (2026-09-05), declared after the Level 1-2 convergence on the nbnd=20 dense chain. Every production script must load this file via electron_defect_interaction.config.load_production(); CLI flags may only widen a sweep, never silently change a frozen value.",
   "M_normalization": "v2 : L et NL en norme unit_cell, 2026-09-25",
   "M_normalization_note": "v1 (results/M, gele) : M^L des noyaux compute_ML_R* avec psi normee sur la super-cellule (facteur N_cells manquant, R5-A.2) et M^NL en norme maille ; v2 (R6) : M2 = N_cells*M^L + M^NL, les deux parties en norme unit_cell ; porte obligatoire A.2 (application directe de dV sur etats de Bloch purs, <= 1e-6 eV) sur chaque M utilise",
-  "results_dir": "results/M2",
-  "results_dir_frozen": "results/M",
+  "results_dir": "results/M2_plateau",
+  "matrices_dir": "results/M2",
+  "results_dir_frozen": [
+    "results/M",
+    "results/M2"
+  ],
+  "alignment": {
+    "version": "plateau (i), R10, 2026-09-29",
+    "method": "C_N = moyenne des decalages de sphere de 1,0 A (alignment.atom_sphere_shifts) sur les atomes a distance vraie >= 0,75 r_max de la lacune ; M_W(R,R) - C_N*I_5 sur les mailles R mod D dans [0,N)^2 (etiquettes brutes de Mwk_to_Mwr, defect_mwr), approximation (i), rien d'autre ; matrices M2 brutes (matrices_dir)",
+    "C_N_eV": {
+      "5x5": -0.0575626062015234,
+      "6x6": -0.05050914517629934,
+      "7x7": -0.02691429425434127,
+      "8x8": -0.014410274533323343,
+      "9x9": -0.02514371002267805,
+      "10x10": -0.009341716029942201,
+      "11x11": -0.009550651557225422,
+      "12x12": -0.01868959310083182,
+      "15x15": -0.01621854502926427,
+      "18x18": -0.015062070057554946,
+      "21x21": -0.014234270413329362,
+      "24x24": -0.013481540317473475,
+      "27x27": -0.0130057717522539
+    },
+    "source": "article/R10_plateau/a/a1_results.json",
+    "source_md5": "3d98bbd244eba8e1c1c645dcf675432b",
+    "labels_offgrid": "wigner_seitz"
+  },
   "R_cut": 3,
   "grid": 240,
   "eta_eV": 0.02,

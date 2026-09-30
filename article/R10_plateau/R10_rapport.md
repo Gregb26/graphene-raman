@@ -597,3 +597,28 @@ Ajouts aux contraintes du lanceur de C (0.6) : C14 appelé avec `--shift-L-meV 9
 Fichiers de l'essai (scratchpad, temporaires) : config de substitution, bancs d'essai, sorties ; hors dépôt et hors répertoire de campagne.
 
 **STOP — (b) écrit le 2026-09-29, non commité.** Suite : relecture et commit par Greg ; (c) par Greg (points 1, 3 et 7 ci-dessus) ; puis GO 2.
+
+## (c) — config appliquée par Code à la demande de Greg (2026-09-29 ; non commitée)
+
+(b) commité par Greg (`ea91d61`, « R10 b »). Greg demande à Code d'appliquer (c) et de vérifier trois points ; Greg commit et pousse.
+
+Fichiers : `config/production.json` (`results_dir` → `results/M2_plateau` ; `matrices_dir` = `results/M2` ; `results_dir_frozen` = [`results/M`, `results/M2`] ;
+bloc `alignment` : version « plateau (i), R10, 2026-09-29 », méthode, `C_N_eV` des 13 tailles, `source` = `article/R10_plateau/a/a1_results.json`, `source_md5`,
+`labels_offgrid` = `wigner_seitz` ; reste du fichier inchangé à l'octet, même mise en forme) ; `src/electron_defect_interaction/config.py` (clés obligatoires
+`matrices_dir`, `alignment` ; `matrices_dir()` ; `alignment_C()`, `KeyError` si la taille manque ; `dense_paths(…)["mfile"]` → `matrices_dir` ; docstring de
+`results_dir` ; ligne `verbose` avec `matrices=` et `C_N=`) ; `.gitignore` (mêmes exceptions pour `results/M2_plateau/` que pour `results/M2/`).
+
+Vérifications (chargeur réel `load_production`) :
+1. C_N de 5×5, 6×6, 7×7, 8×8, 9×9, 12×12 = `C_i_eV` de R9 (`article/R9_controles/a/a1_results.json`) au bit ; arrondis −57,56 / −50,51 / −26,91 / −14,41 / −25,14 /
+   −18,69 meV ; écrits en eV (|C_N| < 0,1). Le `C_retenu_eV` de R9 (autre valeur pour 5×5, 6×6, 7×7, 8×8, 12×12) n'est pas utilisé.
+2. `source_md5` 3d98bbd244eba8e1c1c645dcf675432b = md5 de `article/R10_plateau/a/a1_results.json` = md5 de `R10_plateau/a/a1_results.json` ; les 13 C_N de la config =
+   `C_N_eV` du fichier au bit.
+3. `matrices_dir` → `results/M2`, `results_dir` → `results/M2_plateau` ; `dense_paths("9x9")["mfile"]` = `results/M2/M_dense_9x9.npy` (existe) ; taille absente
+   (13×13) → `KeyError`.
+
+Contrôles : import de `config` des 11 scripts de (b) OK ; `git check-ignore` : `M_analysis.npz`, `specwd_*_prod.npz`, csv, README de `results/M2_plateau/` versionnés,
+`logs/` et autres fichiers ignorés ; `pytest tests` : 192 passed (7 min 53 s). `results/M2_plateau/` n'existe pas encore (créé au GO 2).
+
+Points de (b) toujours ouverts (section « (b) ») : seuil 1e-9 de la porte D6 (iii), colonne de `level2_families.py`, contrôle C.3 des anneaux (1e-14).
+
+**STOP — (c) appliquée le 2026-09-29, non commitée.** Suite : commit et push par Greg ; GO 2.

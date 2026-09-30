@@ -12,7 +12,7 @@ test_zero_pad_dense.py
         machine precision -- the coarse grid is the subset of the dense grid where delta_k_sc lands
         exactly on the preserved coefficients.
 
-    Prints PASS/FAIL and exits 0/1 (no pytest), like the other scripts/ validation tests.
+    Prints PASS/FAIL and exits 0/1, like the other validation scripts; wrapped by tests/test_scripts_M.py.
 """
 import sys
 import numpy as np

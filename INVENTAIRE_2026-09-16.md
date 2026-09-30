@@ -852,6 +852,21 @@ Proposition d'origine, pour mémoire :
 | `requirements.txt` | régénérer depuis le venv (sans abipy/netCDF4, avec mpi4py, pytest, ase/spglib en optionnel) ou déclarer les dépendances dans `pyproject.toml` et supprimer le fichier |
 | `reports/`, `research_notes/` | regrouper sous `article/C_optique_lacunes/biblio/` (ils sont la base du PLAN C) |
 
+### Étape C — EXÉCUTÉE le 2026-09-30 (GO de Greg ; non commitée)
+
+Fait : `[tool.pytest.ini_options]` dans `pyproject.toml` (`testpaths = tests`, marqueurs `slow`, `needs_data`, `cluster`) ;
+`tests/conftest.py` : `scripts/` et `scripts/validation/` sur `sys.path`, fixture `repo_cwd`, helper `local_data` ;
+`tests/test_scripts_tmatrix.py` (golden synthétique, R_cut, `local_green_batch` [slow], test d'or réel [cluster, skip]) et
+`tests/test_scripts_M.py` (zero-pad exact, non-régression dense [needs_data, slow], reconstruction KS [needs_data, slow], pipeline
+Wannier 11×11 [needs_data], pad vs super-cellule [cluster, skip]) : **208 tests collectés** (199 + 9). Codes de sortie corrigés :
+`test_local_green_batch.py` refondu en `main()` (seuil 1e-2 sur fast vs exact, mesuré 5,4e-3) ; `test_local_tmatrix_real.py` déjà
+fait au §11. Marqués `slow` : `test_kubo_pauli_edges_real`, `test_sigma_complex_real` (5–8 s, les deux plus longs de la suite EM).
+Constat : `test_zero_pad_dense` test 2 (dense 5×5, > 10 min) a planté une fois en local avec `MPIDI_OFI_handle_cq_error … OFI poll
+failed (default nic=en12)` : MPICH/libfabric sur l'interface réseau du portable, pas la physique ; à relancer (ou `FI_PROVIDER`).
+Les scripts de `scripts/validation/` restent lançables seuls ; CLAUDE.md et `scripts/README.md` mis à jour.
+
+Proposition d'origine, pour mémoire :
+
 ### Étape C — deux systèmes de tests
 
 1. Garder **pytest** comme unique lanceur : ajouter `[tool.pytest.ini_options] testpaths = ["tests"]` dans

@@ -56,11 +56,14 @@ Work is conducted in French; code and docstrings are in English.
 # Editable install (already done in .venv; redo it if the repo folder is renamed or moved: the .pth stores the absolute path)
 .venv/bin/python -m pip install -e . --no-deps --no-build-isolation
 
-# Two test systems.
-# 1. pytest (tests/, 199 tests, no external data except the tracked wannier/27x27): EM series, matrix_io, R8/R9/R10 functions.
+# ONE test launcher: pytest (config in pyproject.toml, testpaths = tests). 208 tests: EM series, matrix_io, R8/R9/R10 functions
+# (synthetic) + the chain M / chain T validation scripts of scripts/validation/, wrapped by tests/test_scripts_{M,tmatrix}.py
+# (each script keeps its PASS/FAIL and exit code; the test asserts on it). Markers: slow (> ~10 s: the two real-data kubo
+# tests, local_green_batch, ks_reconstruction, zero-pad non-regression), needs_data (local data/graphene, skipped when absent),
+# cluster (M matrices / scratch .save, skipped elsewhere).
 .venv/bin/python -m pytest tests                       # .venv/bin/pytest has a dead shebang: always use `python -m pytest`
-# 2. Standalone validation scripts (chain M / chain T): they print PASS/FAIL and exit 0/1, run from the repo root.
-#    Local data paths live in scripts/_paths.py (override the data root with EDI_DATA).
+.venv/bin/python -m pytest tests -m "not slow"         # ~1 min
+# The validation scripts still run standalone (from the repo root; data paths in scripts/_paths.py, root override EDI_DATA):
 .venv/bin/python scripts/validation/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline (local 5x5 data)
 .venv/bin/python scripts/validation/test_wannier.py               # Wannier interpolation pipeline
 .venv/bin/python scripts/validation/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
@@ -226,8 +229,11 @@ paths are not inspectable from this checkout — confirm names before launching.
 
 - **scripts/validation/test_local_tmatrix.py**, **test_local_rcut.py** (synthetic), **test_local_green_batch.py** (H of `wannier/27x27`),
   **test_local_tmatrix_real.py** (real golden test: local t = dense `compute_T` × N_cells; cluster only) — chain T.
-- **tests/** (pytest, 199 tests) — EM series, `matrix_io`, and the R8/R9/R10 functions of chain T on synthetic data. Not covered
-  by pytest: `compute_ML_*`, `non_local`, `wannier_interpolate`, `scattering_rate(_fast)` (covered by the standalone scripts).
+- **tests/** (pytest, 208 tests) — EM series, `matrix_io`, the R8/R9/R10 functions of chain T on synthetic data, and the
+  standalone scripts above through `tests/test_scripts_M.py` (zero padding, KS reconstruction, Wannier pipeline, pad vs full
+  supercell) and `tests/test_scripts_tmatrix.py` (golden tests, `local_green_batch`, real golden test). Known local hiccup:
+  `test_zero_pad_non_regression` (dense M^L on the 5x5 pair, > 10 min) once died with an MPICH/libfabric error
+  (`OFI poll failed`, network interface) on the laptop — an environment issue, not a physics failure.
 
 The standalone scripts take their data paths from `scripts/_paths.py` or module constants; adjust them to the available
 `.save` names.

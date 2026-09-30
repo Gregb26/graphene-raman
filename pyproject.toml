@@ -16,3 +16,11 @@ campaigns = ["ase", "spglib"]  # campagnes/R/R1, R2 (relaxation inputs and analy
 [tool.setuptools.packages.find]
 where = ["src"]
 
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: more than ~10 s (deselect with -m 'not slow')",
+    "needs_data: needs the local DFT data under data/graphene (skipped when absent)",
+    "cluster: needs rorqual data (M matrices, scratch .save); skipped elsewhere",
+]

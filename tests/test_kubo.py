@@ -260,6 +260,7 @@ def test_kubo_electron_hole_graphene():
                        sigma_on_grid(tb, 600, HW_EDGE, mu=-0.3, eta=0.02, kT=0.025), rtol=0, atol=1e-13)
 
 
+@pytest.mark.slow   # real 27x27 model on a dense grid: the two longest tests of the suite (5-8 s each)
 def test_kubo_pauli_edges_real(tb_w90, w90_ref):
     """
     27 x 27 data, mu = E_D +/- 0.3 eV, kT = 0.025: the half-max edge is 7 meV higher for n than for p doping
@@ -336,6 +337,7 @@ def test_sigma_complex_symmetries_and_blocks():
         assert np.allclose(sigma_on_grid(tb, 300, hw, mu=0.3, eta=0.05, kT=0.025, kernel=K, chunk=7000), s, rtol=0, atol=1e-12)
 
 
+@pytest.mark.slow   # real 27x27 model on a dense grid: the two longest tests of the suite (5-8 s each)
 def test_sigma_complex_real(tb_w90, w90_ref, sigma_w90):
     """
     27 x 27 data, gaussian_complex: values at the lasers and at the van Hove peak (kT = 0.025, N = 300,

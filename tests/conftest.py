@@ -121,3 +121,31 @@ def eig_w90(w90_dir):
     nb, nk = int(eig[:, 0].max()), int(eig[:, 1].max())
     _, k_red = read_w90_mat(w90_dir / "wannier_u.mat")
     return k_red, eig[:, 2].reshape(nk, nb)
+
+
+# ----------------------------------------------------------------------------------------------------
+# Standalone validation scripts of scripts/validation/ (chain M / chain T), wrapped by
+# tests/test_scripts_*.py: they run from the repo root with relative paths and their own PASS/FAIL.
+# ----------------------------------------------------------------------------------------------------
+import os
+import sys
+
+REPO = Path(__file__).resolve().parents[1]
+for _d in ("scripts", "scripts/validation"):
+    if str(REPO / _d) not in sys.path:
+        sys.path.insert(0, str(REPO / _d))
+import _paths  # noqa: E402  scripts/_paths.py (local data layout, EDI_DATA)
+
+
+@pytest.fixture
+def repo_cwd():
+    """Run a standalone script from the repo root (they use relative paths: wannier/, data/, figures/)."""
+    old = os.getcwd()
+    os.chdir(REPO)
+    yield REPO
+    os.chdir(old)
+
+
+def local_data(*paths):
+    """True when every local data path exists (used by skipif of the needs_data tests)."""
+    return all(os.path.exists(os.path.join(REPO, p)) for p in paths)

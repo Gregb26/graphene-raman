@@ -8,13 +8,15 @@ Session strictement en lecture seule : rien déplacé, renommé ni supprimé ; s
 État cartographié : première passe sur HEAD `193e25d` (« updated plan », 2026-09-30 08:46) ; **complété le même jour sur
 HEAD `656c05c`** (quatre commits de plus : `241739e`, `66602ed`, `90d2022`, `656c05c`), arbre propre. Les ajouts de la
 seconde passe sont au §0 bis et reportés dans les sections concernées (§5 R8, §6.2, §8, §9, §10, §12, §13). Les numéros
-de ligne de CLAUDE.md cités au §9 sont ceux de `193e25d` (décalés de +4 après la l. 243 depuis `90d2022`). Les calculs
-rorqual du mémoire sont terminés (R10 clos le 2026-09-30).
+de ligne de CLAUDE.md cités au §9 sont ceux de `193e25d` (décalés de +4 après la l. 243 depuis `90d2022`). **Troisième
+passe (HEAD `7ac2c69`, 2026-09-30 11:45)** : seul l'emplacement et l'état du dépôt du mémoire ont été mis à jour (§0 bis,
+§8, §10, §12, §13 étape F) ; rien d'autre n'a changé dans ce dépôt. Les calculs rorqual du mémoire sont terminés (R10
+clos le 2026-09-30).
 
 Méthode : lecture de chaque fichier de `scripts/`, `src/`, `tests/`, `article/`, `memoire/`, `results/`, `config/`,
 `.md` racine ; résolution **par import réel** de tous les `from electron_defect_interaction… import …` (635 imports,
 script AST + `importlib`) et par AST des imports inter-scripts (`sys.path`) ; grep des figures et tables dans le dépôt
-du mémoire `~/LaTeX/master_thesis` (lecture seule) ; collecte pytest (`--collect-only`, 199 tests, 0 erreur).
+du mémoire (lecture seule ; aujourd'hui `~/projects/msc-graphene-raman-defects`, voir §0 bis) ; collecte pytest (`--collect-only`, 199 tests, 0 erreur).
 
 Vocabulaire des statuts : **actif** = fait partie de la base vivante R10 ou d'un usage courant ; **figé** = campagne
 terminée, gardé pour la provenance, encore exécutable ; **obsolète** = remplacé, non rejouable ou désactivé
@@ -59,14 +61,28 @@ terminée, gardé pour la provenance, encore exécutable ; **obsolète** = rempl
 | `66602ed` « added chap4 tex file » | `memoire/défauts.tex` (750 lignes) : copie du chapitre 4 du mémoire, état **v1** | §6.2 ; copie identique à la version du dépôt du mémoire à une ligne vide près |
 | `90d2022` « conversion v1 -> final chap4 thesis done » | nouvelle campagne `memoire/ch4/` (11 fichiers, pilote `ch4_chiffres.py`) ; `NOTES_TGAMMA.md` porté à l'état final R10 (en-tête, §1, §2, §3, §6e, §8) ; `CLAUDE.md` corrigé sur 4 points (`results_dir` = M2_plateau, `sampling_table.csv`, ligne « Alignement », ligne `memoire/ch4/` du tableau des campagnes) | §6.2, §9 (NOTES_TGAMMA n'est plus « périmé depuis R10 » ; CLAUDE.md l. 243 et 255 corrigées) |
 | `656c05c` « re-did inventory for eventual clean up » | ce fichier (première passe) | — |
+| `7ac2c69` « updated inventory for cleanup » | ce fichier (seconde passe) | — |
 
-Hors dépôt, le même matin : **le dépôt du mémoire a changé de place et de forme.** `~/LaTeX/master_thesis` est vide
-depuis 10 h 33 ; le contenu est dans `~/LaTeX/msc-graphene-raman-defects/` (remote GitHub `Gregb26/msc-graphene-raman-defects`,
-commits `833b9b3` « cleaned up repo », `9b0c49d` « reorganisation », `5debac2` « preparation du repo pour recevoir les
-scripts, données, etc. »), avec `memoire/` (LaTeX) et quatre dossiers d'accueil encore vides (un README chacun) :
-`analyse/` (« copie figée du repo graphene-raman »), `calculs/` (inputs QE/Wannier90/EPW + SLURM, un dossier par
-calcul), `donnees/` (données des figures), `scripts_figures/`. Conséquences : §8 (chemin), §10 et §13 étape F (où
-copier quoi), et le skill `thesis-section-pass` cite encore `~/LaTeX/master_thesis`.
+Hors dépôt, le même matin : **le dépôt du mémoire a changé deux fois de place, et de forme.** Emplacement actuel :
+**`~/projects/msc-graphene-raman-defects/`** (remote GitHub `Gregb26/msc-graphene-raman-defects`, HEAD `e07e0d5`
+« updated readme cosmetic », 11:37). Les deux anciens emplacements, `~/LaTeX/master_thesis` (première passe) et
+`~/LaTeX/msc-graphene-raman-defects` (seconde passe), existent encore mais sont **vides** depuis 11 h 21. Le dossier
+parent s'appelle maintenant `~/projects` (minuscule) ; ce dépôt est donc `~/projects/raman-graphene`, et `~/projects/qe_pp`
+est son voisin. Le `.pth` de l'installation éditable et `config.ROOT` gardent l'ancienne casse (`/Users/gregou/Projects/…`),
+sans effet sur le système de fichiers de macOS, insensible à la casse.
+
+État du dépôt du mémoire à `e07e0d5` :
+
+| Élément | Contenu | Remarque |
+|---|---|---|
+| `memoire/` | source LaTeX (`master_thesis.tex`, `chapitres/`, `annexes/`, `pages_liminaires/`, `tikz/`, `dms.cls`, `.latexmkrc`, `build/`) ; `figures/` réduit aux **20 PDF inclus** (les 19 figures non incluses ont été retirées) | `latexmk` depuis `memoire/`, PDF écrit à la racine (`master_thesis.pdf`) |
+| `analyse/`, `calculs/`, `donnees/`, `scripts_figures/` | dossiers d'accueil, **encore vides** (un README d'une ligne chacun) | à remplir : §13 étape F |
+| `README.md` | structure, compilation, installation du venv ; « Scripts : à venir », « Données lourdes : à venir » | — |
+| `PROVENANCE.md` (172 l., **non commité** à 11:45) | registre de provenance : les 20 figures incluses (label, `.tex:ligne`, producteur et données dans ce dépôt, état R10 ou R6), les figures à venir, les 16 tables, les chiffres cités par chapitre, annexe ligne par ligne | **s'appuie sur ce fichier** (`INVENTAIRE_2026-09-16.md` §8, §10, §13 étape F, HEAD `656c05c`) ; sa colonne « Dans msc- » est vide et se remplira à la copie, avec le commit source |
+| `requirements.txt`, `.venv/` (Python 3.12.1) | gel de 154 paquets d'un environnement généraliste (abipy, netCDF4, torch, jupyterlab, numpy 1.26.4, matplotlib 3.8.2) | **ne correspond pas** au venv de ce dépôt (Python 3.13, numpy 2.3.5) ; sans `mpi4py`, `pytest` ni le paquet `electron_defect_interaction` : à refaire quand `analyse/` et `scripts_figures/` seront remplis |
+
+Conséquences pour cette carte : §8 (chemin et contenu de `figures/`), §10 et §13 étape F (où copier quoi, et
+articulation avec `PROVENANCE.md`). Le skill `thesis-section-pass` cite encore `~/LaTeX/master_thesis`.
 
 Ce que la seconde passe change dans les constats ci-dessus : le point 3 est corrigé dans CLAUDE.md et NOTES_TGAMMA.md
 (reste README.md, PLAN C, `submit_post.sh`) ; le point 4 ne vaut plus pour NOTES_TGAMMA.md ; le point 5 est inchangé
@@ -445,7 +461,7 @@ finale (v2 + alignement de Kumagai–Oba, `results/M2_plateau`). Rien n'a été 
 | `ch4/CLAUDE_md.diff` (42 l.) | diff « proposé, non appliqué » de `CLAUDE.md` | — | trace | figé ; **périmé** : il a été appliqué tel quel dans `90d2022` (le README de `ch4/` dit encore « non appliqué ») |
 | `ch4/ch4_rapport.md` (333 l.) | rapport de session : phase 0, porte, comptes, écarts entre sources, erreurs d'archives, annexe A (diff complet de NOTES_TGAMMA) | — | provenance | figé ; dit « rien n'est commité » et « fichiers non suivis » (vrai à l'écriture, faux depuis `90d2022`) |
 | `ch4/README.md` | README de campagne (but, prompt, statut, date, table des fichiers, relance, règles) | — | — | à jour, sauf « `CLAUDE_md.diff` non appliqué » |
-| `memoire/défauts.tex` (750 l.) | copie du chapitre 4 du mémoire (état v1 : aucune mention de Kumagai–Oba, médianes 2 524 / 2 509 / 2 597 meV, « quasi-annulation à ∼ −2,5 eV ») | — | lu par `ch4_chiffres.py tex` (lecture seule) | **copie de travail** : le rapport (erreur d'archive n° 4) note que le prompt la voulait hors dépôt ; identique à `~/LaTeX/msc-graphene-raman-defects/memoire/chapitres/défauts.tex` à une ligne vide près (md5 70140bc0… vs 6d6c7c60…) → doublon à surveiller dès que l'un des deux est édité |
+| `memoire/défauts.tex` (750 l.) | copie du chapitre 4 du mémoire (état v1 : aucune mention de Kumagai–Oba, médianes 2 524 / 2 509 / 2 597 meV, « quasi-annulation à ∼ −2,5 eV ») | — | lu par `ch4_chiffres.py tex` (lecture seule) | **copie de travail** : le rapport (erreur d'archive n° 4) note que le prompt la voulait hors dépôt ; identique à `~/projects/msc-graphene-raman-defects/memoire/chapitres/défauts.tex` à une ligne vide près (md5 70140bc0… vs 6d6c7c60…) → doublon à surveiller dès que l'un des deux est édité |
 
 Décisions consignées par cette campagne (à reporter dans le mémoire) : alignement de Kumagai–Oba retenu, alignement à
 site unique abandonné ; E_res retiré du ch. 4 ; C14 = ±9,05 meV autour du V_loc aligné ; tab:rcut_M à deux valeurs.
@@ -479,21 +495,24 @@ Producteurs : `make_figures_memoire.py` (6 `_final`/`fig_convergence`/`fig_Ved`)
 `fig_epw_*_mv0.002` (12 fichiers, anciennes figures degauss 0.002 renommées à la main en P18 ; seule
 `fig_epw_vs_ed_mv0.002` est citée, en v1) et `hamiltonian_reconstruction.png`.
 
-Le dépôt du mémoire — `~/LaTeX/master_thesis` lors de la première passe, **déplacé le 2026-09-30 vers
-`~/LaTeX/msc-graphene-raman-defects/memoire/`** (HEAD `5debac2` ; `figures/` = 39 PDF, chapitres dans `chapitres/`) —
-inclut **20 figures** (liste et comparaison md5 revérifiées après le déplacement : inchangées) :
+Le dépôt du mémoire — **`~/projects/msc-graphene-raman-defects/memoire/`** depuis le 2026-09-30 (HEAD `e07e0d5` ;
+chapitres dans `chapitres/` ; historique des emplacements au §0 bis) — inclut **20 figures**, et son `figures/` ne
+contient plus que ces 20 PDF (liste et comparaison md5 revérifiées à `e07e0d5` : inchangées, 8 diffèrent) :
 
 | Figure (mémoire) | Chapitre | Producteur ici | md5 mémoire vs `figures/` (2026-09-30) |
 |---|---|---|---|
 | fig_ks_reconstruction, fig_epw_kohn_degauss, fig_epw_phonons (ch. 2), fig_epw_validation, fig_epw_gamma, fig_epw_g_control, fig_epw_phonselfen, fig_epw_decay, fig_Ved_zoom | défauts.tex / eph.tex / théorie.tex | `make_figures.py`, `make_figures_epw.py` | identiques |
 | fig_M_map_final, fig_M_scaling_final, fig_Ved, fig_convergence, fig_level2, fig_locality_final, fig_spectral_final, fig_epw_vs_ed | défauts.tex, eph.tex | `make_figures_memoire.py`, `make_figures.py`, `make_figures_epw.py` | **diffèrent** : le mémoire a la version R6 (installée par `install_figures_R6.sh`), `figures/` a la version R10 du 2026-09-30 → **à réinstaller dans le mémoire** |
-| KB_projectors_C.pdf, fig_ebands_edos, fig_electron_convergence (théorie.tex) | ch. 2 | **hors dépôt** : `~/Projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) ; `KB_projectors_C.pdf` probable sortie manuelle de `plotting/plot_psp_radial_proj.py` (copie dans `results/`) | — |
+| KB_projectors_C.pdf, fig_ebands_edos, fig_electron_convergence (théorie.tex) | ch. 2 | **hors dépôt** : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) ; `KB_projectors_C.pdf` probable sortie manuelle de `plotting/plot_psp_radial_proj.py` (copie dans `results/`) | — |
 
-Non incluses mais présentes dans le `figures/` du mémoire : `fig_band_interp`, `fig_phonons` (juin, hors
-dépôt), `fig_M_map`, `fig_M_scaling`, `fig_locality`, `fig_spectral`, `fig_plateau`, `fig_rcut`, `fig_Ved_*`,
-`fig_epw_*_mv0.002`. `fig_em_coupling` (§2.5) n'y est pas encore (le texte du §2.5 n'est pas écrit ; le mémoire dit
-encore que « l'évaluation numérique [du couplage électron-photon] est laissée hors du cadre », introduction.tex l. 72,
-raman.tex l. 297).
+Les figures non incluses qui traînaient dans le `figures/` du mémoire (`fig_band_interp`, `fig_phonons`, `fig_M_map`,
+`fig_M_scaling`, `fig_locality`, `fig_spectral`, `fig_plateau`, `fig_rcut`, `fig_Ved_{boundary,map,profile_mean,radial,
+radial_masked}`, les 6 `fig_epw_*_mv0.002`) en ont été **retirées** (19 PDF, commit `dfc3180` du dépôt du mémoire) ; celles
+produites ici restent dans `figures/` de ce dépôt, `fig_band_interp` et `fig_phonons` ne subsistent que dans l'historique
+git du mémoire et dans `~/projects/qe_pp`. `fig_em_coupling` (§2.5) n'y est pas encore (le texte du §2.5 n'est pas
+écrit ; le mémoire dit encore que « l'évaluation numérique [du couplage électron-photon] est laissée hors du cadre »,
+introduction.tex l. 72, raman.tex l. 297). Le registre `PROVENANCE.md` du dépôt du mémoire reprend ce tableau figure
+par figure, avec le label LaTeX et la ligne du `.tex`.
 
 À venir pour le ch. 4 (décidées, pas encore dans le mémoire ni dans `figures/`) : les cinq figures de R8
 `article/R8_kaasbjerg/fig/{dos_c,spectral_GKM,sigma_K,sensibilites,superposition}.pdf` (produites par
@@ -539,7 +558,7 @@ CLAUDE.md l. 5-22).
 
 ---
 
-## 10. Ce qui sert au mémoire (à copier plus tard dans `~/LaTeX/msc-graphene-raman-defects`)
+## 10. Ce qui sert au mémoire (à copier plus tard dans `~/projects/msc-graphene-raman-defects`)
 
 Le dépôt du mémoire a maintenant quatre dossiers d'accueil vides (README seulement) : `analyse/` (code de
 post-traitement, « copie figée du repo graphene-raman »), `calculs/` (inputs QE, Wannier90, EPW et scripts SLURM, un
@@ -576,7 +595,7 @@ NOTES_EPW_REPERES.md.
 diagnostics,wannier_io}.py` + `conftest.py` ; `memoire/EM/{EM.md,EM1_tb,EM2,EM3,M4_sigma}` ; `scripts/make_figures_em.py` ;
 `wannier/27x27` ; `io/wannier_io.read_w90_tb`.
 
-Hors dépôt mais nécessaires au ch. 2 : `~/Projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`,
+Hors dépôt mais nécessaires au ch. 2 : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`,
 `notebooks/{phonons,epw}.ipynb`) pour `fig_ebands_edos`, `fig_electron_convergence`, `fig_phonons`, `fig_band_interp`.
 
 ---
@@ -643,8 +662,9 @@ Nommage local `defect_unit_cell_<N>.save` (`_paths.py`) ≠ cluster `defect_<N>.
 | code promu de R5 | `article/R5_base_vs_M/r5_{deltav_pw,sc_projection}.py` ↔ `src/…/defects/deltav_pw.py`, `wavefunctions/sc_projection.py` (copies de campagne gardées, encore importées par R6) | |
 | données | `results/M/ved_analysis.npz` = `results/M2/ved_analysis.npz` ; `ks_reconstruction.npz` M2 = M2_plateau ; `results/M2/*.csv` = `R6/etape3/csv_v2/*.csv` ; 33 figures `figures/` = `R10_plateau/fig/` ou `R6/etape3/figures_v2/` ; `em_table.csv` M4 ≠ EM3 (contenus différents, même nom) | |
 | pilotes proposés vs finaux | `R9_controles/cloture/r9_driver_propose.py` ↔ `r9_driver.py` | |
-| chapitre 4 (seconde passe) | `memoire/défauts.tex` ↔ `~/LaTeX/msc-graphene-raman-defects/memoire/chapitres/défauts.tex` (une ligne vide d'écart) | la copie du dépôt sert d'entrée à `ch4_chiffres.py tex` ; à resynchroniser ou à lire directement dans le dépôt du mémoire |
+| chapitre 4 (seconde passe) | `memoire/défauts.tex` ↔ `~/projects/msc-graphene-raman-defects/memoire/chapitres/défauts.tex` (une ligne vide d'écart, revérifié à `e07e0d5`) | la copie du dépôt sert d'entrée à `ch4_chiffres.py tex` ; à resynchroniser ou à lire directement dans le dépôt du mémoire |
 | diffs de session (seconde passe) | `memoire/ch4/NOTES_TGAMMA.diff` ↔ annexe A de `ch4_rapport.md` ↔ `git show 90d2022 -- NOTES_TGAMMA.md` ; `memoire/ch4/CLAUDE_md.diff` ↔ `git show 90d2022 -- CLAUDE.md` (appliqué) | trois copies du même diff |
+| provenance des figures et tables du mémoire (troisième passe) | §8 et §10 de ce fichier ↔ `~/projects/msc-graphene-raman-defects/PROVENANCE.md` (§1 figures, §2 tables) | même information en deux endroits : ce fichier décrit l'état d'avant ménage, `PROVENANCE.md` deviendra la référence après la copie (colonne « Dans msc- ») |
 | tables de chiffres du ch. 4 | `R6/etape3/table_v1_v2.md` (v1 → v2), `R10/c/table_v2_plateau.md` (v2 → final), `memoire/ch4/table_v1_final.md` (fusion, 207 lignes), NOTES_TGAMMA.md §2–§3 | la table de `memoire/ch4/` fait foi pour la réécriture ; 31 écarts de forme entre les deux sources y sont listés |
 
 ---
@@ -716,18 +736,21 @@ Alternative plus légère : ne créer que `fig/`, `epw/`, `validation/`, `slurm/
 - Ranger `tb_models.py` sous `tests/` (banc synthétique) si R4 n'est plus rejoué.
 - Une seule définition de `HA2EV` ; défaut `load_M_checked(require_bloch_norm=UNIT_CELL)` ; défaut `ne_per_eta=8`.
 
-### Étape F — alimenter le dépôt du mémoire `~/LaTeX/msc-graphene-raman-defects` (ajout de la seconde passe)
+### Étape F — alimenter le dépôt du mémoire `~/projects/msc-graphene-raman-defects` (ajout de la seconde passe, chemin mis à jour à la troisième)
 
-Le dépôt du mémoire a été préparé le 2026-09-30 (`5debac2`) avec quatre dossiers vides. Correspondance proposée avec
-le §10 ; à faire **après** les étapes A–E pour copier un état propre, et après réparation des chemins du §11.
+Le dépôt du mémoire a été préparé le 2026-09-30 (`5debac2`, puis README, `requirements.txt` et venv jusqu'à `e07e0d5`)
+avec quatre dossiers vides. Correspondance proposée avec le §10 ; à faire **après** les étapes A–E pour copier un état
+propre, et après réparation des chemins du §11. À chaque copie, remplir la colonne « Dans msc- » de `PROVENANCE.md`
+avec le chemin d'arrivée et le commit source de ce dépôt.
 
 | Dossier du mémoire | Ce qui y va (depuis ce dépôt) | Remarque |
 |---|---|---|
 | `analyse/` (« copie figée du repo graphene-raman ») | `src/electron_defect_interaction/` (sans les orphelins du §2), `config/production.json`, `tests/`, les scripts de production des chaînes M et T et EPW (§4.1 à §4.3, §4.5 hors obsolètes), `article/R10_plateau/r10_driver.py`, `article/R8_kaasbjerg/r8_driver.py`, `memoire/ch4/ch4_chiffres.py`, `memoire/EM/{M4_sigma,EM3,EM2}/*.py` | noter le commit d'origine dans le README ; `pyproject.toml` pour l'installation |
 | `calculs/` (un dossier par calcul) | hors dépôt pour l'essentiel : `graphene/qe/defects/{super_cell,unit_cell}` (scf, nscf denses, pp.x, Wannier90), `graphene/qe/epw/24k-24q{,_mv0.02}`, `graphene/qe/electron_photon/{EM1_tb,EM2}` sur rorqual ; depuis ce dépôt : `scripts/submit_*.sh` actifs, `article/R10_plateau/submit_r10.sh`, `memoire/EM/EM1_tb/wannier.win`, `memoire/EM/EM2/{bands.in,bands_pp.in,submit_*.sh,postw90/}` ; l'annexe D du mémoire (`annexes/paramètres.tex`) liste les paramètres | les inputs QE ne sont pas versionnés ici : à prendre dans les répertoires de travail |
 | `donnees/` | `results/M2_plateau/*` (npz, csv, MD5SUMS, README), `results/epw/*.npz` (chaîne `_mv0.02` + celles que `fig_epw_kohn_degauss` lit), `memoire/EM/M4_sigma/{em_scalars.json,em_sigma_*.npz,em_map_K.npz,em_table.tex}`, `memoire/EM/EM3/*.npz`, `memoire/EM/EM2/em2_A.npz`, `article/R8_kaasbjerg/out/` (figures R8), `memoire/ch4/{table_v1_final.md,alignement_regions.*}`, `wannier/27x27` (ou les 5 grilles de production) | ~60 Mo de npz ; `results/M2/*.npy` (matrices) restent sur rorqual/nearline |
-| `scripts_figures/` | `scripts/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/Projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |
+| `scripts_figures/` | `scripts/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |
 | `memoire/figures/` | réinstaller les 8 figures R10 qui diffèrent ; ajouter les 5 figures R8, `fig_em_coupling`, éventuellement `alignement_regions` | voir §8 |
+| `requirements.txt` du mémoire | le régénérer depuis un venv qui fait tourner `analyse/` et `scripts_figures/` (numpy, scipy, h5py, matplotlib, plus `mpi4py` si les noyaux de M sont copiés ; LaTeX pour `text.usetex`) | l'actuel est un gel généraliste (abipy, torch, netCDF4) sans rapport avec ces scripts |
 
-À corriger en même temps : le skill `thesis-section-pass` et toute note qui cite `~/LaTeX/master_thesis` (répertoire
-vide depuis 10 h 33).
+À corriger en même temps : le skill `thesis-section-pass` et toute note qui cite `~/LaTeX/master_thesis` ou
+`~/LaTeX/msc-graphene-raman-defects` (répertoires vides depuis 11 h 21), et valider `PROVENANCE.md` (non commité).

@@ -8,3 +8,4 @@
 - Lecture seule : `results/M2/`, `wannier/27x27`, `wannier/24x24`, json de R9 (jamais `R9_controles/cache/`) ; g₀ recalculé. Aucun calcul QE. Git en lecture.
 - Copie versionnée : `article/R8_kaasbjerg/` (rapport, pilote, tables, figures ; jamais npz > 5 Mo ni slurm).
 - État : 1er GO (étapes 1, 2, 2 bis, 3, 5, 7b) et GO article (étapes 4, 6) exécutés le 2026-09-29 ; résultats dans `R8_rapport.md`, `out/`, `fig/` ; STOP.
+- Portée du mémoire (2026-09-30) : étapes 1–5 et 7 ; figures `dos_c`, `spectral_GKM`, `sigma_K`, `sensibilites`, `superposition` ; l'étape 6 (Dirac) reste pour l'article.

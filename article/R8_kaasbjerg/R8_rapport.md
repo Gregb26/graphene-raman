@@ -5,6 +5,7 @@ GO après R9 ; un seul ensemble de fonctions avec R9 ; rien dans `src/` ni `resu
 et 6 pour l'article, planifiées, non lancées au premier GO). Ordre : phase 0 → STOP → (Greg : fonctions nouvelles) → (GO) calculs → rapport →
 STOP. Dépôt `graphene-raman`, HEAD d90c929 (« R6 clos ») ; seul fichier non suivi : `article/R9_controles/`. Répertoire de travail
 `graphene/qe/defects/R8_kaasbjerg/`, copie versionnée `article/R8_kaasbjerg/`. Chiffres bruts, sans interprétation.
+**2026-09-30 : l'étape 4 (`fig/sigma_K`) entre dans la portée du mémoire ; l'étape 6 reste pour l'article (dernière section).**
 
 ## Phase 0 (2026-09-27 ; rien n'est calculé)
 
@@ -694,6 +695,8 @@ comparaisons « ×2 » de 7b restent rapportées telles quelles, à titre d'info
 
 ## Étapes 4 et 6 (article ; GO de Greg du 2026-09-29, « si c'est pas long »)
 
+2026-09-30 : l'étape 4 passe dans la portée du mémoire, l'étape 6 reste pour l'article (dernière section).
+
 Fonctions ajoutées à `disorder_average.py` (non commitées) : **Q7** `sigma_eff(eps_k, Sigma, e, eta=0.0)` (éq. 45, complément de Schur) ; **Q8** `dirac_g0bar`
 (éq. 48), `dirac_t0` (éq. 47), `dirac_pole` (racine de 1/V₀ = Re Ḡ₀ la plus proche de E_D, du côté −signe(V₀)), `dirac_lambda_for_pole` (Λ = |ε_p| √(1 +
 exp(−1/(V₀ C ε_p))), C = A_cell g_v/(4π(ħv_F)²)). Tests ajoutés à `tests/test_r8_functions.py` : Q7 = diagonale de l'inverse direct 2 × 2 (1e-12) ; Q8 : Re Ḡ₀ =
@@ -764,3 +767,13 @@ ancien json : `out/fig/fig_results_rho0_300.json`.
 | eta_unique | 1 % | 0,00560 → 0,00492 | 0,03487 → 0,03483 |
 
 (δρ sur 300² : mêmes valeurs à ≤ 1e-5, `fig_results.json`.) Figures sans ondulation visible à l'œil : pas de 2 400².
+
+## Portée du mémoire : étape 4 ajoutée (décision de Greg, 2026-09-30)
+
+- Portée du mémoire = étapes 1–5 et 7 (avant : 1–3, 5, 7). L'étape 6 (modèle de Dirac, tableau sans figure) reste pour l'article.
+- Figures du mémoire (`fig/`, PDF ; copie `article/R8_kaasbjerg/fig/`) : `dos_c` (étape 2), `spectral_GKM` (3), `sigma_K` (4), `sensibilites` (5),
+  `superposition` (7b). Hors mémoire : `7a_controle` (contrôle de l'extraction), `{dos_c,superposition}_rho0_300` (anciennes versions, ρ₀ 300²).
+- Aucun calcul, aucune figure refaite : les titres de panneaux de `sigma_K` (variante, c_i, k = K) ne mentionnent pas l'article. Statut TEST inchangé
+  (rien dans `results/`).
+- Les sections antérieures (en-tête, 0.5, M.0–M.7, « Étapes 4 et 6 ») gardent la mention « article » pour l'étape 4 : elles décrivent la portée au moment où
+  elles ont été écrites ; renvois ajoutés sous l'en-tête et sous le titre de la section « Étapes 4 et 6 ».

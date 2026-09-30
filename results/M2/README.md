@@ -2,7 +2,7 @@
 
 M2 = N_cells·M^L + M^NL, en Hartree, M^L et M^NL tous deux en norme `unit_cell` (sidecar `M_normalization = v2`). Remplace
 `results/M/` (v1, gelé : M^L sans le facteur N_cells). Rapport : `graphene/qe/defects/R6_production_corrigee/R6_rapport.md`
-(copie `article/R6_production_corrigee/`).
+(copie `campagnes/R/R6_production_corrigee/`).
 
 **Pas de miroir** (décision de Greg, 2026-09-27) : les 43 fichiers M (`*.npy`) se reconstruisent en environ 11 min à partir de
 fichiers déjà sur `/project`.
@@ -29,3 +29,7 @@ repasser la porte : `sbatch submit_r6.sh gate` (demande les `.save` de maille du
 Produits dérivés (`specwd_*`, `resonance_*`, `*.csv`…) : suivis par git (exceptions `.gitignore`) ; ils se refont avec
 `scripts/submit_post.sh` et les autres `submit_*` (enchaînement : `R6_production_corrigee/etape3/runbook_3.sh`). Non suivis :
 `resigma_9x9_*.npz` (`submit_rcut_resigma.sh`, `submit_nkint_check.sh`) et `logs/`.
+
+Mise à jour du 2026-09-30 (ménage, étape D) : depuis R10, ce répertoire garde le rôle `matrices_dir` (M2 brutes, lecture seule) ; ses
+produits npz/csv sont la référence « v2 non alignée » (gelée), la production du ch. 4 étant `results/M2_plateau/`. Retiré ici :
+`ks_reconstruction.npz` (identique octet pour octet à `results/M2_plateau/ks_reconstruction.npz`).

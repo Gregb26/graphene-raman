@@ -861,6 +861,18 @@ Proposition d'origine, pour mémoire :
   de `memoire/défauts.tex` est **tranché** (copie supprimée, `6340c2f`) : `ch4_chiffres.py tex` lit
   désormais le chapitre dans le dépôt du mémoire (fait, §11).
 
+### Étape D — EXÉCUTÉE le 2026-09-30 (GO de Greg ; non commitée ; pytest : 199 passés)
+
+| Fait | Détail |
+|---|---|
+| `results/M/README.md` | créé depuis `R6/phase0/README_results_M_gele.md` (+ mise à jour R10), ajouté à la liste blanche de `.gitignore` |
+| doublons supprimés | `results/M/ved_analysis.npz` (= `results/M2/`), `results/M2/ks_reconstruction.npz` (= `results/M2_plateau/`) ; notés dans les README de `results/M` et `results/M2` |
+| obsolètes supprimés (suivis) | `results/epw/ed_vs_ep_24k24q{,_mv0.02}.npz` (v1 ; l'écrivain écrit dans `results_dir`), `wannier/{25,27,28,32}x*_nb16/` (24 fichiers, 25 Mo, aucun lecteur), `figures/fig_epw_*_mv0.002.{pdf,png}` (12, chaîne 0.002 abandonnée), `figures/hamiltonian_reconstruction.png` (sans producteur, non inclus) |
+| locaux non suivis supprimés | `results/test_recon/`, `results/M/M_ed.npy` (juin, orphelin) |
+| `campagnes/M/ch4/` | `NOTES_TGAMMA.diff`, `NOTES_TGAMMA_partie5.diff`, `CLAUDE_md.diff` retirés (redondants avec git et le rapport) ; README corrigé |
+| non fait, à décider | (a) les `results/M/M_ed_{5…12}.npy` v1 locaux (238 Mo, non suivis ; sur rorqual `results/M/` sert encore à `assemble_M2.py`) ; (b) réinstaller les 8 figures R10 dans le mémoire : reporté à l'étape F, avec la réécriture du ch. 4 ; (c) `results/KB_projectors_C.pdf` et 4 PNG non suivis (sorties locales de scripts, inoffensifs) ; (d) hash `23ee3bb` dans `R10/README.md` et rapport : archives, laissés |
+| constaté | Greg a mis `article/` dans `.gitignore` (`d9a3588`) : `C_optique_lacunes/` (plan et biblio) n'est plus suivi, il reste en local |
+
 ### Étape E — `src/`
 
 - Supprimer ou isoler : `utils/interpolation.py`, `plotting/` (après avoir régénéré `KB_projectors_C.pdf` une fois et

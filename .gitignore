@@ -41,6 +41,7 @@ results/M/*
 !results/M/ks_reconstruction.npz
 !results/M/ved_analysis.npz
 !results/M/*.csv
+!results/M/README.md
 !results/M2/
 results/M2/*
 !results/M2/specwd_*_prod.npz

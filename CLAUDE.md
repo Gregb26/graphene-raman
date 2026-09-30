@@ -134,7 +134,7 @@ corresponding `scripts/*.py` directly; each is self-contained with hard-coded da
   approximation of r, `pz_block(tb, pz)` for the p_z-only model, `extract_block` (not exported)), `kgrid` (reciprocal lattice, k grids),
   `velocity_operator` (single Fourier routine `fourier`, velocity with Berry connection, whole chain
   `compute_velocity(tb, k, mode)`), `ring`
-  (resonant k points around K, `fermi_velocity`, `ring_stats` for the three velocity variants on the laser rings, `ring_kpoints_crystal` for the EM2 k list, `map_around_K` for the maps of the figure), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`, doping and temperature through `mu` and `kT`, Dirac reference `kubo_doped_finite_T_analytical`), `diagnostics` (reports on a model:
+  (resonant k points around K, `fermi_velocity`, `ring_stats` for the three velocity variants on the laser rings, `ring_kpoints_crystal` for the EM2 k list, `map_around_K` for the maps of the figure), `kubo` (σ(ω)/σ₀, driver `sigma_on_grid`, doping and temperature through `mu` and `kT`, complex σ through `kernel` = `gaussian_complex` or `lorentzian_complex`, Dirac references `kubo_doped_finite_T_analytical` and `kubo_doped_complex_analytical`), `diagnostics` (reports on a model:
   `hermiticity_report`, `symmetry_report`, `frozen_window_limit`). Tests (pytest) in
   `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py`, shared fixtures in `tests/conftest.py` (real data:
   `tb_w90`, `eig_w90`, `w90_ref` on the tracked `wannier/27x27/`; every data-specific value and the sha256 of the
@@ -325,3 +325,4 @@ Classement au 2026-09-23 (EM1 ajouté le 2026-09-25, M4_sigma, EM2 et EM3 le 202
 | M4_sigma σ(ω), cartes et chiffres des anneaux (mémoire §2.5, calcul local) | `memoire/EM/M4_sigma/` (seul emplacement : calcul local de ~4 min, sans répertoire de travail hors dépôt) | PRODUCTION | aucun `.save` ; tout se relance avec `m4_prod.py` |
 | EM2 références indépendantes (DFT directe aux anneaux + postw90 `kubo`) | `graphene/qe/electron_photon/EM2/` (copie `memoire/EM/EM2/`) | PRODUCTION (faite le 2026-09-29, rapport `EM2_rapport.md`) | `qe_tmp_backup/em2_bands_27/` (84 k, md5 OK 2026-09-29) |
 | EM3 figure et chiffres du §2.5 (anneau de 2.33 eV, postw90 `transl_inv`, tableau) | `memoire/EM/EM3/` (seul emplacement : calcul local < 1 s) | PRODUCTION | aucun `.save` ; tout se relance avec `make_em3_data.py` |
+| B σ(ω) complexe 27×27 (perspective B d'EM.md, hors mémoire) | `memoire/EM/B_sigma_complex/` (seul emplacement : calcul local de 3 min) | PRODUCTION | aucun `.save` ; tout se relance avec `b_prod.py` |

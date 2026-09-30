@@ -14,7 +14,8 @@ of dependence:
     ring               resonant k points around K (eps_c - eps_v = hbar omega), fermi_velocity,
                        ring_stats and ring_kpoints_crystal (M3), map_around_K (M4)
     kubo               sigma(omega)/sigma_0, block by block, driver `sigma_on_grid`, doping and temperature
-                       (kT, perspective A) with the reference kubo_doped_finite_T_analytical
+                       (kT, perspective A) with the reference kubo_doped_finite_T_analytical, complex sigma
+                       with a complex kernel (gaussian_complex, lorentzian_complex; perspective B)
     diagnostics        reports on a model: hermiticity_report, symmetry_report (M1),
                        frozen_window_limit (M4)
 Plan, derivations and reference values: memoire/EM/EM.md.
@@ -33,7 +34,8 @@ from .tb_model import WannierTB, make_graphene_tb, make_wannier_tb, centres_only
 from .kgrid import GridTB, reciprocal, k_grid, make_grid_tb, kpath
 from .velocity_operator import dagger, hermitize, fourier, velocity, compute_velocity
 from .ring import ring, fermi_velocity, ring_stats, ring_kpoints_crystal, map_around_K
-from .kubo import gaussian_eta, kubo_accumulate, kubo_normalize, sigma_on_grid, kubo_doped_finite_T_analytical
+from .kubo import (gaussian_eta, lorentzian_complex, gaussian_complex, kubo_accumulate, kubo_normalize,
+                   sigma_on_grid, kubo_doped_finite_T_analytical, kubo_doped_complex_analytical)
 from .diagnostics import hermiticity_report, symmetry_report, frozen_window_limit
 
 __all__ = [
@@ -41,6 +43,7 @@ __all__ = [
     "GridTB", "reciprocal", "k_grid", "make_grid_tb", "kpath",
     "dagger", "hermitize", "fourier", "velocity", "compute_velocity",
     "ring", "fermi_velocity", "ring_stats", "ring_kpoints_crystal", "map_around_K",
-    "gaussian_eta", "kubo_accumulate", "kubo_normalize", "sigma_on_grid", "kubo_doped_finite_T_analytical",
+    "gaussian_eta", "lorentzian_complex", "gaussian_complex", "kubo_accumulate", "kubo_normalize",
+    "sigma_on_grid", "kubo_doped_finite_T_analytical", "kubo_doped_complex_analytical",
     "hermiticity_report", "symmetry_report", "frozen_window_limit",
 ]

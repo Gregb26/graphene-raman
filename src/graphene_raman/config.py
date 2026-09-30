@@ -37,6 +37,16 @@ def epw_dir(cfg, root=ROOT):
     return os.path.join(root, cfg.get("epw_results_dir", "results/epw"))
 
 
+def electron_dir(cfg, root=ROOT):
+    """Directory of the chapter 2 electronic-structure data (QE convergence .dat, bands, DOS): results/electron."""
+    return os.path.join(root, cfg.get("electron_results_dir", "results/electron"))
+
+
+def phonon_dir(cfg, root=ROOT):
+    """Directory of the chapter 2 phonon data (matdyn dispersion and DOS extracted from EPW runs): results/phonon."""
+    return os.path.join(root, cfg.get("phonon_results_dir", "results/phonon"))
+
+
 def alignment_C(cfg, size):
     """Far-field potential offset C_N (eV) of a supercell size (block "alignment", plateau (i), R10), subtracted as M_W(R,R) - C_N on the
     N x N box (defect_mwr). Raises KeyError if the size has no C_N (no silent default)."""

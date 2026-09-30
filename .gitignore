@@ -74,6 +74,8 @@ results/epw/*
 !results/epw/*.npz
 !results/epw/*.csv
 !results/wannier/
+!results/electron/
+!results/phonon/
 
 # Manifestes de ménage (13,6 Mo, dry-run) — hors dépôt
 cleanup/

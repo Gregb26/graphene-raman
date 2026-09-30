@@ -942,6 +942,15 @@ corrigée (trace r·β tel que tabulé, comme l'original ; validée par Greg). L
 
 Déplacé (liste blanche `!results/wannier/` dans `.gitignore`) ; réécrits : `config.dense_paths`, `finalize_wannier.py` (DEST), `mwr_locality_coarse_vs_dense`, `test_local_tmatrix_real`, `test_local_green_batch`, `tests/conftest.py` (`W90_DIR`), `ch4_chiffres.py`, les 8 scripts EM, docs (CLAUDE.md, README, NOTES_TGAMMA, EM.md, README de campagnes, `PROVENANCE.md`). Les manifestes Wannier stockent des chemins relatifs à leur dossier : inchangés. Vérifié : pytest 201, `ch4_chiffres.py check`, `make_em3_data.py`, `make_figures_em.py`, `dense_paths` trouve les manifestes.
 
+### Figures du ch. 2 rapatriées (2026-09-30, `dernieres_figures/` de Greg)
+
+`make_figures_electron.py` reçoit `fig_electron_convergence` (ex `qe_pp/plot_convergence.plot_all`) et `fig_ebands_edos` (ex `qe_pp/plot_ebands_edos`),
+contenu identique, données dans `results/electron/{ecut,ecut_cross,kpoint,smearing,ebands,edos}.dat` (`config.electron_dir`) ; nouveau
+`make_figures_phonons.py` (ex `make_fig_phonons.py`) → `figures/electron_phonon/fig_phfreq_phdos` (pixels identiques à `fig_epw_phonons`), données
+`results/phonon/{validation,phdos}_24k24q_mv0.02.npz` (`config.phonon_dir` ; copies des npz de `results/epw`, que `make_figures_epw.py` garde pour
+ses autres panneaux). `.gitignore` : `!results/electron/`, `!results/phonon/`. Les 20 figures du mémoire ont maintenant toutes un producteur
+dans `scripts/fig/`. `dernieres_figures/` (non suivi) peut être supprimé par Greg ; `~/projects/qe_pp` n'est plus nécessaire au mémoire.
+
 ### Étape F — alimenter le dépôt du mémoire `~/projects/msc-graphene-raman-defects` (ajout de la seconde passe, chemin mis à jour à la troisième)
 
 Le dépôt du mémoire a été préparé le 2026-09-30 (`5debac2`, puis README, `requirements.txt` et venv jusqu'à `e07e0d5`)

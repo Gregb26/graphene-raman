@@ -5,6 +5,8 @@
   "results_dir": "results/M2_plateau",
   "matrices_dir": "results/M2",
   "epw_results_dir": "results/epw",
+  "electron_results_dir": "results/electron",
+  "phonon_results_dir": "results/phonon",
   "results_dir_frozen": [
     "results/M",
     "results/M2"

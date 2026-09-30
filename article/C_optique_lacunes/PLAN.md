@@ -1,7 +1,8 @@
 # C — Conductivité optique du graphène avec lacunes (plan, 2026-09-29)
 
-Statut : **plan**, aucun calcul. Perspective C d'`memoire/EM/EM.md` §11, candidate pour l'article électron-défaut (après le mémoire,
-sauf décision de Greg). Bibliographie : `reports/Optique du graphène avec lacunes.md` (niche : aucun σ(ω) tiré d'une matrice T ab initio ;
+Statut : **plan**, aucun calcul. Perspective C d'`memoire/EM/EM.md` §11 : **article, pas le mémoire** (Greg, 2026-09-29). Préalables, dans l'ordre :
+le ménage du dépôt et la réappropriation de la chaîne matrice T par Greg, puis le mémoire, puis C0. Développement et tests sur le
+portable, production sur rorqual. Bibliographie : `reports/Optique du graphène avec lacunes.md` (niche : aucun σ(ω) tiré d'une matrice T ab initio ;
 aucune matrice T ab initio spin-résolue de la lacune). Mode prévu : Greg code (technicien), Code écrit tests, docs et calculs de production.
 
 ## But et formule
@@ -42,23 +43,33 @@ aucune matrice T ab initio spin-résolue de la lacune). Mode prévu : Greg code 
   (cône : Drude de largeur 2Γ et bord à 2μ élargi, formes analytiques) ; indépendance vis-à-vis des blocs.
 - **C2 — Σ de la lacune** (Greg + Code) : brancher Σ_k(ε) = c T̄_k(ε) ; contrôles : DOS de la même G = `dos_average` ; c → 0 ; règle de
   somme (poids spectral total de Re σ conservé à O(c) près).
+- **C2b — SCTMA** (matrice T autocohérente, dans la foulée de C2) : à chaque énergie, point fixe Σ(ε) = c T̄[G_loc(ε; Σ)], où t est
+  recalculé avec le propagateur local habillé G_loc(R, R'; ε) = (1/N) Σ_k e^{ik(R−R')} [ε + iη − H_k − Σ_k(ε)]⁻¹ au lieu de g₀
+  (généraliser `local_green_batch` avec un Σ_k(ε)). Mélange linéaire, énergies indépendantes ; coût = n_iter × g₀ (production rorqual).
+  Régularise la divergence en E_D jusqu'à Γ_c ~ √c (Ostrovsky 2006) : c'est la fenêtre IR des signatures des lacunes. Tests : c → 0
+  redonne le non autocohérent ; site retiré sur le cône contre l'équation FSBA de Peres 2006. SCTMA n'est pas la CPA (défaut à
+  plusieurs mailles) ; double comptage O(c²), du même ordre que les diagrammes croisés négligés. Concurrent : Kumari et al. 2026
+  (SCTMA dérivée de la DFT, graphène intercalé Au, ARPES).
 - **C3 — Physique** (Code) : c = 0.1 et 1 %, μ = E_D et E_D ± 0.3 eV, 300 K. Sorties : Δσ/σ₀ dans la fenêtre de Pauli par 10¹¹ cm⁻²
   (traduit en I_D/I_G, Cançado 2011), pic à ħω ≈ |μ − ε_rés|, largeur du Drude, bord à 2μ, pic de van Hove ; même chaîne avec
   `removed_site_vloc` (site retiré) : l'écart ab initio / modèle est le résultat de l'article.
 - **C4 — Validité** : ne rien revendiquer sous Γ_c ~ 0.1–0.2 eV (Σ non autocohérente, vertex) ; limite ω → 0 contre un Boltzmann
-  τ_tr de la même matrice T (mesure directe du vertex manquant) ; convergence en R_cut (Re Σ ne l'est pas à R_cut = 3, NOTES_TGAMMA).
-- **C5 — Spin (option, le plus neuf)** : la maille vierge n'est pas magnétique, donc ψ_nk est commun aux deux spins et M^NL ne dépend
+  τ_tr de la même matrice T (mesure directe du vertex manquant) ; en option, le vertex en échelle exact dans l'espace de l'amas
+  (noyau séparable : système linéaire de dimension (n_L n_w)², 58² = 3364 avec le bloc π) à ω → 0 et en quelques ω ;
+  règle de somme f comme diagnostic (la bulle seule la viole à O(c)) ; convergence en R_cut (Re Σ ne l'est pas à R_cut = 3, NOTES_TGAMMA).
+- **C5 — Lacune relaxée et spin (le plus neuf)** : la lacune relaxée est magnétique (liaison pendante σ après Jahn-Teller), donc elle
+  se traite avec le spin : la maille vierge n'est pas magnétique, donc ψ_nk est commun aux deux spins et M^NL ne dépend
   pas du spin ; seul Ṽ^σ = V^σ_d − V_p change : `pp.x` avec `spin_component = 1, 2` sur la super-cellule nspin 2 (R1, relaxée), puis
   deux M^L → T^↑, T^↓ → Γ^↑, Γ^↓, séparation de la résonance (à comparer aux dizaines de meV de la STM, Zhang 2016), σ = σ^↑ + σ^↓.
   Colinéaire : pas de spin-flip ni de Kondo. Demande rorqual (pp.x + deux M^L) ; comparer nspin 1 et 2 relaxés à la même référence.
 
-## Décisions à prendre (Greg)
+## Décisions (Greg, 2026-09-29)
 
-1. Où calculer : en local (recommandé : seul V_loc est à rapatrier, le reste se recalcule en minutes) ou sur rorqual.
-2. Quelle lacune : 9×9 non relaxée de la production du ch. 4 d'abord, puis relaxée (R1) ; sous-réseau A.
-3. η numérique : un seul η pour t et G (variante « eta_unique » de R8) ou deux comme R8.
-4. Autocohérence : non autocohérent d'abord (Kaasbjerg) ; SCTMA plus tard si la fenêtre basse énergie compte.
-5. Mémoire ou article : perspective d'un paragraphe dans le mémoire, calcul pour l'article ; C5 (spin) éventuellement en lettre à part.
+1. Développement et validation sur le portable, production sur rorqual.
+2. Lacune : 9×9 non relaxée, nspin 1 (production du ch. 4) pour C0–C4 ; la relaxée (R1) avec le spin, en C5.
+3. η : probablement deux (η_t pour t, η_G pour G, comme R8), à confirmer en C1.
+4. Autocohérence : SCTMA dans la foulée (C2b), après le non autocohérent qui en est la première itération.
+5. Article, pas le mémoire.
 
 ## Pièges connus
 

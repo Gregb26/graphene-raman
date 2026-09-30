@@ -13,5 +13,7 @@ hermiticité M dense 9x9,max|M - M^\dagger| / max|M|,1.15e-14,1e-12,OK,analyze_M
 hermiticité M dense 12x12,max|M - M^\dagger| / max|M|,2.29e-14,1e-12,OK,analyze_M.py
 "convention intensive (cellule unitaire), famille 3m (N = 6, 9, 12)","(max−min)/moyenne de max|M| sur N = 6, 9, 12, M denses (bandes 1–16)",2.3e-02,5e-2,OK,analyze_M.py
 "convention intensive (cellule unitaire), famille non-3m (N = 5, 7, 8)","(max−min)/moyenne de max|M| sur N = 5, 7, 8, M denses (bandes 1–16)",2.1e-02,5e-2,OK,analyze_M.py
-"test d'or (local vs compute_T), 5×5 dense",max|\Gamma_{loc} - \Gamma_{dense} N_c| / max,1.80e-13,1e-8,OK,r6golden_21852238
+"test d'or (local vs compute_T), 5×5 dense",max|\Gamma_{loc} - \Gamma_{dense} N_c| / max,1.80e-13,1e-8,OK,"r6golden_21852238 (submit_golden_dense.sh 5x5, M2)"
 "g0 par lots vs référence, R_cut 0–3",max écart relatif,1.2e-14,1e-12,OK,test_local_green_batch_20238555
+"porte A.2 : ΔV appliqué aux états de Bloch purs contre M2/N_cells, 8 fichiers grossiers (N = 5x5, 6x6, 7x7, 8x8, 9x9, 9x9 (128 b), 10x10, 12x12)","max|⟨nk|ΔV^L|n′k′⟩ − M2^L/N_cells|, idem NL (eV)",L 3.3e-14 ; NL 8.1e-15,1e-6 eV,OK,gate_M_normalization.py (R6 J3b 21820491)
+"porte A.2 : ΔV appliqué aux états de Bloch purs contre M2/N_cells, 6 fichiers denses (N = 5x5, 6x6, 7x7, 8x8, 9x9, 12x12)","max|⟨nk|ΔV^L|n′k′⟩ − M2^L/N_cells|, idem NL (eV)",L 1.2e-08 ; NL 4.0e-09,1e-6 eV,OK,gate_M_normalization.py (R6 J3b 21820491)

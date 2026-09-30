@@ -672,3 +672,166 @@ porte écrite telle quelle.
 | 22058856 | `r10c2` | tab:rcut_M à trois colonnes, Kaasbjerg | 22058838, 22058848 |
 | 22058857 | `r10c3` | C.3, C.4, C.5 | 22058855, 22058856 |
 | 22058858 | `r10c6` | C.6 | — |
+
+## Rapport — C (GO 2, 2026-09-29/30)
+
+| job | nom | état | durée | MaxRSS |
+|---|---|---|---|---|
+| 22058838 | `r10c0` | COMPLETED | 8 min 20 | 14 Go |
+| 22058839–44 | `specwd_5x5` … `specwd_12x12` | COMPLETED | 1 h 17 / 2 h 01 / 2 h 47 / 2 h 38 / 1 h 01 / 1 h 11 (5, 6, 7, 8, 9, 12) | 16–21 Go |
+| 22058845 | `nkint` | COMPLETED | 11 min 33 | 15 Go |
+| 22058846, 47 | `resigma` (0,1,2,3 ; 4) | COMPLETED | 2 min 47 ; 8 min 14 | 12 ; 15 Go |
+| 22058848 | `post_loc` | COMPLETED | 9 min 26 | 28 Go |
+| 22058849 | `post_ana` | COMPLETED | 3 min 38 | 51 Go |
+| 22058850 | `post_res9` | COMPLETED | 39 min 45 | 26 Go |
+| 22058851 | `post_res6` | COMPLETED | 6 h 25 | 21 Go |
+| 22058852 | `post_res12` | COMPLETED | 2 h 20 | 21 Go |
+| 22058853 | `r10ved` | COMPLETED | 1 min 13 | 5 Go |
+| 22058854 | `r10c14` | COMPLETED | 3 min 36 | 25 Go |
+| 22058855 | `r10c1f` | COMPLETED | 59 s | 0,5 Go |
+| 22058856 | `r10c2` | COMPLETED | 25 min 57 | 9 Go |
+| 22058857 | `r10c3` (c3, c4, c5) | FAILED, code 3 (porte de C.3 refusée, ci-dessous ; c4 et c5 : code 0) | 31 s | 2 Go |
+| 22058858 | `r10c6` | COMPLETED | 2 min 55 | 13 Go |
+
+Journaux de C1 et C1f : `results/M2_plateau/logs/` (aucune erreur, aucune trace d'exception) ; C0, C2, C3, C6 : `slurm-r10-*` du répertoire de campagne. HEAD : 23ee3bb pour
+C0, C1 et C2 ; d262591 pour C1f et C3 (commits de Greg pendant la production : `article/`, `reports/`, `research_notes/` et produits de `results/M2_plateau` déjà
+écrits ; rien dans `src/`, `scripts/`, `config/`). Après la fin des jobs : couleurs de `fig/dV_z_profiles` (C.6) changées (24×24 et 27×27 se confondaient avec les
+courbes grises 5…12), figure refaite depuis les npz de C.6 par la fonction du pilote (nœud de connexion, aucun calcul) ; md5 du pilote aff61c7bec8a → 7adb3c7c8d8e.
+
+### C.0 — portes (toutes OK ; `c/C0_tables.md`)
+
+| porte | valeur | référence |
+|---|---|---|
+| (a) 9×9, C_N = 0 : médiane Γ·N_cells ; E_res | 3 132,5968 meV ; −0,174849 eV | R9 3 132,5968 ; −0,174849 |
+| (a) 9×9 tab:rcut_M R_cut 3 (C_N = 0) | 6,678859e-2 | R9 6,678859e-2 (écart 0,0) |
+| (b) 9×9 plateau (C_N −25,1437 meV) : médiane ; E_res | 3 189,0136 meV ; −0,174849 eV | R9 3 189,0136 ; −0,174849 |
+| (b) 12×12 plateau (C_N −18,6896 meV) : médiane ; E_res | 3 264,5060 meV ; −0,174929 eV | R9 3 264,5060 ; −0,174929 |
+| (b) tab:rcut_M R_cut 3, plateau, étiquettes actuelles : 9×9 ; 12×12 | 2,470441e-2 ; 3,096624e-2 | R9 identiques (écart 0,0) |
+| (b) V_loc aligné = R9 (V − C_N·diag(in_box)) ; `defect_mwr(C_N = 0)` = chaîne recopiée ; R_d et étiquettes | au bit (9×9, 12×12) | — |
+| (c) `Mwr_to_Mwk(ws)` = sans ws, grille MP 27² : étiquettes brutes ; recentrées | 4,1e-16 ; 3,9e-16 (26 étiquettes à égalité, 757 images) | ≤ 1e-12 |
+| (c) D.1 tel quel sans ws (valence K) ; écart max des 4 moyennes | 76,955098 eV Å² ; 5,7e-14 | R9 D.1 76,955098 |
+| (c) D.1 tel quel avec ws ; écart max | 76,955553 eV Å² ; 1,4e-14 | audit « vraie \| brut » 76,955553 |
+| (d) D.1, (i) avec C = Lu (−24,6514 meV), étiquettes brutes : valence K / conduction K / valence K′ / conduction K′ | 81,5129 / 82,7202 / 81,1676 / 82,2881 | R9 exact (F_W) 81,5123 / 82,7063 / 81,1679 / 82,2886 ; écarts +0,0006 / +0,0139 / −0,0003 / −0,0005 |
+
+### C.1 — production dans `results/M2_plateau` (33 fichiers + `logs/`, 40 Mo)
+
+- Produits : `specwd_<S>_prod.npz` ×6, `resigma_9x9_rc0123/rc4/rc3_nk{150,300,450,600}.npz`, `mwr_locality.npz`, `m_rcut_convergence.csv`, `M_analysis.npz`,
+  `M_tests_summary.csv`, `lnl_frobenius.csv`, `resonance_{9x9,6x6,12x12}.npz` et `resonance_criteria_*.npz`, `resonance_9x9_shiftL.npz`, `ved_analysis.npz`,
+  `ks_reconstruction.npz` (copie de `results/M2`, md5 identique), `sampling_table.csv` ; C1f : `m_rcut_resigma.csv`, `level1_summary.csv`, `level2_summary.csv`,
+  `level2_families.csv`, `nkint_check_9x9.csv`, `ed_vs_ep_24k24q_mv0.02.npz` ; C.5 : `README.md`, `MD5SUMS_2026-09-30.txt` (33 fichiers).
+- Journal : ligne `[align]` de chaque specwd (C_N soustrait sur les N² mailles de la boîte : 25, 36, 49, 64, 81, 144).
+- Portes D6 d'`analyze_M.py` : (i) 2,9e-15, (ii) 1,3e-15, (iii) 1,4e-10 (projecteur gelé 1,37e-10) → OK. Portes de production inchangées (jauge, normes v2).
+- `c1post` : porte `mrr` (npz de M2 → csv de M2) écart 0,0 → `m_rcut_resigma.csv` écrit ; `M_tests_summary.csv` : 18 lignes, test d'or de M2 recopié (1,80e-13, D12),
+  2 lignes « porte A.2 » de M2.
+- C14 (±9,05 meV autour du V_loc aligné, 9×9) : médiane |Γ_T|·N_cells des états 3 237,29 / 3 157,07 meV (sans décalage 3 188,35) ; E_res −0,175 eV et pic de la courbe
+  Γ_T −0,180 eV inchangés ; écart relatif de la courbe Γ_T : max 6,36e-2 / 6,10e-2, médian 1,37e-2 / 1,24e-2.
+- Chapitre 5 (`ed_vs_ep`, c = 1 %, 300 K) : médiane Γ^ed/Γ^ep 0,554 ; min 0,128 à +1,875 eV ; max 34,797 à −0,180 eV ; croisements −1,486 et +0,737 eV ; médiane Γ^ed
+  37,730 meV (±1,2 eV : 57,508), Γ^ep 56,956 meV (inchangé, indépendant de M).
+
+Niveau 1 (240², η 0,02, R_cut 3, N_k^int 300 ; `level1_summary.csv`) :
+
+| N | médiane Γ·N_cells (meV) : tel quel → plateau | E_res − E_D (eV) : tel quel → plateau |
+|---|---|---|
+| 5×5 | 3 288,90 → 2 997,14 | −0,284 → −0,227 |
+| 6×6 | 3 155,98 → 3 149,15 | −0,227 → −0,175 |
+| 7×7 | 3 052,03 → 2 942,85 | −0,269 → −0,269 |
+| 8×8 | 3 020,42 → 2 974,18 | −0,270 → −0,227 |
+| 9×9 | 3 132,60 → 3 189,01 | −0,175 → −0,175 |
+| 12×12 | 3 162,78 → 3 264,51 | −0,175 → −0,175 |
+
+9×9 plateau, autres points de la carte : R_cut 0 / 2 / 4 : 3 013,96 / 3 222,08 / 3 200,00 meV ; η 0,01 : 3 202,75 ; 120² : 3 200,71. Re Σ médian (R_cut 3) −26,65 → +605,08 meV ;
+N_k^int 150 / 300 / 450 / 600 : médiane 3 210,02 / 3 189,01 / 3 196,11 / 3 191,93 meV, E_res −0,238 / −0,175 / −0,175 / −0,175 eV. Résonance 9×9 (plateau) : pic de la courbe Γ_T
+−0,180 eV, pic −Im T̄(K) −0,172, Re T̄(E_D) 12,624 eV, critère complet min|det|/max 1,261e-4 à −0,785 eV, bloc π 1,706e-2 à −0,170 eV, Friedel −1,0005. Table complète
+tel quel → plateau : `c/table_v2_plateau.md` (192 lignes, dont tab:L_NL, Re M^L à K, localité, résonances 6×6 et 12×12, tab:tests_M, ch. 5).
+
+### C.2 — tab:rcut_M à trois colonnes et grandeur de Kaasbjerg (portes OK ; `c/C2_tables.md`, `fig/kaasbjerg_plateau_ws`)
+
+Porte : colonne « plateau, Wigner-Seitz » = `m_rcut_convergence.csv` de C1 (chaînes identiques, 9×9 et 12×12, R_cut 0…6). Colonnes « tel quel » et « plateau, étiquettes
+actuelles » = R9 (écart relatif 0,0).
+
+| R_cut | sites | 9×9 : tel quel / plateau / plateau WS | 12×12 : tel quel / plateau / plateau WS |
+|---|---|---|---|
+| 0 | 1 | 3,1569e-1 / 3,1708e-1 / 3,1708e-1 | 8,6729e-1 / 8,6781e-1 / 8,6782e-1 |
+| 1 | 5 | 2,1293e-1 / 1,6301e-1 / 1,6301e-1 | 2,1719e-1 / 1,8923e-1 / 1,8925e-1 |
+| 2 | 13 | 1,1395e-1 / 5,5681e-2 / 5,5681e-2 | 1,2490e-1 / 1,2505e-1 / 1,2506e-1 |
+| 3 | 29 | 6,6789e-2 / 2,4704e-2 / 2,5879e-2 | 9,0206e-2 / 3,0966e-2 / 3,0979e-2 |
+| 4 | 49 | 4,4189e-2 / 1,7179e-2 / 1,8194e-2 | 7,5696e-2 / 1,8398e-2 / 1,8573e-2 |
+| 5 | 81 | 1,7488e-2 / 1,3578e-2 / 1,4950e-2 | 5,3559e-2 / 1,2858e-2 / 1,2739e-2 |
+| 6 | 113 | 1,2068e-2 / 1,1992e-2 / 1,3619e-2 | 3,2881e-2 / 1,2725e-2 / 1,1781e-2 |
+
+max|M_π| (eV) : 9×9 25,4397 (tel quel), 25,6014 (plateau) ; 12×12 25,9402, 26,1611.
+
+D.1 (9×9, k = K + δx̂, δ = 0,0294 Å⁻¹, carte 240², disques de 0,1471 Å⁻¹), eV Å², moyenne [min ; max] :
+
+| variante | valence K | conduction K | valence K′ | conduction K′ |
+|---|---|---|---|---|
+| tel quel + Wigner-Seitz | 76,956 [75,51 ; 78,73] | 78,168 [76,16 ; 80,36] | 81,177 [80,48 ; 82,33] | 82,305 [81,52 ; 83,71] |
+| plateau (i) + Wigner-Seitz | 81,605 [77,40 ; 86,36] | 82,821 [77,81 ; 87,47] | 81,168 [80,53 ; 82,31] | 82,297 [81,52 ; 83,69] |
+| R9 exact (F_W, C = Lu, étiquettes brutes) | 81,512 | 82,706 | 81,168 | 82,289 |
+
+D.2 (bloc 2×2 π/π* à (K, K), eV Å²) : total tel quel valeurs propres −1,71 / 153,45, ½ Tr 75,87 ; plateau 9,02 / 164,17, ½ Tr 86,59 ; M^L tel quel ½ Tr 59,53, plateau 70,25 ;
+M^NL ½ Tr 16,34 (inchangé).
+
+### C.3 — contrôles de l'audit (`c/C3_tables.md`) : **porte des anneaux refusée pour 6×6 (profil masqué) et 11×11 (profil)**
+
+- P-c2, appartenance : sur les anneaux entièrement sous 0,433 a_sc (106 à 256 anneaux selon N), aucun point ne change d'anneau (8 tailles) → OK.
+- P-c2, valeurs sous 0,433 a_sc (seuil 1e-13 eV) : 0,0 ou ≤ 7,1e-14 pour 14 profils sur 16 ; **6×6 masqué 1,21e-13 eV (r = 1,775 Å) et 11×11 non masqué 1,01e-13 eV
+  (r = 9,025 Å) : refusés** (ordre de sommation de `np.histogram`, voir la section « GO 2 »). STOP sur cette partie ; `ved_analysis.npz` de C1 n'est ni modifié ni retiré.
+- P-c2, au-delà de 0,433 a_sc : nombre d'anneaux changés et écart max = audit pour les 8 tailles (18 … 40 ; 16,46 … 0,93 meV) ; valeurs = profils « vraie » de l'audit
+  (écart 0,0 meV) ; 11×11 : 38 anneaux comptés contre 37 dans l'audit, le 38ᵉ est l'anneau à 11,725 Å qui contient 0,433 a_sc (écart 1,2e-14 eV, bruit de sommation).
+  9×9 : anneaux à 9,625 et 11,075 Å : 534 et 518 points (audit : 534, 518).
+- P-b2 (9 grilles : 6 denses, 5×5, 7×7, 8×8 grossières) : abscisse max et points déplacés = audit (ex. 9×9 dense : 15,5885 a, 112) ; poids hors site = M2 à 0,0 ;
+  p_z–p_z sur site − M2 = −C_N (+57,5626 / +50,5091 / +26,9143 / +14,4103 / +25,1437 / +18,6896 meV) → OK.
+- tab:tests_M : max|M| = M2 (denses et grossiers) ; lignes par famille 3m 2,3e-02 (2,257e-2) et non-3m 2,1e-02 (2,057e-2) = recalcul ; ancienne ligne six tailles
+  absente → OK.
+
+### C.4 — planches avant/après (`fig/avant_apres/`, 28 planches ; `fig/M_map_brut_aligne`)
+
+Figures régénérées dans `fig/` (make_figures.py, make_figures_memoire.py, make_figures_epw.py) et comparées aux PNG de `figures/` (lecture seule) :
+- identiques au pixel (16) : fig_M_map, fig_M_map_final, fig_M_scaling, fig_M_scaling_final, fig_Ved_boundary, fig_Ved_map, fig_Ved_profile_mean, fig_Ved_zoom,
+  fig_epw_decay, fig_epw_g_control, fig_epw_gamma, fig_epw_kohn_degauss, fig_epw_phonons, fig_epw_phonselfen, fig_epw_validation, fig_ks_reconstruction ;
+- différentes (12) : fig_Ved, fig_Ved_radial, fig_Ved_radial_masked, fig_convergence, fig_epw_vs_ed, fig_level2, fig_locality, fig_locality_final, fig_plateau, fig_rcut,
+  fig_spectral, fig_spectral_final.
+Rien n'est écrit dans `figures/`.
+
+### C.5 — table de correspondance et `results/M2_plateau`
+
+`c/table_v2_plateau.md` : 192 lignes (v2 tel quel `results/M2` → v2 plateau `results/M2_plateau`) au format de `table_v1_v2.md` de R6, avec les lignes R10 (C_N des 13 tailles,
+colonnes alignées de D6, portes D6, abscisses de localité, tab:rcut_M avec la colonne « étiquettes actuelles », C14 ancien et nouveau, Kaasbjerg, ch. 5).
+`results/M2_plateau/README.md` et `MD5SUMS_2026-09-30.txt` (33 fichiers) écrits.
+
+### C.6 — anomalie ⟨ΔV⟩_3D d'A.1 (`c/C6_tables.md`, `fig/dV_z_profiles`)
+
+SCF (scf.out) : les 26 calculs (d et p, 5…27) convergés (« convergence has been achieved »), 16 à 33 itérations, dernière précision 7,7e-12 à 9,8e-11 Ry ;
+conv_thr 1e-10, mixing_beta 0,3, K_POINTS gamma, assume_isolated '2D', ecutwfc 100, degauss 0,01 identiques pour les 13 tailles.
+
+| N | ⟨ΔV⟩_3D (meV) | N²⟨ΔV⟩ (meV) | part |z| ≤ 3 Å (meV) | vide |z| > 5 Å : moyenne ± écart-type (meV) | bord de cellule (meV) |
+|---|---|---|---|---|---|
+| 5 | +28,618 | +715,5 | +34,081 | −10,876 ± 9,756 | −13,296 |
+| 6 | +20,826 | +749,7 | +27,671 | −16,183 ± 20,406 | −59,589 |
+| 7 | +14,554 | +713,1 | +17,137 | −4,941 ± 4,285 | −3,823 |
+| 8 | +11,230 | +718,7 | +13,794 | −5,344 ± 5,340 | −11,971 |
+| 9 | +9,087 | +736,1 | +12,136 | −7,007 ± 8,667 | −25,498 |
+| 10 | +7,173 | +717,3 | +8,724 | −3,170 ± 3,047 | −6,166 |
+| 11 | +5,947 | +719,5 | +7,366 | −2,996 ± 3,076 | −7,334 |
+| 12 | +5,059 | +728,5 | +6,713 | −3,732 ± 4,518 | −13,187 |
+| 15 | +1,416 | +318,5 | +4,233 | −7,122 ± 8,585 | −25,123 |
+| 18 | −8,482 | −2 748,1 | +2,905 | −30,426 ± 22,533 | −64,990 |
+| 21 | +1,034 | +455,9 | +2,115 | −2,577 ± 1,406 | −3,966 |
+| 24 | −62,739 | −36 137,7 | +1,605 | −167,482 ± 36,973 | −211,895 |
+| 27 | −99,913 | −72 836,6 | +1,261 | −252,913 ± 42,283 | −329,669 |
+
+(c = 15,875 Å et nz = 192 pour toutes les tailles ; ⟨ΔV⟩_3D recalculé = A.1 ; « part |z| ≤ 3 Å » = Σ des plans de la tranche / nz ; profils complets dans
+`c/c6_profile_<S>.npz`.)
+
+### Fichiers
+
+- Répertoire de campagne : `c/` (json, tables C0, C2, C3, C6, `table_v2_plateau.md`, `c2_kaasbjerg_maps.npz` 2,8 Mo, `c6_profile_*.npz`), `fig/` (figures de production
+  régénérées, `kaasbjerg_plateau_ws`, `M_map_brut_aligne`, `dV_z_profiles`, `avant_apres/`), `submitted/22058838`, `22058839`, `22058855`–`22058858`, `JOBID`,
+  `slurm-r10-*`, `r10_log.txt` ; `cache/` inchangé depuis le GO 1 (g₀ « res » 300² et 900², 2 × 813 Mo ; manifeste `manifeste_R10.md` ; TEST, rien supprimé).
+- `results/M2_plateau/` : produits de C (non commités, sauf ceux versionnés par les points de sauvegarde de Greg) ; `results/M2`, `results/M` : lecture seule, inchangés.
+- Copie `article/R10_plateau/` : rapport, README, pilote, lanceur, manifeste, `c/`, figures (`fig/`, dont `avant_apres/`) ; ni slurm, ni `cache/`.
+- Rien dans `figures/` (installation : GO séparé), `src/`, `scripts/`, `config/`.
+
+**STOP — GO 2 terminé le 2026-09-30.** En suspens pour Greg : la porte refusée de C.3 (anneaux 6×6 masqué et 11×11, 1,21e-13 et 1,01e-13 eV contre 1e-13) ;
+installation des figures (GO séparé) ; commit de `results/M2_plateau` et de la copie `article/R10_plateau/`.

@@ -3,7 +3,7 @@ against the dense compute_T reference, and local_green_batch against local_green
 own PASS/FAIL and returns 0/1; the assertion is on the return code."""
 import pytest
 from conftest import local_data
-from electron_defect_interaction.config import load_production, matrices_dir
+from graphene_raman.config import load_production, matrices_dir
 
 
 def test_local_tmatrix_golden(repo_cwd):

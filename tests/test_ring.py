@@ -7,7 +7,7 @@ node with Berry, isotropy, ring averages, and the effect of dropping the Berry t
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import (centres_only, compute_velocity, fermi_velocity,
+from graphene_raman.electron_photon import (centres_only, compute_velocity, fermi_velocity,
                                                          make_graphene_tb, make_grid_tb, map_around_K,
                                                          reciprocal, ring, ring_kpoints_crystal, ring_stats)
 from scipy.interpolate import RegularGridInterpolator

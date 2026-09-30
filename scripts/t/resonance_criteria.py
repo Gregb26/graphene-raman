@@ -10,11 +10,11 @@ resonance_criteria.py -- definitive resonance criterion + sum rule + concentrati
 Output: <results_dir>/resonance_criteria_<size>.npz
 """
 import argparse, numpy as np
-from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, results_dir, alignment_C
+from graphene_raman.io import qe_io, matrix_io, wannier_provenance
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
+from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.config import load_production, dense_paths, results_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--c-compare", type=float, default=1e-3)

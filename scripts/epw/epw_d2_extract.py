@@ -25,6 +25,8 @@ Usage: python scripts/epw/epw_d2_extract.py [--root <24k-24q dir>]
 """
 import argparse, os, re, sys, numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "src"))
+from graphene_raman.config import load_production, epw_dir
+EPW = epw_dir(load_production(verbose=False))          # results/epw (config, ménage 2026-09-30)
 ap = argparse.ArgumentParser(); ap.add_argument("--root", default="/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene/qe/epw/24k-24q")
 ap.add_argument("--tag", default="24k24q", help="validation_<tag>.npz and d2_extract_<tag>.npz"); ap.add_argument("--phself-tag", default="path_1200_dg0.02"); ap.add_argument("--E_D", type=float, default=-4.2389); ap.add_argument("--out-tag", default=None, help="d2_extract_<out-tag>.npz (default: --tag)"); a = ap.parse_args()
 R = a.root; E_D = a.E_D
@@ -36,7 +38,7 @@ alat_bohr = np.linalg.norm([4.0354919061, -2.3298923383]); a_A = alat_bohr * 0.5
 print(f"[const] D^2/g^2 = {D2_over_g2_per_eV:.2f} A^-2 per eV of hbar*omega ; a = {a_A:.4f} A, A_c = {A_c:.4f} A^2")
 
 # ---------------- Fermi velocity of OUR chain: EPW band.eig (474 k on Gamma-K-M-Gamma, absolute eV) and bands.x (181 k), around K
-V = np.load(f"results/epw/validation_{a.tag}.npz", allow_pickle=True)
+V = np.load(f"{EPW}/validation_{a.tag}.npz", allow_pickle=True)
 L_path = (2 / 3 + 1 / 3 + 1 / np.sqrt(3)) * 2 * np.pi / a_A                     # A^-1, Gamma-K-M-Gamma
 sK = (2 / 3) / (2 / 3 + 1 / 3 + 1 / np.sqrt(3))
 def read_plot(f):
@@ -109,8 +111,8 @@ print(f"                              q={bK['q']}: A1' = mode {a1_d} hw {wKd_} m
 print(f"                EPW/DFPT: S_g Gamma {SgG/SgGd:.3f}, K {SgK/SgKd:.3f} ; S_D Gamma {SDG/SDGd:.3f}, K {SDK/SDKd:.3f} ; omega ratio Gamma {wG*1e3/wGd.mean():.3f}, K {wK*1e3/wKd_.mean():.3f}")
 
 # ---------------- route 2: inversion of EPW gamma (1200^2, sigma 0.02, 10 K), per-mode HWHM
-P = np.load(f"results/epw/phself_{a.phself_tag}.npz", allow_pickle=True)
-from electron_defect_interaction.electron_phonon import phself
+P = np.load(f"{EPW}/phself_{a.phself_tag}.npz", allow_pickle=True)
+from graphene_raman.electron_phonon import phself
 sp = phself.special_points(P["q"]); jG, jK = sp["G"][0], sp["K"][0]; i10 = int(np.argmin(np.abs(P["T"] - 10)))
 Rp = dict(T=P["T"], omega=P["omega"], gamma_epw=P["gamma_epw"]); mE2 = list(phself.modes_E2g(Rp, jG)); mA2 = phself.mode_A1p(Rp, jK)   # by frequency / by character (largest gamma at K)
 print(f"[route 2 modes] phonselfen: E2g(Gamma) = modes {mE2[0]+1}+{mE2[1]+1}, A1'(K) = mode {mA2+1} ({P['omega'][jK, mA2]:.2f} meV)")
@@ -134,7 +136,7 @@ print("\n[table] <D^2>_Gamma, <D^2>_K (eV^2/A^2), per-entry mean convention; rat
 for name, (dg_, dk_) in list(d2.items()) + list(LIT.items()):
     print(f"   {name:46s} {dg_:8.1f} ({dg_/45.6:4.2f})   {dk_:8.1f} ({dk_/92.05:4.2f})   K/Gamma {dk_/dg_:4.2f}")
 gG_lit = A_c * 45.6 / (2 * 5.5 ** 2 * D2_over_g2_per_eV); print(f"[check] Dirac-cone HWHM from Piscanec d^2 = 45.6, v = 5.5 eV.A: {gG_lit*1e3:.3f} meV = {gG_lit*1e3*8.06554:.2f} cm^-1 -> FWHM {2*gG_lit*1e3*8.06554:.1f} cm^-1 (literature ~10-11)")
-np.savez(f"results/epw/d2_extract_{a.out_tag or a.tag}.npz", d2_table=np.array([(k, v1, v2) for k, (v1, v2) in list(d2.items()) + list(LIT.items())], dtype=object), units="S_g eV^2; S_D eV^2/A^2; v eV.A; omega eV; gamma eV (HWHM)", E_D=E_D, v_F_epw=v_epw, v_F_dft=v_dft, A_c=A_c, D2_over_g2_per_eV=D2_over_g2_per_eV,
+np.savez(f"{EPW}/d2_extract_{a.out_tag or a.tag}.npz", d2_table=np.array([(k, v1, v2) for k, (v1, v2) in list(d2.items()) + list(LIT.items())], dtype=object), units="S_g eV^2; S_D eV^2/A^2; v eV.A; omega eV; gamma eV (HWHM)", E_D=E_D, v_F_epw=v_epw, v_F_dft=v_dft, A_c=A_c, D2_over_g2_per_eV=D2_over_g2_per_eV,
          Sg_G_epw=SgG, Sg_K_epw=SgK, SD_G_epw=SDG, SD_K_epw=SDK, omega_G_epw=wG, omega_K_epw=wK, Sg_G_dfpt=SgGd, Sg_K_dfpt=SgKd, SD_G_dfpt=SDGd, SD_K_dfpt=SDKd,
          omega_G_dfpt=wGd.mean() * 1e-3, omega_K_dfpt=wKd_.mean() * 1e-3, gamma_G_hwhm_10K=gG, gamma_K_hwhm_10K=gK, Sg_G_inv=16 * v ** 2 * gG / (A_c * wG2), Sg_K_inv=16 * v ** 2 * gK / (A_c * wK2))
 print(f"saved results/epw/d2_extract_{a.out_tag or a.tag}.npz")

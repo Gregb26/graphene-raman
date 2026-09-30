@@ -29,7 +29,7 @@ N=${SIZES[$SLURM_ARRAY_TASK_ID]}
 module restore qe
 module load mpi4py/4.0.3 scipy-stack
 export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
-MAT=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, matrices_dir; print(matrices_dir(load_production(verbose=False)))')   # R10 : les matrices vont dans matrices_dir (results/M2), pas dans results_dir (produits)
+MAT=$("$PROJ/.venv/bin/python" -c 'from graphene_raman.config import load_production, matrices_dir; print(matrices_dir(load_production(verbose=False)))')   # R10 : les matrices vont dans matrices_dir (results/M2), pas dans results_dir (produits)
 mkdir -p "$MAT/logs"
 
 UC=data/graphene/unit_cell/qe/defect_${N}.save

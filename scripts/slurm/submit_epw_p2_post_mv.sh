@@ -23,7 +23,7 @@ $PY -u scripts/epw/epw_phself_post.py --dir $EPW/epw6_phself_path_1200_dg0.02 $E
 $PY -u scripts/epw/epw_phself_post.py --table $EPW/epw6_phself_K_*_dg* --ref 1200_dg0.02
 $PY -u scripts/epw/epw_d2_extract.py --root $EPW --tag $TAG --phself-tag path_1200_dg0.02$SUF --E_D $ED
 read GG GK V <<<$($PY -c "
-import numpy as np; from electron_defect_interaction.electron_phonon import phself
+import numpy as np; from graphene_raman.electron_phonon import phself
 P=np.load('results/epw/phself_path_1200_dg0.02$SUF.npz', allow_pickle=True); sp=phself.special_points(P['q']); i10=int(np.argmin(np.abs(P['T']-10)))
 Rp=dict(T=P['T'], omega=P['omega'], gamma_epw=P['gamma_epw']); mE=list(phself.modes_E2g(Rp, sp['G'][0])); mA=phself.mode_A1p(Rp, sp['K'][0])
 D=np.load('results/epw/d2_extract_$TAG.npz', allow_pickle=True); print(P['gamma_epw'][i10, sp['G'][0], mE].mean(), P['gamma_epw'][i10, sp['K'][0], mA], float(D['v_F_epw']))")

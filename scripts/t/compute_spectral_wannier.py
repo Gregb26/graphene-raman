@@ -16,14 +16,14 @@ compute_spectral_wannier.py
 import argparse
 import numpy as np
 
-from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
-from electron_defect_interaction.config import load_production, dense_paths, matrices_dir, alignment_C
+from graphene_raman.io import qe_io, matrix_io, wannier_provenance
+from graphene_raman.config import load_production, dense_paths, matrices_dir, alignment_C
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule) ; produits dans results_dir
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
+from graphene_raman.defects.many_body import local_tmatrix as lt
 
-HA2EV = 27.211386245988
+from graphene_raman.config import HA2EV   # noqa: E402
 
 
 def parse_args():

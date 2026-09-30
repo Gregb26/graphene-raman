@@ -7,7 +7,9 @@ Convention (P7 calibration): EPW gamma___ is numerically the FWHM (2 x Dirac-con
 """
 import argparse, os, sys, numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "src"))
-from electron_defect_interaction.electron_phonon import phself
+from graphene_raman.electron_phonon import phself
+from graphene_raman.config import load_production, epw_dir
+EPW = epw_dir(load_production(verbose=False))          # results/epw (config, ménage 2026-09-30)
 ap = argparse.ArgumentParser(); ap.add_argument("--dir", nargs="*"); ap.add_argument("--tag"); ap.add_argument("--table", nargs="*"); ap.add_argument("--ref", default=None); a = ap.parse_args()
 C = phself.MEV2CM
 
@@ -29,7 +31,7 @@ if a.dir:
     sp = phself.special_points(R["q"])
     for i in sp.get("G", []):
         print(f"   Gamma iq={i+1}: acoustic omega {R['omega'][i,:3]} meV, acoustic gamma(300K) {R['gamma_epw'][-1, i, :3]} meV (masked in the figure)")
-    out = f"results/epw/phself_{tag}.npz"; os.makedirs("results/epw", exist_ok=True)
+    out = f"{EPW}/phself_{tag}.npz"; os.makedirs(EPW, exist_ok=True)
     np.savez(out, tag=tag, units="meV (omega, gamma); q crystal; s = path coordinate", convention="gamma_epw = raw EPW gamma___; P7 calibration (2026-09-11): gamma_fwhm = gamma_epw, gamma_hwhm = gamma_epw/2 (EPW value = 2 x Dirac-cone Im Pi from EPW's g; matches literature FWHM)",
              E_F=R["E_F"], E_D=-4.2389, nkf=R["nkf"], degaussw=R["degaussw"], fsthick=3.5, T=R["T"], q=R["q"], s=R["s"], omega=R["omega"], gamma_epw=R["gamma_epw"], gamma_hwhm=R["gamma_hwhm"], gamma_fwhm=R["gamma_fwhm"],
              lam=R["lam"] if R["lam"] is not None else np.array([]), key_values=np.array([(r[0], r[1], r[2], r[3], r[4]) for r in key_values(R)], dtype=object))

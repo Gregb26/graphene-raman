@@ -8,12 +8,12 @@ Run: PYTHONPATH=src pytest tests/test_r8_functions.py"""
 import numpy as np
 import pytest
 
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.defects.many_body import disorder_average as da
-from electron_defect_interaction.defects.many_body.pole_criterion import local_t_cache
-from electron_defect_interaction.defects.many_body.tb_models import graphene_pz_tb
-from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from electron_defect_interaction.utils.lattice import build_k_path
+from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.defects.many_body import disorder_average as da
+from graphene_raman.defects.many_body.pole_criterion import local_t_cache
+from graphene_raman.defects.many_body.tb_models import graphene_pz_tb
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from graphene_raman.utils.lattice import build_k_path
 
 N = 6                                                        # finite lattice N x N cells (periodic)
 ETA = 0.1                                                    # eV, broadening of g0 (and of G_k where the identity needs it)

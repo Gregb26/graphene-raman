@@ -10,9 +10,9 @@ Output: <results_dir>/ved_analysis.npz
 """
 import numpy as np
 from scipy.ndimage import map_coordinates
-from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.defects import alignment as al
-from electron_defect_interaction.config import HA2EV, load_production, results_dir
+from graphene_raman.io import qe_io
+from graphene_raman.defects import alignment as al
+from graphene_raman.config import HA2EV, load_production, results_dir
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 BOHR = 0.529177210903; DATA = "data/graphene"; out = {}
 import sys

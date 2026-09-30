@@ -21,7 +21,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # test_ks_reconstruction.py, même dossier
 from test_ks_reconstruction import reconstruct_ks_hamiltonian
-from electron_defect_interaction.io import qe_io
+from graphene_raman.io import qe_io
 
 SIZES = sys.argv[1:] or ["5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11", "12x12"]
 OUTDIR = "results/test_A"

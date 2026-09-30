@@ -23,8 +23,9 @@ Work is conducted in French; code and docstrings are in English.
 
 ## Repository layout (2026-09-30)
 
-- `src/electron_defect_interaction/` — the package (see "Module structure"). `scripts/` — production, analysis, figure and
-  validation scripts, SLURM launchers. `tests/` — pytest suite. `config/production.json` — frozen production parameters.
+- `src/graphene_raman/` — the package (renamed from `electron_defect_interaction` on 2026-09-30; see "Module structure").
+  `scripts/{m,t,epw,fig,validation,slurm}/` — production, analysis, figure and validation scripts, SLURM launchers
+  (index `scripts/README.md`). `tests/` — pytest suite. `config/production.json` — frozen production parameters.
 - `results/M2_plateau/` — **live** production products (`results_dir`, R10: v2 + Kumagai–Oba alignment); `results/M2/` — the M
   matrices (`matrices_dir`; the `.npy` exist on rorqual only) and the frozen unaligned v2 products; `results/M/` — frozen v1;
   `results/epw/` — chapter 5. `wannier/<D>x<D>/` — tracked Wannier90 outputs per grid. `figures/` — thesis figures.
@@ -43,7 +44,7 @@ Work is conducted in French; code and docstrings are in English.
 - **DFT**: Quantum ESPRESSO (pw.x). Local potential via `pp.x` (`plot_num=1`, filplot — there is
   **no HDF5 output from pp.x**). Pseudopotentials: UPF v2.
 - **Wannier functions**: Wannier90 (run via `pw2wannier90.x` + `wannier90.x` — outside this repo).
-- **Python** package `electron_defect_interaction` (src layout, editable install). Dependencies are declared in
+- **Python** package `graphene_raman` (src layout, editable install). Dependencies are declared in
   `pyproject.toml` (numpy, scipy, h5py, matplotlib, tqdm; extras `mpi` = mpi4py, `test` = pytest, `campaigns` = ase, spglib);
   there is no `requirements.txt`. `mpi4py` is imported at module load by `defects.local_R`, `local_G`, `non_local`.
 - **Cluster**: `rorqual` (Alliance/Calcul Québec, SLURM). Large supercells run there with the MPI
@@ -63,7 +64,7 @@ Work is conducted in French; code and docstrings are in English.
 # cluster (M matrices / scratch .save, skipped elsewhere).
 .venv/bin/python -m pytest tests                       # .venv/bin/pytest has a dead shebang: always use `python -m pytest`
 .venv/bin/python -m pytest tests -m "not slow"         # ~1 min
-# The validation scripts still run standalone (from the repo root; data paths in scripts/_paths.py, root override EDI_DATA):
+# The validation scripts still run standalone (from the repo root; data paths in scripts/validation/_paths.py, root override EDI_DATA):
 .venv/bin/python scripts/validation/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline (local 5x5 data)
 .venv/bin/python scripts/validation/test_wannier.py               # Wannier interpolation pipeline
 .venv/bin/python scripts/validation/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
@@ -89,7 +90,7 @@ sbatch scripts/slurm/submit_M_dense.sh 9x9                   # dense M on the (p
 ```
 
 There is no build/lint step beyond the editable install. Scripts are run from the repo root (several use relative
-paths such as `figures/memoire.mplstyle` or `wannier/27x27`). The former `scripts/run.py` and
+paths such as `wannier/27x27` or `results/…` through `config`). The former `scripts/run.py` and
 `scripts/compute_M_cluster.py` no longer exist (replaced by `compute_M.py` and `compute_M_dense_stages.py`).
 
 ## Critical physics conventions (get these wrong and results are silently off)
@@ -119,22 +120,22 @@ paths such as `figures/memoire.mplstyle` or `wannier/27x27`). The former `script
     `m_rcut_convergence.py` and `r10_driver.py` only — the local t-matrix never needs them.
   - graphene high-symmetry path convention: **K = (2/3, 1/3, 0)**, **M = (1/2, 0, 0)**, Γ = (0,0,0).
 
-## Module structure (`src/electron_defect_interaction/`)
+## Module structure (`src/graphene_raman/`)
 
 - **config.py** — single loader of `config/production.json`: `load_production`, `results_dir` (products), `matrices_dir`
-  (M files), `alignment_C(cfg, size)` (C_N in eV), `dense_paths(cfg, size)` (dense `.save`, M file, Wannier dir; the scratch path is
-  rorqual's), `ROOT`, `HA2EV`.
+  (M files), `epw_dir` (`results/epw`, chapter 5 products), `alignment_C(cfg, size)` (C_N in eV), `dense_paths(cfg, size)` (dense
+  `.save`, M file, Wannier dir; the scratch path is rorqual's), `ROOT`, `HA2EV` (the only definition of the Ha→eV factor). **Every
+  access to results goes through these functions**, never through a literal `results/...` path.
 - **io/matrix_io.py** — `save_M` / `load_M_checked` / `read_manifest`: every M file has a JSON sidecar (Bloch norm, units,
   `M_normalization`); `load_M_checked(..., require_bloch_norm=UNIT_CELL, units=EV, require_normalization=M_NORM_V2)` is the only
   Ha→eV conversion and refuses anything that is not v2.
 - **io/wannier_provenance.py** — sha256 gauge gate: `write_wannier_manifest`, `load_wannier_checked(manifest)`.
-- **io/qe_gamma_io.py**, **io/projwfc_io.py** — Γ-only supercell wavefunctions and projwfc.x readers (R4–R10 campaigns).
+- **io/qe_gamma_io.py** — Γ-only supercell wavefunctions (gate A.2, R10). The projwfc.x reader (`projwfc_io`, R4 only) was removed on 2026-09-30.
 - **io/qe_io.py** — the QE I/O backend. All compute functions take an `io=` module; pass `qe_io`.
   Functions take a `prefix.save/` dir: `get_C_nk`, `get_G_red`, `get_k_red`, `get_A_volume`,
-  `get_B_volume`, `get_ecut`, `get_x_red`, `get_typat`, `get_eigenvalues`, `get_ngfft`, `get_pot`.
+  `get_B_volume`, `get_ecut`, `get_x_red`, `get_eigenvalues`, `get_ngfft`, `get_pot`.
 - **io/pseudo_io.py** — `read_upf` (QE UPF, the default `pseudo_reader`), `fq_from_fr` (Hankel
-  transform of the radial projectors), and `read_psp8` (legacy ABINIT `.psp8` reader, kept but
-  unused by default — safe to delete if ABINIT is fully dropped).
+  transform of the radial projectors). The ABINIT `.psp8` reader was removed on 2026-09-30.
 - **io/wannier_io.py** — Wannier90 readers: `read_w90_mat` (U / U_dis `.mat`, asserts
   unitarity/isometry), `read_w90_tb` (`_tb.dat`, returns `(HR, R, ndegen, rR, lattice)`: H(R) in eV,
   position operator r(R) (nR, 3, nw, nw) in Angstrom, lattice in columns), `read_w90_HR` (former name, kept as a
@@ -175,8 +176,10 @@ paths such as `figures/memoire.mplstyle` or `wannier/27x27`). The former `script
 - **wavefunctions/fold_wfk_to_sc.py** — `compute_psi_nk_fold_sc` (unfold unit-cell ψ onto the
   supercell grid).
 - **utils/** — `lattice` (`red_to_cart`, `build_k_path`), `planewaves` (`mask_invalid_G`),
-  `fft_utils` (`map_G_to_fft_grid`, `fft_grid_from_G_red`). `interpolation` (periodic tri-linear / cubic-spline) and
-  `plotting/` are orphans (imported by nothing).
+  `fft_utils` (`map_G_to_fft_grid`, `fft_grid_from_G_red`).
+- **plotting/palette.py** + **plotting/memoire.mplstyle** — thesis style and palette: `use_style()` (style found from `__file__`,
+  never from the cwd), `save(fig, stem, outdir)` (PDF + PNG with fixed metadata, byte-reproducible), colours `NAVY`, `ORANGE`, …,
+  `CMAP_SEQ`, `CMAP_DIV`. Every figure script and campaign driver imports it (no `sys.path` to `scripts/`).
 - **defects/many_body/single_defect.py** — historical dense Bloch T-matrix (`compute_T`, `compute_G0`, `compute_G`, M in
   supercell norm). Not used in production, but it is the **reference of the golden tests** (`test_local_tmatrix*.py`,
   `test_local_rcut.py`): do not delete.
@@ -201,7 +204,7 @@ Under `data/graphene/` (this whole dir is git-ignored; real files locally, symli
 `scripts/m/link_data.sh`):
 
 - `unit_cell/qe/defect_unit_cell_{5x5,11x11,12x12}.save/` — unit cells on the full MP grid (`wfc*.hdf5`, `C.upf`,
-  `data-file-schema.xml`). Local naming is `defect_unit_cell_<N>.save` (`scripts/_paths.py`); on the cluster it is
+  `data-file-schema.xml`). Local naming is `defect_unit_cell_<N>.save` (`scripts/validation/_paths.py`); on the cluster it is
   `defect_<N>.save` (`link_data.sh`, production scripts).
 - `supercell/qe/defect_5x5_p.save/` (pristine, `Vks_5x5_p`) and `defect_5x5_d.save/` (defective, `Vks_5x5_d`) — the only
   supercell pair available locally (plus the `Vks_11x11_{p,d}` potentials); it feeds the local validation scripts.
@@ -235,7 +238,7 @@ paths are not inspectable from this checkout — confirm names before launching.
   `test_zero_pad_non_regression` (dense M^L on the 5x5 pair, > 10 min) once died with an MPICH/libfabric error
   (`OFI poll failed`, network interface) on the laptop — an environment issue, not a physics failure.
 
-The standalone scripts take their data paths from `scripts/_paths.py` or module constants; adjust them to the available
+The standalone scripts take their data paths from `scripts/validation/_paths.py` or module constants; adjust them to the available
 `.save` names.
 
 ## Known pitfalls & documented bugs
@@ -292,8 +295,8 @@ The standalone scripts take their data paths from `scripts/_paths.py` or module 
 
 ## Figures du mémoire (conventions obligatoires)
 
-- Style : `figures/memoire.mplstyle`, chargé par `plt.style.use("figures/memoire.mplstyle")` dans
-  `scripts/fig/make_figures.py` et dans tout script de figure. Palette fixe dans `scripts/_palette.py`
+- Style : `memoire.mplstyle` dans le paquet, chargé par `graphene_raman.plotting.palette.use_style()` dans tout script de figure
+  (jamais par un chemin relatif au cwd). Palette fixe dans `graphene_raman.plotting.palette`
   (2026-09-21) : **principale = bleu marine #000080** (`\definecolor{darkblue}{rgb}{0,0,0.5}`, couleur des
   hyperliens du mémoire), portée par la grandeur de production de chaque figure (9×9, matrice T, EPW,
   240² à 300 K, chaîne degauss 0.02) ; orange #eb6834 pour le contraste (Born, DFPT direct, Γ^ed au ch. 5),
@@ -309,8 +312,15 @@ The standalone scripts take their data paths from `scripts/_paths.py` or module 
 - Taille : `figure.figsize` du style (6.5 × 4.0 po) pour une figure pleine largeur ; deux panneaux
   côte à côte = largeur 6.5 po, hauteur ajustée. Sauvegarde en PDF (vectoriel, pour LaTeX) et PNG
   (prévisualisation) dans `figures/<chapitre>/` (depuis le 2026-09-30 : `electron/` (ch. 2), `electron_defect/` (ch. 4),
-  `electron_phonon/` (ch. 5, dont `fig_epw_phonons` du ch. 2), `electron_photon/` (§2.5) ; défauts `--outdir` des quatre
-  `scripts/fig/make_figures*.py`) ; le style reste `figures/memoire.mplstyle`.
+  `electron_phonon/` (ch. 5, dont `fig_epw_phonons` du ch. 2), `electron_photon/` (§2.5) ; défauts `--outdir` des cinq
+  `scripts/fig/make_figures*.py`), par `palette.save` : PDF et PNG **reproductibles au bit** (métadonnées fixées), ce qui est le
+  test de recette de la copie vers le dépôt du mémoire (régénérer, comparer les md5). Les 20 figures incluses : 16 par
+  `make_figures{,_memoire,_epw}.py` + `fig_em_coupling` (`make_figures_em.py`) + `fig_kb_pseudo_C` (`make_figures_electron.py`,
+  redessinée le 2026-09-30) ; `fig_ebands_edos`, `fig_electron_convergence` viennent de `~/projects/qe_pp` (hors dépôt). Les 9 figures de
+  contrôle du ch. 4 retenues (R7 : `fig_size_3m`, `fig_localized_3m` ; R9 : `fig_resonance_vs_nkint{,_plateau}`, `fig_rcut_aligned`,
+  `fig_folded_vs_R7` ; R10 : `fig_offset_profiles_13`, `fig_levels_vs_invN`, `fig_kaasbjerg_plateau_ws`) sont produites par
+  `make_figures_controles.py` depuis les json/npz de `campagnes/R/` (fonctions extraites des pilotes, retirés) ; les 5 figures R8 par
+  `campagnes/R/R8_kaasbjerg/r8_driver.py fig|sigeff` (données `out/`).
 - Données : lues uniquement dans le `results_dir` de `config/production.json` (`results/M2_plateau/` depuis R10, 2026-09-30 ;
   matrices M2 dans `results/M2/` = `matrices_dir` ; `results/M/` (v1) et `results/M2/` (v2 non aligné) gelés, `results_dir_frozen`)
   ou dans les `.save`, jamais dans les logs ;
@@ -358,7 +368,7 @@ avec les options de production de `submit_post.sh`, sinon l'ancienne chaîne 0.0
 ħv = V†(∂H + i[H, A])V, décisions verrouillées, format du `_tb.dat`, conventions du module, plan M0–M4
 (fonctions F1–F19, vérifications, critères de sortie avec les valeurs de référence σ/σ₀) et statut. EM.md est
 un guide, pas un cadre : en cas d'écart le code fait foi, et on réaligne EM.md (ne pas « corriger » le code vers le plan). Le code
-est `src/electron_defect_interaction/electron_photon/` (un module par responsabilité : les fonctions de M1–M4 vont
+est `src/graphene_raman/electron_photon/` (un module par responsabilité : les fonctions de M1–M4 vont
 dans le module de leur rôle, pas dans un module par étape ; la lecture de fichiers reste dans `io/`) ; les campagnes de calcul EM vont sous `campagnes/EM/<campagne>/`.
 Les étapes M0–M4 sont codées par Greg lui-même en mode technicien (skill `technicien`) : n'écrire ni ne
 modifier son code sans « écris-le » ou demande explicite. Données de production : `campagnes/EM/M4_sigma/` (calcul local,

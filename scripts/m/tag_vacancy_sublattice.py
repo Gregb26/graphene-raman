@@ -1,7 +1,7 @@
 """Write `vacancy_sublattice` (A/B), `vacancy_s_red` and the A/B-equivalence note into every M sidecar of each size."""
 import glob, json, numpy as np, sys
-from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.config import load_production, matrices_dir
+from graphene_raman.io import qe_io
+from graphene_raman.config import load_production, matrices_dir
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes et leurs sidecars (results/M2)
 NOTE = "vacancy on sublattice {sub}; A and B are equivalent by the honeycomb inversion symmetry (unrelaxed isolated vacancy): same Gamma, M identical up to pz(A)<->pz(B) and a BZ rotation"
 for S in (sys.argv[1:] or ["5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11", "12x12"]):

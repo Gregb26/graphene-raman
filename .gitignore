@@ -13,6 +13,9 @@ __pycache__/
 data/
 jobs/
 article/
+campagnes/
+admin/
+notes/
 
 # Computed data (never commit matrices / DFT outputs)
 *.npy

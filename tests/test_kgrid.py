@@ -4,7 +4,7 @@ Tests of the reciprocal lattice, k grids and paths (kgrid).
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import kpath, reciprocal
+from graphene_raman.electron_photon import kpath, reciprocal
 
 PATH = [('G', (0, 0, 0)), ('K', (2/3, 1/3, 0)), ('M', (1/2, 0, 0)), ('G', (0, 0, 0))]
 

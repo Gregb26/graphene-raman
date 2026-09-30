@@ -8,7 +8,7 @@ import dataclasses
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import (compute_velocity, frozen_window_limit, hermiticity_report,
+from graphene_raman.electron_photon import (compute_velocity, frozen_window_limit, hermiticity_report,
                                                          make_graphene_tb, make_grid_tb, pz_block, symmetry_report)
 
 

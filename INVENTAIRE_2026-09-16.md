@@ -38,7 +38,7 @@ mécaniquement (y compris dans les descriptions de commits du §0 bis, qui parla
 Index des campagnes : `campagnes/README.md`.**
 
 Méthode : lecture de chaque fichier de `scripts/`, `src/`, `tests/`, `article/`, `memoire/`, `results/`, `config/`,
-`.md` racine ; résolution **par import réel** de tous les `from electron_defect_interaction… import …` (635 imports,
+`.md` racine ; résolution **par import réel** de tous les `from graphene_raman… import …` (635 imports,
 script AST + `importlib`) et par AST des imports inter-scripts (`sys.path`) ; grep des figures et tables dans le dépôt
 du mémoire (lecture seule ; aujourd'hui `~/projects/msc-graphene-raman-defects`, voir §0 bis) ; collecte pytest (`--collect-only`, 199 tests, 0 erreur).
 
@@ -51,7 +51,7 @@ terminée, gardé pour la provenance, encore exécutable ; **obsolète** = rempl
 
 ## 0. Constats principaux
 
-1. **Aucun import cassé.** `alignment_C` et `matrices_dir` existent dans `src/electron_defect_interaction/config.py`
+1. **Aucun import cassé.** `alignment_C` et `matrices_dir` existent dans `src/graphene_raman/config.py`
    (l. 30 et 35), ajoutés au commit `c2bc733` « checkpoint R10 » (2026-09-29 20:55), poussé sur `origin/main`. Les 635
    imports du paquet se résolvent, ainsi que tous les imports inter-scripts (`_palette`, `_bands`, `_paths`,
    `r4_driver`/`r5_driver`, `em2_B_compare`, `test_ks_reconstruction`). La ligne « ImportError en local, 2026-09-29 »
@@ -106,8 +106,8 @@ chemin) : à supprimer par `rmdir` s'il n'est pas voulu. Effets vérifiés (éta
 | Élément | État après renommage | Remarque |
 |---|---|---|
 | fichiers suivis | aucun chemin `raman-graphene` ni `/Users/gregou` (`git grep`, hors ce fichier) ; `config.ROOT` se déduit de `__file__` → `/Users/gregou/projects/graphene-raman` | rien à corriger dans le dépôt |
-| **installation éditable** | **cassée** : `.venv/lib/python3.13/site-packages/__editable__.electron_defect_interaction-0.1.0.pth` pointe vers `/Users/gregou/Projects/raman-graphene/src` (inexistant) ; `import electron_defect_interaction` → `ModuleNotFoundError` ; `.venv/bin/python -m pytest tests` échoue au chargement de `conftest.py` | contournement : `PYTHONPATH=src` (199 tests collectés) ; **réparée à la cinquième passe** (étape 0 faite par Greg) : `.pth` et `direct_url.json` → `/Users/gregou/projects/graphene-raman`, import et collecte pytest (199 tests) sans `PYTHONPATH` |
-| exécutables du venv | `.venv/bin/pytest` et `py.test` ont un shebang vers l'ancien chemin (morts, **encore à la cinquième passe** ; `pip` a été réécrit) ; `activate` et `pyvenv.cfg` citent un chemin encore plus ancien (`~/electron_defect_interaction/.venv`) | `.venv/bin/python -m …` fonctionne ; venv jamais recréé depuis août 2025 |
+| **installation éditable** | **cassée** : `.venv/lib/python3.13/site-packages/__editable__.graphene_raman-0.1.0.pth` pointe vers `/Users/gregou/Projects/raman-graphene/src` (inexistant) ; `import graphene_raman` → `ModuleNotFoundError` ; `.venv/bin/python -m pytest tests` échoue au chargement de `conftest.py` | contournement : `PYTHONPATH=src` (199 tests collectés) ; **réparée à la cinquième passe** (étape 0 faite par Greg) : `.pth` et `direct_url.json` → `/Users/gregou/projects/graphene-raman`, import et collecte pytest (199 tests) sans `PYTHONPATH` |
+| exécutables du venv | `.venv/bin/pytest` et `py.test` ont un shebang vers l'ancien chemin (morts, **encore à la cinquième passe** ; `pip` a été réécrit) ; `activate` et `pyvenv.cfg` citent un chemin encore plus ancien (`~/graphene_raman/.venv`) | `.venv/bin/python -m …` fonctionne ; venv jamais recréé depuis août 2025 |
 | liens symboliques, `data/` | aucun lien dans l'arbre (hors `.venv`) ; rien de cassé | — |
 | variables `PROJECTS`, `GRAPHENE_RAMAN` | non définies en local (elles le sont dans `~/.bashrc` de rorqual) ; le défaut `$PROJECTS/graphene-raman` des pilotes et d'EM2 correspond maintenant aussi au nom local | EM3 (`make_em3_data.py`) les pose lui-même depuis `__file__` |
 | mémoire persistante de Claude Code | rangée par chemin : l'ancienne est sous `~/.claude/projects/-Users-gregou-Projects-raman-graphene/memory/` (7 notes), la nouvelle (`-Users-gregou-projects-graphene-raman`) était vide | notes recopiées et mises à jour à la quatrième passe ; les transcriptions des anciennes sessions restent sous l'ancien chemin |
@@ -122,7 +122,7 @@ compilé pour linstant » : `c844c22` retire `master_thesis.pdf` du suivi, `4da4
 | `analyse/`, `calculs/`, `donnees/`, `scripts_figures/` | dossiers d'accueil, **encore vides** (un README d'une ligne chacun) | à remplir : §13 étape F |
 | `README.md` | structure, compilation, installation du venv ; « Scripts : à venir », « Données lourdes : à venir » | — |
 | `PROVENANCE.md` (172 l. ; vide dans `dfc3180`, **commité dans `4da4d62`**) | registre de provenance : les 20 figures incluses (label, `.tex:ligne`, producteur et données dans ce dépôt, état R10 ou R6), les figures à venir, les 16 tables, les chiffres cités par chapitre, annexe ligne par ligne | **s'appuie sur ce fichier** (`INVENTAIRE_2026-09-16.md` §8, §10, §13 étape F, HEAD `656c05c`) ; sa colonne « Dans msc- » est vide et se remplira à la copie, avec le commit source |
-| `requirements.txt`, `.venv/` (Python 3.12.1) | gel de 154 paquets d'un environnement généraliste (abipy, netCDF4, torch, jupyterlab, numpy 1.26.4, matplotlib 3.8.2) | **ne correspond pas** au venv de ce dépôt (Python 3.13, numpy 2.3.5) ; sans `mpi4py`, `pytest` ni le paquet `electron_defect_interaction` : à refaire quand `analyse/` et `scripts_figures/` seront remplis |
+| `requirements.txt`, `.venv/` (Python 3.12.1) | gel de 154 paquets d'un environnement généraliste (abipy, netCDF4, torch, jupyterlab, numpy 1.26.4, matplotlib 3.8.2) | **ne correspond pas** au venv de ce dépôt (Python 3.13, numpy 2.3.5) ; sans `mpi4py`, `pytest` ni le paquet `graphene_raman` : à refaire quand `analyse/` et `scripts_figures/` seront remplis |
 
 Conséquences pour cette carte : §8 (chemin et contenu de `figures/`), §10 et §13 étape F (où copier quoi, et
 articulation avec `PROVENANCE.md`). Le skill `thesis-section-pass` citait encore `~/LaTeX/master_thesis` ; **corrigé à la
@@ -195,7 +195,7 @@ en dur `/home/gregb26/links/scratch/qe_tmp` : tout script qui l'appelle ne tourn
 
 ---
 
-## 2. `src/electron_defect_interaction/` (42 fichiers suivis)
+## 2. `src/graphene_raman/` (42 fichiers suivis)
 
 Paquet d'espace de noms (pas de `__init__.py` à la racine ni dans `io/`, `wannier/`, `wavefunctions/`, `plotting/`,
 `many_body/`), installé en éditable (`.pth` → `src/` ; refait après le renommage du dossier, §0 bis). `mpi4py` est importé au chargement de `local_G`, `local_R`,
@@ -647,7 +647,7 @@ dossier par calcul), `donnees/` (données des figures), `scripts_figures/`. Corr
 d'alignement, nombres du chapitre) et les cinq figures R8 de la portée du mémoire (`dos_c`, `spectral_GKM`, `sigma_K`,
 `sensibilites`, `superposition`) avec leurs données `campagnes/R/R8_kaasbjerg/out/{dos,spec,sigeff,sens,7a}/`.
 
-**Chapitre 4 (M, matrice T, Γ)** — code : `src/electron_defect_interaction/{config,io/qe_io,io/matrix_io,
+**Chapitre 4 (M, matrice T, Γ)** — code : `src/graphene_raman/{config,io/qe_io,io/matrix_io,
 io/pseudo_io,io/wannier_io,io/wannier_provenance,utils/fft_utils,utils/lattice,utils/planewaves,wavefunctions/wfk,
 wavefunctions/fold_wfk_to_sc,wannier/wannier_hamiltonian,wannier/wannier_interpolation,defects/local_R,
 defects/non_local,defects/alignment,defects/deltav_pw,wavefunctions/sc_projection,defects/many_body/local_tmatrix,
@@ -905,6 +905,20 @@ Proposition d'origine, pour mémoire :
 | non fait, à décider | (a) les `results/M/M_ed_{5…12}.npy` v1 locaux (238 Mo, non suivis ; sur rorqual `results/M/` sert encore à `assemble_M2.py`) ; (b) réinstaller les 8 figures R10 dans le mémoire : reporté à l'étape F, avec la réécriture du ch. 4 ; (c) `results/KB_projectors_C.pdf` et 4 PNG non suivis (sorties locales de scripts, inoffensifs) ; (d) hash `23ee3bb` dans `R10/README.md` et rapport : archives, laissés |
 | constaté | Greg a mis `article/` dans `.gitignore` (`d9a3588`) : `C_optique_lacunes/` (plan et biblio) n'est plus suivi, il reste en local |
 
+### Étape E — EXÉCUTÉE le 2026-09-30 (GO de Greg ; décisions : `results_dir()` pour R8, `plot_psp` → nouveau script, PDF reproductibles ; non commitée)
+
+| Sous-étape | Fait |
+|---|---|
+| E1 paquet | `src/electron_defect_interaction` → **`src/graphene_raman`** (`pyproject.toml` `name = "graphene_raman"`, réinstallation éditable) ; 104 fichiers réécrits (py, sh, toml, md vivants, `PROVENANCE.md`) ; 4 fichiers d'archives/données touchés par la substitution restaurés depuis HEAD |
+| E2 palette et style | `graphene_raman/plotting/palette.py` (ex `scripts/_palette.py` ; + `use_style()`, `save()` reproductible, `STYLE`) et `plotting/memoire.mplstyle` (ex `figures/memoire.mplstyle`, copie unique, `package-data`) ; 19 importeurs réécrits, plus aucun `sys.path` vers `scripts/` ; `_paths.py`, `_bands.py` → `scripts/validation/` |
+| E3 résultats par la config | `r8_driver.py` : `md5_listed` lit les `MD5SUMS_*.txt` de `matrices_dir()`, la porte P2 lit `resonance_9x9.npz` dans `results_dir()` (base finale, commentaire : le run de 2026-09-29 comparait M2 tel quel) ; nouvelle clé `epw_results_dir` + `config.epw_dir()` : les 8 scripts `epw_*` et `make_figures_epw.py` n'ont plus de `results/epw` en dur |
+| E4 orphelins | supprimés : `utils/interpolation.py`, `plotting/these.mplstyle`, et 12 fonctions mortes (`compute_ML_G_mpi`, `scattering_rate_from_wannier`, `split_counts`, `local_slice`, `read_psp8`, `monkhorst_pack_grid`, `generate_mp_grid`, `write_kpoints`, `make_Cdicts_for_k`, `get_typat`, `read_pdos_m`, `kvec_to_rvec`, constante `RY2EV`), chacune vérifiée sans utilisateur ; `plotting/plot_psp_radial_proj.py` remplacé par **`scripts/fig/make_figures_electron.py`** (fig:KB du ch. 2 : V_PPL vs −Z/r, projecteurs β_{iℓ}(r) avec r_c^(s) = 1,24 et r_c^(p) = 1,30 bohr, depuis `C.upf`) → `figures/electron/fig_kb_pseudo_C` **redessinée, à valider par Greg** (original dans git) |
+| E5 défauts | `HA2EV` défini une seule fois (`config.py` ; `matrix_io` et 5 scripts l'importent) ; défauts `load_M_checked(require_bloch_norm=UNIT_CELL)`, `scattering_rate_fast(ne_per_eta=8)`, `compute_ML_R(subtract_mean=False)`, `prep_reciprocal_inputs(subtract_mean=False)` |
+| E6 recette | pytest 201 (hors slow) après chaque sous-étape ; `ch4_chiffres.py check` ; les 29 figures régénérables (`make_figures{,_memoire,_epw,_em}.py`) sont **identiques pixel à pixel** aux versions suivies (les octets diffèrent : encodeur PNG et métadonnées de l'ancienne génération) ; **deux exécutions successives donnent des PDF et PNG identiques au bit** (métadonnées fixées dans `palette.save`) — c'est le test de recette de l'étape F ; `results/M2_plateau/*.csv` réécrits à l'identique par `make_figures.py` |
+| reste | dossier `src/electron_defect_interaction.egg-info/` (ignoré, périmé) à supprimer à la main ; tags git `memoire-avant-menage` (sur `656c05c`) et `memoire-apres-menage` : Greg |
+
+Proposition d'origine, pour mémoire :
+
 ### Étape E — `src/`
 
 - Supprimer ou isoler : `utils/interpolation.py`, `plotting/` (après avoir régénéré `KB_projectors_C.pdf` une fois et
@@ -912,6 +926,17 @@ Proposition d'origine, pour mémoire :
   zero-padding, qui sont ses seuls utilisateurs), `read_psp8`, `scattering_rate_from_wannier`, fonctions mortes listées §2.
 - Ranger `tb_models.py` sous `tests/` (banc synthétique) si R4 n'est plus rejoué.
 - Une seule définition de `HA2EV` ; défaut `load_M_checked(require_bloch_norm=UNIT_CELL)` ; défaut `ne_per_eta=8`.
+
+### Étape F0 — mise au style des figures de contrôle — EXÉCUTÉE le 2026-09-30 (décision de Greg : une seule migration)
+
+`scripts/fig/make_figures_controles.py` : les fonctions de tracé de `r7_driver.figs`, `r9_driver.{b_figure,cmd_synth,c_figure}` et
+`r10_driver.{a1_figure,a2_figure,c2_figure}` extraites **à contenu identique** (mêmes séries, panneaux, légendes), style du paquet,
+lecture des json/npz de `campagnes/R/{R7,R9,R10}` → `figures/electron_defect/fig_{size_3m,localized_3m,resonance_vs_nkint,
+resonance_vs_nkint_plateau,rcut_aligned,folded_vs_R7,offset_profiles_13,levels_vs_invN,kaasbjerg_plateau_ws}`. Retirés ensuite :
+`r7_driver.py`, `r9_driver.py`, `r4_driver.py`, `r5_{driver,sc_projection,basis_diagnostics,alignment_ext}.py` (gardés jusque-là pour
+ces figures), les copies des 9 figures dans `campagnes/R/*/fig/`, et `io/projwfc_io.py` (plus aucun utilisateur). `fig_kb_pseudo_C`
+corrigée (trace r·β tel que tabulé, comme l'original ; validée par Greg). Les 5 figures R8 restent produites par `r8_driver.py` dans
+`campagnes/R/R8_kaasbjerg/fig/` (données `out/`).
 
 ### Étape F — alimenter le dépôt du mémoire `~/projects/msc-graphene-raman-defects` (ajout de la seconde passe, chemin mis à jour à la troisième)
 
@@ -922,7 +947,7 @@ avec le chemin d'arrivée et le commit source de ce dépôt.
 
 | Dossier du mémoire | Ce qui y va (depuis ce dépôt) | Remarque |
 |---|---|---|
-| `analyse/` (« copie figée du repo graphene-raman ») | `src/electron_defect_interaction/` (sans les orphelins du §2), `config/production.json`, `tests/`, les scripts de production des chaînes M et T et EPW (§4.1 à §4.3, §4.5 hors obsolètes), `campagnes/R/R10_plateau/r10_driver.py`, `campagnes/R/R8_kaasbjerg/r8_driver.py`, `campagnes/M/ch4/ch4_chiffres.py`, `campagnes/EM/{M4_sigma,EM3,EM2}/*.py` | noter le commit d'origine dans le README ; `pyproject.toml` pour l'installation |
+| `analyse/` (« copie figée du repo graphene-raman ») | `src/graphene_raman/` (sans les orphelins du §2), `config/production.json`, `tests/`, les scripts de production des chaînes M et T et EPW (§4.1 à §4.3, §4.5 hors obsolètes), `campagnes/R/R10_plateau/r10_driver.py`, `campagnes/R/R8_kaasbjerg/r8_driver.py`, `campagnes/M/ch4/ch4_chiffres.py`, `campagnes/EM/{M4_sigma,EM3,EM2}/*.py` | noter le commit d'origine dans le README ; `pyproject.toml` pour l'installation |
 | `calculs/` (un dossier par calcul) | hors dépôt pour l'essentiel : `graphene/qe/defects/{super_cell,unit_cell}` (scf, nscf denses, pp.x, Wannier90), `graphene/qe/epw/24k-24q{,_mv0.02}`, `graphene/qe/electron_photon/{EM1_tb,EM2}` sur rorqual ; depuis ce dépôt : `scripts/submit_*.sh` actifs, `campagnes/R/R10_plateau/submit_r10.sh`, `campagnes/EM/EM1_tb/wannier.win`, `campagnes/EM/EM2/{bands.in,bands_pp.in,submit_*.sh,postw90/}` ; l'annexe D du mémoire (`annexes/paramètres.tex`) liste les paramètres | les inputs QE ne sont pas versionnés ici : à prendre dans les répertoires de travail |
 | `donnees/` | `results/M2_plateau/*` (npz, csv, MD5SUMS, README), `results/epw/*.npz` (chaîne `_mv0.02` + celles que `fig_epw_kohn_degauss` lit), `campagnes/EM/M4_sigma/{em_scalars.json,em_sigma_*.npz,em_map_K.npz,em_table.tex}`, `campagnes/EM/EM3/*.npz`, `campagnes/EM/EM2/em2_A.npz`, `campagnes/R/R8_kaasbjerg/out/` (figures R8), `campagnes/M/ch4/{table_v1_final.md,alignement_regions.*}`, `wannier/27x27` (ou les 5 grilles de production) | ~60 Mo de npz ; `results/M2/*.npy` (matrices) restent sur rorqual/nearline |
 | `scripts_figures/` | `scripts/fig/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |

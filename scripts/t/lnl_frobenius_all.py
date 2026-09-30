@@ -8,10 +8,10 @@ R10 (D6) : raw columns unchanged; *_aligned columns with M^L + dM, dM(k', k) = -
 approximation (i), brought back to the Bloch basis; same closed form as analyze_M.py, whose gates tie it to defect_mwr), C_N from the config.
 """
 import csv, os, sys, time, numpy as np
-from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat
-from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order, _infer_mp_grid
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir, alignment_C
+from graphene_raman.io import qe_io, matrix_io
+from graphene_raman.io.wannier_io import read_w90_mat
+from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order, _infer_mp_grid
+from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par dense_paths (matrices_dir)
 
 cfg = load_production()

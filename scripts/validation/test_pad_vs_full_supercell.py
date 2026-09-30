@@ -32,8 +32,8 @@ import sys
 import argparse
 import numpy as np
 
-from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.defects.local_G import (
+from graphene_raman.io import qe_io
+from graphene_raman.defects.local_G import (
     prep_reciprocal_inputs, compute_ML_G, compute_ML_G_dense,
 )
 

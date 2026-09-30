@@ -1,8 +1,0 @@
-&bands
-   prefix='defect_uc_dense_27'
-   outdir='/home/gregb26/links/scratch/qe_tmp/em2_bands_27'
-   filband='em2_bands.dat'
-   lp=.true.
-   filp='em2_p_avg.dat'
-   no_overlap=.true.
-/

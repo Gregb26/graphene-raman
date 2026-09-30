@@ -16,8 +16,8 @@ from types import SimpleNamespace
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import make_graphene_tb, make_grid_tb, make_wannier_tb
-from electron_defect_interaction.io.wannier_io import read_w90_mat
+from graphene_raman.electron_photon import make_graphene_tb, make_grid_tb, make_wannier_tb
+from graphene_raman.io.wannier_io import read_w90_mat
 
 N = 100    # the k grid has N x N = 1e4 points: fast, yet covers the whole Brillouin zone
 
@@ -131,10 +131,9 @@ import os
 import sys
 
 REPO = Path(__file__).resolve().parents[1]
-for _d in ("scripts", "scripts/validation"):
-    if str(REPO / _d) not in sys.path:
-        sys.path.insert(0, str(REPO / _d))
-import _paths  # noqa: E402  scripts/_paths.py (local data layout, EDI_DATA)
+if str(REPO / "scripts" / "validation") not in sys.path:
+    sys.path.insert(0, str(REPO / "scripts" / "validation"))
+import _paths  # noqa: E402  scripts/validation/_paths.py (local data layout, EDI_DATA)
 
 
 @pytest.fixture

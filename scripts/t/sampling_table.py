@@ -1,6 +1,6 @@
 """Sampling table: N, N mod 3, dE_F = E_F(d)-E_F(p) (meV), KS dense reconstruction (max/mean meV), max|V_ed^L| boundary (meV, raw)."""
 import csv, os, numpy as np, xml.etree.ElementTree as ET
-from electron_defect_interaction.config import load_production, results_dir
+from graphene_raman.config import load_production, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 HA = 27.211386245988; rows = []
 K = np.load(f"{RES}/ks_reconstruction.npz") if os.path.exists(f"{RES}/ks_reconstruction.npz") else {}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Figure du §2.5 (couplage électron-photon, série EM), style figures/memoire.mplstyle, français. Données :
+Figure du §2.5 (couplage électron-photon, série EM), style graphene_raman.plotting (memoire.mplstyle), français. Données :
 campagnes/EM/EM3/ (em3_ring_2p33.npz, em2_postw90_sigma_ti.npz : make_em3_data.py), campagnes/EM/EM2/em2_A.npz (DFT directe)
 et la production M4 (campagnes/EM/M4_sigma/ : em_sigma_*_N1200_eta0.04.npz, em_scalars.json).
   fig_em_coupling : (a) |ħv_cv| dans le plan sur l'anneau de 2.33 eV (532 nm) en fonction de θ, trois variantes de la
@@ -17,9 +17,8 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[2]            # scripts/fig/ -> racine
-plt.style.use(ROOT / "figures" / "memoire.mplstyle")
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
-from _palette import NAVY, ORANGE, GREEN, GOLD, REF, INK, MUTED
+from graphene_raman.plotting.palette import save as palette_save, use_style; use_style()
+from graphene_raman.plotting.palette import NAVY, ORANGE, GREEN, GOLD, REF, INK, MUTED
 
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default=str(ROOT / "figures" / "electron_photon")); a = ap.parse_args()
 EM = ROOT / "campagnes" / "EM"
@@ -38,7 +37,7 @@ def panel(ax, letter):
 
 
 def save(fig, name):
-    for ext in ("pdf", "png"): fig.savefig(f"{a.outdir}/{name}.{ext}")
+    palette_save(fig, name, a.outdir)          # pdf + png, métadonnées fixées (reproductible au bit)
     w, h = fig.get_size_inches(); plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png ({w:.2f} × {h:.2f} po)")
 
 

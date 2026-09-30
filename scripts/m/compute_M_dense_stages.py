@@ -18,7 +18,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1"); os.environ.setdefault("OPENBLAS_N
 os.environ.setdefault("FLEXIBLAS_NUM_THREADS", "1"); os.environ.setdefault("MKL_NUM_THREADS", "1")
 import argparse
 import numpy as np
-from electron_defect_interaction.io import qe_io, matrix_io
+from graphene_raman.io import qe_io, matrix_io
 
 PFAC = {"5x5": 5, "6x6": 4, "7x7": 4, "8x8": 4, "9x9": 3, "12x12": 2}
 SCRATCH = "/home/gregb26/links/scratch/qe_tmp"
@@ -46,11 +46,11 @@ def stage_ml(a):
               f"nranks={comm.Get_size()} uc={uc}", flush=True)
     if a.kernel == "R":
         # real-space kernel with node-shared u_nk: exact zero-padded dense M^L (see local_R docstring)
-        from electron_defect_interaction.defects.local_R import compute_ML_R_mpi_shared
+        from graphene_raman.defects.local_R import compute_ML_R_mpi_shared
         M_L = compute_ML_R_mpi_shared(uc, P["scp"], P["pot_p"], P["pot_d"], subtract_mean=False,
                                       bands=bands, io=qe_io, grid_block=a.block_size)
     else:
-        from electron_defect_interaction.defects.local_G import prep_reciprocal_inputs, compute_ML_G_dense_mpi
+        from graphene_raman.defects.local_G import prep_reciprocal_inputs, compute_ML_G_dense_mpi
         prep = None
         if rank == 0:
             prep = prep_reciprocal_inputs(P["uc"], P["scp"], P["pot_p"], P["pot_d"],
@@ -71,8 +71,8 @@ def stage_ml(a):
 
 
 def stage_nl(a):
-    from electron_defect_interaction.io.pseudo_io import read_upf
-    from electron_defect_interaction.defects.non_local import compute_M_NL
+    from graphene_raman.io.pseudo_io import read_upf
+    from graphene_raman.defects.non_local import compute_M_NL
     P = paths(a.size); bands = None if a.bands == "all" else [int(b) for b in a.bands.split(",")]
     M_NL = compute_M_NL(P["uc_dense"], P["scp"], P["scd"], P["upf"], io=qe_io, pseudo_reader=read_upf, bands=bands)
     matrix_io.save_M(a.out, M_NL, matrix_io.UNIT_CELL, part="M_NL_dense", p=P["p"], D=P["D"], M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")

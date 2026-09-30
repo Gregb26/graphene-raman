@@ -1,10 +1,10 @@
 """Minimal tests of the R9 functions (2026-09-28): P1 atom_sphere_shifts, P2 Mwr_to_Mwk_pairs, P3 cluster_ldos, P4 ldos_from_eigenpairs.
 Run: PYTHONPATH=src pytest tests/test_r9_functions.py"""
 import numpy as np
-from electron_defect_interaction.defects import alignment as al
-from electron_defect_interaction.wannier.wannier_interpolation import Mwr_to_Mwk, Mwr_to_Mwk_pairs
-from electron_defect_interaction.defects.many_body.local_tmatrix import cluster_ldos
-from electron_defect_interaction.wannier.supercell_fold import ldos_from_eigenpairs
+from graphene_raman.defects import alignment as al
+from graphene_raman.wannier.wannier_interpolation import Mwr_to_Mwk, Mwr_to_Mwk_pairs
+from graphene_raman.defects.many_body.local_tmatrix import cluster_ldos
+from graphene_raman.wannier.supercell_fold import ldos_from_eigenpairs
 
 
 def _graphene_supercell(N, a=2.4659, c=8.0):

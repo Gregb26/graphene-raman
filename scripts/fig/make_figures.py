@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Figures du mémoire (matplotlib, style figures/memoire.mplstyle, texte en français, données lues uniquement dans <results_dir>/*.npz).
+Figures du mémoire (matplotlib, style graphene_raman.plotting (memoire.mplstyle), texte en français, données lues uniquement dans <results_dir>/*.npz).
   fig_rcut          Γ N_cells vs R_cut, quatre tailles (grille et η gelés)
   fig_plateau       carte (grille × η) à R_cut gelé, taille de référence
   fig_level2        Γ N_cells vs N (niveau 2)
@@ -16,13 +16,12 @@ import argparse, csv, os, numpy as np
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
-from electron_defect_interaction.config import load_production, results_dir
+from graphene_raman.config import load_production, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 
-plt.style.use("figures/memoire.mplstyle")
-# palette catégorielle fixe (scripts/_palette.py, principale = bleu marine) : taille -> teinte, jamais recyclée ; 9×9 (référence) porte la principale
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
-from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
+from graphene_raman.plotting.palette import save as palette_save, use_style; use_style()
+# palette catégorielle fixe (graphene_raman.plotting.palette, principale = bleu marine) : taille -> teinte, jamais recyclée ; 9×9 (référence) porte la principale
+from graphene_raman.plotting.palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
 FAM3 = set(cfg_fam) if (cfg_fam := None) else {"6x6", "9x9", "12x12"}   # famille N = 3m (K se replie sur Γ)
 def famlab(S): return lab(S)                      # (mention N = 3m retirée des figures, 2026-09-15)
 def mk(S): return "o"
@@ -39,7 +38,7 @@ def lab(S): return S.replace("x", r"$\times$")
 def panel(ax, letter):
     t = ax.get_title(loc="left"); ax.set_title(f"({letter}) {t}" if t else f"({letter})", loc="left", fontsize=ax.title.get_fontsize())
 def save(fig, name):
-    for ext in ("pdf", "png"): fig.savefig(f"{a.outdir}/{name}.{ext}")
+    palette_save(fig, name, a.outdir)          # pdf + png, métadonnées fixées (reproductible au bit)
     plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png")
 
 def load_map(S):

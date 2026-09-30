@@ -1,4 +1,4 @@
-from electron_defect_interaction.config import load_production, results_dir
+from graphene_raman.config import load_production, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """

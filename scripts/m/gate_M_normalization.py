@@ -28,18 +28,18 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__)); PROJ = os.path.dirname(os.path.dirname(HERE))   # scripts/m/ -> racine
 try:
-    import electron_defect_interaction  # noqa: F401
+    import graphene_raman  # noqa: F401
 except ImportError:
     sys.path.insert(0, os.path.join(PROJ, "src"))
-from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io import qe_gamma_io as qg
-from electron_defect_interaction.defects import alignment as al
-from electron_defect_interaction.defects.local_R import fourier_resample
-from electron_defect_interaction.wannier import supercell_fold as sf
-from electron_defect_interaction.wavefunctions import sc_projection as sp
-from electron_defect_interaction.defects import deltav_pw as dv
-from electron_defect_interaction.utils.lattice import red_to_cart
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
+from graphene_raman.io import qe_io, matrix_io
+from graphene_raman.io import qe_gamma_io as qg
+from graphene_raman.defects import alignment as al
+from graphene_raman.defects.local_R import fourier_resample
+from graphene_raman.wannier import supercell_fold as sf
+from graphene_raman.wavefunctions import sc_projection as sp
+from graphene_raman.defects import deltav_pw as dv
+from graphene_raman.utils.lattice import red_to_cart
+from graphene_raman.config import load_production, dense_paths, HA2EV
 
 BOHR = 0.529177210903
 K_RED = np.array([2 / 3, 1 / 3, 0.0]); KP_RED = np.array([1 / 3, 2 / 3, 0.0])

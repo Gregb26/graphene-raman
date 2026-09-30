@@ -1,7 +1,7 @@
 """Level 2 by family (N = 3m vs others): median Gamma*N_cells at the frozen parameters, dense on-site pz-pz of the vacancy
 sublattice, Re M^L / Re M^NL at K (R10 D6: + Re M^L at K, aligned variant, last column). Writes <results_dir>/level2_families.csv."""
 import csv, os, numpy as np
-from electron_defect_interaction.config import load_production, results_dir
+from graphene_raman.config import load_production, results_dir
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 cfg = load_production(verbose=False); RC, G, E = cfg["R_cut"], cfg["grid"], cfg["eta_eV"]
 L = np.load(f"{RES}/mwr_locality.npz"); A = np.load(f"{RES}/M_analysis.npz", allow_pickle=True)

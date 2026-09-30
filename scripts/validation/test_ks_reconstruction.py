@@ -23,15 +23,15 @@ import sys
 import numpy as np
 from scipy.interpolate import CubicSpline
 
-from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.io.pseudo_io import read_upf, fq_from_fr
-from electron_defect_interaction.utils.planewaves import mask_invalid_G
-from electron_defect_interaction.utils.lattice import red_to_cart
-from electron_defect_interaction.defects.non_local import (
+from graphene_raman.io import qe_io
+from graphene_raman.io.pseudo_io import read_upf, fq_from_fr
+from graphene_raman.utils.planewaves import mask_invalid_G
+from graphene_raman.utils.lattice import red_to_cart
+from graphene_raman.defects.non_local import (
     build_K_vectors, compute_phase, compute_angular_part, compute_M_NL,
 )
-from electron_defect_interaction.defects.local_R import compute_ML_R
-from electron_defect_interaction.wavefunctions.wfk import compute_psi_nk
+from graphene_raman.defects.local_R import compute_ML_R
+from graphene_raman.wavefunctions.wfk import compute_psi_nk
 
 
 def sc_pot_on_uc_grid(uc_save, sc_save, pot_sc_file):
@@ -151,7 +151,7 @@ def null_test(uc_save, sc_p_save, pot_p, upf_file):
 
 
 def main():
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); import _paths   # scripts/_paths.py
+    import _paths   # scripts/validation/_paths.py (même dossier)
     grid = "5x5"
     uc_save = _paths.uc(grid)
     sc_p_save = _paths.sc_p(grid)

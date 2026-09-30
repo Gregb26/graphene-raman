@@ -15,9 +15,9 @@ import sys
 
 import numpy as np
 
-from electron_defect_interaction.io.wannier_io import read_w90_tb, read_w90_mat
-from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from electron_defect_interaction.io.wannier_provenance import write_wannier_manifest
+from graphene_raman.io.wannier_io import read_w90_tb, read_w90_mat
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from graphene_raman.io.wannier_provenance import write_wannier_manifest
 
 GRAPHENE = os.environ.get("PROJECTS", "/home/gregb26/links/projects/rrg-cotemich-ac/gregb26") + "/graphene/qe/defects/unit_cell"
 DEST = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "wannier")   # <dépôt>/wannier

@@ -57,7 +57,7 @@ in `scripts/`.
 
 ## Layout
 
-    src/electron_defect_interaction/   core package (M, Wannier, T-matrix,
+    src/graphene_raman/   core package (M, Wannier, T-matrix,
                                        electron–photon, EPW post-processing)
     scripts/                           production, analysis, figures, SLURM launchers
     tests/                             pytest suite

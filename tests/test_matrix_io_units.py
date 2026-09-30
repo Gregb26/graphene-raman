@@ -1,7 +1,7 @@
 """Units gate: M files must be tagged units='hartree'; conversion to eV happens only in load_M_checked."""
 import json, os
 import numpy as np, pytest
-from electron_defect_interaction.io import matrix_io
+from graphene_raman.io import matrix_io
 
 def _write(tmp_path, meta):
     f = str(tmp_path / "M.npy"); np.save(f, np.ones((2, 3, 2, 3)) * 0.5)

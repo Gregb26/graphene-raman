@@ -14,11 +14,11 @@ R10 (D6) : M2 matrices stay raw; the map (pi, pi*, L part) and Re M^L at K get a
 """
 import csv, json, numpy as np
 from scipy.ndimage import map_coordinates
-from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwr_to_Mwk, Mwr_to_Mwk_pairs, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order
-from electron_defect_interaction.defects.many_body.local_tmatrix import defect_mwr
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C
+from graphene_raman.io import qe_io, matrix_io
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_interpolation import Mbk_to_Mwk, Mwr_to_Mwk, Mwr_to_Mwk_pairs, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order
+from graphene_raman.defects.many_body.local_tmatrix import defect_mwr
+from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau)
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule)
 BOHR = 0.529177210903

@@ -9,11 +9,11 @@ on-shell nearest-energy-grid evaluation as compute_spectral_wannier.py. Output: 
 Usage: rcut_resigma.py --size 9x9 --rcut 0,1,2,3 [--grid 240 --eta 0.02] --out <results_dir>/resigma_9x9_rc0123.npz
 """
 import argparse, numpy as np
-from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, alignment_C
+from graphene_raman.io import qe_io, matrix_io, wannier_provenance
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
+from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.config import load_production, dense_paths, alignment_C
 
 p = argparse.ArgumentParser(); p.add_argument("--size", required=True); p.add_argument("--rcut", required=True)
 p.add_argument("--grid", type=int, default=None); p.add_argument("--eta", type=float, default=None); p.add_argument("--out", required=True); p.add_argument("--npe", type=int, default=None, help="ne_per_eta override (default: frozen config)")

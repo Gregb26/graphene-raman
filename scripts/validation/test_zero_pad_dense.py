@@ -17,9 +17,8 @@ test_zero_pad_dense.py
 import sys
 import numpy as np
 
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
 import _paths
-from electron_defect_interaction.defects.local_G import (
+from graphene_raman.defects.local_G import (
     zero_pad_potential, prep_reciprocal_inputs, compute_ML_G, compute_ML_G_dense,
 )
 
@@ -67,7 +66,7 @@ def test_zero_pad(p=3):
 
 
 def test_non_regression(p=3):
-    from electron_defect_interaction.io import qe_io
+    from graphene_raman.io import qe_io
 
     print("=== Test 2: dense path reproduces compute_ML_G at the coarse k-points ===")
     try:

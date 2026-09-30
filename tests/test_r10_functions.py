@@ -1,8 +1,8 @@
 """Minimal tests of the R10 functions (2026-09-29): ws_images, ws_phase, Mwr_to_Mwk(ws=), defect_mwr.
 Run: PYTHONPATH=src pytest tests/test_r10_functions.py"""
 import numpy as np
-import electron_defect_interaction.wannier.wannier_interpolation as wi
-import electron_defect_interaction.defects.many_body.local_tmatrix as lt
+import graphene_raman.wannier.wannier_interpolation as wi
+import graphene_raman.defects.many_body.local_tmatrix as lt
 
 
 def _graphene_cell(a=2.4659, c=8.0):

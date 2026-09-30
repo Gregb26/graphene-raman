@@ -11,6 +11,8 @@ Prints the ring-averaged block sums, interband fractions, predicted Im Pi and th
 Usage: python scripts/epw/epw_ring_check.py [--dir <epw_g_ring>] [--v 5.464] [--gamma-G 1.3346 --gamma-K 2.6448]
 """
 import argparse, os, re, numpy as np
+from graphene_raman.config import load_production, epw_dir
+EPW = epw_dir(load_production(verbose=False))          # results/epw (config, ménage 2026-09-30)
 ap = argparse.ArgumentParser(); ap.add_argument("--dir", default="/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/graphene/qe/epw/24k-24q/epw_g_ring")
 ap.add_argument("--v", type=float, default=5.464); ap.add_argument("--gamma-G", type=float, default=1.3346); ap.add_argument("--gamma-K", type=float, default=2.6448); ap.add_argument("--E_D", type=float, default=-4.2389); ap.add_argument("--tag", default="24k24q")
 a = ap.parse_args(); A_c = np.sqrt(3) / 2 * 2.4659 ** 2; v = a.v; ED = a.E_D
@@ -50,5 +52,5 @@ for iq, name, modes, ring, nval, gepw in ((1, "E2g, q = Gamma", mG, range(1, 13)
     out[name] = (w, blk.mean(), inter.mean(), impi, gepw)
 r = [out[k][4] * 1e-3 / out[k][3] for k in out]
 print(f"[verdict] gamma___/Im Pi = {r[0]:.3f} (Gamma) and {r[1]:.3f} (K): EPW's gamma___ is 2 Im Pi = the FULL width (FWHM)" if all(abs(x - 2) < 0.05 for x in r) else f"[verdict] ratios {r}: no clean factor")
-np.savez(f"results/epw/ring_check_{a.tag}.npz", **{k.replace(", ", "_").replace(" = ", "").replace("'", "p"): np.array(vv) for k, vv in out.items()}, v=v, A_c=A_c, units="hw eV; S, inter eV^2; ImPi eV (HWHM); gamma_epw meV")
+np.savez(f"{EPW}/ring_check_{a.tag}.npz", **{k.replace(", ", "_").replace(" = ", "").replace("'", "p"): np.array(vv) for k, vv in out.items()}, v=v, A_c=A_c, units="hw eV; S, inter eV^2; ImPi eV (HWHM); gamma_epw meV")
 print(f"saved results/epw/ring_check_{a.tag}.npz")

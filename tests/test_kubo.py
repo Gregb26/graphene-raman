@@ -8,7 +8,7 @@ complex sigma with the complex kernels (perspective B).
 import pytest
 import numpy as np
 from scipy.integrate import quad
-from electron_defect_interaction.electron_photon import (centres_only, gaussian_eta, gaussian_complex, kubo_accumulate,
+from graphene_raman.electron_photon import (centres_only, gaussian_eta, gaussian_complex, kubo_accumulate,
                                                          kubo_normalize, lorentzian_complex,
                                                          kubo_doped_complex_analytical, kubo_doped_finite_T_analytical, make_graphene_tb,
                                                          sigma_on_grid)

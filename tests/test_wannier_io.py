@@ -8,7 +8,7 @@ import re
 
 import pytest
 import numpy as np
-from electron_defect_interaction.io.wannier_io import read_w90_tb, read_w90_HR
+from graphene_raman.io.wannier_io import read_w90_tb, read_w90_HR
 
 
 @pytest.fixture(scope="module")

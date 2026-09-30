@@ -1,8 +1,8 @@
-from electron_defect_interaction.config import load_production, results_dir
+from graphene_raman.config import load_production, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
-Figures du chapitre 5 (couplage électron-phonon, EPW), style figures/memoire.mplstyle, français, données lues dans results/epw/*.npz
+Figures du chapitre 5 (couplage électron-phonon, EPW), style graphene_raman.plotting (memoire.mplstyle), français, données lues dans results/epw/*.npz
 et <results_dir>/resonance_9x9.npz (Γ^ed). Trois figures :
   fig_epw_validation : (a) bandes DFT (bands.x) vs EPW/Wannier, (b) phonons matdyn vs EPW, chemin Γ–K–M–Γ    [validation_24k24q.npz]
   fig_epw_gamma      : (a) Γ^ep(ε) convergence (degaussw à 120², 240²), (b) Γ^ep(ε) à 300 K et 10 K (production)  [selfen_*.npz]
@@ -13,7 +13,7 @@ Usage : python scripts/fig/make_figures_epw.py [--outdir figures/electron_phonon
 import argparse, os, glob, numpy as np
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-plt.style.use("figures/memoire.mplstyle")
+from graphene_raman.plotting.palette import use_style; use_style()
 from matplotlib.ticker import FuncFormatter, ScalarFormatter, LogFormatterSciNotation
 def fr(x, nd=2):
     """nombre formaté (POINT décimal : convention du mémoire depuis P18, 2026-09-20 ; l'ancienne virgule() n'est plus appliquée)."""
@@ -24,8 +24,9 @@ def virgule(ax):
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default="figures/electron_phonon"); ap.add_argument("--control", action="store_true"); ap.add_argument("--prod-tag", default="prod"); ap.add_argument("--phself-tag", default="path_1200_dg0.02")
 ap.add_argument("--val-tag", default="24k24q", help="validation_<tag>.npz (bandes, phonons, décroissance, |g|)"); ap.add_argument("--sel-suffix", default="", help="suffixe des selfen de convergence : selfen_<k><suffixe>_T300.npz")
 ap.add_argument("--kohn-val-tags", default="24k24q,24k24q_mv0.02", help="tags des validation npz (matdyn) pour fig_epw_kohn_degauss, dans l'ordre"); ap.add_argument("--kohn-sigmas", default="0.002,0.02", help="degauss (Ry) des chaînes matdyn, même ordre que --kohn-val-tags"); ap.add_argument("--dfpt-sigma", default="0.002", help="degauss (Ry) du run DFPT direct"); ap.add_argument("--dfpt-tag", default="24k24q", help="dfpt_path_freq_<tag>.npz (DFPT direct 16×16, 31 q)"); ap.add_argument("--phdos-tag", default=None, help="phdos_<tag>.npz (DOS matdyn) pour fig_epw_phonons ; défaut = --val-tag"); a = ap.parse_args()
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
-from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
+from graphene_raman.plotting.palette import save as palette_save, NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
+from graphene_raman.config import load_production, epw_dir
+EPW = epw_dir(load_production(verbose=False))          # results/epw (config, ménage 2026-09-30)
 # principale (marine) = EPW / production 240², 300 K ; C_T = Γ^ep 300 K (fig_gamma b, vs_ed, barres) ; orange = référence directe (DFPT prt), Γ^ed, fenêtre gelée
 C_DFT, C_EPW, C_T, C_10K, C_ED, C_WIN = MUTED, NAVY, NAVY, GREEN, ORANGE, ORANGE   # référence en gris moyen, plus épaisse, sous le marine tireté
 CONV_COL = {"120_dg0.01": GOLD, "120_dg0.02": SKY, "120_dg0.05": PINK, "240_dg0.02": NAVY}
@@ -36,14 +37,14 @@ def panel(ax, letter):
     t = ax.get_title(loc="left"); ax.set_title(f"({letter}) {t}" if t else f"({letter})", loc="left", fontsize=ax.title.get_fontsize())
 def save(fig, name):
     for ax in fig.axes: virgule(ax)
-    for ext in ("pdf", "png"): fig.savefig(f"{a.outdir}/{name}.{ext}")
+    palette_save(fig, name, a.outdir)          # pdf + png, métadonnées fixées (reproductible au bit)
     w, h = fig.get_size_inches(); plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png ({w:.2f} × {h:.2f} po)")
 def path_axis(ax):
     ax.set_xticks(TICKS); ax.set_xticklabels(TLAB); ax.set_xlim(0, 1); ax.xaxis._etiquettes_fixes = True
     for t in TICKS[1:-1]: ax.axvline(t, color=MUTED, lw=0.6)
 
 # ---------------- 1. validation bandes + phonons
-V = np.load(f"results/epw/validation_{a.val_tag}.npz", allow_pickle=True)
+V = np.load(f"{EPW}/validation_{a.val_tag}.npz", allow_pickle=True)
 ED = float(V["bands_ED_dft"]); s = V["bands_s"]; Ed = V["bands_E_dft"] - ED; Ee = V["bands_E_epw_on_dft"] - ED
 fig, (a1, a2) = plt.subplots(1, 2, figsize=(6.5, 3.4))
 for n in range(Ed.shape[1]): a1.plot(s, Ed[:, n], color=C_DFT, lw=1.8, label="DFT" if n == 0 else None)
@@ -57,8 +58,8 @@ fig.tight_layout(); save(fig, "fig_epw_validation")
 
 # ---------------- 2. Γ^ep(ε) : convergence + température
 def load_sel(f): R = np.load(f, allow_pickle=True); return R["eg"] - float(R["E_D"]), R["Gamma_e"] * 1e3, R
-conv = {k: f"results/epw/selfen_{k}{a.sel_suffix}_T300.npz" for k in CONV_COL}; conv = {k: f for k, f in conv.items() if os.path.exists(f)}
-prod = {T: f"results/epw/selfen_{a.prod_tag}_T{T}.npz" for T in (300, 10)}; prod = {T: f for T, f in prod.items() if os.path.exists(f)}
+conv = {k: f"{EPW}/selfen_{k}{a.sel_suffix}_T300.npz" for k in CONV_COL}; conv = {k: f for k, f in conv.items() if os.path.exists(f)}
+prod = {T: f"{EPW}/selfen_{a.prod_tag}_T{T}.npz" for T in (300, 10)}; prod = {T: f for T, f in prod.items() if os.path.exists(f)}
 if conv:
     fig, (b1, b2) = plt.subplots(1, 2, figsize=(6.5, 3.4), sharey=True)
     for k, f in conv.items():
@@ -99,9 +100,9 @@ if a.control:
     fig.tight_layout(); save(fig, "fig_epw_g_control")
 
 # ---------------- 4. fig_epw_phonselfen : γ_qν le long de Γ–K–M–Γ (300 K) + valeurs clés aux deux T
-PH = f"results/epw/phself_{a.phself_tag}.npz"
+PH = f"{EPW}/phself_{a.phself_tag}.npz"
 if os.path.exists(PH):
-    import electron_defect_interaction.electron_phonon.phself as _ph
+    import graphene_raman.electron_phonon.phself as _ph
     P = np.load(PH, allow_pickle=True); T = P["T"]; s = P["s"]; om = P["omega"]; gam = P["gamma_fwhm"]; i300 = int(np.argmin(np.abs(T - 300))); i10 = int(np.argmin(np.abs(T - 10)))
     fig, (c1, c2) = plt.subplots(1, 2, figsize=(6.5, 3.4), gridspec_kw={"width_ratios": [2.2, 1]})
     BR_COL = [LIGHT, MUTED, REF, GREEN, ORANGE, NAVY]
@@ -151,25 +152,25 @@ if all(f"decay_{k}_r" in V.files for k in ("H", "dynmat", "epmate", "epmatp")):
     fig.tight_layout(); save(fig, "fig_epw_decay")
 
 # ---------------- 6. fig_epw_kohn_degauss : deux branches optiques les plus hautes sur Γ–K–M–Γ, matdyn (degauss 0.002 / 0.02 Ry) et DFPT direct 16×16 (31 q)
-KV = [(t, l) for t, l in zip(a.kohn_val_tags.split(","), a.kohn_sigmas.split(",")) if os.path.exists(f"results/epw/validation_{t}.npz")]
-DF = f"results/epw/dfpt_path_freq_{a.dfpt_tag}.npz"
+KV = [(t, l) for t, l in zip(a.kohn_val_tags.split(","), a.kohn_sigmas.split(",")) if os.path.exists(f"{EPW}/validation_{t}.npz")]
+DF = f"{EPW}/dfpt_path_freq_{a.dfpt_tag}.npz"
 if KV and os.path.exists(DF):
     fig, ax = plt.subplots(figsize=(6.5, 3.6)); KCOL = [MUTED, NAVY, ORANGE]
     for i, (t, l) in enumerate(KV):
-        Vt = np.load(f"results/epw/validation_{t}.npz", allow_pickle=True); Ft = Vt["ph_F_matdyn"] * CM2MEV
+        Vt = np.load(f"{EPW}/validation_{t}.npz", allow_pickle=True); Ft = Vt["ph_F_matdyn"] * CM2MEV
         for m in (4, 5): ax.plot(Vt["ph_s"], Ft[:, m], color=KCOL[i], lw=1.2, label=rf"24$\times$24 $\mathbf{{k}}$, $\sigma$ = {l} Ry" if m == 4 else None)
     D = np.load(DF, allow_pickle=True); Fd = D["freq"] * CM2MEV
     for m in (4, 5): ax.plot(D["s"], Fd[:, m], "o", color=KCOL[2], ms=3.2, label=rf"16$\times$16 $\mathbf{{k}}$, $\sigma$ = {a.dfpt_sigma} Ry" if m == 4 else None)
     ax.set_ylabel(r"$\hbar\omega_{\nu\mathbf{q}}$ (meV)"); ax.set_title(r"Anomalies de Kohn en fonction de l'élargissement de Marzari-Vanderbilt $\sigma$", loc="left", fontsize=9); ax.legend(fontsize=7, loc="lower left"); path_axis(ax)
     for t, l in KV:
-        Vt = np.load(f"results/epw/validation_{t}.npz", allow_pickle=True); sq = Vt["ph_s"]; F = Vt["ph_F_matdyn"]; iG = int(np.argmin(sq)); iK = int(np.argmin(np.abs(sq - TICKS[1]))); iM = int(np.argmin(np.abs(sq - TICKS[2])))
+        Vt = np.load(f"{EPW}/validation_{t}.npz", allow_pickle=True); sq = Vt["ph_s"]; F = Vt["ph_F_matdyn"]; iG = int(np.argmin(sq)); iK = int(np.argmin(np.abs(sq - TICKS[1]))); iM = int(np.argmin(np.abs(sq - TICKS[2])))
         print(f"[kohn {t} (sigma {l} Ry)] matdyn omega(Gamma) = {F[iG, 4]:.2f}/{F[iG, 5]:.2f} cm^-1 ; omega(K), 6 modes = {np.round(F[iK], 2).tolist()} ; omega(M) LO/TO = {F[iM, 4]:.2f}/{F[iM, 5]:.2f} cm^-1")
     iK = int(np.argmin(np.abs(D["s"] - TICKS[1]))); iM = int(np.argmin(np.abs(D["s"] - TICKS[2])))
     print(f"[kohn dfpt {a.dfpt_tag}] omega(Gamma) = {D['freq'][0, 4]:.2f}/{D['freq'][0, 5]:.2f} ; omega(K), 6 modes = {np.round(D['freq'][iK], 2).tolist()} ; omega(M) = {D['freq'][iM, 4]:.2f}/{D['freq'][iM, 5]:.2f} cm^-1")
     fig.tight_layout(); save(fig, "fig_epw_kohn_degauss")
 
 # ---------------- 7. fig_epw_phonons : (a) dispersion matdyn sur Γ–K–M–Γ (mêmes IFC que fig_epw_*), (b) DOS matdyn sur grille dense ; cm⁻¹ ; paramètres réels en titres
-PD = f"results/epw/phdos_{a.phdos_tag or a.val_tag}.npz"
+PD = f"{EPW}/phdos_{a.phdos_tag or a.val_tag}.npz"
 if os.path.exists(PD) and "ph_F_matdyn" in V.files:
     P = np.load(PD, allow_pickle=True); Fm = V["ph_F_matdyn"]; sq = V["ph_s"]
     fig, (d1, d2) = plt.subplots(1, 2, figsize=(6.5, 3.6), sharey=True, gridspec_kw={"width_ratios": [3, 1]})

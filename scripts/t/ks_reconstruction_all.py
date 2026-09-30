@@ -10,13 +10,13 @@ Reports per case: offset, max/mean |diag - eps - offset|, per-band max/median (m
 """
 import numpy as np
 from scipy.interpolate import CubicSpline
-from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.io.pseudo_io import read_upf, fq_from_fr
-from electron_defect_interaction.utils.planewaves import mask_invalid_G
-from electron_defect_interaction.utils.lattice import red_to_cart
-from electron_defect_interaction.defects.non_local import build_K_vectors, compute_phase, compute_angular_part
-from electron_defect_interaction.wavefunctions.wfk import compute_psi_nk
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
+from graphene_raman.io import qe_io
+from graphene_raman.io.pseudo_io import read_upf, fq_from_fr
+from graphene_raman.utils.planewaves import mask_invalid_G
+from graphene_raman.utils.lattice import red_to_cart
+from graphene_raman.defects.non_local import build_K_vectors, compute_phase, compute_angular_part
+from graphene_raman.wavefunctions.wfk import compute_psi_nk
+from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 import os, sys; sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "validation")); from test_ks_reconstruction import sc_pot_on_uc_grid
 

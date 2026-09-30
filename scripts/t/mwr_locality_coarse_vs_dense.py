@@ -2,11 +2,11 @@
 R10 : Mwr aligned (M_W(R,R) - C_N on the N x N box, approximation (i), C_N from the config block "alignment"); abscissa = true distance of the
 Wigner-Seitz image to the defect (ws_images, P-b2)."""
 import numpy as np
-from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat
-from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order, ws_images
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C
+from graphene_raman.io import qe_io, matrix_io
+from graphene_raman.io.wannier_io import read_w90_mat
+from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order, ws_images
+from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau)
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule)
 import os

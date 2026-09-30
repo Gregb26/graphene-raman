@@ -26,14 +26,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
 import _paths
-from electron_defect_interaction.io import qe_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order
+from graphene_raman.io import qe_io
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order
 
-HA_TO_EV = 27.211386245988
+from graphene_raman.config import HA2EV as HA_TO_EV   # noqa: E402  single definition (config.py)
 
 DATA = _paths.uc("11x11")            # unit cell that ships the Wannier files locally
 U_PATH = f"{DATA}/wannier_u.mat"

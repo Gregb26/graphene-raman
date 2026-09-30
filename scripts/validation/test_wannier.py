@@ -22,15 +22,15 @@ test_wannier.py
           - interpolating to a denser grid yields a Hermitian operator and real, finite band energies
 """
 
+import os
 import numpy as np
 
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
 import _paths
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb, read_w90_hr
-from electron_defect_interaction.wannier.wannier_interpolation import (
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb, read_w90_hr
+from graphene_raman.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, Mwr_to_Mwk, wannier_interpolate,
 )
-from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 
 # 11x11 is the unit cell that ships the Wannier files locally (5x5 has none); see scripts/_paths.py
 DATA = _paths.uc("11x11")
@@ -125,7 +125,7 @@ def test_parsers():
 def test_roundtrip(k_coarse):
     print("\n=== (2) round-trip Wannier-gauge Fourier identity (M_wk -> M_wr -> M_wk) ===")
     nw, nk = 5, len(k_coarse)
-    from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid
+    from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid
     MP = _infer_mp_grid(k_coarse)
     Mwk = random_hermitian_M(nw, nk, seed=1)            # random Hermitian object in the Wannier gauge
     Mwr, R = Mwk_to_Mwr(Mwk, k_coarse, MP)
@@ -179,8 +179,8 @@ def test_real_matrix(matrix_path="M_ed.npy"):
     """Round-trip on the actual electron-defect matrix M = M^L + M^NL (M_ed.npy), if present."""
     print("\n=== (5) round-trip on the REAL electron-defect matrix (M_ed.npy) ===")
     import os
-    from electron_defect_interaction.io import qe_io
-    from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order, _infer_mp_grid
+    from graphene_raman.io import qe_io
+    from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order, _infer_mp_grid
 
     if not os.path.exists(matrix_path):
         print(f"  {matrix_path} not found -> SKIP")
@@ -229,8 +229,8 @@ def main():
     # Use the PRECISE QE k-grid for the Fourier round-trips: the .mat k-points carry only ~6-7
     # decimals, which inflates the (exact) FT identity to ~1e-6. Align U/U_dis to that order, exactly
     # as wannier_interpolate does internally.
-    from electron_defect_interaction.io import qe_io
-    from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order
+    from graphene_raman.io import qe_io
+    from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order
     k_coarse = qe_io.get_k_red(DATA)
     perm = _match_kpoint_order(k_U, k_coarse)
     U, Ud = U[perm], Ud[perm]

@@ -11,12 +11,12 @@ Reported per R_cut: max|dM|/max|M_ref| over the pi/pi* blocks of all (k',k); max
 Usage: python scripts/t/m_rcut_convergence.py --size 9x9 [--nf 60] [--rcuts 0,1,2,3]
 """
 import argparse, csv, os, numpy as np
-from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order, ws_images, ws_phase
-from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, dense_paths, results_dir, alignment_C
+from graphene_raman.io import qe_io, matrix_io
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order, ws_images, ws_phase
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.config import load_production, dense_paths, results_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default="9x9"); ap.add_argument("--nf", type=int, default=60); ap.add_argument("--rcuts", default="0,1,2,3"); a = ap.parse_args()
 cfg = load_production(); dp = dense_paths(cfg, a.size); S = a.size

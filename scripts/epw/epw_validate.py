@@ -12,7 +12,10 @@ Energies: eV; |g| meV; E_D explicit (min pi/pi* gap on the path). Output: result
 Usage: python scripts/epw/epw_validate.py --root <grid dir> --tag 24k24q [--bands bands/graphene.qe.bands] ...
 """
 import argparse, os, re, numpy as np
-HA2EV = 27.211386245988; CM2MEV = 1.0 / 8.06554
+from graphene_raman.config import load_production, epw_dir
+EPW = epw_dir(load_production(verbose=False))          # results/epw (config, ménage 2026-09-30)
+from graphene_raman.config import HA2EV   # noqa: E402
+CM2MEV = 1.0 / 8.06554
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--root", required=True); ap.add_argument("--tag", required=True)
@@ -164,4 +167,4 @@ for spec in a.g_dirs.split(","):
         if m.any(): print(f"   {lab} (|E_k-E_D|,|E_k+q-E_D| <= {a.fsthick} eV, G>20 meV): {m.sum()} sums, rel median {np.median(err[m]/res[m,4]):.2%}, max {np.max(err[m]/res[m,4]):.2%}, |dG| max {err[m].max():.2f} meV")
     out[f"g_{kname}_win_mask"] = win; out[f"g_{kname}_win_median"] = float(np.median(err[win] / res[win, 4])) if win.any() else np.nan; out[f"g_{kname}_win_max"] = float(np.max(err[win] / res[win, 4])) if win.any() else np.nan
     out[f"g_{kname}_win_noM_median"] = float(np.median(err[noM] / res[noM, 4])) if noM.any() else np.nan; out[f"g_{kname}_win_noM_max"] = float(np.max(err[noM] / res[noM, 4])) if noM.any() else np.nan; out["g_fsthick"] = a.fsthick
-o = a.out or f"results/epw/validation_{a.tag}.npz"; os.makedirs(os.path.dirname(o), exist_ok=True); np.savez(o, units="energies eV; |g| meV; phonons cm^-1; decay Ry", tag=a.tag, **out); print(f"saved {o}")
+o = a.out or f"{EPW}/validation_{a.tag}.npz"; os.makedirs(os.path.dirname(o), exist_ok=True); np.savez(o, units="energies eV; |g| meV; phonons cm^-1; decay Ry", tag=a.tag, **out); print(f"saved {o}")

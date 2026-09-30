@@ -5,7 +5,7 @@ dagger/hermitize, and `velocity` (F5).
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import (compute_velocity, dagger, fourier, hermitize, kpath,
+from graphene_raman.electron_photon import (compute_velocity, dagger, fourier, hermitize, kpath,
                                                          make_graphene_tb, reciprocal, velocity, centres_only)
 
 DK = 1e-5  # finite-difference step (1/Angstrom); truncation ~DK^2 and round-off ~eps/DK balance here

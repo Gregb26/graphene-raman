@@ -1,4 +1,4 @@
-from electron_defect_interaction.config import load_production, results_dir
+from graphene_raman.config import load_production, results_dir
 RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
 #!/usr/bin/env python
 """
@@ -58,7 +58,7 @@ import argparse
 import time
 import numpy as np
 
-from electron_defect_interaction.io import matrix_io
+from graphene_raman.io import matrix_io
 
 
 def parse_args():
@@ -88,8 +88,8 @@ def require(args, names, stage):
 
 
 def get_io():
-    from electron_defect_interaction.io import qe_io as io
-    from electron_defect_interaction.io.pseudo_io import read_upf as pseudo_reader
+    from graphene_raman.io import qe_io as io
+    from graphene_raman.io.pseudo_io import read_upf as pseudo_reader
     return io, pseudo_reader
 
 
@@ -104,7 +104,7 @@ def stage_ml(args):
     require(args, ["uc", "sc_p", "pot_p", "pot_d"], "ml")
 
     from mpi4py import MPI
-    from electron_defect_interaction.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
+    from graphene_raman.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -131,7 +131,7 @@ def stage_nl(args):
     """Serial (fresh process): compute the non-local part M^NL and save it."""
     require(args, ["uc", "sc_p", "sc_d", "upf"], "nl")
 
-    from electron_defect_interaction.defects.non_local import compute_M_NL
+    from graphene_raman.defects.non_local import compute_M_NL
 
     io, pseudo_reader = get_io()
     bands = None if args.bands == "all" else [int(b) for b in args.bands.split(",")]

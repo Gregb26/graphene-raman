@@ -30,10 +30,10 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__)); PROJ = os.path.dirname(os.path.dirname(HERE))   # scripts/m/ -> racine
 try:
-    import electron_defect_interaction  # noqa: F401
+    import graphene_raman  # noqa: F401
 except ImportError:
     sys.path.insert(0, os.path.join(PROJ, "src"))
-from electron_defect_interaction.io import matrix_io
+from graphene_raman.io import matrix_io
 
 M_NORM_V2 = "v2 : L et NL en norme unit_cell, 2026-09-25"
 

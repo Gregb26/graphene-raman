@@ -5,9 +5,9 @@ convergence parameter); (iii) extract_V_loc / mwr_locality guardrails behave.
 """
 import numpy as np
 
-from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from electron_defect_interaction.defects.many_body.single_defect import compute_T
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from graphene_raman.defects.many_body.single_defect import compute_T
+from graphene_raman.defects.many_body import local_tmatrix as lt
 from test_local_tmatrix import random_H   # reuse the synthetic Hamiltonian
 
 

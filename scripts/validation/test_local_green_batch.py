@@ -3,8 +3,8 @@
 Run from the repo root. Prints PASS/FAIL and exits 0/1; wrapped by tests/test_scripts_tmatrix.py."""
 import sys, time
 import numpy as np
-from electron_defect_interaction.io.wannier_io import read_w90_tb
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+from graphene_raman.io.wannier_io import read_w90_tb
+from graphene_raman.defects.many_body import local_tmatrix as lt
 
 
 def main(tb_path="wannier/27x27/wannier_tb.dat"):

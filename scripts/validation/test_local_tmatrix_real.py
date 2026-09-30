@@ -7,14 +7,14 @@ same coarse internal grid. Also reports the on-site V_loc and positivity. Usage:
 """
 import sys
 import numpy as np
-from electron_defect_interaction.io import qe_io, matrix_io
-from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_tb
-from electron_defect_interaction.wannier.wannier_interpolation import (
+from graphene_raman.io import qe_io, matrix_io
+from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order)
-from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from electron_defect_interaction.defects.many_body.single_defect import compute_T
-from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, matrices_dir
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
+from graphene_raman.defects.many_body.single_defect import compute_T
+from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.config import load_production, matrices_dir
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule)
 
 N = sys.argv[1] if len(sys.argv) > 1 else "5x5"

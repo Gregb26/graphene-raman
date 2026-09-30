@@ -8,8 +8,10 @@ Usage: epw_selfen_post.py --dir <epw run dir> --tag <tag>            -> results/
 """
 import argparse, os, sys, numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "src"))
-from electron_defect_interaction.config import load_production
-from electron_defect_interaction.electron_phonon import selfen
+from graphene_raman.config import load_production
+from graphene_raman.electron_phonon import selfen
+from graphene_raman.config import load_production, epw_dir
+EPW = epw_dir(load_production(verbose=False))          # results/epw (config, ménage 2026-09-30)
 
 ap = argparse.ArgumentParser(); ap.add_argument("--dir"); ap.add_argument("--tag"); ap.add_argument("--table", nargs="*"); ap.add_argument("--ref", default=None)
 ap.add_argument("--E_D", type=float, default=-4.2389); a = ap.parse_args()
@@ -32,7 +34,7 @@ if a.dir:
               f"|eps-E_D|<=1.2 eV: n={s12.sum()}, median {np.median(r['Gamma'][s12])*1e3:.3f} meV")
         print(f"   Gamma^ep(eps) (Lorentzian eta={eta}): median over |eps-E_D|<=3 eV ({n3} pts) = {m3*1e3:.3f} meV; over <=1.2 eV ({n12} pts) = {m12*1e3:.3f} meV; "
               f"at E_D {np.interp(E_D, eg, Ge)*1e3:.3f} meV; min {Ge.min()*1e3:.3f} meV at {eg[np.argmin(Ge)]-E_D:+.3f} eV")
-        out = f"results/epw/selfen_{tag}.npz"; os.makedirs("results/epw", exist_ok=True)
+        out = f"{EPW}/selfen_{tag}.npz"; os.makedirs(EPW, exist_ok=True)
         np.savez(out, tag=tag, units="eV", convention="Gamma^ep = 2 Im Sigma (total width); Gamma^ed = -2 Im Sigma (ch. 4)", E_D=E_D, E_F_epw=r["E_F"], T=r["T"],
                  degaussw=r["degaussw"], n_mesh=n, eta=eta, fsthick=3.5, k=r["k"], w=w, ik=r["ik"], ibnd=r["ibnd"], E=r["E"], ReS=r["ReS"], ImS=r["ImS"], Gamma=r["Gamma"],
                  eg=eg, Gamma_e=Ge, median_3eV=m3, median_1p2eV=m12, n_states_3eV=int(s3.sum()), n_states_1p2eV=int(s12.sum()))

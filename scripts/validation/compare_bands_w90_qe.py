@@ -29,12 +29,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
 import _paths
 from _bands import SYM_POINTS, path_corners, label_corner, dirac_energy
-from electron_defect_interaction.io import qe_io
+from graphene_raman.io import qe_io
 
-HA_TO_EV = 27.211386245988
+from graphene_raman.config import HA2EV as HA_TO_EV   # noqa: E402  single definition (config.py)
 
 # Defaults (override on the command line). 11x11 ships both bands.dat and wannier_band.dat locally.
 DATA = _paths.uc("11x11")

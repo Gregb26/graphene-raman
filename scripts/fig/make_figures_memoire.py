@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Figures finales du mémoire (retouches), style figures/memoire.mplstyle, français, données lues dans <results_dir>/*.npz.
+Figures finales du mémoire (retouches), style graphene_raman.plotting (memoire.mplstyle), français, données lues dans <results_dir>/*.npz.
 Noms distincts des figures de travail (rien n'est écrasé) :
   fig_convergence        (a) Γ N_cells vs R_cut, six tailles ; (b) carte plateau (grille × η), référence     — 6.5 × 3.4 po
   fig_locality_final     (a) 5×5, (b) 8×8 avec grille aliasée ; (c) 9×9, (d) 12×12                 — 6.5 × 5.6 po
@@ -17,12 +17,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
 from matplotlib.patches import Polygon
 from scipy.spatial import Voronoi
-from electron_defect_interaction.config import load_production, results_dir, alignment_C
+from graphene_raman.config import load_production, results_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 
-plt.style.use("figures/memoire.mplstyle")
-import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # scripts/ : _palette, _bands, _paths
-from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
+from graphene_raman.plotting.palette import save as palette_save, use_style; use_style()
+from graphene_raman.plotting.palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
 FAM3 = {"6x6", "9x9", "12x12"}
 C_T, C_BORN, C_REF, C_DIS = NAVY, ORANGE, REF, GREEN
 LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"; LBL_G = r"$\Gamma\,N_\mathrm{cells}$ (meV)"
@@ -34,7 +33,7 @@ def famlab(S): return lab(S)                      # (mention N = 3m retirée des
 def panel(ax, letter):
     t = ax.get_title(loc="left"); ax.set_title(f"({letter}) {t}" if t else f"({letter})", loc="left", fontsize=ax.title.get_fontsize())
 def save(fig, name):
-    for ext in ("pdf", "png"): fig.savefig(f"{a.outdir}/{name}.{ext}")
+    palette_save(fig, name, a.outdir)          # pdf + png, métadonnées fixées (reproductible au bit)
     w, h = fig.get_size_inches(); DONE.append((name, w, h)); plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png  ({w:.2f} × {h:.2f} po)")
 def load_map(S):
     f = f"{RES}/specwd_{S}_prod.npz"

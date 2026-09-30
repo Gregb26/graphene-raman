@@ -7,11 +7,11 @@ its p_z block pz_block (M3).
 
 import pytest
 import numpy as np
-from electron_defect_interaction.electron_photon import (centres_only, compute_velocity, dagger,
+from graphene_raman.electron_photon import (centres_only, compute_velocity, dagger,
                                                          fermi_velocity, fourier, hermitize,
                                                          make_graphene_tb, make_grid_tb, pz_block,
                                                          reciprocal, ring)
-from electron_defect_interaction.electron_photon.tb_model import extract_block
+from graphene_raman.electron_photon.tb_model import extract_block
 
 HW = 2.33        # eV, 532 nm laser
 

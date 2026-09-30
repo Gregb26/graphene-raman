@@ -33,3 +33,4 @@ fec6493a8b0f80e55c2be6cd34d306d8 R9_controles/a/a3_results.json
 a8c9cd30d0cff6dc1f13c8f6c26a7f51 R9_controles/b/b_results.json
 1b2f1198f4de50682aa1a9b05285205c R9_controles/b/b_results_plateau.json
 bda4a4a8236454100c85a3b6a3be6ffd R9_controles/c/c_results.json
+5e3e4cf1a5d155e8087657e16f6a5550 R8_kaasbjerg/spec/spectral_GKM_9x9.npz

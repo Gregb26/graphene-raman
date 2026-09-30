@@ -20,7 +20,7 @@ def test_local_rcut(repo_cwd):
 
 @pytest.mark.slow
 def test_local_green_batch(repo_cwd):
-    """local_green_batch = local_green to 1e-12 (wannier/27x27); scattering_rate_fast vs exact (C8)."""
+    """local_green_batch = local_green to 1e-12 (results/wannier/27x27); scattering_rate_fast vs exact (C8)."""
     import test_local_green_batch
     assert test_local_green_batch.main() == 0
 

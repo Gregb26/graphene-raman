@@ -31,8 +31,8 @@ for S in ("5x5", "6x6", "7x7", "8x8", "9x9", "12x12"):
     dp = dense_paths(cfg, S)
     if not os.path.exists(dp["mfile"]) or not os.path.isdir(dp["wdir"]): print(f"[{S}] dense M or wannier missing; skipped"); continue
     run(dp["uc"], dp["mfile"], dp["wdir"], f"{S}_dense", S)
-    if os.path.isdir(f"wannier/{S}"):
-        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"{MAT}/M_ed_{S}.npy", f"wannier/{S}", f"{S}_coarse", S)
+    if os.path.isdir(f"results/wannier/{S}"):
+        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"{MAT}/M_ed_{S}.npy", f"results/wannier/{S}", f"{S}_coarse", S)
     else:
-        print(f"[{S}] no coarse wannierization (wannier/{S}); dense only")
+        print(f"[{S}] no coarse wannierization (results/wannier/{S}); dense only")
 np.savez(f"{RES}/mwr_locality.npz", **out); print("saved <results_dir>/mwr_locality.npz")

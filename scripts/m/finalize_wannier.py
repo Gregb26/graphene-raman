@@ -20,7 +20,7 @@ from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.io.wannier_provenance import write_wannier_manifest
 
 GRAPHENE = os.environ.get("PROJECTS", "/home/gregb26/links/projects/rrg-cotemich-ac/gregb26") + "/graphene/qe/defects/unit_cell"
-DEST = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "wannier")   # <dépôt>/wannier
+DEST = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "results", "wannier")   # <dépôt>/wannier
 
 
 def parse_spreads(wout):

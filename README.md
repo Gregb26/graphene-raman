@@ -62,10 +62,10 @@ in `scripts/`.
     scripts/                           production, analysis, figures, SLURM launchers
     tests/                             pytest suite
     config/production.json             frozen production parameters and paths
-    wannier/                           Wannier90 outputs per k-grid
     results/M2_plateau/                final production data (npz/csv)
     results/M2/, results/M/            earlier, frozen versions (unaligned; v1)
     results/epw/                       electron–phonon post-processing (npz)
+    results/wannier/<D>x<D>/           Wannier90 outputs per k-grid (tb.dat, u.mat, u_dis.mat, eig, wout, manifest)
     figures/                           thesis figures (generated)
     campagnes/{R,EM,M}/                computation campaigns: inputs, drivers,
                                        reports, tables (mostly in French)

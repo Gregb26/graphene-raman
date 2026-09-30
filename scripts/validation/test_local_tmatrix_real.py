@@ -22,11 +22,11 @@ dense = len(sys.argv) > 2 and sys.argv[2] == "--dense"
 eta = 0.10
 PF = {"5x5": (5, 25), "6x6": (4, 24), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3, 27), "12x12": (2, 24)}
 if dense:
-    D = PF[N][1]; W = f"wannier/{D}x{D}"
+    D = PF[N][1]; W = f"results/wannier/{D}x{D}"
     uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
     MFILE = f"{MAT}/M_dense_{N}.npy"
 else:
-    W = f"wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"; MFILE = f"{MAT}/M_ed_{N}.npy"
+    W = f"results/wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"; MFILE = f"{MAT}/M_ed_{N}.npy"
 k = qe_io.get_k_red(uc); Nc = len(k); MP = _infer_mp_grid(k)
 U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
 Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]

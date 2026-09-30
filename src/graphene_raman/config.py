@@ -52,5 +52,5 @@ def dense_paths(cfg, size, scratch="/home/gregb26/links/scratch/qe_tmp", root=RO
     return dict(D=D, p=cfg["dense"][size]["p"],
                 uc=f"{scratch}/defect_uc_dense_{D}/defect_uc_dense_{D}.save",
                 mfile=os.path.join(matrices_dir(cfg, root), f"M_dense_{size}.npy"),
-                wdir=os.path.join(root, f"wannier/{D}x{D}"),
-                manifest=os.path.join(root, f"wannier/{D}x{D}/wannier_manifest.json"))
+                wdir=os.path.join(root, f"results/wannier/{D}x{D}"),
+                manifest=os.path.join(root, f"results/wannier/{D}x{D}/wannier_manifest.json"))

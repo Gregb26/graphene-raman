@@ -28,7 +28,7 @@ Work is conducted in French; code and docstrings are in English.
   (index `scripts/README.md`). `tests/` — pytest suite. `config/production.json` — frozen production parameters.
 - `results/M2_plateau/` — **live** production products (`results_dir`, R10: v2 + Kumagai–Oba alignment); `results/M2/` — the M
   matrices (`matrices_dir`; the `.npy` exist on rorqual only) and the frozen unaligned v2 products; `results/M/` — frozen v1;
-  `results/epw/` — chapter 5. `wannier/<D>x<D>/` — tracked Wannier90 outputs per grid. `figures/` — thesis figures.
+  `results/epw/` — chapter 5. `results/wannier/<D>x<D>/` — tracked Wannier90 outputs per grid. `figures/` — thesis figures.
 - `campagnes/<série>/<campagne>/` — versioned copies of every computation campaign, whatever its destination (thesis or article):
   series `R/` (R1…R10, chain M/T and DFT of the vacancy), `EM/` (electron–photon), `M/` (`ch4/`, numbers of chapter 4); index in
   `campagnes/README.md` (status live/archive, destination). `article/C_optique_lacunes/` — plan and bibliography of the future article.
@@ -70,7 +70,7 @@ Work is conducted in French; code and docstrings are in English.
 .venv/bin/python scripts/validation/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
 .venv/bin/python scripts/validation/test_local_tmatrix.py         # synthetic golden test of the local t-matrix
 .venv/bin/python scripts/validation/test_local_rcut.py            # R_cut, extract_V_loc, mwr_locality (synthetic)
-.venv/bin/python scripts/validation/test_local_green_batch.py     # local_green_batch / scattering_rate_fast (wannier/27x27)
+.venv/bin/python scripts/validation/test_local_green_batch.py     # local_green_batch / scattering_rate_fast (results/wannier/27x27)
 .venv/bin/python scripts/validation/validate_wannier_bands.py     # Wannier vs DFT bands (coarse grid) + figures
 .venv/bin/python scripts/validation/compare_bands_qe.py           # Wannier vs DFT along a k-path (needs bands.dat)
 .venv/bin/python scripts/validation/compare_bands_w90_qe.py       # Wannier90 .dat vs QE bands.dat (argparse)
@@ -90,7 +90,7 @@ sbatch scripts/slurm/submit_M_dense.sh 9x9                   # dense M on the (p
 ```
 
 There is no build/lint step beyond the editable install. Scripts are run from the repo root (several use relative
-paths such as `wannier/27x27` or `results/…` through `config`). The former `scripts/run.py` and
+paths such as `results/wannier/27x27` or `results/…` through `config`). The former `scripts/run.py` and
 `scripts/compute_M_cluster.py` no longer exist (replaced by `compute_M.py` and `compute_M_dense_stages.py`).
 
 ## Critical physics conventions (get these wrong and results are silently off)
@@ -140,7 +140,7 @@ paths such as `wannier/27x27` or `results/…` through `config`). The former `sc
   unitarity/isometry), `read_w90_tb` (`_tb.dat`, returns `(HR, R, ndegen, rR, lattice)`: H(R) in eV,
   position operator r(R) (nR, 3, nw, nw) in Angstrom, lattice in columns), `read_w90_HR` (former name, kept as a
   wrapper returning `(HR, R, ndegen)` for frozen campaign drivers), `read_w90_hr` (`_hr.dat`, returns
-  `(HR, R, ndegen)`), `check_hermicity_HR`. Tests: `tests/test_wannier_io.py` on `wannier/27x27/`.
+  `(HR, R, ndegen)`), `check_hermicity_HR`. Tests: `tests/test_wannier_io.py` on `results/wannier/27x27/`.
 - **defects/local_R.py** — M^L in **real space**: `compute_ML_R` (serial, dense BLAS, fast for
   moderate supercells but O(D³)), `prep_realspace_inputs` + `compute_ML_R_mpi` (grid-distributed,
   Allreduce, coarse grid), `compute_ML_R_mpi_shared` (**production kernel of the dense M**: zero-padding, node-shared u_nk),
@@ -192,7 +192,7 @@ paths such as `wannier/27x27` or `results/…` through `config`). The former `sc
   `hermiticity_report`, `symmetry_report`, `frozen_window_limit`). Tests (pytest) in
   `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py` (the other pytest files,
   `test_matrix_io_units.py` and `test_r{8,9,10}_functions.py`, cover chain M/T functions), shared fixtures in `tests/conftest.py` (real data:
-  `tb_w90`, `eig_w90`, `w90_ref` on the tracked `wannier/27x27/`; every data-specific value and the sha256 of the
+  `tb_w90`, `eig_w90`, `w90_ref` on the tracked `results/wannier/27x27/`; every data-specific value and the sha256 of the
   files are in `W90_REF`/`W90_SHA256` of `conftest.py`).
   Plan and conventions: `campagnes/EM/EM.md`.
 
@@ -230,7 +230,7 @@ paths are not inspectable from this checkout — confirm names before launching.
 - **scripts/validation/compare_bands_qe.py** — Wannier vs DFT along a continuous k-path from a `bands.x`
   `bands.dat`. Median agreement ~21 meV. Aligns each band structure on its own Dirac point.
 
-- **scripts/validation/test_local_tmatrix.py**, **test_local_rcut.py** (synthetic), **test_local_green_batch.py** (H of `wannier/27x27`),
+- **scripts/validation/test_local_tmatrix.py**, **test_local_rcut.py** (synthetic), **test_local_green_batch.py** (H of `results/wannier/27x27`),
   **test_local_tmatrix_real.py** (real golden test: local t = dense `compute_T` × N_cells; cluster only) — chain T.
 - **tests/** (pytest, 208 tests) — EM series, `matrix_io`, the R8/R9/R10 functions of chain T on synthetic data, and the
   standalone scripts above through `tests/test_scripts_M.py` (zero padding, KS reconstruction, Wannier pipeline, pad vs full

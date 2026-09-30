@@ -1,5 +1,5 @@
 """local_green_batch must equal local_green to roundoff (exact restructuring), on real Wannier data
-(wannier/27x27, tracked); then scattering_rate_fast (batched, energy grid) vs scattering_rate (per state).
+(results/wannier/27x27, tracked); then scattering_rate_fast (batched, energy grid) vs scattering_rate (per state).
 Run from the repo root. Prints PASS/FAIL and exits 0/1; wrapped by tests/test_scripts_tmatrix.py."""
 import sys, time
 import numpy as np
@@ -7,7 +7,7 @@ from graphene_raman.io.wannier_io import read_w90_tb
 from graphene_raman.defects.many_body import local_tmatrix as lt
 
 
-def main(tb_path="wannier/27x27/wannier_tb.dat"):
+def main(tb_path="results/wannier/27x27/wannier_tb.dat"):
     Hwr, Rw, nd, _, _ = read_w90_tb(tb_path)
     k_int = lt.mp_grid(90, 90, 1)
     Hwk, _, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)

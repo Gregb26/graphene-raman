@@ -1,6 +1,6 @@
 """
 Tests of the Wannier90 `_tb.dat` reader `read_w90_tb` (io/wannier_io.py, F8 of the EM series) on the
-27 x 27 wannierisation tracked in wannier/27x27/ (fixtures w90_dir, w90_ref and eig_w90 of
+27 x 27 wannierisation tracked in results/wannier/27x27/ (fixtures w90_dir, w90_ref and eig_w90 of
 conftest.py). Reference values: campagnes/EM/EM.md, section 2.
 """
 

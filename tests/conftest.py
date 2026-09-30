@@ -4,7 +4,7 @@ Shared fixtures of the electron_photon tests (loaded by pytest for every test fi
 Most tests run in two gauges, shift_B = (0,0,0) and (1,0,0), through an indirect parametrization of
 the `tb` fixture: gauge-independent properties must hold in both. Reference values and the
 derivations behind the tolerances: campagnes/EM/EM.md (M0, implementation notes). The real data of M1
-come from the 27 x 27 wannierisation tracked in wannier/27x27/ (fixtures w90_dir, tb_w90, eig_w90);
+come from the 27 x 27 wannierisation tracked in results/wannier/27x27/ (fixtures w90_dir, tb_w90, eig_w90);
 everything the tests know about these data is in W90_REF (fixture w90_ref).
 
 Run with:  .venv/bin/python -m pytest tests -v
@@ -25,7 +25,7 @@ HW = 2.33  # eV, 532 nm laser
 
 # Reference data: the 27 x 27 wannierisation of the thesis. The values of W90_REF belong to these
 # exact files (sha256 prefixes, checked by w90_dir): a new reference changes both, here only.
-W90_DIR = Path(__file__).resolve().parents[1] / "wannier" / "27x27" # repo root from this file
+W90_DIR = Path(__file__).resolve().parents[1] / "results" / "wannier" / "27x27" # repo root from this file
 W90_SHA256 = {"wannier_tb.dat": "baa17b88b1b69e51", "wannier.wout": "3db1203ed17c2558",
               "wannier.eig": "8ed92c792c499689", "wannier_u.mat": "64f31f661b4d5c6c"}
 W90_REF = SimpleNamespace(

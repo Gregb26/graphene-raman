@@ -73,6 +73,7 @@ results/M2_plateau/*
 results/epw/*
 !results/epw/*.npz
 !results/epw/*.csv
+!results/wannier/
 
 # Manifestes de ménage (13,6 Mo, dry-run) — hors dépôt
 cleanup/

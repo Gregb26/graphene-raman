@@ -332,7 +332,7 @@ Colonnes : rôle · campagne · qui l'utilise · statut · mémoire.
 | `assemble_M2.py` | M2 = N_cells·M^L(v1) + M^NL par blocs memmap, sidecars v2, refus d'écrasement | R6 | `etape{1,2}/submit_r6.sh` ; `results/M2/README.md` | figé (outil officiel de reconstruction des 43 M2, non miroités) | ch. 4 |
 | `gate_M_normalization.py` | porte A.2 : ΔV appliqué aux Bloch purs vs M/N_cells (1e-6 eV, code 3 = refus) | R6 | `submit_r6.sh`, `submit_r6_kernel.sh`, R10 c1post | actif ; `--m2-dir results/M2` en dur cohérent avec `matrices_dir` | ch. 4 (tab:tests_M) |
 | `tag_vacancy_sublattice.py` | écrit `vacancy_sublattice` A/B dans les sidecars | chaîne M | manuel | **cassé silencieusement** (glob l. 12 sur `results_dir` : « 0 sidecars tagged ») | métadonnée |
-| `finalize_wannier.py` | rapport d'étalements, copie tb/u/u_dis dans `wannier/{N}`, écrit le manifeste | chaîne M/T, EM1 | manuel (`submit_dense_nb20.sh` rorqual) | figé (défauts l. 85-90 périmés : tailles 5/7/8, sans `--dense`) | ch. 4 (entrées), §2.5 |
+| `finalize_wannier.py` | rapport d'étalements, copie tb/u/u_dis dans `results/wannier/{N}`, écrit le manifeste | chaîne M/T, EM1 | manuel (`submit_dense_nb20.sh` rorqual) | figé (défauts l. 85-90 périmés : tailles 5/7/8, sans `--dense`) | ch. 4 (entrées), §2.5 |
 | `link_data.sh` | construit `data/graphene/**` en liens vers le scratch et `Vks_*` | infra | manuel (README) | actif sur rorqual ; cite `run.py` (l. 2) ; nommage `defect_<N>.save` ≠ local `defect_unit_cell_<N>.save` | infra |
 | `migrate_M_norm.py` | `M_ed_*` → `*_norm.npy` (÷N_cells) | pré-2026-09-05 | — | **obsolète** (`SystemExit` l. 2) | — |
 | `_diag_mnl_mpi.py`, `_test_mnl_mpi.sh` | diagnostic de `compute_M_NL_mpi` (corruption de tas nk ≥ 81) | chaîne M | — | figé (clos) ; `.sh` écrit dans `$RES/_test_mnl` (M2_plateau) | — |
@@ -410,7 +410,7 @@ Colonnes : rôle · campagne · qui l'utilise · statut · mémoire.
 | `test_pad_vs_full_supercell.py` | M^L zero-padded ×p vs super-cellule p fois plus grande | paires 6×6 et 12×12 | non | figé |
 | `test_local_tmatrix.py` | test d'or synthétique (t local sur site = `compute_T` dense × N_k) | aucune | oui | actif |
 | `test_local_rcut.py` | R_cut synthétique, `extract_V_loc`, `mwr_locality` ; importe `random_H` | aucune (lancer `python scripts/…`) | oui | actif |
-| `test_local_green_batch.py` | `local_green_batch` = `local_green` ; `scattering_rate_fast` = `scattering_rate` (C8) | `wannier/27x27` (versionné), cwd = racine | oui | actif ; **pas de code de sortie** |
+| `test_local_green_batch.py` | `local_green_batch` = `local_green` ; `scattering_rate_fast` = `scattering_rate` (C8) | `results/wannier/27x27` (versionné), cwd = racine | oui | actif ; **pas de code de sortie** |
 | `test_local_tmatrix_real.py` | test d'or réel bloquant (C6) sur M grossier ou dense | scratch + M | non | **cassé depuis R10** (l. 18, 27, 29 : `results_dir`) ; **aucun `SystemExit` avec code** : FAIL sort en 0 (l. 63) ; scratch en dur l. 26, table `PF` dupliquée l. 23 |
 | `validate_wannier_bands.py` | Wannier vs DFT sur la grille MP grossière (avec/sans ndegen), 2 PNG dans le cwd | 11×11 locale | oui | actif ; docstring périmée ; `get_fermi` sous `hasattr` |
 | `compare_bands_qe.py` | H(R) interpolé vs `bands.dat` sur un chemin → `results/compare_bands_qe.png` | 11×11 locale | oui | figé |
@@ -479,7 +479,7 @@ mémoire) à faire. `EM2_prompt.md` (prompt EM2), `notes_numpy_pytest.md` (pièg
 
 | Campagne | Répertoire | But | Statut déclaré | Scripts (imports `electron_photon`) | Produit → pour | Statut réel |
 |---|---|---|---|---|---|---|
-| EM1 | `EM1_tb` | r(R) et `_tb.dat` de la wannierisation 27×27 (`restart = plot`) | PRODUCTION 2026-09-25 | `em1_check.py` (aucun import du paquet) | données §2.5 (`wannier/27x27/wannier_tb.dat`) | figé ; README l. 14 et rapport l. 5 à corriger sur rorqual puis `cp -p` (mémoire persistante) |
+| EM1 | `EM1_tb` | r(R) et `_tb.dat` de la wannierisation 27×27 (`restart = plot`) | PRODUCTION 2026-09-25 | `em1_check.py` (aucun import du paquet) | données §2.5 (`results/wannier/27x27/wannier_tb.dat`) | figé ; README l. 14 et rapport l. 5 à corriger sur rorqual puis `cp -p` (mémoire persistante) |
 | EM2 | `EM2` | DFT directe (`bands.x lp`) et postw90 `kubo` vs M4 | PRODUCTION 2026-09-29 | `em2_kpoints.py`, `em2_A_compare.py`, `em2_A_figure.py`, `em2_B_ours.py` (`kgrid`, `kubo`), `em2_B_compare.py` (aucun), `em2_B_decompose.py`, `em2_B_figure.py` (importent `em2_B_compare`) ; `REPO` exige `PROJECTS` ou `GRAPHENE_RAMAN` | `em2_A_anneaux`, `em2_B_sigma` (validation §2.5) ; `em2_A.npz`, `em2_postw90_sigma.npz` | figé ; `__pycache__` local ignoré |
 | EM3 | `EM3` | données de la figure et tableau du §2.5 (anneau 2,33 eV, `transl_inv`) | PRODUCTION 2026-09-29 (local, < 1 s) | `make_em3_data.py` (importe `EM2/em2_B_compare`) | `em3_ring_2p33.npz`, `em2_postw90_sigma_ti.npz`, `em_table.{md,csv}` → `scripts/fig/make_figures_em.py` → `fig_em_coupling` | actif |
 | M4_sigma | `M4_sigma` (+ `pilote/`) | σ(ω) trois variantes, carte K, statistiques d'anneaux | PRODUCTION 2026-09-29 (local, ~4 min) | `m4_prod.py`, `make_table.py` → `em_table.tex` ; `pilote/{sweep,check_equiv,convergence}.py` | `em_sigma_*_N1200_eta0.04.npz`, `em_map_K.npz`, `em_table.tex` → mémoire §2.5 | actif (fermé) ; `em_table.csv` diffère de celui d'EM3 |
@@ -510,7 +510,7 @@ finale (v2 + alignement de Kumagai–Oba, `results/M2_plateau`). Rien n'a été 
 
 | Fichier | Rôle | Lit | Utilisé par / pour | Statut |
 |---|---|---|---|---|
-| `ch4/ch4_chiffres.py` (904 l.) | pilote unique, sous-commandes `check` (porte : 13 C_N de la config redonnés au bit par la règle ≥ 0,75 r_max), `table`, `regions`, `notes`, `tex`, `all` ; racine déduite de `__file__` ; **aucun import du paquet** (numpy, matplotlib ; `scripts/_palette` par `sys.path` l. 725 pour la figure) | `campagnes/R/R{4,5,6,8,9,10}` (tables, json, npz), `results/M2`, `results/M2_plateau` (csv, npz, `MD5SUMS_2026-09-30.txt`), `config/production.json`, `memoire/défauts.tex`, `wannier/27x27/wannier.wout` | relance : `.venv/bin/python campagnes/M/ch4/ch4_chiffres.py all` | **actif** ; `check` rejoué en local le 2026-09-30 : PASS (écart 0,0 eV) ; `regions` lit les `scf.in` des super-cellules **hors dépôt** (`/lustre09/project/…/graphene/qe/defects/super_cell/<N>/defective/scf.in`, chemins tirés d'`a1_results.json`) → rorqual seulement ; `notes` appelle `git diff` |
+| `ch4/ch4_chiffres.py` (904 l.) | pilote unique, sous-commandes `check` (porte : 13 C_N de la config redonnés au bit par la règle ≥ 0,75 r_max), `table`, `regions`, `notes`, `tex`, `all` ; racine déduite de `__file__` ; **aucun import du paquet** (numpy, matplotlib ; `scripts/_palette` par `sys.path` l. 725 pour la figure) | `campagnes/R/R{4,5,6,8,9,10}` (tables, json, npz), `results/M2`, `results/M2_plateau` (csv, npz, `MD5SUMS_2026-09-30.txt`), `config/production.json`, `memoire/défauts.tex`, `results/wannier/27x27/wannier.wout` | relance : `.venv/bin/python campagnes/M/ch4/ch4_chiffres.py all` | **actif** ; `check` rejoué en local le 2026-09-30 : PASS (écart 0,0 eV) ; `regions` lit les `scf.in` des super-cellules **hors dépôt** (`/lustre09/project/…/graphene/qe/defects/super_cell/<N>/defective/scf.in`, chemins tirés d'`a1_results.json`) → rorqual seulement ; `notes` appelle `git diff` |
 | `ch4/table_v1_final.md` (631 l.) | partie 1 : table principale v1 → non aligné → final, **207 lignes** (117 appariées, 9 v1 seulement, 81 final seulement ; statuts : remplacé 85, nouveau 87, retiré par décision 24, inchangé 6, sans équivalent final 5) ; 31 écarts entre les deux tables sources (rapportés, non corrigés) ; chiffres nouveaux a–l (porte A.2, escalier D4, convergence en bandes, niveaux QE π/σ par taille, chaîne repliée − QE, E_res vs grille, familles N mod 3, Kaasbjerg Fig. 3/13/14, C14 ±9,05 meV, Re Σ vs R_cut, ⟨ΔV⟩_3D, Γ^ed/Γ^ep du ch. 5) ; grandeurs retirées | `R6/etape3/table_v1_v2.md` (md5 f8972c4d…), `R10/c/table_v2_plateau.md` (md5 807bb352…) + sources ci-dessus | **source des chiffres du ch. 4** (et de la ligne Γ^ed/Γ^ep du ch. 5) ; cité par NOTES_TGAMMA.md et CLAUDE.md | actif (généré, ne pas éditer) |
 | `ch4/alignement_regions.{md,npz,pdf,png}` | partie 2 : régions d'échantillonnage de l'alignement, 13 tailles : (A) ≥ 0,75 r_max (production), (B) Kumagai–Oba 2D ≥ N·a/2, (C) Kumagai–Oba 3D min(N·a/2, c/2), (D) site unique publié et site vraiment le plus loin ; figure au style du mémoire | `R10/a/profiles_<S>.npz`, `a1_results.json`, `scf.in` (a, c) | justification de la région dans le ch. 4 ; figure **non installée dans `figures/`** ni dans le mémoire | actif |
 | `ch4/defauts_nombres.md` (565 l.) | partie 4 : les 553 nombres de `memoire/défauts.tex` appariés à la table : 87 appariés (valeurs **v1**), 67 non appariés (surtout des paramètres), 399 entiers courts non comparés ; 59 lignes de la table jamais citées | `memoire/défauts.tex` (md5 70140bc0…) | liste de travail de la réécriture du ch. 4 | actif ; à régénérer après chaque révision du chapitre |
@@ -532,7 +532,7 @@ points 1–2 et 5 de R6 encore ouverts.
 
 | Système | Fichiers | Ce qu'ils couvrent | Données | Lancement |
 |---|---|---|---|---|
-| **pytest** `tests/` (12 fichiers, 199 tests, collecte 0,31 s sans erreur) | `conftest.py` (fixtures jouet + `wannier/27x27` avec sha256 `W90_SHA256`, valeurs de référence `W90_REF`), `test_diagnostics` (16), `test_kgrid` (6), `test_kubo` (27, un test ~13 s), `test_ring` (65), `test_tb_model` (23), `test_velocity_operator` (28), `test_wannier_io` (9) — **EM** ; `test_matrix_io_units` (5, `tmp_path`) — chaîne M ; `test_r8_functions` (8, `disorder_average`, `pole_criterion`, `tb_models`, résolvante directe 6×6), `test_r9_functions` (4, `alignment`, `Mwr_to_Mwk_pairs`, `cluster_ldos`, `ldos_from_eigenpairs`), `test_r10_functions` (8, `ws_images`, `ws_phase`, `defect_mwr`, `recenter_mwr`) — synthétiques | modules EM, `matrix_io`, fonctions R8/R9/R10 de la chaîne T ; **pas** `compute_ML_*`, `non_local`, `wannier_interpolate`, `scattering_rate(_fast)` | aucune donnée externe hors `wannier/27x27` (versionné) | `.venv/bin/python -m pytest tests` ; aucun `sys.path`, aucun import de `scripts/` ni des pilotes |
+| **pytest** `tests/` (12 fichiers, 199 tests, collecte 0,31 s sans erreur) | `conftest.py` (fixtures jouet + `results/wannier/27x27` avec sha256 `W90_SHA256`, valeurs de référence `W90_REF`), `test_diagnostics` (16), `test_kgrid` (6), `test_kubo` (27, un test ~13 s), `test_ring` (65), `test_tb_model` (23), `test_velocity_operator` (28), `test_wannier_io` (9) — **EM** ; `test_matrix_io_units` (5, `tmp_path`) — chaîne M ; `test_r8_functions` (8, `disorder_average`, `pole_criterion`, `tb_models`, résolvante directe 6×6), `test_r9_functions` (4, `alignment`, `Mwr_to_Mwk_pairs`, `cluster_ldos`, `ldos_from_eigenpairs`), `test_r10_functions` (8, `ws_images`, `ws_phase`, `defect_mwr`, `recenter_mwr`) — synthétiques | modules EM, `matrix_io`, fonctions R8/R9/R10 de la chaîne T ; **pas** `compute_ML_*`, `non_local`, `wannier_interpolate`, `scattering_rate(_fast)` | aucune donnée externe hors `results/wannier/27x27` (versionné) | `.venv/bin/python -m pytest tests` ; aucun `sys.path`, aucun import de `scripts/` ni des pilotes |
 | **scripts autonomes** `scripts/test_*.py` (8) + `validate_wannier_bands.py` | voir §4.6 | chaîne M (reconstruction KS, zero-padding, interpolation Wannier) et test d'or de la chaîne T | `.save` locaux 5×5/11×11 ou aucune ; 2 exigent le cluster | `.venv/bin/python scripts/test_X.py` ; PASS/FAIL, code 0/1 (sauf `test_local_green_batch` sans code, `test_local_tmatrix_real` toujours 0) |
 
 Le renommage du dossier (quatrième passe) imposait `PYTHONPATH=src` ; le `.pth` est refait depuis la cinquième passe
@@ -604,7 +604,7 @@ venir », qui ne liste aujourd'hui que les cinq R8, `alignement_regions` et `fig
 Tables du mémoire (labels `tab:`) et leur source ici : `tests_M` ← `M_tests_summary.csv` ; `L_NL` ← `lnl_frobenius.csv` ;
 `rcut_M` ← `m_rcut_convergence.csv` ; `échantillonnage` ← `sampling_table.csv` ; `convergence_gamma`, `tests_T`,
 `param_T` ← `level1_summary.csv`, `level2_*.csv`, `nkint_check_9x9.csv`, NOTES_TGAMMA ; `param_M`, `param_dft`,
-`param_wannier`, `param_dfpt`, `param_epw` ← `production.json`, `wannier/*/wannier.wout`, NOTES_EPW ; `gamma_ep_conv`,
+`param_wannier`, `param_dfpt`, `param_epw` ← `production.json`, `results/wannier/*/wannier.wout`, NOTES_EPW ; `gamma_ep_conv`,
 `gamma_ph_conv`, `gamma_ph_prod`, `kohn_chaines` ← `results/epw/*.npz` (via `epw_*_post.py`) ; §2.5 (à venir) ←
 `campagnes/EM/M4_sigma/em_table.tex`, `EM3/em_table.md`. Toutes sont saisies à la main dans le `.tex` (aucun `\input` de csv).
 
@@ -661,7 +661,7 @@ defects/many_body/pole_criterion,defects/many_body/single_defect}.py` ; scripts 
 `test_local_green_batch.py`, `tests/test_{matrix_io_units,r9_functions,r10_functions}.py` ; lanceurs
 `submit_spectral_wannier_dense.sh`, `submit_rcut_resigma.sh`, `submit_nkint_check.sh`, `submit_lnl_frobenius.sh`,
 `submit_post.sh`, `submit_M.sh`, `submit_M_dense.sh`, `campagnes/R/R10_plateau/submit_r10.sh` ; données `config/production.json`,
-`results/M2_plateau/*`, `wannier/{24,25,27,28,32}x*` (sans `_nb16`) ; pilotes `campagnes/R/R10_plateau/r10_driver.py` (base
+`results/M2_plateau/*`, `results/wannier/{24,25,27,28,32}x*` (sans `_nb16`) ; pilotes `campagnes/R/R10_plateau/r10_driver.py` (base
 vivante), `campagnes/R/R8_kaasbjerg/r8_driver.py` + `defects/many_body/disorder_average.py` (DOS, A_k), R6 (provenance de v2).
 Documentation : NOTES_TGAMMA.md §0–§3, §6e, §8 (état final R10 depuis `90d2022`), `campagnes/M/ch4/table_v1_final.md`, CLAUDE.md l. 72-95 (conventions), l. 249-265
 (N mod 3, sous-réseaux), `campagnes/R/R10_plateau/c/table_v2_plateau.md`, `R10_rapport.md`.
@@ -673,7 +673,7 @@ NOTES_EPW_REPERES.md.
 
 **§2.5 (électron-photon)** — `src/…/electron_photon/*.py` ; `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,
 diagnostics,wannier_io}.py` + `conftest.py` ; `campagnes/EM/{EM.md,EM1_tb,EM2,EM3,M4_sigma}` ; `scripts/fig/make_figures_em.py` ;
-`wannier/27x27` ; `io/wannier_io.read_w90_tb`.
+`results/wannier/27x27` ; `io/wannier_io.read_w90_tb`.
 
 Hors dépôt mais nécessaires au ch. 2 : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`,
 `notebooks/{phonons,epw}.ipynb`) pour `fig_ebands_edos`, `fig_electron_convergence`, `fig_phonons`, `fig_band_interp`.
@@ -727,7 +727,7 @@ Correction commune : `matrices_dir(cfg)` ou `dense_paths(cfg, S)["mfile"]` à la
 `check_M_dense_vs_coarse_bands.py` (orphelin), `summarize_level1_maps.py`, `submit_spectral.sh`, `submit_tmatrix.sh`,
 `submit_spectral_wannier.sh`, `campagnes/R/R9_controles/cloture/{r9_driver_propose.py,submit_r9_propose.sh}`,
 `defects/local_G.py` (+ étiquetage v2 douteux via `--kernel G`), `io/pseudo_io.read_psp8`,
-`local_tmatrix.scattering_rate_from_wannier`, `utils/interpolation.py`, `plotting/`, `wannier/*_nb16`,
+`local_tmatrix.scattering_rate_from_wannier`, `utils/interpolation.py`, `plotting/`, `results/wannier/*_nb16`,
 `results/test_recon`, `results/M/M_ed.npy`, `results/epw/ed_vs_ep_*.npz` (v1), `figures/fig_epw_*_mv0.002.*`,
 `figures/hamiltonian_reconstruction.png`.
 
@@ -884,7 +884,7 @@ Proposition d'origine, pour mémoire :
 
 - Ajouter `results/M/README.md` (copie de `R6/phase0/README_results_M_gele.md`) à la liste blanche ; décider du sort
   de `results/M/ved_analysis.npz` (doublon 13,5 Mio) et de `results/epw/ed_vs_ep_*.npz` (v1) ; supprimer
-  `results/test_recon`, `results/M/M_ed.npy` (local) ; `wannier/*_nb16` (4 dirs, aucun lecteur) → nearline ou suppression.
+  `results/test_recon`, `results/M/M_ed.npy` (local) ; `results/wannier/*_nb16` (4 dirs, aucun lecteur) → nearline ou suppression.
 - Réinstaller dans le mémoire les 8 figures R10 qui diffèrent (§8) et y ajouter `fig_em_coupling` quand le §2.5 sera écrit.
 - Traduire `23ee3bb` → `c2bc733` dans `campagnes/R/R10_plateau/{README.md,R10_rapport.md}` et `NOTES_TGAMMA.md` §8 (ou noter
   la table de REECRITURE).
@@ -899,7 +899,7 @@ Proposition d'origine, pour mémoire :
 |---|---|
 | `results/M/README.md` | créé depuis `R6/phase0/README_results_M_gele.md` (+ mise à jour R10), ajouté à la liste blanche de `.gitignore` |
 | doublons supprimés | `results/M/ved_analysis.npz` (= `results/M2/`), `results/M2/ks_reconstruction.npz` (= `results/M2_plateau/`) ; notés dans les README de `results/M` et `results/M2` |
-| obsolètes supprimés (suivis) | `results/epw/ed_vs_ep_24k24q{,_mv0.02}.npz` (v1 ; l'écrivain écrit dans `results_dir`), `wannier/{25,27,28,32}x*_nb16/` (24 fichiers, 25 Mo, aucun lecteur), `figures/fig_epw_*_mv0.002.{pdf,png}` (12, chaîne 0.002 abandonnée), `figures/hamiltonian_reconstruction.png` (sans producteur, non inclus) |
+| obsolètes supprimés (suivis) | `results/epw/ed_vs_ep_24k24q{,_mv0.02}.npz` (v1 ; l'écrivain écrit dans `results_dir`), `results/wannier/{25,27,28,32}x*_nb16/` (24 fichiers, 25 Mo, aucun lecteur), `figures/fig_epw_*_mv0.002.{pdf,png}` (12, chaîne 0.002 abandonnée), `figures/hamiltonian_reconstruction.png` (sans producteur, non inclus) |
 | locaux non suivis supprimés | `results/test_recon/`, `results/M/M_ed.npy` (juin, orphelin) |
 | `campagnes/M/ch4/` | `NOTES_TGAMMA.diff`, `NOTES_TGAMMA_partie5.diff`, `CLAUDE_md.diff` retirés (redondants avec git et le rapport) ; README corrigé |
 | non fait, à décider | (a) les `results/M/M_ed_{5…12}.npy` v1 locaux (238 Mo, non suivis ; sur rorqual `results/M/` sert encore à `assemble_M2.py`) ; (b) réinstaller les 8 figures R10 dans le mémoire : reporté à l'étape F, avec la réécriture du ch. 4 ; (c) `results/KB_projectors_C.pdf` et 4 PNG non suivis (sorties locales de scripts, inoffensifs) ; (d) hash `23ee3bb` dans `R10/README.md` et rapport : archives, laissés |
@@ -938,6 +938,10 @@ ces figures), les copies des 9 figures dans `campagnes/R/*/fig/`, et `io/projwfc
 corrigée (trace r·β tel que tabulé, comme l'original ; validée par Greg). Les 5 figures R8 restent produites par `r8_driver.py` dans
 `campagnes/R/R8_kaasbjerg/fig/` (données `out/`).
 
+### `wannier/` → `results/wannier/` (2026-09-30, demande de Greg)
+
+Déplacé (liste blanche `!results/wannier/` dans `.gitignore`) ; réécrits : `config.dense_paths`, `finalize_wannier.py` (DEST), `mwr_locality_coarse_vs_dense`, `test_local_tmatrix_real`, `test_local_green_batch`, `tests/conftest.py` (`W90_DIR`), `ch4_chiffres.py`, les 8 scripts EM, docs (CLAUDE.md, README, NOTES_TGAMMA, EM.md, README de campagnes, `PROVENANCE.md`). Les manifestes Wannier stockent des chemins relatifs à leur dossier : inchangés. Vérifié : pytest 201, `ch4_chiffres.py check`, `make_em3_data.py`, `make_figures_em.py`, `dense_paths` trouve les manifestes.
+
 ### Étape F — alimenter le dépôt du mémoire `~/projects/msc-graphene-raman-defects` (ajout de la seconde passe, chemin mis à jour à la troisième)
 
 Le dépôt du mémoire a été préparé le 2026-09-30 (`5debac2`, puis README, `requirements.txt` et venv jusqu'à `e07e0d5`)
@@ -949,7 +953,7 @@ avec le chemin d'arrivée et le commit source de ce dépôt.
 |---|---|---|
 | `analyse/` (« copie figée du repo graphene-raman ») | `src/graphene_raman/` (sans les orphelins du §2), `config/production.json`, `tests/`, les scripts de production des chaînes M et T et EPW (§4.1 à §4.3, §4.5 hors obsolètes), `campagnes/R/R10_plateau/r10_driver.py`, `campagnes/R/R8_kaasbjerg/r8_driver.py`, `campagnes/M/ch4/ch4_chiffres.py`, `campagnes/EM/{M4_sigma,EM3,EM2}/*.py` | noter le commit d'origine dans le README ; `pyproject.toml` pour l'installation |
 | `calculs/` (un dossier par calcul) | hors dépôt pour l'essentiel : `graphene/qe/defects/{super_cell,unit_cell}` (scf, nscf denses, pp.x, Wannier90), `graphene/qe/epw/24k-24q{,_mv0.02}`, `graphene/qe/electron_photon/{EM1_tb,EM2}` sur rorqual ; depuis ce dépôt : `scripts/submit_*.sh` actifs, `campagnes/R/R10_plateau/submit_r10.sh`, `campagnes/EM/EM1_tb/wannier.win`, `campagnes/EM/EM2/{bands.in,bands_pp.in,submit_*.sh,postw90/}` ; l'annexe D du mémoire (`annexes/paramètres.tex`) liste les paramètres | les inputs QE ne sont pas versionnés ici : à prendre dans les répertoires de travail |
-| `donnees/` | `results/M2_plateau/*` (npz, csv, MD5SUMS, README), `results/epw/*.npz` (chaîne `_mv0.02` + celles que `fig_epw_kohn_degauss` lit), `campagnes/EM/M4_sigma/{em_scalars.json,em_sigma_*.npz,em_map_K.npz,em_table.tex}`, `campagnes/EM/EM3/*.npz`, `campagnes/EM/EM2/em2_A.npz`, `campagnes/R/R8_kaasbjerg/out/` (figures R8), `campagnes/M/ch4/{table_v1_final.md,alignement_regions.*}`, `wannier/27x27` (ou les 5 grilles de production) | ~60 Mo de npz ; `results/M2/*.npy` (matrices) restent sur rorqual/nearline |
+| `donnees/` | `results/M2_plateau/*` (npz, csv, MD5SUMS, README), `results/epw/*.npz` (chaîne `_mv0.02` + celles que `fig_epw_kohn_degauss` lit), `campagnes/EM/M4_sigma/{em_scalars.json,em_sigma_*.npz,em_map_K.npz,em_table.tex}`, `campagnes/EM/EM3/*.npz`, `campagnes/EM/EM2/em2_A.npz`, `campagnes/R/R8_kaasbjerg/out/` (figures R8), `campagnes/M/ch4/{table_v1_final.md,alignement_regions.*}`, `results/wannier/27x27` (ou les 5 grilles de production) | ~60 Mo de npz ; `results/M2/*.npy` (matrices) restent sur rorqual/nearline |
 | `scripts_figures/` | `scripts/fig/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |
 | `memoire/figures/` | réinstaller les 8 figures R10 qui diffèrent ; ajouter les 5 figures R8, `fig_em_coupling`, éventuellement `alignement_regions`, et les figures de `article/` et `memoire/` retenues à l'arbitrage (tableau « Figures hors de `figures/` », §8) | voir §8 ; chaque figure retenue entraîne son pilote (`scripts_figures/` ou `analyse/`) et ses données (`donnees/`) |
 | `requirements.txt` du mémoire | le régénérer depuis un venv qui fait tourner `analyse/` et `scripts_figures/` (numpy, scipy, h5py, matplotlib, plus `mpi4py` si les noyaux de M sont copiés ; LaTeX pour `text.usetex`) | l'actuel est un gel généraliste (abipy, torch, netCDF4) sans rapport avec ces scripts |
@@ -988,6 +992,6 @@ Ces points figuraient dans la liste d'origine du ménage et ne sont couverts par
 | Renommer le sous-paquet `defects` → `electron_defects` | 52 fichiers importent `config`, 19 `local_tmatrix`, etc. (§2) ; les pilotes figés `campagnes/R/R4–R10` importent `defects.*` | casse le rejeu des campagnes figées sauf alias ; à lier au point précédent |
 | Wrapper `wannier_io.read_w90_HR` | gardé pour `campagnes/R/R4`, `campagnes/R/R9` (§2) | le supprimer casse ces deux pilotes |
 | `campagnes/R/R8_kaasbjerg/ref/kaasbjerg_2020_prb101_045433.pdf` (3,1 Mo, suivi) | article sous droits d'auteur dans un dépôt GitHub | **retiré le 2026-09-30** (étape « campagnes ») ; reste dans l'historique |
-| Données de test | les tests ne lisent que 4 fichiers de `wannier/27x27/` (sha256 dans `tests/conftest.py`) | les regrouper sous `tests/data/` ; Zenodo pour les autres wannierisations si le dépôt devient public |
+| Données de test | les tests ne lisent que 4 fichiers de `results/wannier/27x27/` (sha256 dans `tests/conftest.py`) | les regrouper sous `tests/data/` ; Zenodo pour les autres wannierisations si le dépôt devient public |
 | Historique git | pack de 103 Mo, clone rorqual | **ne pas** réécrire (pas de `filter-repo`) |
 | Nom de ce fichier | `INVENTAIRE_2026-09-16.md` pour un contenu du 2026-09-30 ; cité sous ce nom par `PROVENANCE.md` l. 6 | renommage prévu à l'étape B (`admin/CARTOGRAPHIE_2026-09-30.md`) ; mettre `PROVENANCE.md` à jour en même temps |

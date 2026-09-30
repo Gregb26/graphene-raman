@@ -1,413 +1,638 @@
-# Inventaire du projet sur Rorqual — 2026-09-16 (P12, lecture seule)
+# Cartographie du dépôt `raman-graphene` — 2026-09-30 (ménage, étape 1, lecture seule)
 
-Session strictement en lecture seule : aucune modification, aucun déplacement.
-Seule écriture : ce fichier. Non commité.
+Réécriture complète de ce fichier. L'ancien contenu (inventaire P12 du stockage Rorqual, 2026-09-16 : quotas, purge du
+scratch, classement irremplaçable / reproductible / jetable, chemins codés en dur) est dépassé par CLEANUP.md (tous les
+étages exécutés le 2026-09-23/24) et reste lisible dans git : `git show 193e25d:INVENTAIRE_2026-09-16.md`.
 
-Périmètre : `~/links/projects/rrg-cotemich-ac/gregb26/` (= `/project/rrg-cotemich-ac/gregb26/`)
-et `$SCRATCH` = `/scratch/gregb26` (= `/lustre10/scratch/gregb26`). Aucun répertoire
-d'un autre utilisateur n'a été consulté. Les liens `~/links/{projects,scratch,nearlines}`
-pointent vers ces volumes ; le nearline (269 Go, niveau groupe) n'a pas été inspecté.
+Session strictement en lecture seule : rien déplacé, renommé ni supprimé ; seule écriture, ce fichier. Aucun commit.
+État cartographié : HEAD `193e25d` (« updated plan », 2026-09-30), arbre propre, `main` = `origin/main`. Les calculs
+rorqual du mémoire sont terminés (R10 clos le 2026-09-30).
 
-Tailles = tailles apparentes (`du --apparent-size`, Gio). Dates = mtime / atime des
-fichiers. Attention : Lustre met l'atime à jour paresseusement (relatime), une
-date d'accès ancienne n'exclut pas une lecture récente via `mmap`, mais c'est
-l'atime que la purge regarde.
+Méthode : lecture de chaque fichier de `scripts/`, `src/`, `tests/`, `article/`, `memoire/`, `results/`, `config/`,
+`.md` racine ; résolution **par import réel** de tous les `from electron_defect_interaction… import …` (635 imports,
+script AST + `importlib`) et par AST des imports inter-scripts (`sys.path`) ; grep des figures et tables dans le dépôt
+du mémoire `~/LaTeX/master_thesis` (lecture seule) ; collecte pytest (`--collect-only`, 199 tests, 0 erreur).
+
+Vocabulaire des statuts : **actif** = fait partie de la base vivante R10 ou d'un usage courant ; **figé** = campagne
+terminée, gardé pour la provenance, encore exécutable ; **obsolète** = remplacé, non rejouable ou désactivé
+(`SystemExit`) ; **cassé** = plante ou lit le mauvais répertoire à l'exécution. Campagnes : **chaîne M** (calcul de M),
+**chaîne T** (t local, Γ), **P** (série mémoire), **R1–R10** (article), **EM** (électron-photon, §2.5), **EPW** (ch. 5).
 
 ---
 
-## 0. En-tête : occupation, quotas, urgence scratch
+## 0. Constats principaux
 
-### Quotas (`diskusage_report`, 2026-09-16)
+1. **Aucun import cassé.** `alignment_C` et `matrices_dir` existent dans `src/electron_defect_interaction/config.py`
+   (l. 30 et 35), ajoutés au commit `c2bc733` « checkpoint R10 » (2026-09-29 20:55), poussé sur `origin/main`. Les 635
+   imports du paquet se résolvent, ainsi que tous les imports inter-scripts (`_palette`, `_bands`, `_paths`,
+   `r4_driver`/`r5_driver`, `em2_B_compare`, `test_ks_reconstruction`). La ligne « ImportError en local, 2026-09-29 »
+   de `article/C_optique_lacunes/PLAN.md` (dernière ligne) date du commit précédent `7414c2c` et est périmée. Seul nom
+   inexistant : `qe_io.get_fermi` dans `validate_wannier_bands.py:67`, protégé par `hasattr`.
+2. **La casse réelle est un problème de chemins, introduit par R10.** `config/production.json` sépare depuis R10
+   `results_dir = results/M2_plateau` (produits npz/csv seulement) de `matrices_dir = results/M2` (les 43 matrices M2,
+   présentes uniquement sur `/project` de rorqual ; **aucun `.npy` dans `results/M2` en local**). Les scripts qui
+   lisent ou écrivent des `M_*.npy` via `results_dir()` visent donc un répertoire sans matrices. Liste exacte au §11.
+3. **Base vivante** : `results/M2_plateau` (R10, `MD5SUMS_2026-09-30.txt`) ; `results/M2` = matrices v2 (R6) + produits
+   gelés ; `results/M` = v1 gelé. CLAUDE.md (l. 243), NOTES_TGAMMA.md, PLAN C et `submit_post.sh` disent encore que
+   `results/M2` est vivant.
+4. **Documents périmés** : CLAUDE.md (scripts `run.py`/`compute_M_cluster.py` inexistants depuis `cf05e92`, carte des
+   modules incomplète, `single_defect` dit orphelin, tableau des campagnes sans R2–R10), README.md (v1, `results/M`,
+   `notebooks/`, EM absente), NOTES_TGAMMA.md (état R6, pas R10), requirements.txt (freeze de l'ère ABINIT), CLEANUP.md
+   (en-tête « dry-run » alors que tout est exécuté). Détail au §9.
+5. **Figures du mémoire** : le dépôt LaTeX inclut 20 figures ; 8 d'entre elles diffèrent (md5) de la version R10
+   régénérée le 2026-09-30 dans `figures/` (le mémoire a encore la version R6). `fig_em_coupling` n'est pas encore
+   incluse (§2.5 non rédigé). Détail au §8.
+6. **Doublons** : `results/M/ved_analysis.npz` = `results/M2/ved_analysis.npz` (md5 identique, 13,5 Mio ×2) ;
+   `ks_reconstruction.npz` identique entre M2 et M2_plateau ; 33 figures de `figures/` ont une copie octet pour octet
+   dans `article/R10_plateau/fig/` ou `article/R6_production_corrigee/etape3/figures_v2/` ; scripts en doublon au §12.
+7. **Deux systèmes de tests** : `tests/` (pytest, 199 tests, tous sans données externes, EM + R8/R9/R10 + matrix_io)
+   et `scripts/test_*.py` (8 scripts PASS/FAIL, chaîne M/T, 6 exécutables en local). Détail au §7.
 
-| Espace | Occupé | Quota | Fichiers |
+---
+
+## 1. Configuration et répertoires de résultats
+
+### 1.1 `config/production.json` (commit `c2bc733`, R10) et `src/…/config.py`
+
+| Clé / fonction | Valeur / rôle | Lu par |
+|---|---|---|
+| `results_dir` = `results/M2_plateau` | produits vivants | `config.results_dir(cfg)` : 39 fichiers |
+| `matrices_dir` = `results/M2` | matrices M2 brutes, lecture seule | `config.matrices_dir(cfg)` : `analyze_M`, `compute_spectral_wannier`, `mwr_locality_coarse_vs_dense` ; `dense_paths()["mfile"]` |
+| `results_dir_frozen` = `[results/M, results/M2]` | liste depuis R10 | `r6_compare_v1_v2.py:14` seulement (qui attend une chaîne → TypeError) |
+| `alignment` (plateau (i), 13 C_N en eV, source `R10_plateau/a/a1_results.json`, md5 vérifié) | décalage C_N soustrait sur M_W(R,R) | `config.alignment_C(cfg, size)` : 10 fichiers |
+| `R_cut 3`, `grid 240`, `eta_eV 0.02`, `nk_int 300`, `e_window_eV 3`, `ne_per_eta 8`, `N_min 7`, `reference_size 9x9` | paramètres gelés le 2026-09-05 | chaîne T |
+| `dense` : 5x5→25, 6x6→24, 7x7→28, 8x8→32, 9x9→27, 12x12→24 (p, D) | grilles denses | `config.dense_paths(cfg, size)` : 17 fichiers ; `KeyError` pour 10x10, 11x11, ≥15x15 |
+| `M_normalization` = v2 (R6) ; `units` ; `K_red` ; `families` ; `defect_concentration_for_dos 0.01` | conventions | `matrix_io` (porte v2), `resonance_*` |
+| non lues par le code | `labels_offgrid`, `production_sizes`, `nbnd_dense`, `M_normalization_note`, `K_note`, `source_md5`, `units` | documentaires |
+
+`config.py` : `HA2EV` (dupliqué dans `matrix_io.py:26` et redéfini dans 8 scripts), `ROOT` (dérivé de `__file__`),
+`load_production` (exige 12 clés), `results_dir`, `matrices_dir`, `alignment_C`, `dense_paths` (scratch rorqual codé
+en dur `/home/gregb26/links/scratch/qe_tmp` : tout script qui l'appelle ne tourne que sur le cluster). Statut : actif.
+
+### 1.2 Les trois `results/`
+
+| Répertoire | Contenu | Écrit par | Statut |
 |---|---|---|---|
-| /home (gregb26) | 4,4 Go | 50 Go | 62 k / 500 k |
-| /scratch (gregb26) | 107 Go (113,3 Gio apparent) | 20 To | 15 775 / 1 M |
-| /project rrg-cotemich-ac (groupe) | 40 To | 180 To | 4,7 M / 15 M |
-| /project def-cotemich (groupe) | 12 Go | 10 To | 353 k / 500 k |
-| /nearline rrg-cotemich-ac (groupe) | 269 Go | 100 To | 25 / 5000 |
+| `results/M` | v1 (M^L en norme super-cellule, facteur N_cells manquant, R5-A.2) : 23 produits suivis ; `M_ed_{5..12}.npy` + `M_ed.npy` (juin, orphelin) ignorés par git ; **pas de README local** (le texte « GELÉ » n'est que dans `article/R6_production_corrigee/phase0/README_results_M_gele.md`, la liste blanche `.gitignore` de `results/M/` exclut README.md) | chaîne M/T jusqu'au 2026-09-24 | gelé v1 ; encore lu par R4 (`RES`), R5, `r6_kernel_check`, `r6_m_rcut_resigma`, `r6_compare_v1_v2`, `make_inputs_series` (R2, sidecars), `submit_post.sh ksrec` (l. 31 copie `ved_analysis.npz` v1) |
+| `results/M2` | v2 (R6) : README, `MD5SUMS_2026-09-25.txt` (43 M npy, **tous sur rorqual seulement**), 28 produits suivis | R6 (`runbook_3.sh`, `submit_post.sh`, `assemble_M2.py`, `r6_*`) | matrices vivantes (`matrices_dir`) ; produits gelés (« v2 tel quel ») |
+| `results/M2_plateau` | R10 : README, `MD5SUMS_2026-09-30.txt` (27/33 vérifiables en local, 6 `resigma_*` absents et non versionnés), 28 produits suivis ; `resonance_*.npz` sans `ML_diag_mean`/`G_S`/`Gamma_T_noshift`, avec `C_N_eV` | R10 (`submit_r10.sh` → lanceurs de `scripts/`, `r10_driver c1post/c5`) | **vivant** (`results_dir`) |
+| `results/epw` | 25 npz suivis (validation, selfen, phself, dfpt_path_freq, phdos, ring_check, d2_extract ; chaîne `_mv0.02` = production, sans suffixe = ancienne chaîne degauss 0.002) ; `ed_vs_ep_*.npz` = v1 obsolètes (l'écrivain écrit dans `results_dir` depuis R6) | `epw_*.py` | figé (ch. 5) |
+| `results/test_recon` | `ks_recon_*.npz`, `summary.txt` (juin), ignoré | aucun script (l'écrivain `run_test_A_batch.py` vise `results/test_A`) | orphelin |
+| fichiers isolés (ignorés) | `KB_projectors_C.pdf` (sans producteur ; inclus par le mémoire ch. 2), `compare_bands_{qe,w90_qe}.png`, `wannier_bands_path.png`, `wannier_vs_dft_coarse.png` | `compare_bands_*`, `validate_wannier_bands` (écrit dans le cwd) | figé |
 
-Part de gregb26 dans /project rrg-cotemich-ac (somme des `du`) : **≈ 1 931 Gio ≈ 1,93 Tio,
-≈ 115 600 fichiers** (hors contenu des `.git`). Détail : `graphene/` 1 763,5 G,
-`ab-initio-defects/` 160,8 G, `codes/` 2,8 G, `abinit_assignment/` 2,4 G, `dft/` 1,2 G,
-`abinit_processing/` 0,02 G, `ai/` 0.
+Écrivains / lecteurs par produit (scripts de `scripts/` sauf mention) :
 
-### Politique de purge du scratch
+| Produit | Écrit par | Lu par |
+|---|---|---|
+| `M_analysis.npz`, `M_tests_summary.csv` | `analyze_M.py` (+ lignes de porte : `r6_tests_gate_row`, `r10 c1post`) | `make_figures*`, `level2_families`, R9, R10, `r6_compare` |
+| `ved_analysis.npz` | `analyze_Ved.py` | `make_figures*`, `sampling_table`, R9, R10 |
+| `mwr_locality.npz` | `mwr_locality_coarse_vs_dense.py` | `make_figures*`, `level2_families`, R9, R10 |
+| `ks_reconstruction.npz` | `ks_reconstruction_all.py` (R10 : copié de M2) | `make_figures`, `sampling_table` |
+| `level1_summary.csv`, `level2_summary.csv` | `make_figures.py` (effet de bord) | R10, `r6_compare` |
+| `level2_families.csv` | `level2_families.py` | R10, `r6_compare` |
+| `lnl_frobenius.csv` | `lnl_frobenius_all.py` | R10 (tab:L_NL) |
+| `m_rcut_convergence.csv` | `m_rcut_convergence.py` (**en ajout** : une relance duplique les lignes) | R9, R10 (tab:rcut_M) |
+| `m_rcut_resigma.csv` | `article/R6…/etape3/r6_m_rcut_resigma.py` ou `r10 c1post` (**aucun script de `scripts/`**) | R10 |
+| `nkint_check_9x9.csv` | `nkint_check_post.py` (lit `resigma_9x9_rc3_nk*.npz`, non versionnés) | R10 |
+| `resonance_<S>.npz`, `resonance_9x9_shiftL.npz` | `resonance_metrics.py` (shiftL : R10 ±9,05 meV ; `submit_post.sh c14` a encore ±25) | `make_figures*`, `resonance_criteria`, `epw_ed_vs_ep`, R8, R9, R10 |
+| `resonance_criteria_<S>.npz` | `resonance_criteria.py` | `make_figures*` |
+| `specwd_<S>_prod.npz` | `compute_spectral_wannier.py` (via `submit_spectral_wannier_dense.sh`) | `level2_families`, `make_figures*`, `r6_level1_gate`, R9 |
+| `sampling_table.csv` | `sampling_table.py` | CLAUDE.md, mémoire (tab:échantillonnage) |
+| `ed_vs_ep_*.npz` | `epw_ed_vs_ep.py` | R10, `r6_compare` |
+| `resigma_9x9_*.npz` (non versionnés) | `rcut_resigma.py` | `nkint_check_post`, `r6_level1_gate`, `r6_m_rcut_resigma`, `r10 c1post` |
 
-- Pas d'information dans le motd de Rorqual. La page `docs.alliancecan.ca/wiki/Scratch_purging_policy`
-  n'est pas accessible depuis le nœud de connexion (bloquée par un anti-robot Anubis) ;
-  non vérifiée dans cette session.
-- Règle Alliance telle que je la connais (à confirmer avec les courriels de notification) :
-  fichiers dont **atime ET ctime datent de plus de 60 jours** ; liste des candidats
-  envoyée en début de mois, suppression le 15 du mois.
-- `/scratch/.purged/lustre10/scratch/` existe (mécanisme en place) mais est **vide** au
-  2026-09-16 : aucune liste de candidats visible. Les fichiers ci-dessous ont déjà plus de
-  60 jours et sont toujours là au lendemain d'un 15 : soit la purge n'est pas encore
-  active sur Rorqual, soit la liste n'est pas exposée. **Ne pas compter dessus.**
+### 1.3 `wannier/` (72 fichiers suivis, propre)
 
-### URGENT — sur le scratch et NULLE PART AILLEURS, déjà éligibles à la purge (atime = ctime ≤ 2026-06-18)
-
-Les fonctions d'onde de toute la chaîne M vivent uniquement sur le scratch : le dépôt
-n'en a que des **liens symboliques** (`ab-initio-defects/data/graphene/**` → 1 189 liens vers
-`/home/gregb26/links/scratch/qe_tmp/…`) et les `outdir` des entrées QE dans
-`graphene/qe/defects/**` pointent tous vers `qe_tmp/`. Le projet ne contient que
-`scf.in/out`, `pp.out` et les potentiels `Vks_*` (pp.x).
-
-| Répertoire scratch | Taille | atime des wfc | Contenu | Coût de recalcul |
-|---|---|---|---|---|
-| `qe_tmp/defect_{5..12}x{5..12}_{p,d}/*.save` (16 dirs) | **43,2 G** | 2026-06-17/18 | SCF supercellules pristine/défaut : `wfc1.hdf5`, `charge-density.hdf5`, `data-file-schema.xml`, `C.upf` | 16 SCF supercellule (jusqu'à 12×12 : heures-cœur ×centaines) |
-| `qe_tmp/defect_unit_cell_{10x10,11x11}` (.save) | 1,36 G | 2026-08-31 | SCF/NSCF maille unitaire grossière 10×10, 11×11 | modéré |
-| `qe_tmp/graphene_scf` (.save 1,95 G) | 4,0 G | 2026-05-20 (accédé 06-18) | SCF graphène pristine utilisé par `graphene/qe/{bands,nscf,dos}.in` | faible (SCF maille unitaire) |
-
-Fichiers > 1 Go concernés (tous atime = 2026-06-17/18) : `defect_12x12_{p,d}.save/wfc1.hdf5`
-(6,2 G ×2), `11x11` (4,4 G ×2), `10x10` (3,05 G ×2), `9x9` (2,04 G ×2), `8x8` (1,3 G ×2).
-
-Encore accédés récemment (donc pas encore éligibles, mais **uniques eux aussi**) :
-
-| Répertoire scratch | Taille (.save) | atime | Contenu | Coût |
-|---|---|---|---|---|
-| `qe_tmp/defect_uc_dense_{24,25,27,28,32}/*.save` | 11,0 G (+12,2 G de `.wfcN` en vrac, doublons) | 2026-09-07/14 | NSCF denses nbnd=20 (chaîne de production M, `config.dense_paths`) | 5 NSCF denses (heures) |
-| `qe_tmp/defect_unit_cell_{5..9}x…, 12x12` (.save) | ≈ 1,0 G | 2026-09-07/09 | mailles unitaires grossières (chaîne grossière, golden test) | faible |
-| `qe_tmp/defect_unit_cell_{5x5,7x7,8x8}_wann` | 0,68 G | 2026-09-03 | pw2wannier ; les sorties Wannier sont dans le projet | faible |
-
-Total « irremplaçable, uniquement sur scratch » : **≈ 57 G** (43,2 + 11,0 + ≈ 3,1).
-Le reste du scratch (≈ 56 G : `qe_conv/` 44,9 G et fichiers `.wfcN` en vrac) est
-reproductible ou redondant (voir §2 et §3c).
+12 grilles × 6 fichiers (`wannier.eig`, `wannier.wout`, `wannier_manifest.json`, `wannier_tb.dat`, `wannier_u.mat`,
+`wannier_u_dis.mat`). Denses de production (`dense_paths`) : 25x25 (5×5), 24x24 (6×6 et 12×12), 28x28 (7×7), 27x27
+(9×9, toute la série EM, `tests/conftest.py` avec sha256), 32x32 (8×8). Grossières 5x5, 7x7, 8x8 :
+`mwr_locality_coarse_vs_dense.py`, `test_local_tmatrix_real.py`. `*_nb16` (25, 27, 28, 32) : héritage nbnd 16,
+**aucun lecteur** (candidats au ménage, 4 × ~4 Mo). Les `24x24` et `*_nb16` « non suivis » du 2026-09-16 le sont depuis.
 
 ---
 
-## 1. Arborescence (≈ 3 niveaux)
+## 2. `src/electron_defect_interaction/` (42 fichiers suivis)
 
-### 1.1 Premier niveau de `~/links/projects/rrg-cotemich-ac/gregb26/`
+Paquet d'espace de noms (pas de `__init__.py` à la racine ni dans `io/`, `wannier/`, `wavefunctions/`, `plotting/`,
+`many_body/`), installé en éditable (`.pth` → `src/`). `mpi4py` est importé au chargement de `local_G`, `local_R`,
+`non_local` (donc `deltav_pw`) et absent de `requirements.txt`.
 
-| Répertoire | Taille | Fichiers | Contenu le plus récent (mtime) | Dernier accès |
+| Module | Rôle | Importé par | Campagne | Statut |
 |---|---|---|---|---|
-| `graphene/` | 1 763,5 G | 79 629 | 2026-09-14 | 2026-09-16 |
-| `ab-initio-defects/` (dépôt git, `main`, dernier commit 3f2ac7a 2026-09-15) | 160,8 G | 16 885 | 2026-09-16 | 2026-09-16 |
-| `codes/` | 2,8 G | 16 700 | 2026-01-19 | 2026-09-16 |
-| `abinit_assignment/` | 2,4 G | 208 | 2026-05-28 | 2026-05-29 |
-| `dft/` | 1,2 G | 701 | 2025-11-24 | 2025-11-26 |
-| `abinit_processing/` | 0,02 G | 1 467 | 2026-01-19 | 2026-09-14 |
-| `ai/` | 0,0 G | 10 | 2025-10-17 | 2026-02-04 |
-| `submit.sbatch` | 732 o | 1 | 2025-11-24 | — |
+| `config.py` | chargeur unique de `production.json`, chemins | 52 fichiers | R10 | actif |
+| `io/qe_io.py` | lecteur QE (`.save` : XML Ha, wfc hdf5, filplot pp.x Ry→Ha) | 46 fichiers | chaîne M | actif (figé 2026-09-02) ; `get_typat` morte |
+| `io/matrix_io.py` | `save_M`/`load_M_checked`/`check_manifest`/`read_manifest`, sidecar JSON (norme de Bloch, unité, `M_normalization`), conversion Ha→eV unique | 35 fichiers | chaîne M, R6 | actif ; docstring et défaut `require_bloch_norm=SUPERCELL` de `load_M_checked` antérieurs à R6 (piège) |
+| `io/pseudo_io.py` | `read_upf` (Ry→Ha), `fq_from_fr` ; `read_psp8` ABINIT | non_local, deltav_pw, R4, R5, 5 scripts | chaîne M | actif ; `read_psp8` obsolète |
+| `io/wannier_io.py` | `read_w90_mat`, `read_w90_tb` (H(R) eV brut, r(R) Å), `read_w90_hr`, `read_w90_HR` (wrapper), `check_hermicity_HR` | 25 fichiers | chaîne M, EM | actif |
+| `io/wannier_provenance.py` | porte de jauge sha256 (`write_wannier_manifest`, `load_wannier_checked`) | 9 fichiers | chaîne T | actif |
+| `io/qe_gamma_io.py` | wfc « gamma trick » Γ, `mirror_parity_z`, `density_2d`, `inplane_disc_mask` | R4, R5, R6, R7, R9, R10, `gate_M_normalization` | R4 | figé |
+| `io/projwfc_io.py` | lecteurs projwfc.x | `r4_driver` seulement | R4 | figé ; `read_pdos_m` morte |
+| `utils/fft_utils.py` | G → indice FFT (`np.rint`) | local_G, local_R, fold_wfk_to_sc, wfk | chaîne M | actif (interne) |
+| `utils/lattice.py` | `red_to_cart`, `build_k_path` (R8) ; `monkhorst_pack_grid`, `generate_mp_grid`, `write_kpoints` mortes | non_local, R5, R8, 3 scripts, test_r8 | chaîne M, R8 | actif en partie |
+| `utils/planewaves.py` | `mask_invalid_G` ; `make_Cdicts_for_k` morte | non_local, fft_utils, 2 scripts | chaîne M | actif |
+| `utils/interpolation.py` | tri-linéaire / spline périodiques | **personne** | — | **orphelin** |
+| `wavefunctions/wfk.py` | ψ réel depuis C_nk | `r6_kernel_check`, `ks_reconstruction_all`, `test_ks_reconstruction` | chaîne M | figé |
+| `wavefunctions/fold_wfk_to_sc.py` | repli ψ sur la super-cellule, norme maille (v2 depuis `a223687`) | `local_R.compute_ML_R` | chaîne M | figé (interne) |
+| `wavefunctions/sc_projection.py` | états Γ de super-cellule sur grille FFT, projection Bloch (promu de R5) | deltav_pw, `gate_M_normalization` | R5→R6 | figé |
+| `wannier/wannier_hamiltonian.py` | `Hwr_to_Hwk(Hwr, Rw, k, ndegen)` → (H(k), ε, U) | 16 fichiers (+ `lt.Hwr_to_Hwk`) | chaîne M | actif |
+| `wannier/wannier_interpolation.py` | `Mbk_to_Mwk`, `Mwk_to_Mwr`, `Mwr_to_Mwk`, `Mwr_to_Mwk_pairs` (R9), `Mwk_to_Mbk`, `_match_kpoint_order`, `_infer_mp_grid`, `wannier_interpolate`, `ws_images`, `ws_phase` (R10) | 23 fichiers | chaîne M, R9, R10 | actif ; `wannier_interpolate` n'est appelée que par `test_wannier.py` |
+| `wannier/supercell_fold.py` | H de super-cellule replié à Γ, LDOS (R9), `sc_planewave_index` | R4, R5, R6, R9, `gate_M_normalization`, test_r9 | R4–R9 | figé ; `kvec_to_rvec` morte |
+| `defects/alignment.py` | alignement de potentiel : `vacancy_site`, `far_atom_alignment` (R4), `true_min_image_dist` (R9), `atom_sphere_shifts` (R9, source des C_N) | 10 fichiers | R4, R9, R10 | figé (C_N gelés dans le JSON) |
+| `defects/deltav_pw.py` | porte A.2 : ΔV appliqué aux Bloch purs, `RemovedAtomProjector`, `check_pure_bloch` | `gate_M_normalization`, `r6_states_identity` | R5→R6 | figé |
+| `defects/local_R.py` | M^L espace réel : `compute_ML_R` (série ; défaut `subtract_mean=True` ≠ production), `prep_realspace_inputs`, `compute_ML_R_mpi` (grossier), `compute_ML_R_mpi_shared` (dense, zero-padding, production), `fourier_resample` | `compute_M`, `compute_M_dense_stages`, `gate_M_normalization`, R5, R6, R9, 2 tests | chaîne M (R6 v2) | actif |
+| `defects/local_G.py` | M^L espace réciproque (`compute_ML_G*`, `zero_pad_potential`) | `compute_M_dense_stages --kernel G`, `test_pad_vs_full_supercell`, `test_zero_pad_dense` | chaîne M (historique) | **obsolète** (remplacé par `compute_ML_R_mpi_shared`, `9b58a02`) ; non mis à l'échelle N_cells en R6 mais étiqueté v2 par `--kernel G` (**à vérifier**, chemin non pris par défaut) ; `compute_ML_G_mpi` jamais appelée |
+| `defects/non_local.py` | M^NL Kleinman-Bylander (préfacteur 4π/√Ω_uc, norme maille), `build_K_vectors`, `compute_phase`, `compute_angular_part`, `compute_M_NL_mpi` | deltav_pw, local_G, R4, R5, 5 scripts | chaîne M | actif ; `split_counts`, `local_slice` mortes ; `_mpi` n'est appelée que par `_diag_mnl_mpi.py` |
+| `defects/many_body/local_tmatrix.py` | cœur de la chaîne T (§3) | 19 fichiers + 3 tests | chaîne T, R9, R10 | actif ; `scattering_rate_from_wannier` (pré-R10, sans C_N) **orpheline** ; argument `perdef` mort |
+| `defects/many_body/disorder_average.py` | moyenne sur le désordre Kaasbjerg : `tbar_reduce`, `tbar_k`, `green_k`, `dos_average`, `spectral_path`, `spectral_maxima`, `sigma_eff`, `dirac_*` | `r8_driver`, `test_r8` | R8 | actif (aucun script de `scripts/`) |
+| `defects/many_body/pole_criterion.py` | critère de pôle (det, λ), `local_t_cache`, `tbar_pair` | R4, R6, R8, R9, `test_r8` | R4 | figé |
+| `defects/many_body/tb_models.py` | banc synthétique graphène π à 5 WF (D6) | R4, `r6_d4`, `test_r8` | R4 | figé (« test material », docstring) |
+| `defects/many_body/single_defect.py` | T-matrice de Bloch dense historique (`compute_G0`, `compute_T`, `compute_G`, M en norme super-cellule) | `test_local_tmatrix{,_real}`, `test_local_rcut` (référence du test d'or) ; `compute_spectral`, `compute_tmatrix`, `_eta_scan` (désactivés), `_normtest` | chaîne T pré-2026-09-05 | figé (référence de test) ; **pas orphelin**, contrairement à CLAUDE.md l. 131 |
+| `electron_phonon/{phself,selfen}.py` | post-traitement EPW (`linewidth.phself`, elecselfen ; Γ^ep = 2 Im Σ) | `epw_d2_extract`, `epw_phself_post`, `epw_selfen_post`, `make_figures_epw` | EPW | figé ; `RY2EV` morte |
+| `electron_photon/{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics}.py` | série EM (k cartésien, eV/Å ; `__all__` de 31 noms complet) | `memoire/EM/*`, `tests/`, `dev.ipynb` | EM | actif |
+| `plotting/plot_psp_radial_proj.py` (+ `these.mplstyle`) | facteurs de forme radiaux | **personne** | — | **orphelin** (probable producteur manuel de `KB_projectors_C.pdf`) |
 
-### 1.2 `graphene/` (1 763,5 G)
-
-| Sous-répertoire | Taille | Fichiers | mtime max | Note |
-|---|---|---|---|---|
-| `graphene/qe/epw/` | 1 289,6 G | 57 332 | 2026-09-14 | EPW ; 24k-24q = production |
-| ├ `24k-24q/` | 179,3 G | ≈ 12 000 | 2026-09-14 | production (§3a) |
-| ├ `36k-30q/` | 581,4 G | 11 775 wfc | 2026-04-30 | test avril ; `phonons/_ph0` |
-| ├ `30k-24q/` | 263,6 G | 7 899 wfc | 2026-04-30 | test avril ; `phonons/_ph0` |
-| ├ `16k-8q/` | 151,7 G | 9 360 wfc | 2026-04-29 | dfpt_g_G/K 72 G ×2, epw_g_*, validation_16k8q |
-| ├ `24k-12q/` | 45,3 G | | 2026-04-28 | `phonons/_ph0` |
-| ├ `16k-16q/` | 35,4 G | | 2026-04-28 | `phonons/_ph0` |
-| ├ `16k-12q/` | 20,4 G | | 2026-04-29 | `phonons/_ph0` |
-| ├ `12k-12q/` | 11,7 G | | 2026-04-28 | `phonons/_ph0` |
-| ├ `30k-30q/` | 0,45 G | | 2026-04-29 | `_ph0` supprimé 2026-09-10 |
-| ├ `36k-36q/`, `8k-8q/` | 0,31 G, 0,03 G | | 2026-04-29 | |
-| └ `NOTES_EPW.md`, `CLAUDE.md` | | | 2026-09-14 | |
-| `graphene/abinit/` | 420,7 G | ≈ 9 250 | 2026-02-02 | ère ABINIT (nov. 2025 – févr. 2026), remplacée par QE |
-| ├ `pristine/unit_cell/` | 396,6 G | 8 780 | | `wannier/bands` 375 G (WFK.nc), `wannier/pi_bands` 11,7 G |
-| ├ `pristine/supercell/` | 6,5 G | | | |
-| └ `defective/` | 17,6 G | 436 | 2025-12-21 | 5x5…10x10, vacancies |
-| `graphene/qe/test/` | 31,5 G | 11 910 | 2026-04-21 | `_ph0` 30,8 G (test ph.x 16×16 q, dvscf 0,46 G), `tutorial01` 0,6 G |
-| `graphene/qe/defects/` | 21,7 G | 821 | 2026-09-07 | entrées/sorties QE + `Vks_*` (3,6 G) + Wannier ; `unit_cell/` 15,4 G, `super_cell/` 6,3 G |
-| `graphene/qe/convergence/` | 3,6 M | | 2026-05-27 | ecut, kpoint, smearing, phonons (sorties seulement ; `outdir` sur scratch `qe_conv/`) |
-| `graphene/qe/` (racine) | ≈ 40 M | | 2026-05-20 | scf/nscf/bands/dos, dyn*, ifc, modes du graphène pristine (janv. 2026) |
-
-### 1.3 `ab-initio-defects/` (160,8 G)
-
-| Sous-répertoire | Taille | Fichiers | mtime max | Note |
-|---|---|---|---|---|
-| `results/M/` | 132,4 G | 540 | 2026-09-15 | matrices M (§3) ; `obsolete_grid_7x7/` 15 G, `_test_mnl/` 52 M, `logs/` 2,3 M |
-| `jobs/` | 27,9 G | ≈ 150 | 2026-02-03 | ère ABINIT (`wfk_*.nc`, `pot_*.nc`, `M_test.npy`) ; ignoré par git |
-| `.venv/` | 0,29 G | 15 838 | 2026-09-07 | |
-| `.git/` | 0,11 G | | 2026-09-16 | |
-| `wannier/` | 60 M | | 2026-09-07 | 12 grilles (5x5…32x32, `_nb16`) ; `24x24`, `*_nb16` non suivis par git |
-| `figures/` | 15 M | 53 | 2026-09-15 | 27 figures (pdf+png) |
-| `results/epw/`, `results/test_A/` | 2,3 M, 0,3 M | | 2026-09-14 | npz commités |
-| `data/` | (liens) | 1 189 liens | 2026-06-18 | → scratch `qe_tmp/` |
-| `scripts/` (71), `src/`, `tests/`, `config/`, `notebooks/` (1,6 M) | < 5 M | | | |
-
-### 1.4 Autres
-
-| Répertoire | Taille | Note |
-|---|---|---|
-| `codes/qe/` (1,06 G dont `.git` 0,80 G), `codes/abinit/` (1,14 G dont `.git` 0,62 G), `codes/wannier90/` (0,57 G, `libwannier90.a` compilé) | 2,8 G | sources ; 1 lien cassé : `codes/wannier90/test-suite/library-mode-test/ref/gaas.win` |
-| `dft/{compmatphys,copper,diamond,iron}` | 1,2 G | tutoriels nov. 2025 |
-| `abinit_assignment/` | 2,4 G | devoir GaAs mai 2026 (WFK, DEN, GSR) |
-| `abinit_processing/` | 0,02 G | `pseudo/` (**référencé par ≥ 42 entrées QE comme `pseudo_dir`**), `scripts/`, `venv/` (août 2025), `cif/` vide |
-| `ai/IonicConductivityFlow/` | 149 K | dépôt git, oct. 2025 |
-
-### 1.5 Scratch `/scratch/gregb26` (113,3 G, 15 775 fichiers)
-
-| Répertoire | Taille | Fichiers | mtime max | atime max |
-|---|---|---|---|---|
-| `qe_tmp/` | 68,4 G | 6 279 | 2026-09-07 | 2026-09-14 |
-| ├ `defect_{N}x{N}_{p,d}/` (16) | 43,2 G | 5 chacun | 2026-06-18 | 2026-09-09 (xml seulement ; wfc : 06-18) |
-| ├ `defect_uc_dense_{24,25,27,28,32}/` | 23,3 G (dont .save 11,0 G) | 643–1 091 | 2026-09-07 | 2026-09-14 |
-| ├ `defect_unit_cell_{5..12}x…/` (8) | 2,3 G | 29–248 | 2026-06-19 | 2026-09-09 |
-| ├ `defect_unit_cell_{5x5,7x7,8x8}_wann/` | 0,68 G | | 2026-09-02 | 2026-09-03 |
-| └ `graphene_scf/` | 4,0 G | 949 | 2026-05-20 | 2026-06-18 |
-| `qe_conv/` | 44,9 G | 9 492 | 2026-05-29 | 2026-05-29 |
-| ├ `phonons/` | 34,8 G | 1 043 | 2026-05-29 | 2026-05-29 |
-| │  └ `_ph0/` | 32,5 G | 128 `.wfcN` + 233 xml phsave | | pas de dvscf, pas de q_* |
-| ├ `smearing/` (24 runs) | 8,0 G | 6 600 | 2026-05-19 | 2026-05-19 |
-| ├ `kpoint/` (5 runs) | 1,2 G | 969 | 2026-05-19 | 2026-05-19 |
-| └ `ecut_{40..130}_k{12,24}/` (20 runs) | 0,9 G | | 2026-05-19 | 2026-05-19 |
-| `compmatphys/basic/` | 0 | 4 | 2025-10-14 | 2025-10-17 |
-| `jobs/`, `graphene/` | 0 | 0 | 2026-02-03, 2026-07-16 | répertoires vides |
+Fonctions mortes ou orphelines (récapitulatif) : `utils/interpolation.py`, `plotting/`, `local_G.compute_ML_G_mpi`,
+`local_tmatrix.scattering_rate_from_wannier`, `non_local.{split_counts,local_slice}`, `pseudo_io.read_psp8`,
+`lattice.{monkhorst_pack_grid,generate_mp_grid,write_kpoints}`, `planewaves.make_Cdicts_for_k`, `qe_io.get_typat`,
+`projwfc_io.read_pdos_m`, `supercell_fold.kvec_to_rvec`, `selfen.RY2EV`.
 
 ---
 
-## 2. Scratch — détail et diagnostic
+## 3. Chaîne matrice T (M → M_wk → M_wr → V_loc → g₀ → t → Γ/Σ → DOS/A_k) — pour la réappropriation
 
-Éligible à la purge (atime **et** ctime < 2026-07-18, 60 jours) : **≈ 88 G, 10 500 fichiers**
-(`find -atime +60 -ctime +60`). Ventilation :
+Référence canonique = ce qu'exécutent `compute_spectral_wannier.py`, `rcut_resigma.py`, `resonance_metrics.py`,
+`resonance_criteria.py` et `r10_driver.py`. Unités : fichiers M en Hartree (sidecar obligatoire), tout le reste en eV
+après `load_M_checked(units=EV)` ; H(R) Wannier en eV ; Γ, Σ, η, C_N en eV (×10³ → meV). Index : `M[bra, k', ket, k]`.
 
-| Bloc | Taille | Statut |
+Recette minimale (reconstituée de `resonance_metrics.py:25-58` et `compute_spectral_wannier.py:66-109`) :
+
+```python
+cfg = load_production(); dp = dense_paths(cfg, S); paths = wannier_provenance.load_wannier_checked(dp["manifest"])
+M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=UNIT_CELL, units=EV, require_normalization=M_NORM_V2)  # eV
+k = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k)
+U, kU = read_w90_mat(paths["u"]);       U  = U[_match_kpoint_order(kU, k)]        # (nk, 5, 5)
+Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k)]     # (nk, 20, 5)
+Hwr, Rw, nd, _, _ = read_w90_tb(paths["tb"])
+d = lt.defect_mwr(M, U, Ud, k, MP, n_box=N, C_N=alignment_C(cfg, S)); Mwr, Rn = d["Mwr"], d["Rn"]
+lt.mwr_locality(Mwr, Rn)                                                            # garde-fou a
+Rloc = Rn[np.linalg.norm(Rn, axis=1) <= cfg["R_cut"] + 1e-9]; V, _ = lt.extract_V_loc(Mwr, Rn, Rloc)
+Hk_int, _, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(cfg["nk_int"]), ndegen=nd)
+g0 = lt.local_green_batch(Hk_int, k_int, Rloc, egrid, eta)                         # (nE, dim, dim)
+t  = lt.local_t(V, g0[j])                                                           # V (1 - g0 V)^-1
+Gamma_nk = -2 Im phi_nk^† t(eps_nk) phi_nk                                          # lt.scattering_rate_fast
+```
+
+| Étape | Fonction (fichier:ligne) | Formule / convention | Appelée par |
+|---|---|---|---|
+| 0. Portes | `config.load_production`, `dense_paths`, `alignment_C` (`config.py:10/44/35`) ; `wannier_provenance.load_wannier_checked` (`:44`, sha256 tb/u/u_dis) | toute incohérence lève une erreur | tous les scripts de production |
+| 1. M | construction en amont (Ha) : `local_R.compute_ML_R_mpi` (grossier, `compute_M.py`) ou `compute_ML_R_mpi_shared` (dense zero-padding D = pN, `compute_M_dense_stages.py`) + `non_local.compute_M_NL` ; réassemblage v2 `assemble_M2.py` (M2 = N_cells·M^L(v1) + M^NL). Chargement `matrix_io.load_M_checked` (`matrix_io.py:70-106`) | M[n,k',m,k] = ⟨ψ_nk'|ΔV|ψ_mk⟩ sur la super-cellule, ψ normée sur la maille ; refuse sidecar absent, `bloch_norm ≠ unit_cell`, `units ≠ hartree`, `M_normalization` ≠ v2 ; seule conversion Ha→eV | 10 scripts + 8 pilotes |
+| 1b. Grille et U | `qe_io.get_k_red` ; `_infer_mp_grid` (`wannier_interpolation.py:208-227`, grille MP complète Γ-centrée) ; `read_w90_mat` + `_match_kpoint_order` (`:186-206`, tol 1e-5) | ligne r de U_dis = bande absolue r (vrai car `dis_win_min = −25 eV` sous la bande la plus basse) | idem |
+| 2. M_wk = V†MV | `Mbk_to_Mwk(Mbk, U, U_dis)` (`wannier_interpolation.py:11-54`) | V(k) = U_dis(k)·U(k) ; double boucle (k',k) ; vérifie tr(VV†) = nw ; sortie (5, nk, 5, nk) eV | `defect_mwr`, `wannier_interpolate`, 4 scripts, 7 pilotes |
+| 3. M_wr | `Mwk_to_Mwr(Mwk, k_red, MP)` (`:56-89`) ; inverse `Mwr_to_Mwk` (`:91-123`, sans 1/N), rectangulaire `Mwr_to_Mwk_pairs` (`:125-156`, R9) | M_W(R,R') = (1/N_k²) Σ e^{+2πik'·R} M_W(k',k) e^{−2πik·R'} ; boîte R centrée, meshgrid 'ij', nR = D² ; **pas de ndegen, pas de Wigner-Seitz** (étiquettes modulo D) ; commentaire l. 87 annonce une mauvaise forme | `defect_mwr`, 3 scripts, 6 pilotes |
+| 3b. Alignement + recentrage (R10) | `local_tmatrix.defect_mwr(Mbk, U, U_dis, k, MP, n_box, C_N)` (`local_tmatrix.py:309-344`) → `recenter_mwr` (`:82-97`) ; garde-fou a `mwr_locality` (`:39-54`) | `in_box = all((R mod MP)[:2] < n_box)` sur les étiquettes brutes ; `Mwr[w,in_box,w,in_box] -= C_N` (diagonale R = R' seulement : approximation (i)) ; R_d = argmax ‖M_W[:,R,:,R]‖_F ; Rn = ((R − R_d + D//2) mod D) − D//2 ; `AssertionError` si le max n'est pas en R₀ ; distance = norme des **étiquettes réduites** | `defect_mwr` : 8 scripts + r10 ; `recenter_mwr` seul (chaîne brute pré-R10, sans C_N) : `check_onsite_and_NL`, `test_local_tmatrix_real`, r4–r9 |
+| 4. V_loc | troncature **dans les scripts** : `Rloc = Rn[‖Rn‖ ≤ R_cut]` ; `extract_V_loc(Mwr, R, R_local, herm_atol=1e-10)` (`:57-79`) | norme euclidienne des indices réduits (R_cut 3 → 29 mailles, dim 145) ; index plat L·nw + w ; garde-fou b : symétrise ½(V+V†) si résidu > 1e-10 | 6 scripts, 6 pilotes |
+| 5. g₀ | `read_w90_tb` ; `Hwr_to_Hwk` (`wannier_hamiltonian.py:7-42`, H(k) = Σ_R e^{+2πik·R} H(R)/ndegen, `eigh`) ; `mp_grid` (`:27`, grille [0,1) non décalée, nk_int = 300 → 90 000 k, **découplée** de la sortie 240²) ; `local_green` (`:100-113`, une énergie par `inv`) ; `local_green_batch(Hwk, k_int, R_local, egrid, eta, deriv=False)` (`:125-159`, restructuré par différences D = R_L − R_L', `_diff_table` `:116`) | g₀[(L,w),(L',w')](ε) = (1/N) Σ_k e^{2πik·R_L} [(ε+iη) − H(k)]⁻¹_ww' e^{−2πik·R_L'} ; `deriv=True` → dg₀/dε ; pas d'énergie η/ne_per_eta = 2,5 meV | `rcut_resigma`, `resonance_*`, `test_local_green_batch`, r4, r8, r9, r10 |
+| 6. t | `local_t(V, g0)` (`:162-165`) ; lots : `pole_criterion.local_t_cache` (`:116-121`, threads `R4_EIG_WORKERS`/`SLURM_CPUS_PER_TASK`) ; Born t_B = V + V g₀ V en ligne (`resonance_metrics.py:60`) | t = V (1 − g₀V)⁻¹ par `solve` ; exact si R_local couvre le support de V | `rcut_resigma` ; r4, r6, r8 |
+| 7. Σ, Γ sur couche | `scattering_rate` (`:199-230`, exact, lent) ; **`scattering_rate_fast`** (`:264-306`, production : g₀ une fois sur la grille d'énergie, état → point le plus proche, hors fenêtre → NaN, défaut `ne_per_eta=4` ≠ config 8) ; Σ complexe en ligne dans `rcut_resigma.py` | φ_nk[(L,w)] = U_out[k,w,n] e^{2πik·R_L} (`_phase` `:34`) ; Γ_nk = −2 Im φ†t(ε_nk)φ ; `AssertionError` si min Γ < −1e-8 ; Γ « par défaut » intensif = Γ·N_cells ; taux physique = c·Γ | `compute_spectral_wannier`, r9, r10 (`fast`) ; tests (`scattering_rate`) |
+| 8. DOS / A_k (R8, Kaasbjerg PRB 101, 045433) | `disorder_average.tbar_reduce` (`:29-67`, τ(D;ε)), `tbar_k` (`:70-104`, T̄_k = Σ_D e^{−2πik·D} τ ; base de bandes U†T̄U), `green_k` (`:107`), `dos_average` (`:127-176`, Σ_k = c·T̄_k, ρ = −(1/πN_k) Σ Im Tr G_k ; `linear=True` = Lloyd), `spectral_path` (`:179`, A_k = −2 Im Tr G_k), `spectral_maxima`, `sigma_eff` (`:233`, Schur 2×2, éq. 44-45), `dirac_*` (`:259-306`, éq. 47-48) | états/eV/maille/spin ; c = `defect_concentration_for_dos` (0,01) ; `resonance_metrics.py` n'utilise que Lloyd (ρ_dis = ρ₀ + c·δρ, δρ = (1/π) Im Tr[t dg₀/dε]) | `r8_driver`, `test_r8` seulement |
+| 9. Résonance, LDOS | E_D = milieu π/π* au minimum du gap sur `mp_grid(90)` ; E_res = argmax |Γ| dans ±1,5 eV ; `pole_criterion.det_eig_criterion` (`:43-74`, A = I − V g₀, slogdet, λ_min), `local_minima`, `sign_changes`, `tbar_pair` ; `resonance_criteria.py:~50-58` refait det/λ en ligne ; `local_tmatrix.cluster_ldos` (`:168-196`, G = g₀ + g₀Tg₀, R9) ; `supercell_fold.ldos_from_eigenpairs` (`:156`) | Friedel : ∫δρ (Tr[t g₀′]) contrôlé par Lloyd | `resonance_criteria` ; r4, r6, r8, r9 |
+
+Chemins annexes : `wannier_interpolate` (Mbk→Mwk→Mwr→Mwk fin→`Mwk_to_Mbk`, sans recentrage ; `test_wannier.py`
+seulement) ; `ws_images`/`ws_phase` (`wannier_interpolation.py:290-372`, R10 : images de Wigner-Seitz pour les k hors
+grille, poids 1/n_tie ; utilisées par `m_rcut_convergence.py` et r10 pour tab:rcut_M, **pas par la matrice t locale**,
+d'où la clé `labels_offgrid` documentaire) ; référence dense `single_defect.compute_T` (test d'or
+`test_local_tmatrix_real.py`, local = dense × N_cells à 1e-13) ; H replié à Γ `supercell_fold.bloch_folded_hamiltonian`
+(diag(ε) + M/N_cells, r4–r9) ; banc synthétique `tb_models` (r4, test_r8).
+
+Scripts de la chaîne, dans l'ordre de production (tous sous `submit_r10.sh` → lanceurs de `scripts/`) :
+
+| Maillon | Script | Sortie |
 |---|---|---|
-| `qe_tmp/defect_{N}_{p,d}` (SCF supercellules) | 43,2 G | **IRREMPLAÇABLE, unique** — rapatrier |
-| `qe_tmp/defect_unit_cell_{10x10,11x11}` | 1,4 G | unique ; utilisé par la chaîne grossière (liens `data/`) |
-| `qe_tmp/graphene_scf` | 4,0 G | reproductible (SCF maille unitaire ; entrées `graphene/qe/scf.in`) ; 2,07 G de `.wfcN` en vrac redondants |
-| `qe_conv/phonons` | 34,8 G | reproductible ; résultats (dyn, q2r, matdyn) déjà dans `graphene/qe/convergence/phonons/` ; `_ph0` = 32,5 G de wfc de reprise ph.x |
-| `qe_conv/smearing`, `kpoint`, `ecut_*` | 10,1 G | reproductible ; sorties de convergence dans `graphene/qe/convergence/` |
+| M (amont) | `compute_M.py` (grossier, MPI), `compute_M_dense_stages.py` (dense), `assemble_M2.py` (v2), porte `gate_M_normalization.py` (A.2) | `results/M2/M_*.npy` + sidecars |
+| M → M_wr, localité | `mwr_locality_coarse_vs_dense.py` ; `m_rcut_convergence.py` (M_wr → M fin, R_cut) ; `analyze_M.py` (cartes, échelle, tests, D6) ; `lnl_frobenius_all.py` (L/NL) | `mwr_locality.npz`, `m_rcut_convergence.csv`, `M_analysis.npz`, `M_tests_summary.csv`, `lnl_frobenius.csv` |
+| V_loc → g₀ → t → Γ, niveau 1 | `compute_spectral_wannier.py` (`scattering_rate_fast`, carte R_cut × grille × η) | `specwd_<S>_prod.npz` |
+| Σ par R_cut, N_k^int | `rcut_resigma.py` (`--rcut`, `--npe`, `--nk-int`) ; `nkint_check_post.py` | `resigma_*.npz`, `nkint_check_9x9.csv`, `m_rcut_resigma.csv` (via r6/r10) |
+| Γ(ε), Born, δρ, ρ_dis, T̄(K), C14 | `resonance_metrics.py` | `resonance_<S>.npz`, `_shiftL` |
+| det/λ, Friedel/Lloyd, Γ à c = 0,1 % | `resonance_criteria.py` | `resonance_criteria_<S>.npz` |
+| niveau 2, familles | `level2_families.py` ; `make_figures.py` (csv) | `level2_families.csv`, `level{1,2}_summary.csv` |
+| pont ch. 5 | `epw_ed_vs_ep.py` | `ed_vs_ep_*.npz` |
+| figures | `make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py` (`fig_epw_vs_ed`) | `figures/` |
+| validation | `test_local_tmatrix.py`, `test_local_rcut.py` (synthétiques), `test_local_green_batch.py` (H 27×27), `test_local_tmatrix_real.py` (test d'or réel, **cassé depuis R10**) | PASS/FAIL |
+| DOS / A_k | `article/R8_kaasbjerg/r8_driver.py` seulement | `article/R8_kaasbjerg/out/` |
+| ancienne chaîne de Bloch (obsolète) | `compute_spectral.py`, `compute_tmatrix.py`, `compute_convergence.py`, `_eta_scan.py`, `_normtest.py` | — |
 
-Ce qui est sur le scratch et existe aussi dans le projet : rien de volumineux. Les seuls
-« doublons » sont internes au scratch : les `prefix.wfcN` en vrac (copies par processus MPI)
-à côté de `prefix.save/wfcN.hdf5` — 12,2 G dans `defect_uc_dense_*`, 2,1 G dans
-`graphene_scf`, 1,0 G dans `defect_unit_cell_*`, 33,7 G dans `qe_conv/phonons(+_ph0)`.
-
-Qui lit le scratch (voir §4) : `link_data.sh` (construit `data/`), `config.dense_paths()`,
-`check_M_dense_vs_coarse*.py`, `check_onsite_and_NL.py`, `test_local_tmatrix_real.py`,
-`compute_M_dense_stages.py`, et tous les `outdir` des entrées QE de `graphene/qe/defects/`
-et `graphene/qe/{bands,nscf,dos}.in`.
+Paramètres réels et contrôles C1–C18 : NOTES_TGAMMA.md §1–§3 (valeurs v2 R6 ; les valeurs de production R10 sont dans
+`article/R10_plateau/c/table_v2_plateau.md`). Points à retenir en se réappropriant : R_cut est une norme sur les indices
+réduits, pas une distance cartésienne ; deux « médianes de Γ » coexistent (états vs courbe) ; E_res est discret ;
+N_k^int 300 → 600 change Γ_T(E_D) de +4,8 % ; la matrice t ne voit pas les images de Wigner-Seitz.
 
 ---
 
-## 3. Classification
+## 4. `scripts/` (81 fichiers suivis : 67 `.py`, 14 `.sh`)
 
-### 3a. IRREMPLAÇABLE (heures-cœur à refaire)
+`scripts/run.py` et `scripts/compute_M_cluster.py`, cités par CLAUDE.md (l. 59, 63-65, 217) et `link_data.sh:2`,
+**n'existent pas** (supprimés par `cf05e92`, 2026-06-19 ; remplacés par `compute_M.py` et `compute_M_dense_stages.py`).
+Colonnes : rôle · campagne · qui l'utilise · statut · mémoire.
 
-| Emplacement | Taille | Contenu |
+### 4.1 Production de M (chaîne M)
+
+| Script | Rôle | Campagne | Utilisé par | Statut | Mémoire |
+|---|---|---|---|---|---|
+| `compute_M.py` | pilote M grossier en 3 étapes `ml` (MPI, `compute_ML_R_mpi`) / `nl` / `combine` (v2) | chaîne M, R6 | `submit_M.sh`, `submit_r6_kernel.sh`, `_test_mnl_mpi.sh`, r9 | figé (outil valide) ; l. 1-2 avant le shebang, `RES` inutilisé, commentaires l. 124/141 vs 150-152 contradictoires | ch. 4 |
+| `compute_M_dense_stages.py` | M dense (pN)² par zero-padding, `ml`/`nl`/`combine`, noyau R (défaut) ou G, `--coarse` | chaîne M dense, R4, R6 | `submit_M_dense.sh`, `submit_r6_kernel.sh`, r4, r9 (`paths`) | figé ; `PFAC` et scratch en dur (l. 23-24) dupliquent la config ; `--kernel G` étiquette v2 un M probablement v1 | ch. 4 |
+| `assemble_M2.py` | M2 = N_cells·M^L(v1) + M^NL par blocs memmap, sidecars v2, refus d'écrasement | R6 | `etape{1,2}/submit_r6.sh` ; `results/M2/README.md` | figé (outil officiel de reconstruction des 43 M2, non miroités) | ch. 4 |
+| `gate_M_normalization.py` | porte A.2 : ΔV appliqué aux Bloch purs vs M/N_cells (1e-6 eV, code 3 = refus) | R6 | `submit_r6.sh`, `submit_r6_kernel.sh`, R10 c1post | actif ; `--m2-dir results/M2` en dur cohérent avec `matrices_dir` | ch. 4 (tab:tests_M) |
+| `tag_vacancy_sublattice.py` | écrit `vacancy_sublattice` A/B dans les sidecars | chaîne M | manuel | **cassé silencieusement** (glob l. 12 sur `results_dir` : « 0 sidecars tagged ») | métadonnée |
+| `finalize_wannier.py` | rapport d'étalements, copie tb/u/u_dis dans `wannier/{N}`, écrit le manifeste | chaîne M/T, EM1 | manuel (`submit_dense_nb20.sh` rorqual) | figé (défauts l. 85-90 périmés : tailles 5/7/8, sans `--dense`) | ch. 4 (entrées), §2.5 |
+| `link_data.sh` | construit `data/graphene/**` en liens vers le scratch et `Vks_*` | infra | manuel (README) | actif sur rorqual ; cite `run.py` (l. 2) ; nommage `defect_<N>.save` ≠ local `defect_unit_cell_<N>.save` | infra |
+| `migrate_M_norm.py` | `M_ed_*` → `*_norm.npy` (÷N_cells) | pré-2026-09-05 | — | **obsolète** (`SystemExit` l. 2) | — |
+| `_diag_mnl_mpi.py`, `_test_mnl_mpi.sh` | diagnostic de `compute_M_NL_mpi` (corruption de tas nk ≥ 81) | chaîne M | — | figé (clos) ; `.sh` écrit dans `$RES/_test_mnl` (M2_plateau) | — |
+
+### 4.2 Contrôles de M
+
+| Script | Rôle | Campagne | Utilisé par | Statut | Mémoire |
+|---|---|---|---|---|---|
+| `analyze_M.py` | carte |M| à K, V_ed ligne, Re M^L/M^NL à K, échelle max|M|(N), table des tests, variante alignée D6 avec portes | chaîne M, R6, R10 | `submit_post.sh analyze`, `submit_r10.sh` ; lu par `make_figures*`, `level2_families` | actif ; l. 231 chiffre codé en dur (job 20238555) | ch. 4 (§4.1.5, tab:tests_M) |
+| `analyze_Ved.py` | V_ed^L : carte, profils, moyenne azimutale, anomalie 1,42 Å | chaîne M, R10 | `submit_r10.sh` (l. 132) | actif | ch. 4 (fig_Ved) |
+| `ks_reconstruction_all.py` | reconstruction KS H = T + ⟨V_p⟩ + V^NL sur grossiers et denses | chaîne M, R6 | `submit_post.sh ksrec`, `submit_r6_kernel.sh` | figé (R10 a copié le npz) ; `sys.path.insert(0,"scripts")` relatif exige cwd = racine | ch. 4 (fig_ks_reconstruction) |
+| `sampling_table.py` | table N, N mod 3, ΔE_F, V_ed frontière/radial | chaîne M, R10 | `submit_post.sh ksrec`, `submit_r10.sh p_ved` | actif (lancé en local, écraserait le CSV avec des NaN : seule la 5×5 est présente) | ch. 4 (tab:échantillonnage) |
+| `lnl_frobenius_all.py` | ⟨‖M^NL‖⟩/⟨‖M^L‖⟩ blocs π/π*, brut et aligné D6 | chaîne M, R10 | `submit_post.sh analyze`, `submit_lnl_frobenius.sh`, r10 | actif | ch. 4 (tab:L_NL) |
+| `_bz_ratio_LNL.py` | même rapport L/NL (ponctuel R6 J8) | R6 | manuel | figé (doublon de `lnl_frobenius_all`) | ch. 4 (chiffre) |
+| `check_ML_coarse_kernel.py` | noyau partagé sur la grille grossière = `M_L_<S>` (1e-10) | chaîne M dense, R6 | — (cité R6_rapport) | **cassé depuis R10** (l. 5, 8-9 : `results_dir`) ; doublon d'`analyze_M` l. 197-205 | tab:tests_M (via analyze_M) |
+| `check_M_dense_vs_coarse.py` | k communs dense/grossier : valeurs singulières, Frobenius | chaîne M dense, R6 | `submit_golden_dense.sh` | **cassé depuis R10** (l. 8, 15-17) ; doublon d'`analyze_M` l. 173-183 | idem |
+| `check_M_dense_vs_coarse_bands.py` | idem résolu en bandes (nb_sub 4-16) | chaîne M dense | personne | obsolète (orphelin, sans porte v2, code mort l. 20-21) | — |
+| `check_M_dense_nb20_vs_nb16.py` | non-régression nbnd 16 → 20 | chaîne M dense | — | **obsolète / non rejouable** (nb16 sur nearline, `SystemExit` l. 6) + chemin R10 | tab:tests_M (« non rejouable ») |
+| `check_onsite_and_NL.py` | sur-site p_z–p_z de V_loc, M^L/M^NL à K et K' | chaîne M dense, R4 | — (rapports R4, R6, R10) | **cassé depuis R10** (l. 9) et obsolète (chaîne brute sans C_N) ; remplacé par `mwr_locality_coarse_vs_dense` et `analyze_M` §3 | — |
+| `validate_ML_grid_7x7.py` | M^L de référence 7×7 (noyau série) vs MPI et ancienne grille 216 | chaîne M (bogue de grille) | — | **cassé / non rejouable** (argv sans défaut l. 9, garde l. 15, chemin l. 16) | — |
+| `_old_vs_new_7x7.py` | M dense 7×7 ancienne vs nouvelle grille | chaîne M | — | obsolète (`obsolete_grid_7x7` supprimé, garde l. 6) | — |
+| `_mcheck.py` | normes max|M|, ‖M‖_F de `M_ed_{5..8}` | chaîne M | — | **cassé depuis R10** (l. 4, 7, 11) | — |
+| `_normtest.py` | médiane Γ avec M brut vs M/nk (`compute_T`) | pré-2026-09-05 | — | **cassé** (chemin l. 11 ; mélange Ha/eV l. 11-12) → à classer obsolète | — |
+
+### 4.3 Chaîne T (production, ch. 4)
+
+| Script | Rôle | Campagne | Utilisé par | Statut | Mémoire |
+|---|---|---|---|---|---|
+| `compute_spectral_wannier.py` | niveau 1 : `defect_mwr` → V_loc → `scattering_rate_fast`, carte (R_cut, grille, η), porte de jauge | chaîne T (gel 2026-09-05), R6, R10 | `submit_spectral_wannier{,_dense}.sh`, `submit_r10.sh` | actif | ch. 4 (fig_convergence, fig_rcut, fig_plateau, fig_level2) |
+| `resonance_metrics.py` | Γ_T, Γ_Born, Γ/ρ₀, δρ, ρ_dis, T̄_ππ(K), `--shift-L-meV` (C14) | chaîne T, R6, R10 (D10) | `submit_post.sh resonance|c14`, `submit_r10.sh` | actif (`np.trapz` déprécié l. 62) | ch. 4 (fig_spectral*), ch. 5 (fig_epw_vs_ed) |
+| `resonance_criteria.py` | det/λ par bloc (full, π, σ), Friedel/Lloyd, Γ à c = 0,1 % | chaîne T, R6, R10 | `submit_post.sh resonance|criteria`, r10 | actif ; exige `resonance_<S>.npz` avant | ch. 4 (fig_spectral*) |
+| `rcut_resigma.py` | Σ_nk complexe par R_cut, `--npe`, `--nk-int` | chaîne T, P13, R6, R10 | `submit_rcut_resigma.sh`, `submit_nkint_check.sh`, r9, r10 | actif | ch. 4 (C9-C11, tab:rcut_M via csv) |
+| `nkint_check_post.py` | tableaux N_k^int (médianes, E_res, Γ_T(E_D)) | P13, R6, R10 | `submit_post.sh figures`, `submit_r10.sh c1f` | actif ; l. 1-2 avant le shebang | ch. 4 (NOTES_TGAMMA §6) |
+| `m_rcut_convergence.py` | convergence de R_cut au niveau de M (images WS) | chaîne T, R6, R10 (b) | `submit_post.sh locality`, r9, r10 | actif ; csv **en ajout** (l. 62-66) | ch. 4 (tab:rcut_M) |
+| `mwr_locality_coarse_vs_dense.py` | sur-site p_z–p_z et décroissance ‖M_W(R,R₀)‖, grossier vs dense | chaîne T, R6, R10 (b) | `submit_post.sh locality`, r10 | actif | ch. 4 (fig_locality*) |
+| `level2_families.py` | table niveau 2 par famille 3m / non-3m | niveau 2, R10 (D6) | `submit_post.sh figures`, `submit_r10.sh`, r10 | actif | ch. 4 (tableau des familles) |
+| `summarize_level1_maps.py` | synthèse niveau 1 depuis les **logs** `specwd_*.out` | chaîne T | personne | obsolète (remplacé par `level1_summary.csv` ; lit les logs, contraire à la règle) | — |
+| `compute_spectral.py`, `compute_tmatrix.py`, `compute_convergence.py` | ancienne T-matrice de Bloch dense (`compute_T`, `compute_G0/G`) et sa convergence ; lisaient `M_ed_*_norm.npy` (supprimés) | pré-2026-09-05 | `submit_spectral.sh`, `submit_tmatrix.sh` | **obsolètes** (`SystemExit` l. 2 / garde l. 36) | — |
+| `_eta_scan.py` | sensibilité à η (`compute_T`) | pré-2026-09-05 | — | obsolète (`SystemExit` l. 7) | — |
+| `epw_ed_vs_ep.py` | Γ^ed(c)/Γ^ep(T) point par point | EPW/ch. 5, R6, R10 | `submit_post.sh figures`, `submit_epw_p2_post_mv.sh`, `submit_r10.sh` | actif ; l. 1-2 avant le shebang | ch. 5 |
+
+### 4.4 Figures et tables
+
+| Script | Rôle | Figures produites (lues dans `results_dir` = M2_plateau) | Statut | Mémoire |
+|---|---|---|---|---|
+| `make_figures.py` | figures de travail ch. 4 (14) + `level{1,2}_summary.csv` | fig_rcut, fig_plateau, fig_level2 (specwd) ; fig_locality (mwr_locality) ; fig_spectral (resonance_9x9 + criteria) ; fig_M_map, fig_Ved_boundary, fig_M_scaling (M_analysis) ; fig_ks_reconstruction ; fig_Ved_map, fig_Ved_profile_mean, fig_Ved_radial, fig_Ved_zoom, fig_Ved_radial_masked (ved_analysis) | actif ; code mort l. 25 ; style par chemin relatif (cwd = racine) | ch. 4 (fig_level2, fig_convergence via memoire, fig_ks_reconstruction, fig_Ved_zoom inclus) |
+| `make_figures_memoire.py` | versions finales ch. 4 (6) | fig_convergence (specwd ×6), fig_locality_final, fig_spectral_final, fig_M_map_final, fig_M_scaling_final, fig_Ved (ved_analysis + C_N) | actif ; aucune garde d'existence ; docstring 6,5×7,2 vs code 6,5×6,0 | ch. 4 (5 incluses + fig_Ved) |
+| `make_figures_epw.py` | figures ch. 5 (8) | fig_epw_validation, fig_epw_gamma, fig_epw_vs_ed (+ resonance_9x9), fig_epw_g_control, fig_epw_phonselfen, fig_epw_decay, fig_epw_kohn_degauss, fig_epw_phonons (`results/epw/*`) | actif ; défauts `--prod-tag prod` et `phdos_24k24q` inexistants : sans les options de `submit_post.sh` l. 44-45, deux figures manquent et l'ancienne chaîne mv0.002 est tracée ; docstring « trois figures » | ch. 5 (7 incluses) + ch. 2 (fig_epw_phonons) |
+| `make_figures_em.py` | figure §2.5 | fig_em_coupling (`memoire/EM/{M4_sigma,EM3,EM2}`) | actif ; `ROOT` absolu (robuste) | §2.5 (pas encore incluse) |
+| `_palette.py` | palette fixe (NAVY #000080, …, `CMAP_SEQ/DIV`) | — | actif ; importé par 4 `make_figures*`, r4/r5/r8/r9/r10, EM2/EM3/B | toutes |
+| `_bands.py` | helpers de chemins de bandes | — | actif (`compare_bands_*`, r9) ; l. 16 : image de K (2/3, −1/3) n'est pas un point K (étiquettes seulement) | — |
+| `_paths.py` | chemins locaux `data/graphene` (`EDI_DATA`, nommage `defect_unit_cell_<N>.save`) | — | actif (6 scripts de validation) | — |
+
+### 4.5 EPW (ch. 5)
+
+| Script | Rôle | Campagne | Utilisé par | Statut |
+|---|---|---|---|---|
+| `epw_pp_save.py` | équivalent pp.py : dvscf/dyn/phsave → `save/` | EPW P0/P1 | manuel | figé ; `_ph0` supprimé, non rejouable ; `save/` irremplaçable |
+| `epw_extract_gkk.py` | découpe prtgkk d'`epw.out` | P1 | `submit_epw_p1_post.sh` | figé |
+| `epw_validate.py` | bandes, phonons, décroissance, |g| DFPT vs EPW (fsthick) → `validation_<tag>.npz` | P1, P18 | `submit_epw_p1_post.sh` ; lu par `make_figures_epw`, `epw_d2_extract` | figé ; maille en dur l. 29 |
+| `epw_selfen_post.py` | elecselfen → Γ^ep = 2 Im Σ, médianes → `selfen_<tag>_T<T>.npz` | P2/P4 | `submit_epw_p2_post_mv.sh` | figé |
+| `epw_phself_post.py` | phonselfen → ω, γ, λ → `phself_<tag>.npz` | P6/P7 | idem | figé ; `E_D = −4.2389` en dur l. 34 |
+| `epw_d2_extract.py` | ⟨D²_Γ⟩, ⟨D²_K⟩ par trois routes → `d2_extract_<tag>.npz` | P7 | idem | figé ; chemin cluster absolu l. 28 ; maille en dur l. 35 |
+| `epw_ring_check.py` | convention gamma de EPW sur anneaux → `ring_check_<tag>.npz` | P11 | idem | figé ; chemin absolu l. 14 |
+| `epw_dfpt_path_freq.py` | fréquences ph.x sur Γ–K–M–Γ → `dfpt_path_freq_<tag>.npz` | P18 | `make_figures_epw` | figé |
+| `epw_phdos_extract.py` | DOS de phonons matdyn → `phdos_<tag>.npz` | P18 | `make_figures_epw` | figé |
+
+### 4.6 Validation Wannier et tests autonomes (PASS/FAIL)
+
+| Script | Rôle | Données | Exécutable en local | Statut |
+|---|---|---|---|---|
+| `test_ks_reconstruction.py` | A : H = T + V_loc + V^NL = diag(ε) ; B : défaut nul ⇒ M = 0 ; C : V_p restreint | `_paths` 5×5 (présent) | oui | actif ; fournit `sc_pot_on_uc_grid` et `reconstruct_ks_hamiltonian` à `ks_reconstruction_all`, `run_test_A_batch`, `r6_kernel_check` |
+| `test_wannier.py` | 5 tests d'interpolation Wannier (parseurs, aller-retour FT, spectre, grille fine, M réel) | 11×11 locale ; `hr.dat` et `M_ed.npy` absents → sous-tests ignorés | oui | actif ; docstring « 5×5 » périmée |
+| `test_zero_pad_dense.py` | exactitude de `zero_pad_potential` ; non-régression dense vs `compute_ML_G` | test 1 sans données ; test 2 5×5 | oui | actif |
+| `test_pad_vs_full_supercell.py` | M^L zero-padded ×p vs super-cellule p fois plus grande | paires 6×6 et 12×12 | non | figé |
+| `test_local_tmatrix.py` | test d'or synthétique (t local sur site = `compute_T` dense × N_k) | aucune | oui | actif |
+| `test_local_rcut.py` | R_cut synthétique, `extract_V_loc`, `mwr_locality` ; importe `random_H` | aucune (lancer `python scripts/…`) | oui | actif |
+| `test_local_green_batch.py` | `local_green_batch` = `local_green` ; `scattering_rate_fast` = `scattering_rate` (C8) | `wannier/27x27` (versionné), cwd = racine | oui | actif ; **pas de code de sortie** |
+| `test_local_tmatrix_real.py` | test d'or réel bloquant (C6) sur M grossier ou dense | scratch + M | non | **cassé depuis R10** (l. 18, 27, 29 : `results_dir`) ; **aucun `SystemExit` avec code** : FAIL sort en 0 (l. 63) ; scratch en dur l. 26, table `PF` dupliquée l. 23 |
+| `validate_wannier_bands.py` | Wannier vs DFT sur la grille MP grossière (avec/sans ndegen), 2 PNG dans le cwd | 11×11 locale | oui | actif ; docstring périmée ; `get_fermi` sous `hasattr` |
+| `compare_bands_qe.py` | H(R) interpolé vs `bands.dat` sur un chemin → `results/compare_bands_qe.png` | 11×11 locale | oui | figé |
+| `compare_bands_w90_qe.py` | `wannier_band.dat` vs `bands.dat` → `results/compare_bands_w90_qe.png` | 11×11 locale | oui | figé |
+| `run_test_A_batch.py` | test A sur les 8 mailles → `results/test_A/` | nommage cluster | non | figé (répertoire `test_A` inexistant ; `results/test_recon` orphelin) |
+
+### 4.7 Lanceurs SLURM (`submit_*.sh`, 14)
+
+Traits communs : `PROJ=${GRAPHENE_RAMAN:-git rev-parse}`, `PYTHONPATH=$PROJ/src`, `RES=results_dir(cfg)`
+(= M2_plateau depuis R10), `#SBATCH --output` sur le littéral `results/M2/logs/` (12 lanceurs). Aucun chemin
+`ab-initio-defects` ni `results/M/` dans les options SBATCH.
+
+| Lanceur | Lance | Statut |
 |---|---|---|
-| scratch `qe_tmp/defect_{N}_{p,d}/*.save` | 43,2 G | SCF supercellules 5×5…12×12 (voir §0) |
-| scratch `qe_tmp/defect_uc_dense_D/*.save` | 11,0 G | NSCF denses nbnd=20, D = 24/25/27/28/32 |
-| scratch `qe_tmp/defect_unit_cell_N/*.save` | ≈ 2,3 G | mailles unitaires grossières (nb faible mais chaîne grossière + tests) |
-| `results/M/M_{,L_,NL_}dense_{5,6,7,8,9,12}x…npy` (nb20) | 58 G | matrices M denses de production (Hartree, sidecars .json) ; 8×8 = 4 × 6,25 G |
-| `results/M/M_ed_*.npy`, `M_L_*`, `M_NL_*` (grossières) | 0,5 G | M grossières (compute_M.py ; recalcul minutes à ~1 h selon N) |
-| `graphene/qe/epw/24k-24q/phonons/save/` + `graphene.dyn*` | 0,97 G | DFPT 24×24 q : 61 dvscf + dyn (`epw_pp_save.py`) |
-| `graphene/qe/epw/24k-24q/epw1/` : `epwdata.fmt`, `graphene.epmatwp` (0,81 G), `wigner/vmedata/dmedata/crystal.fmt`, `.chk/.mmn/.ukk`, `epw1.out` | ≈ 1,1 G | produits de P1 ; les runs epw2/epw6 y pointent par liens relatifs `../epw1/*.fmt` |
-| `graphene/qe/epw/24k-24q/epw1/graphene.epb{1..16}` | 30,4 G | matrice e-ph Bloch (intermédiaire ; regénérable en relançant epw1 depuis `save/`, plusieurs heures) |
-| `graphene/qe/epw/24k-24q/dfpt_g_{G,K}/` : `ph.out` (prt), dvscf (0,48 G), dyn xml, `nscf.out` | ≈ 2,3 G ×2 | vérification D² DFPT (§5.4) — **hors** les 66,3 G de wfc de chaque dir |
-| `graphene/qe/epw/24k-24q/epw2_selfen_*`, `epw6_phself_*`, `epw_g_{G,K,ring}`, `bands/` (sorties) | ≈ 0,1 G | sorties EPW (elecselfen 240², phonselfen 1200², prtgkk) — petites mais des heures |
-| `graphene/qe/defects/**` : `scf.in/out`, `nscf.in/out`, `Vks_*` (24 fichiers, 3,6 G), `wannier.*` (chk, mmn, amn, tb.dat, hr.dat) | ≈ 15 G | provenance + potentiels pp.x + Wannier ; les `pp.out` (184 M ×16 ≈ 3 G) sont le stdout de pp.x (reproductibles depuis les .save) |
-| `graphene/qe/` racine : `graphene.dyn*`, `.ifc`, `.modes`, `.freq`, `.dos`, `bands.dat` | ≈ 40 M | phonons/bandes du graphène pristine (janv./mai 2026) |
-| `ab-initio-defects/wannier/*` | 60 M | tb.dat, hr.dat, chk par grille (5 non suivis : `24x24`, `*_nb16`) |
-| `results/epw/*.npz`, `results/M/specwd_*_prod.npz`, `resonance_*.npz`, csv | < 5 M | commités (produits de production) |
-| `graphene/qe/epw/16k-8q/` : `epw_g_{G,K}` (1,3 G ×2), `dfpt_g_*/ph.out+dvscf`, `validation_16k8q` | ≈ 5 G | grille de validation (results/epw/validation_16k8q.npz) — **hors** les 145 G de wfc |
-
-### 3b. REPRODUCTIBLE en < 1 h par un script du dépôt
-
-| Emplacement | Taille | Script régénérateur |
-|---|---|---|
-| `results/M/M_dense_*_norm.npy` (6 fichiers nb20 + 4 nb16) | 19,4 G + 9,9 G | `scripts/migrate_M_norm.py` (copie renormalisée `supercell` de `M_dense_*`) |
-| `results/M/M_ed_*_norm.npy` | 0,25 G | `scripts/migrate_M_norm.py` |
-| `results/M/specwd_*_prod.npz` | | `scripts/compute_spectral_wannier.py` via `submit_spectral_wannier_dense.sh` (~1 h pour R_cut 3, cf. mémoire) |
-| `results/M/resonance_*.npz`, `resonance_criteria_*.npz` | | `resonance_metrics.py`, `resonance_criteria.py` |
-| `results/M/M_analysis.npz`, `ved_analysis.npz`, `mwr_locality.npz`, `ks_reconstruction.npz` | | `analyze_M.py`, `analyze_Ved.py`, `mwr_locality_coarse_vs_dense.py`, `ks_reconstruction_all.py` |
-| `results/M/level1_summary.csv`, `level2_*.csv`, `lnl_frobenius.csv`, `sampling_table.csv`, `m_rcut_*.csv`, `convergence.npz/png` | | `summarize_level1_maps.py`, `level2_families.py`, `lnl_frobenius_all.py`, `sampling_table.py`, `m_rcut_convergence.py`, `compute_convergence.py` |
-| `results/M/dos_*.npz/png`, `gamma_*.npz/png` | | `compute_tmatrix.py`, `compute_spectral.py` |
-| `results/M/resigma_9x9_*.npz` | | `rcut_resigma.py` (`submit_rcut_resigma.sh`) |
-| `results/M/*_coarsecheck.npy`, `_ML_7x7_ref_b4.npy`, `_test_mnl/` | 0,1 G | `check_ML_coarse_kernel.py`, `validate_ML_grid_7x7.py`, `_test_mnl_mpi.sh` |
-| `results/epw/*.npz` | 2,3 M | `epw_selfen_post.py`, `epw_phself_post.py`, `epw_validate.py`, `epw_d2_extract.py`, `epw_ring_check.py` |
-| `results/test_A/` | 0,3 M | `run_test_A_batch.py` (`submit_test_A.sh`) |
-| `figures/` | 15 M | `make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py` |
-| `ab-initio-defects/data/` (liens) | — | `scripts/link_data.sh NxN` |
-| `graphene/qe/defects/**/pp.out` | ≈ 3 G | pp.x (`submit.pp`) — nécessite les `.save` du scratch |
-| `graphene/qe/epw/24k-24q/phonons/save/` | 0,97 G | `epw_pp_save.py` à partir de `phonons/_ph0` — **mais `_ph0` a été supprimé le 2026-09-10** : `save/` est donc irremplaçable (classé 3a) |
-| scratch `qe_tmp/graphene_scf`, `qe_conv/*` | 49 G | `graphene/qe/submit.scf`, `graphene/qe/convergence/*/submit.*`, `phonons.sh` (résultats déjà dans le projet) |
-
-### 3c. JETABLE (candidats — rien n'a été supprimé)
-
-| Emplacement | Taille | Pourquoi |
-|---|---|---|
-| `graphene/qe/epw/36k-30q/phonons/_ph0` | 579,6 G (wfc) | grille test avril 2026, jamais accédée depuis 2026-05-05 ; dvscf 1,4 G et dyn à part |
-| `graphene/qe/epw/30k-24q/phonons/_ph0` | 262,4 G (wfc) | idem |
-| `graphene/qe/epw/16k-8q/dfpt_g_{G,K}/` wfc | 144,7 G | wfc des runs prt ; garder `ph.out`, dvscf, dyn, `epw_g_*` (≈ 5 G) |
-| `graphene/qe/epw/24k-12q`, `16k-16q`, `16k-12q`, `12k-12q` (`phonons/_ph0`) | 45 + 35 + 20 + 12 = 112 G | grilles test avril (non arbitrées, cf. NOTES_EPW) |
-| `graphene/qe/epw/24k-24q/dfpt_g_{G,K}/` wfc + `_ph0` wfc | 66,3 G ×2 | fonctions d'onde des runs prt terminés (garder les sorties, ≈ 2,3 G ×2) |
-| `graphene/qe/epw/24k-24q/epw1/*.wfc*`, `graphene.save/wfc*.hdf5` | 5,3 + 2,7 G | wfc NSCF de epw1 (regénérables ; les .epb et .fmt suffisent à epw2/epw6) |
-| `graphene/abinit/pristine/` | 403,1 G | ère ABINIT (nov. 2025 – févr. 2026), méthode abandonnée ; 375 G de `graphene_w90o_DS4_WFK.nc` dont 212 G de doublons exacts (§5) |
-| `graphene/abinit/defective/` | 17,6 G | idem ; `10x10/defect_not_relaxed/test{,/test2}` dupliqués |
-| `ab-initio-defects/jobs/` | 27,9 G | wfk/pot ABINIT déc. 2025 – févr. 2026 (`M_test.npy`, `wfk_*.nc`) ; ignoré par git |
-| `results/M/obsolete_grid_7x7/` | 15,0 G | déjà étiqueté obsolète ; comparé par `_old_vs_new_7x7.py` |
-| `results/M/*_nb16.npy` (16 fichiers) | 39,5 G | artefacts nbnd=16 conservés pour trace ; `check_M_dense_nb20_vs_nb16.py` les lit |
-| `results/M/M_dense_*_norm.npy` | 29,3 G | copies renormalisées, regénérables (3b) |
-| `graphene/qe/test/` | 31,5 G | `_ph0` d'un test ph.x 16×16 q (avril) + tutorial01 ; dvscf 0,46 G |
-| `abinit_assignment/` | 2,4 G | devoir de cours mai 2026 (WFK, DEN) |
-| `dft/` | 1,2 G | tutoriels nov. 2025 |
-| `codes/{qe,abinit,wannier90}` | 2,8 G | sources + `.git` (1,4 G) ; recompilables — **vérifier** que `codes/wannier90/libwannier90.a` n'est pas lié par un module utilisé |
-| `abinit_processing/venv/` | ~0,02 G | venv août 2025 ; **ne pas toucher `abinit_processing/pseudo/`** (pseudo_dir de ≥ 42 entrées QE) |
-| `ab-initio-defects/hamiltonian_reconstruction.png` (racine), `scripts/_test_mnl_mpi.sh` (non suivi), `.pytest_cache` | < 1 M | vrac |
-| scratch `qe_conv/` | 44,9 G | convergences mai 2026, résultats dans le projet |
-| scratch `.wfcN` en vrac (hors `.save`) dans `qe_tmp/defect_uc_dense_*`, `graphene_scf`, `defect_unit_cell_*` | 15,3 G | copies par processus, redondantes avec `.save/wfcN.hdf5` |
-| scratch `compmatphys/`, `jobs/`, `graphene/` | 0 | vides (oct. 2025 / févr. 2026) |
-| `/home/gregb26/.vscode-server` (info) | 5,2 G | cache VS Code (hors périmètre) |
-
-Total « jetable » projet ≈ 1 550 G ; scratch ≈ 60 G.
+| `submit_M.sh` | `compute_M.py ml → nl → combine` (tableau 5…12) → `$RES/M_*` | figé ; **écrirait les M dans M2_plateau** (l. 40-42) au lieu de `matrices_dir` |
+| `submit_M_dense.sh` | `compute_M_dense_stages.py` → `$RES/M_*dense_*` | figé ; même défaut (l. 25-33) |
+| `submit_golden_dense.sh` | `test_local_tmatrix_real.py --dense` puis `check_M_dense_vs_coarse.py $RES/M_ed… $RES/M_dense…` | **cassé depuis R10** (l. 25) ; `rc=$?` vaut 0 sur FAIL |
+| `submit_spectral_wannier_dense.sh` | `compute_spectral_wannier.py --dense` → `specwd_<S>_prod.npz` | actif (R10 C1 ×6) |
+| `submit_spectral_wannier.sh` | version grossière → `specw_<S>.npz` | obsolète (aucun `specw_*` conservé) |
+| `submit_rcut_resigma.sh`, `submit_nkint_check.sh` | `rcut_resigma.py` par R_cut / par N_k^int | actifs (R10 C1) |
+| `submit_lnl_frobenius.sh` | `lnl_frobenius_all.py` | actif |
+| `submit_post.sh` | tâches `locality`, `analyze`, `ksrec`, `resonance`, `criteria`, `c14`, `figures` | actif en partie ; périmé : `ksrec` copie `results/M/ved_analysis.npz` (v1, l. 31) ; `c14` `--shift-L-meV 25,-25` (R6 ; R10 = ±9,05, l. 36) → relancer écraserait `resonance_9x9_shiftL.npz` ; `figures` sans `--outdir` |
+| `submit_test_A.sh` | `run_test_A_batch.py` | figé ; pas de `PYTHONPATH` |
+| `submit_spectral.sh`, `submit_tmatrix.sh` | `compute_spectral.py`, `compute_tmatrix.py` | **obsolètes** (scripts désactivés) |
+| `submit_epw_p1_post.sh` | `epw_extract_gkk.py`, `epw_validate.py` | figé ; chemin EPW absolu l. 14 ; pas de `PYTHONPATH` |
+| `submit_epw_p2_post_mv.sh` | `epw_selfen_post` ×3, `epw_phself_post` ×2, `epw_d2_extract`, `epw_ring_check`, `epw_ed_vs_ep` | figé ; chemin absolu l. 16 ; **pas de `PYTHONPATH`** alors que 4 scripts importent le paquet (risque `ImportError` sur rorqual sans install éditable) |
+| `_test_mnl_mpi.sh` | diagnostic M^NL MPI vs série | figé (clos) |
 
 ---
 
-## 4. Chemins codés en dur (carte de ce qu'un déplacement casserait)
+## 5. `article/` (720 fichiers suivis) — campagnes R
 
-### 4.1 Racines absolues
+Toutes les copies `article/` sont des copies versionnées de répertoires de travail rorqual : les pilotes calculent
+`PROJ` et `R4DIR`/`R5DIR` à partir de l'arborescence `graphene/qe/defects/…` et **ne s'exécutent pas sur place en
+local** (sauf `GRAPHENE_RAMAN` + arborescence rorqual). Aucun import du paquet cassé. `ase` et `spglib` (R1, R2) ne
+sont pas dans le venv local.
 
-| Racine | Où | Effet d'un déplacement |
+| Campagne | Répertoire | But | Statut déclaré | Pilote(s) et imports notables | Figures / tables → pour | Statut réel |
+|---|---|---|---|---|---|---|
+| R1 (+R1b) | `R1_vacancy_relaxed` | relaxation 9×9 lacune nspin 1/2 ; scf 3×3×1 de contrôle | non déclaré (prépa article), miroité, 2026-09-22 | `make_inputs.py`, `analyze_relax.py` (ase, spglib), `k3x3/*` ; aucun import du paquet | tables des rapports → article | figé (géométrie relaxée ; sert à R4 J0, plan C5) |
+| R2 | `R2_size_series` | relaxations 5×5…12×12 | PRODUCTION 2026-09-24 | `make_inputs_series.py` (lit sidecars `results/M/*.json` rorqual l. 15), `analyze_relax_series.py` | tables → article | figé (source du transplant R7c) |
+| R4 | `R4_quasi_lie` | états π/σ de la lacune 9×9 en DFT vs chaîne M → Wannier → T | TEST 2026-09-25 | `r4_driver.py` (prep, d6, d1, d5, r, d4, d3, g0, tables, figs) : qe_io, matrix_io, wannier_provenance, wannier_io, qe_gamma_io, projwfc_io, pseudo_io, wannier_interpolation, supercell_fold, local_tmatrix, pole_criterion, tb_models, alignment, non_local ; `_palette` | `fig/d1_states, d3_alpha_*, d4_ladder, d5_boundary, d6_*` → article ; `sections/tables.md` | **obsolète pour M** (v1 ; erratum R5 ; D3/D4 refaits par R6 étape 2) ; rejeu incohérent : `RES = results/M` (l. 42) mais `dense_paths` → M2 (l. 109, 216) |
+| R5 | `R5_base_vs_M` | écart H_p+M vs QE : base ou M ? ; nscf 128 bandes | TEST 2026-09-25 | `r5_driver.py` (**importe `r4_driver`**, 29 noms), `r5_deltav_pw.py` (promu en `defects/deltav_pw.py`), `r5_sc_projection.py` (promu en `wavefunctions/sc_projection.py`), `r5_basis_diagnostics.py`, `r5_alignment_ext.py` | `fig/a_delta, a_ladder_corrected, size, delta_vs_n, ladder_bands` → article ; tables A/B/C | figé ; A.2 (facteur 81) à l'origine de R6 ; modules `r5_*` restent importés par R6, R7, R9 ; rejeu l. 171 mélange v1/v2 |
+| R6 | `R6_production_corrigee` | M2 = N_cells·M^L + M^NL, porte A.2, D4, régénération ch. 4 | PRODUCTION 2026-09-25→27 | `phase0/*.diff` (appliqués) ; `etape1/r6_kernel_check.py` (importe `scripts/test_ks_reconstruction`), `r6_states_identity.py` (importe `r5_driver`) ; `etape2/r6_d4.py` (importe `r5_driver`, lit `results/M2` l. 40) ; `etape3/r6_compare_v1_v2.py`, `r6_level1_gate.py`, `r6_m_rcut_resigma.py`, `r6_tests_gate_row.py`, `refactor_3_0.py` (patcheur appliqué), `runbook_3.sh`, `submit_r6_final.sh`, `install_figures_R6.sh` | `etape2/fig` (validation) ; `etape3/figures_v2` (28 fig + `_mv0.002`) et `figures_fix` → mémoire ch. 4/5 **remplacées par R10** ; `table_v1_v2.md`, `level1_gate.md`, `gate_table.md` ; `csv_v2` = `results/M2/*.csv` | figé ; **`etape3/r6_compare_v1_v2.py:14` TypeError latent** (`results_dir_frozen` est une liste) ; les 3 autres scripts etape3 visent M2_plateau (dérive de sens) |
+| R7 (+R7c) | `R7_tailles_3m` | scf 15×15…27×27 famille 3m ; R7c relaxations nspin1 | PRODUCTION 2026-09-25/26 | `r7_driver.py` (importe `r4_driver`, `r5_driver`, `r5_alignment_ext`), `make_inputs_r7{,_relax}.py`, `phase0_inventory.py` | `fig/size_3m, localized_3m` (+ `_d1_8pts`, `_d1_reg`) → article ; `d1*/D1_tables.md` | figé (D1 à 8 points = référence R9 C, R10 A.2) ; **R7c inachevé dans la copie** : `relax.out` pour 15 et 18 seulement |
+| R8 | `R8_kaasbjerg` | Fig. 13/14 de Kaasbjerg (DOS, A_k) avec M2 et t local | TEST 2026-09-27→29 | `r8_driver.py` (extract, prep, g0, gate, dos, spec, sens, fig, sigeff, dirac) : `disorder_average.*`, `pole_criterion.{local_t_cache, sign_changes}`, `lattice.build_k_path`, chaîne T ; lit `results/M2/{MD5SUMS, resonance_9x9}` explicitement (l. 575, 897), C_N de `R9/a/a1_results.json` ; sorties dans `out/` | `fig/dos_c, spectral_GKM, sensibilites, superposition, 7a_controle` (+ `_rho0_300`) → **mémoire ch. 4** (étapes 1-3, 5, 7) ; `sigma_K` → article | figé (base pré-R10, sans WS ; même C_N plateau) ; seul utilisateur de `disorder_average` |
+| R9 | `R9_controles` | A : C_N ; B : E_res vs N_k^int ; C : chaîne repliée vs R7 ; D : Kaasbjerg ; clôture plateau ; audit image minimale | TEST, clos 2026-09-29 | `r9_driver.py` (17 sous-commandes) : chaîne T complète, `alignment.atom_sphere_shifts`, `local_R.*`, `supercell_fold`, `cluster_ldos` ; importe `scripts/compute_M_dense_stages.paths`, `_bands`, `_palette`, `r5_driver` ; `cloture/r9_driver_propose.py` + `submit_r9_propose.sh` (proposition remplacée, 525 lignes de diff) | `fig/offset_profiles, resonance_vs_nkint{,_R9,_plateau}, rcut_aligned, folded_vs_R7, kaasbjerg_fig3_map` → contrôles ch. 4 (non installées) ; tables A1/A3/B/C/D, `cloture/synthese.md`, `audit_image_minimale.md` | figé ; plateau promu par R10 ; **rejeu cassé** : `r9_driver.py:855, 903` lisent `M_ed_<S>.npy` dans `results_dir` (= M2_plateau) ; l. 607/724/973/995 changent de sens ; `cloture/*_propose*` obsolètes |
+| R10 | `R10_plateau` | base unique du ch. 4 : A C_N plateau (13 tailles), B E_res/familles, C rejeu de la production (`defect_mwr`, C_N config, images WS) | TEST (sorties C = production ch. 4), **CLOS 2026-09-30** | `r10_driver.py` (a0…c6) : `config.{alignment_C, results_dir, dense_paths}`, chaîne T (`defect_mwr`, `scattering_rate_fast`, `ws_images`, `ws_phase`), `alignment.*` ; aucun import de r4–r9 (lit leurs JSON) ; `submit_r10.sh` (c1 = lanceurs de `scripts/`, p_ved, p_c14, c1f) ; lit `results/M2` (`M2_DIR`), écrit `results/M2_plateau` | `fig/fig_*` (28 PNG **identiques au bit à `figures/`**) → mémoire ch. 4 + ch. 5 ; contrôles `offset_profiles_13, levels_vs_invN, eres_vs_grid, kaasbjerg_plateau_ws, M_map_brut_aligne, dV_z_profiles`, `fig/avant_apres/` ; tables A1-3, B, C0/C2/C3/C6, `c/table_v2_plateau.md`, `manifeste_R10.md` | **actif** (définit la base vivante) ; README l. 6 et rapport l. 628/658 citent le hash `23ee3bb` **réécrit** (devenu `c2bc733`) ; README se termine sur « - Lecture : » vide (comme R9) |
+| C | `C_optique_lacunes/PLAN.md` | σ(ω) Kubo-Greenwood avec Σ = c·T̄ (puis SCTMA, spin) ; réutilise la chaîne `r8_driver` | plan, 2026-09-29 (perspective C d'EM.md) | — | → article (futur) | plan ; désigne `results/M2/resonance_*` (périmé) ; dernière ligne « ImportError » périmée |
+
+Dépendances entre pilotes (à garder à l'esprit avant tout déplacement) : `r5_driver` ← `r4_driver` ;
+`r6_states_identity`, `r6_d4`, `r7_driver`, `r9_driver` ← `r5_driver` (et `r5_sc_projection`, `r5_alignment_ext`) ;
+`r6_kernel_check`, `ks_reconstruction_all`, `run_test_A_batch` ← `scripts/test_ks_reconstruction` ; `r9_driver` ←
+`scripts/compute_M_dense_stages`, `scripts/_bands` ; r4/r5/r8/r9/r10, EM2/EM3/B ← `scripts/_palette`.
+
+---
+
+## 6. `memoire/` (156 fichiers suivis) — série EM (§2.5)
+
+`memoire/EM/EM.md` : plan M0–M4, fonctions F1–F19, décisions verrouillées, statut. Toutes les fonctions existent dans
+`electron_photon/` sauf **F16 `shift_home_cell`** (reportée, absente de src). M0–M4 faits (2026-09-28/29) ;
+perspectives A (kT, dopage) et B (σ complexe) faites, C → `article/C_optique_lacunes`, D ouverte ; P28 (texte du
+mémoire) à faire. `EM2_prompt.md` (prompt EM2), `notes_numpy_pytest.md` (pièges NumPy/pytest de M0).
+
+| Campagne | Répertoire | But | Statut déclaré | Scripts (imports `electron_photon`) | Produit → pour | Statut réel |
+|---|---|---|---|---|---|---|
+| EM1 | `EM1_tb` | r(R) et `_tb.dat` de la wannierisation 27×27 (`restart = plot`) | PRODUCTION 2026-09-25 | `em1_check.py` (aucun import du paquet) | données §2.5 (`wannier/27x27/wannier_tb.dat`) | figé ; README l. 14 et rapport l. 5 à corriger sur rorqual puis `cp -p` (mémoire persistante) |
+| EM2 | `EM2` | DFT directe (`bands.x lp`) et postw90 `kubo` vs M4 | PRODUCTION 2026-09-29 | `em2_kpoints.py`, `em2_A_compare.py`, `em2_A_figure.py`, `em2_B_ours.py` (`kgrid`, `kubo`), `em2_B_compare.py` (aucun), `em2_B_decompose.py`, `em2_B_figure.py` (importent `em2_B_compare`) ; `REPO` exige `PROJECTS` ou `GRAPHENE_RAMAN` | `em2_A_anneaux`, `em2_B_sigma` (validation §2.5) ; `em2_A.npz`, `em2_postw90_sigma.npz` | figé ; `__pycache__` local ignoré |
+| EM3 | `EM3` | données de la figure et tableau du §2.5 (anneau 2,33 eV, `transl_inv`) | PRODUCTION 2026-09-29 (local, < 1 s) | `make_em3_data.py` (importe `EM2/em2_B_compare`) | `em3_ring_2p33.npz`, `em2_postw90_sigma_ti.npz`, `em_table.{md,csv}` → `scripts/make_figures_em.py` → `fig_em_coupling` | actif |
+| M4_sigma | `M4_sigma` (+ `pilote/`) | σ(ω) trois variantes, carte K, statistiques d'anneaux | PRODUCTION 2026-09-29 (local, ~4 min) | `m4_prod.py`, `make_table.py` → `em_table.tex` ; `pilote/{sweep,check_equiv,convergence}.py` | `em_sigma_*_N1200_eta0.04.npz`, `em_map_K.npz`, `em_table.tex` → mémoire §2.5 | actif (fermé) ; `em_table.csv` diffère de celui d'EM3 |
+| B | `B_sigma_complex` | σ complexe (perspective B) | PRODUCTION 2026-09-29 (local, 3 min) | `b_prod.py`, `b_figure.py` (`_palette`) | `b_sigma_complex.{pdf,png,npz}` → hors mémoire | figé |
+
+Tests associés : `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,diagnostics,wannier_io}.py` (§7).
+`dev.ipynb` (racine, ignoré) : carnet brouillon EM (`from electron_photon import *`), jetable.
+
+---
+
+## 7. Les deux systèmes de tests
+
+| Système | Fichiers | Ce qu'ils couvrent | Données | Lancement |
+|---|---|---|---|---|
+| **pytest** `tests/` (12 fichiers, 199 tests, collecte 0,31 s sans erreur) | `conftest.py` (fixtures jouet + `wannier/27x27` avec sha256 `W90_SHA256`, valeurs de référence `W90_REF`), `test_diagnostics` (16), `test_kgrid` (6), `test_kubo` (27, un test ~13 s), `test_ring` (65), `test_tb_model` (23), `test_velocity_operator` (28), `test_wannier_io` (9) — **EM** ; `test_matrix_io_units` (5, `tmp_path`) — chaîne M ; `test_r8_functions` (8, `disorder_average`, `pole_criterion`, `tb_models`, résolvante directe 6×6), `test_r9_functions` (4, `alignment`, `Mwr_to_Mwk_pairs`, `cluster_ldos`, `ldos_from_eigenpairs`), `test_r10_functions` (8, `ws_images`, `ws_phase`, `defect_mwr`, `recenter_mwr`) — synthétiques | modules EM, `matrix_io`, fonctions R8/R9/R10 de la chaîne T ; **pas** `compute_ML_*`, `non_local`, `wannier_interpolate`, `scattering_rate(_fast)` | aucune donnée externe hors `wannier/27x27` (versionné) | `.venv/bin/python -m pytest tests` ; aucun `sys.path`, aucun import de `scripts/` ni des pilotes |
+| **scripts autonomes** `scripts/test_*.py` (8) + `validate_wannier_bands.py` | voir §4.6 | chaîne M (reconstruction KS, zero-padding, interpolation Wannier) et test d'or de la chaîne T | `.save` locaux 5×5/11×11 ou aucune ; 2 exigent le cluster | `.venv/bin/python scripts/test_X.py` ; PASS/FAIL, code 0/1 (sauf `test_local_green_batch` sans code, `test_local_tmatrix_real` toujours 0) |
+
+CLAUDE.md l. 44 (« no pytest ») contredit l. 50 et l'existence de `tests/` ; sa liste l. 139 omet
+`test_matrix_io_units`, `test_r8/r9/r10_functions`. `pyproject.toml` n'a pas de `[tool.pytest]` ; `pytest` et
+`mpi4py` sont absents de `requirements.txt`.
+
+---
+
+## 8. `figures/` (72 fichiers suivis) et usage par le mémoire
+
+35 noms × {pdf, png} + `hamiltonian_reconstruction.png` (sans producteur, `git mv` de l'étage 6) + `memoire.mplstyle`
+(chargé par les 4 `make_figures*`, `_palette`, r4/r5/r8/r9/r10, EM2/EM3/M4/B ; `figure.figsize` = 6,5 × 4,0, pas
+6,5 × 3,6 comme le dit CLAUDE.md l. 240).
+
+Producteurs : `make_figures_memoire.py` (6 `_final`/`fig_convergence`/`fig_Ved`), `make_figures.py` (14),
+`make_figures_epw.py` (8), `make_figures_em.py` (1). **Orphelines** (aucun script n'écrit ce nom) : les 6
+`fig_epw_*_mv0.002` (12 fichiers, anciennes figures degauss 0.002 renommées à la main en P18 ; seule
+`fig_epw_vs_ed_mv0.002` est citée, en v1) et `hamiltonian_reconstruction.png`.
+
+Le dépôt du mémoire (`~/LaTeX/master_thesis`, HEAD « terminer la conclusion ») inclut **20 figures** :
+
+| Figure (mémoire) | Chapitre | Producteur ici | md5 mémoire vs `figures/` (2026-09-30) |
+|---|---|---|---|
+| fig_ks_reconstruction, fig_epw_kohn_degauss, fig_epw_phonons (ch. 2), fig_epw_validation, fig_epw_gamma, fig_epw_g_control, fig_epw_phonselfen, fig_epw_decay, fig_Ved_zoom | défauts.tex / eph.tex / théorie.tex | `make_figures.py`, `make_figures_epw.py` | identiques |
+| fig_M_map_final, fig_M_scaling_final, fig_Ved, fig_convergence, fig_level2, fig_locality_final, fig_spectral_final, fig_epw_vs_ed | défauts.tex, eph.tex | `make_figures_memoire.py`, `make_figures.py`, `make_figures_epw.py` | **diffèrent** : le mémoire a la version R6 (installée par `install_figures_R6.sh`), `figures/` a la version R10 du 2026-09-30 → **à réinstaller dans le mémoire** |
+| KB_projectors_C.pdf, fig_ebands_edos, fig_electron_convergence (théorie.tex) | ch. 2 | **hors dépôt** : `~/Projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) ; `KB_projectors_C.pdf` probable sortie manuelle de `plotting/plot_psp_radial_proj.py` (copie dans `results/`) | — |
+
+Non incluses mais présentes dans `~/LaTeX/master_thesis/figures/` : `fig_band_interp`, `fig_phonons` (juin, hors
+dépôt), `fig_M_map`, `fig_M_scaling`, `fig_locality`, `fig_spectral`, `fig_plateau`, `fig_rcut`, `fig_Ved_*`,
+`fig_epw_*_mv0.002`. `fig_em_coupling` (§2.5) n'y est pas encore (le texte du §2.5 n'est pas écrit ; le mémoire dit
+encore que « l'évaluation numérique [du couplage électron-photon] est laissée hors du cadre », introduction.tex l. 72,
+raman.tex l. 297).
+
+Tables du mémoire (labels `tab:`) et leur source ici : `tests_M` ← `M_tests_summary.csv` ; `L_NL` ← `lnl_frobenius.csv` ;
+`rcut_M` ← `m_rcut_convergence.csv` ; `échantillonnage` ← `sampling_table.csv` ; `convergence_gamma`, `tests_T`,
+`param_T` ← `level1_summary.csv`, `level2_*.csv`, `nkint_check_9x9.csv`, NOTES_TGAMMA ; `param_M`, `param_dft`,
+`param_wannier`, `param_dfpt`, `param_epw` ← `production.json`, `wannier/*/wannier.wout`, NOTES_EPW ; `gamma_ep_conv`,
+`gamma_ph_conv`, `gamma_ph_prod`, `kohn_chaines` ← `results/epw/*.npz` (via `epw_*_post.py`) ; §2.5 (à venir) ←
+`memoire/EM/M4_sigma/em_table.tex`, `EM3/em_table.md`. Toutes sont saisies à la main dans le `.tex` (aucun `\input` de csv).
+
+---
+
+## 9. Fichiers de la racine, `config/`, `.claude/`
+
+| Fichier | Rôle | Statut | Points périmés (ligne) |
+|---|---|---|---|
+| `CLAUDE.md` (25,8 Ko) | guide Claude Code | partiellement périmé | l. 44 « no pytest » ; l. 59/63-65/217 `run.py`, `compute_M_cluster.py` ; l. 91-94 `use_ws_distance` sans la nuance R10 (`ws_images`) ; l. 97-143 carte des modules sans `config`, `matrix_io`, `projwfc_io`, `qe_gamma_io`, `wannier_provenance`, `alignment`, `deltav_pw`, `many_body/*`, `supercell_fold`, `sc_projection`, `electron_phonon`, `plotting` ; l. 131 `single_defect` « orphan » ; l. 139 tests incomplets ; l. 156 « no defective 12×12 » ; l. 157/203 `M_ed.npy` à la racine et « not covered by .gitignore » (faux : `*.npy` ignoré) ; l. 240 figsize ; l. 243 `results/M2` vivant ; l. 302 règle 4 manquante ; l. 314-328 tableau sans R2–R10 ni C ; l. 46 nom du dossier |
+| `README.md` (4,4 Ko, anglais) | vitrine GitHub | périmé | l. 18-19 M^L « in reciprocal space » (production = noyau réel) ; l. 24-25 « Born fails by 3–16 » (v1 ; v2 : médian 46,5) ; l. 52-59 layout sans `article/`, `memoire/`, avec `notebooks/` inexistant ; l. 56 `results/M` production ; l. 63-65 `data/` en liens (vrais fichiers en local) ; série EM absente |
+| `CLEANUP.md` (23,3 Ko) | plan et journal du ménage P13 (rorqual) | clos ; en-tête périmé | l. 6-8 « dry-run… rien supprimé » ; l. 185 « non poussés » ; reste : 9 répertoires vides scratch (l. 235-244), `graphene_scf.save` 1,95 Gio, `phonons/graphene.wfcN` ~0,9 Gio, étage `codes/` éventuel (l. 154-156, nom « étage 7 » réattribué à R1) |
+| `INVENTAIRE_2026-09-16.md` | ce fichier (ex-inventaire rorqual) | réécrit 2026-09-30 | — |
+| `NOTES_TGAMMA.md` (34,4 Ko) | chaîne t/Γ : étapes, paramètres, contrôles C1–C18, balayage N_k^int | périmé depuis R10 | état R6 (v2 « tel quel ») : pas de C_N plateau, pas d'images WS, pas de `defect_mwr`, pas de `results/M2_plateau` ni R7–R10 ; l. 6 `ab-initio-defects` ; `fichier:ligne` dérivés (ex. positivité `local_tmatrix.py:269-271` → l. 229/305) ; A_k/DOS de R8 absents ; pas de section « Ξ » ni « résumé » (les équivalents sont §0, §4, §7) |
+| `NOTES_EPW.md` (53,7 Ko) | état de la chaîne EPW P0–P18, note R6 | fond à jour ; §5-§6 périmés | l. 4 ancien nom ; l. 219-222 `_ph0` restants (supprimés) ; l. 222/228 « commits à pousser » (poussés) ; l. 226 point ouvert : quelle chaîne (0.002 ou 0.02) le chapitre cite |
+| `NOTES_EPW_REPERES.md` (4,9 Ko) | repères durables EPW | à jour sauf | l. 8-9 « production degauss 0.002 » (ambigu depuis P18, figures en mv0.02) ; l. 20 grilles restantes (étage 1 fait) |
+| `REECRITURE_HISTORIQUE_2026-09-29.md` (38,8 Ko) | compte rendu de la réécriture git **exécutée** (Co-Authored-By retirés, courriels, 238 commits, bundle nearline) | fait et effectif | reste (l. 17-20) : hash dans les sorties json/logs et le code gelé R6/R7/R9 ; `23ee3bb` de R10 non traduit |
+| `requirements.txt` | pip freeze de l'ère ABINIT (nov. 2025) | périmé | `abipy`, `netCDF4` (interdits par CLAUDE.md l. 206) ; `-e git+…/ab-initio-electron-defect-interaction` ; `numpy==1.26.4` vs 2.3.5 installé ; `ase`, `spglib` listés mais absents du venv ; `mpi4py`, `pytest` absents |
+| `pyproject.toml` | métadonnées minimales (0.1.0, src layout) | fonctionnel | aucune dépendance déclarée, pas de `[tool.pytest]` |
+| `.gitignore` | ignore `data/`, `*.npy`, `*.save/`, `.venv`, `cleanup/`, `dev.ipynb`, `results/*` sauf listes blanches (M, M2, M2_plateau : `specwd_*_prod`, `resonance_*`, `mwr_locality`, `M_analysis`, `ks_reconstruction`, `ved_analysis`, `*.csv` ; + `MD5SUMS_*`, `ed_vs_ep_*`, `README.md` pour M2/M2_plateau ; `results/epw/*.npz,*.csv`) ; `figures/` suivi en entier | à jour | `results/M/README.md` non couvert ; `notebooks/` non listé (CLAUDE.md l. 203) |
+| `LICENSE` (MIT 2026) | — | à jour | — |
+| `dev.ipynb` | brouillon EM, ignoré | jetable | — |
+| `.claude/settings.local.json` | 4 permissions Bash, `attribution` vide (pas de trailer co-auteur) | à jour | — |
+| `reports/Optique du graphène avec lacunes.md`, `research_notes/…/{ab_initio_methods,experiments,spin_vacancy,theory_models}.md` | revue bibliographique du 2026-09-29 (base du PLAN C) | à jour | — |
+
+Chevauchements : règles de campagne (CLAUDE.md l. 290-313 ↔ CLEANUP l. 12-23, 194, 199) ; conventions EPW écrites
+trois fois (CLAUDE.md l. 267-275, NOTES_EPW §3, NOTES_EPW_REPERES) ; conventions de figures (CLAUDE.md l. 224-247,
+NOTES_EPW l. 199, REPERES l. 11) ; R6 raconté quatre fois ; unités Ha→eV (NOTES_TGAMMA l. 53, CLAUDE.md l. 246-247,
+NOTES_EPW l. 201) ; familles N mod 3 (NOTES_TGAMMA C12, CLAUDE.md l. 249-255) ; description du projet (README ↔
+CLAUDE.md l. 5-22).
+
+---
+
+## 10. Ce qui sert au mémoire (à copier plus tard dans `~/LaTeX/master_thesis` ou son dépôt de scripts)
+
+**Chapitre 4 (M, matrice T, Γ)** — code : `src/electron_defect_interaction/{config,io/qe_io,io/matrix_io,
+io/pseudo_io,io/wannier_io,io/wannier_provenance,utils/fft_utils,utils/lattice,utils/planewaves,wavefunctions/wfk,
+wavefunctions/fold_wfk_to_sc,wannier/wannier_hamiltonian,wannier/wannier_interpolation,defects/local_R,
+defects/non_local,defects/alignment,defects/deltav_pw,wavefunctions/sc_projection,defects/many_body/local_tmatrix,
+defects/many_body/pole_criterion,defects/many_body/single_defect}.py` ; scripts de production `compute_M.py`,
+`compute_M_dense_stages.py`, `assemble_M2.py`, `gate_M_normalization.py`, `compute_spectral_wannier.py`,
+`resonance_metrics.py`, `resonance_criteria.py`, `rcut_resigma.py`, `nkint_check_post.py`, `m_rcut_convergence.py`,
+`mwr_locality_coarse_vs_dense.py`, `analyze_M.py`, `analyze_Ved.py`, `ks_reconstruction_all.py`, `sampling_table.py`,
+`lnl_frobenius_all.py`, `level2_families.py`, `finalize_wannier.py` ; figures `make_figures.py`, `make_figures_memoire.py`,
+`_palette.py`, `figures/memoire.mplstyle` ; tests `test_ks_reconstruction.py`, `test_zero_pad_dense.py`,
+`test_pad_vs_full_supercell.py`, `test_wannier.py`, `test_local_tmatrix{,_real}.py`, `test_local_rcut.py`,
+`test_local_green_batch.py`, `tests/test_{matrix_io_units,r9_functions,r10_functions}.py` ; lanceurs
+`submit_spectral_wannier_dense.sh`, `submit_rcut_resigma.sh`, `submit_nkint_check.sh`, `submit_lnl_frobenius.sh`,
+`submit_post.sh`, `submit_M.sh`, `submit_M_dense.sh`, `article/R10_plateau/submit_r10.sh` ; données `config/production.json`,
+`results/M2_plateau/*`, `wannier/{24,25,27,28,32}x*` (sans `_nb16`) ; pilotes `article/R10_plateau/r10_driver.py` (base
+vivante), `article/R8_kaasbjerg/r8_driver.py` + `defects/many_body/disorder_average.py` (DOS, A_k), R6 (provenance de v2).
+Documentation : NOTES_TGAMMA.md §0–§3, §6 (après mise à jour R10), CLAUDE.md l. 72-95 (conventions), l. 249-265
+(N mod 3, sous-réseaux), `article/R10_plateau/c/table_v2_plateau.md`, `R10_rapport.md`.
+
+**Chapitre 5 (EPW)** — `src/…/electron_phonon/{phself,selfen}.py` ; `scripts/epw_{pp_save,extract_gkk,validate,
+selfen_post,phself_post,d2_extract,ring_check,dfpt_path_freq,phdos_extract,ed_vs_ep}.py`, `make_figures_epw.py`,
+`submit_epw_p1_post.sh`, `submit_epw_p2_post_mv.sh` ; `results/epw/*.npz` ; NOTES_EPW.md §1c–§1g, §3, §4,
+NOTES_EPW_REPERES.md.
+
+**§2.5 (électron-photon)** — `src/…/electron_photon/*.py` ; `tests/test_{tb_model,kgrid,velocity_operator,ring,kubo,
+diagnostics,wannier_io}.py` + `conftest.py` ; `memoire/EM/{EM.md,EM1_tb,EM2,EM3,M4_sigma}` ; `scripts/make_figures_em.py` ;
+`wannier/27x27` ; `io/wannier_io.read_w90_tb`.
+
+Hors dépôt mais nécessaires au ch. 2 : `~/Projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`,
+`notebooks/{phonons,epw}.ipynb`) pour `fig_ebands_edos`, `fig_electron_convergence`, `fig_phonons`, `fig_band_interp`.
+
+---
+
+## 11. Cassé, obsolète, incohérent (liste exacte)
+
+**Cassé à l'exécution (chemins R10 : `results_dir` = M2_plateau sans matrices)** :
+`scripts/check_ML_coarse_kernel.py:5,8-9` · `check_M_dense_vs_coarse.py:8,15-17` · `check_onsite_and_NL.py:9,16-17,32-33,44` ·
+`check_M_dense_nb20_vs_nb16.py:3` (déjà non rejouable) · `_mcheck.py:4,7,11` · `_normtest.py:11` (+ mélange Ha/eV l. 11-12) ·
+`test_local_tmatrix_real.py:18,27,29` (+ FAIL sort en code 0, l. 63) · `validate_ML_grid_7x7.py:16` (+ argv l. 9, garde l. 15) ·
+`tag_vacancy_sublattice.py:12` (silencieux, 0 sidecar) · `submit_golden_dense.sh:25` ·
+`article/R9_controles/r9_driver.py:855,903` (rejeu) · `article/R6_production_corrigee/etape3/r6_compare_v1_v2.py:14`
+(TypeError : `results_dir_frozen` est une liste).
+Correction commune : `matrices_dir(cfg)` ou `dense_paths(cfg, S)["mfile"]` à la place de `results_dir(cfg)` pour les
+`M_*.npy`. **Écriraient les M au mauvais endroit** : `submit_M.sh:40-42`, `submit_M_dense.sh:25-33`.
+
+**Dérive de sens (lisent M2_plateau au lieu de M2 « tel quel »)** : `r6_level1_gate.py`, `r6_m_rcut_resigma.py`,
+`r6_tests_gate_row.py`, `r9_driver.py:607,724,973,995` ; rejeu R4/R5 mélange v1 (`RES = results/M`) et v2
+(`dense_paths` → M2) : `r4_driver.py:42,109,216-217`, `r5_driver.py:171`.
+
+**Obsolètes (désactivés ou non rejouables)** : `compute_spectral.py`, `compute_tmatrix.py`, `compute_convergence.py`,
+`_eta_scan.py`, `migrate_M_norm.py`, `_old_vs_new_7x7.py`, `check_M_dense_nb20_vs_nb16.py`,
+`check_M_dense_vs_coarse_bands.py` (orphelin), `summarize_level1_maps.py`, `submit_spectral.sh`, `submit_tmatrix.sh`,
+`submit_spectral_wannier.sh`, `article/R9_controles/cloture/{r9_driver_propose.py,submit_r9_propose.sh}`,
+`defects/local_G.py` (+ étiquetage v2 douteux via `--kernel G`), `io/pseudo_io.read_psp8`,
+`local_tmatrix.scattering_rate_from_wannier`, `utils/interpolation.py`, `plotting/`, `wannier/*_nb16`,
+`results/test_recon`, `results/M/M_ed.npy`, `results/epw/ed_vs_ep_*.npz` (v1), `figures/fig_epw_*_mv0.002.*`,
+`figures/hamiltonian_reconstruction.png`.
+
+**Incohérences documentaires** (§9) et **valeurs périmées dans les lanceurs** : `submit_post.sh:31` (v1), `:36` (±25 meV),
+`make_figures_epw.py` (défauts de tags), `finalize_wannier.py:85-90`, `link_data.sh:2`, docstrings de `test_wannier`,
+`validate_wannier_bands`, `matrix_io` (défaut `SUPERCELL`), `local_R.compute_ML_R` et `local_G.prep_reciprocal_inputs`
+(`subtract_mean=True` par défaut ≠ production), `scattering_rate_fast` (`ne_per_eta=4` ≠ config 8),
+`m_rcut_convergence.py` (csv en ajout), `Mwk_to_Mwr` (commentaire de forme l. 87). Lignes 1-2 avant le shebang :
+`compute_M`, `compute_convergence`, `compute_spectral`, `compute_tmatrix`, `epw_ed_vs_ep`, `migrate_M_norm`,
+`nkint_check_post`, `make_figures_epw`.
+
+**Chemins cluster codés en dur** (n'empêchent rien sur rorqual, bloquent en local) : `config.dense_paths` (scratch),
+`compute_M_dense_stages.py:24`, `check_M_dense_vs_coarse{,_bands}.py`, `check_onsite_and_NL.py`,
+`test_local_tmatrix_real.py:26`, `link_data.sh`, `epw_d2_extract.py:28`, `epw_ring_check.py:14`, `finalize_wannier.py:22`,
+`submit_epw_p{1,2}_post*.sh`, tous les pilotes `article/` (`PROJ`, `R4DIR`, `R5DIR`), `memoire/EM/EM2/*` (`PROJECTS`).
+Nommage local `defect_unit_cell_<N>.save` (`_paths.py`) ≠ cluster `defect_<N>.save` (`link_data.sh`, scripts de production).
+
+---
+
+## 12. Doublons
+
+| Sujet | Fichiers | Remarque |
 |---|---|---|
-| `/home/gregb26/links/scratch/qe_tmp/` | `src/electron_defect_interaction/config.py:22` (`dense_paths`, défaut), `scripts/link_data.sh`, `check_M_dense_vs_coarse{,_bands}.py`, `check_onsite_and_NL.py`, `test_local_tmatrix_real.py`, `compute_M_dense_stages.py`, 1 189 liens `data/**`, tous les `outdir` de `graphene/qe/defects/**/*.in` (16 supercellules, 5 denses, 12 mailles unitaires), `graphene/qe/{bands,nscf,dos}.in` (`qe_tmp/graphene_scf`) | casse la chaîne M dense et grossière, les tests réels, `data/` |
-| `/home/gregb26/links/scratch/qe_conv/` | `graphene/qe/convergence/**/*.in` (phonons, smearing ×72, kpoint, ecut) | seulement une relance des convergences |
-| `/home/gregb26/links/projects/rrg-cotemich-ac/gregb26/ab-initio-defects` | tous les `scripts/submit_*.sh` (12), `_test_mnl_mpi.sh`, `link_data.sh` | `cd` en tête des jobs SLURM |
-| `…/gregb26/graphene/qe/epw/24k-24q` | `epw_d2_extract.py`, `epw_ring_check.py` (`epw_g_ring`), `submit_epw_p1_post.sh` | post-traitement EPW |
-| `…/gregb26/graphene/qe/defects/unit_cell`, `…/ab-initio-defects/wannier` | `finalize_wannier.py` | import des Wannier |
-| `…/gregb26/graphene/qe/defects` | `link_data.sh` (`Vks_*`) | |
-| `…/gregb26/abinit_processing/pseudo` | `pseudo_dir` de 42 entrées `graphene/qe/epw/**/*.in` (scf, nscf, bands) + `graphene/qe/convergence/phonons/scf.in` (+ probablement `graphene/qe/defects/**`, non compté) | déplacer `abinit_processing/` casse toute relance QE |
-| `EDI_DATA` (env, défaut `data/graphene`) | `scripts/_paths.py` | |
+| Figures de travail vs finales | `make_figures.py` ↔ `make_figures_memoire.py` (helpers `lab`, `famlab`, `panel`, `save`, `load_map`, `bz_vertices`, `FAM3` recopiés ; fig_rcut+fig_plateau ↔ fig_convergence ; fig_locality ↔ `_final` ; fig_spectral ↔ `_final` ; fig_M_map/scaling ↔ `_final` ; fig_Ved_map+radial_masked ↔ fig_Ved) | `memoire` dépend de `make_figures` pour fig_Ved_zoom |
+| k communs dense/grossier | `check_M_dense_vs_coarse.py`, `check_M_dense_vs_coarse_bands.py`, `analyze_M.py:173-183` | un seul vivant (analyze_M) |
+| noyau dense p=1 vs grossier | `check_ML_coarse_kernel.py`, `analyze_M.py:198-205` | idem |
+| nbnd 16→20 | `check_M_dense_nb20_vs_nb16.py`, `analyze_M.py:185-196` | non rejouable |
+| rapport L/NL | `lnl_frobenius_all.py`, `_bz_ratio_LNL.py`, `analyze_M.py:116-128` (`mmap_M`, `wannier_V`, `pi_pair`, `box_dirichlet` recopiés) ; `check_onsite_and_NL.py` Q2 | |
+| sur-site p_z | `check_onsite_and_NL.py` Q1 ↔ `mwr_locality_coarse_vs_dense.py` | |
+| V_ed le long de a₁ et détection de la lacune | `analyze_M.py:132-147` ↔ `analyze_Ved.py` §2 ; argmax dmin recopié 3× alors que `alignment.vacancy_site` existe | |
+| assemblage de M | `compute_M.py combine`, `compute_M_dense_stages.py combine`, `assemble_M2.py` | trois voies |
+| bandes Wannier vs DFT | `validate_wannier_bands.py`, `compare_bands_qe.py`, `compare_bands_w90_qe.py`, `finalize_wannier.py` (erreur de bandes), `epw_validate.py` (bloc bandes) | |
+| tests de la matrice t | `test_local_tmatrix`, `test_local_rcut`, `test_local_tmatrix_real` (référence `compute_T × N_k` recopiée) | |
+| parseurs EPW | `read_plot` (d2_extract) ↔ `read_epw_plot` (validate) ; parseur prt ph.out (d2_extract) ↔ `read_dfpt_prt` (validate) ; prtgkk (ring_check ↔ extract_gkk) | |
+| Γ^ed vs Γ^ep | `epw_ed_vs_ep.py` ↔ `make_figures_epw.py` fig_epw_vs_ed | |
+| `HA2EV` | `config.py:5`, `matrix_io.py:26`, 8 scripts | |
+| tables de tailles (p, D) | `config["dense"]` ↔ `PFAC` (`compute_M_dense_stages:23`), `D` (`check_M_dense_vs_coarse:10`, `_bands:6`), `PF` (`check_onsite_and_NL:11`, `test_local_tmatrix_real:23`) | |
+| code promu de R5 | `article/R5_base_vs_M/r5_{deltav_pw,sc_projection}.py` ↔ `src/…/defects/deltav_pw.py`, `wavefunctions/sc_projection.py` (copies de campagne gardées, encore importées par R6) | |
+| données | `results/M/ved_analysis.npz` = `results/M2/ved_analysis.npz` ; `ks_reconstruction.npz` M2 = M2_plateau ; `results/M2/*.csv` = `R6/etape3/csv_v2/*.csv` ; 33 figures `figures/` = `R10_plateau/fig/` ou `R6/etape3/figures_v2/` ; `em_table.csv` M4 ≠ EM3 (contenus différents, même nom) | |
+| pilotes proposés vs finaux | `R9_controles/cloture/r9_driver_propose.py` ↔ `r9_driver.py` | |
 
-### 4.2 Chemins relatifs (depuis la racine du dépôt) par script
+---
 
-| Script | Chemins référencés |
+## 13. Proposition de réorganisation (à arbitrer étape par étape ; rien n'est fait)
+
+Principe : ne rien déplacer qui casse un import ou un lanceur gelé sans mettre à jour l'appelant dans le même
+commit ; les campagnes `article/` et `memoire/` restent des copies figées (leurs `sys.path` pointent vers `scripts/`
+et vers les répertoires rorqual) ; `figures/` reste la cible d'installation.
+
+### Étape A — `scripts/` en sous-dossiers (81 → 6 familles)
+
+| Sous-dossier | Contenu | Précautions |
+|---|---|---|
+| `scripts/m/` (chaîne M) | `compute_M.py`, `compute_M_dense_stages.py`, `assemble_M2.py`, `gate_M_normalization.py`, `tag_vacancy_sublattice.py`, `finalize_wannier.py`, `link_data.sh`, `_diag_mnl_mpi.py`, `_test_mnl_mpi.sh` | `r9_driver` importe `compute_M_dense_stages` par `sys.path` → mettre à jour ou laisser un stub ; lanceurs `submit_M*.sh`, `submit_r6_kernel.sh` |
+| `scripts/t/` (chaîne T) | `compute_spectral_wannier.py`, `resonance_metrics.py`, `resonance_criteria.py`, `rcut_resigma.py`, `nkint_check_post.py`, `m_rcut_convergence.py`, `mwr_locality_coarse_vs_dense.py`, `level2_families.py`, `analyze_M.py`, `analyze_Ved.py`, `ks_reconstruction_all.py`, `sampling_table.py`, `lnl_frobenius_all.py`, `epw_ed_vs_ep.py` | `submit_r10.sh`, `submit_post.sh`, `runbook_3.sh` codent `scripts/<nom>` ; `ks_reconstruction_all` importe `test_ks_reconstruction` |
+| `scripts/epw/` | les 9 `epw_*.py` (sauf `epw_ed_vs_ep`) | `submit_epw_p{1,2}_post*.sh` |
+| `scripts/fig/` | `make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `_bands.py` | `_palette` est importé par r4/r5/r8/r9/r10, EM2/EM3/B via `sys.path.insert(…, "scripts")` → soit un stub `scripts/_palette.py`, soit déplacer `_palette` dans `src/…/plotting/` (et `memoire.mplstyle` avec lui) |
+| `scripts/validation/` | `test_ks_reconstruction.py`, `test_wannier.py`, `test_zero_pad_dense.py`, `test_pad_vs_full_supercell.py`, `test_local_tmatrix.py`, `test_local_rcut.py`, `test_local_green_batch.py`, `test_local_tmatrix_real.py`, `validate_wannier_bands.py`, `compare_bands_qe.py`, `compare_bands_w90_qe.py`, `run_test_A_batch.py`, `_paths.py` | `test_local_rcut` importe `test_local_tmatrix` ; `r6_kernel_check` importe `test_ks_reconstruction` |
+| `scripts/slurm/` | les 14 `submit_*.sh` | `submit_r10.sh` (article) appelle `scripts/submit_*.sh` par chemin |
+| `scripts/_obsolete/` (ou suppression après arbitrage) | `compute_spectral.py`, `compute_tmatrix.py`, `compute_convergence.py`, `_eta_scan.py`, `_normtest.py`, `_mcheck.py`, `migrate_M_norm.py`, `_old_vs_new_7x7.py`, `check_M_dense_nb20_vs_nb16.py`, `check_M_dense_vs_coarse_bands.py`, `summarize_level1_maps.py`, `submit_spectral.sh`, `submit_tmatrix.sh`, `submit_spectral_wannier.sh`, `_bz_ratio_LNL.py` | cités par NOTES_TGAMMA, CLEANUP, rapports R6 : garder une ligne de renvoi |
+| à réparer avant de classer | `check_ML_coarse_kernel.py`, `check_M_dense_vs_coarse.py`, `check_onsite_and_NL.py`, `validate_ML_grid_7x7.py`, `test_local_tmatrix_real.py`, `tag_vacancy_sublattice.py`, `submit_golden_dense.sh`, `submit_M*.sh` (→ `matrices_dir`) ; ou décider que les trois premiers sont absorbés par `analyze_M` et vont en `_obsolete/` | correction d'une ligne chacun |
+
+Alternative plus légère : ne créer que `fig/`, `epw/`, `validation/`, `slurm/`, `_obsolete/` et laisser M + T à plat
+(les ~25 scripts de production que `submit_r10.sh` appelle).
+
+### Étape B — `.md` de la racine
+
+| Fichier | Proposition |
 |---|---|
-| `analyze_M.py` | `data/graphene`, `results/M/M_analysis.npz`, `M_dense_{N}[_nb16].npy`, `M_ed_{N}.npy`, `M_L_{N}.npy`, `M_L_dense_{N}_coarsecheck.npy`, `M_tests_summary.csv` |
-| `analyze_Ved.py` | `data/graphene`, `results/M/ved_analysis.npz` |
-| `check_M_dense_nb20_vs_nb16.py` | `results/M/M_dense_{N}[_nb16].npy` |
-| `check_M_dense_vs_coarse.py`, `_bands.py` | `data/graphene/unit_cell/qe/defect_{N}.save`, scratch `defect_uc_dense_{D}.save`, `results/M/M_L[_dense]_{N}.npy` |
-| `check_ML_coarse_kernel.py` | `results/M/M_L_{N}.npy`, `M_L_dense_{N}_coarsecheck.npy` |
-| `check_onsite_and_NL.py` | scratch dense `.save`, `results/M/M_{,L_,NL_}dense_{N}.npy`, `wannier/{D}x{D}` |
-| `compare_bands_qe.py`, `compare_bands_w90_qe.py` | `results/compare_bands_*.png` |
-| `compute_convergence.py` | `results/M/{prefix}_*x*.npz`, `convergence.npz/png` |
-| `compute_M_dense_stages.py` | `data/graphene/supercell/qe/defect_{N}_{p,d}.save[/Vks_{N}_{p,d}]`, `data/graphene/unit_cell/qe/defect_{N}.save[/C.upf]`, scratch `qe_tmp` |
-| `compute_M.py` | `results/M/M_ed_NxN.npy`, `M_L_NxN.npy`, `M_NL_NxN.npy` |
-| `compute_spectral.py` | `data/graphene/unit_cell/qe/defect_{N}.save`, `results/M/gamma_{N}.npz/png`, `M_ed_{N}_norm.npy` |
-| `compute_spectral_wannier.py` | `data/graphene/unit_cell/qe/defect_{N}.save`, `results/M/M_ed_{N}.npy` |
-| `compute_tmatrix.py` | idem + `results/M/dos_{N}.npz/png`, `M_ed_{N}_norm.npy` |
-| `epw_d2_extract.py` | abs. `24k-24q`, `results/epw/{d2_extract_24k24q,phself_path_1200_dg0.02,validation_24k24q}.npz` |
-| `epw_phself_post.py`, `epw_selfen_post.py`, `epw_validate.py` | `results/epw/{phself,selfen,validation}_*.npz` |
-| `epw_ring_check.py` | abs. `24k-24q/epw_g_ring`, `results/epw/ring_check_24k24q.npz` |
-| `_eta_scan.py`, `_mcheck.py`, `_normtest.py` | `data/graphene/unit_cell/qe/defect_{N}.save`, `results/M/M_ed_{N}[_norm].npy` |
-| `finalize_wannier.py` | abs. `ab-initio-defects/wannier`, abs. `graphene/qe/defects/unit_cell` |
-| `ks_reconstruction_all.py` | `data/graphene`, `results/M/ks_reconstruction.npz` |
-| `level2_families.py` | `results/M/{level2_families.csv,M_analysis.npz,mwr_locality.npz,specwd_{N}_prod.npz}` |
-| `link_data.sh` | abs. ROOT/PROJ/SCRATCH/GRAPHENE ; `data/graphene/{unit_cell,supercell}/qe/defect_*` |
-| `lnl_frobenius_all.py` | `results/M/lnl_frobenius.csv` |
-| `make_figures.py` | `figures/memoire.mplstyle`, `results/M/{ks_reconstruction.npz,level1_summary.csv,level2_summary.csv,M_analysis.npz,mwr_locality.npz,resonance_NxN.npz,specwd_*.npz,ved_analysis.npz}` |
-| `make_figures_memoire.py` | `figures/memoire.mplstyle`, `results/M/{M_analysis,mwr_locality,resonance_criteria_*,resonance_*,specwd_*_prod,ved_analysis}.npz` |
-| `make_figures_epw.py` | `figures/memoire.mplstyle`, `results/epw/{phself_*,selfen_*_T*,validation_24k24q}.npz`, `results/M/resonance_NxN.npz` |
-| `migrate_M_norm.py` | `results/M/M_ed_*`, `M_ed_{N}_norm.npy` |
-| `m_rcut_convergence.py` | `results/M/m_rcut_convergence.csv` |
-| `mwr_locality_coarse_vs_dense.py` | `data/graphene/unit_cell/qe/defect_{N}.save`, `results/M/M_ed_{N}.npy`, `mwr_locality.npz`, `wannier/{…}` |
-| `_old_vs_new_7x7.py` | `results/M/{,obsolete_grid_7x7/}M_{,L_}dense_7x7.npy` |
-| `_paths.py` | `data/graphene` (ou `$EDI_DATA`) |
-| `rcut_resigma.py` | `results/M/resigma_9x9_rc0123.npz` |
-| `resonance_criteria.py`, `resonance_metrics.py` | `results/M/resonance[_criteria]_{N}.npz` |
-| `run_test_A_batch.py` | `data/graphene/unit_cell/qe/defect_{N}.save`, `results/test_A` |
-| `sampling_table.py` | `data/graphene/supercell/qe/defect_{N}_{p,d}.save/data-file-schema.xml`, `results/M/{ks_reconstruction.npz,sampling_table.csv,ved_analysis.npz}` |
-| `submit_epw_p1_post.sh` | abs. dépôt, abs. `graphene/qe/epw/`, `results/epw/logs` |
-| `submit_golden_dense.sh`, `submit_M_dense.sh`, `submit_M.sh`, `submit_lnl_frobenius.sh`, `submit_rcut_resigma.sh`, `submit_spectral*.sh`, `submit_tmatrix.sh`, `submit_test_A.sh`, `_test_mnl_mpi.sh` | abs. dépôt ; `results/M/logs/`, `results/M/M_{dense,ed,L,NL}_*`, `specwd_*`, `resigma_*`, `wannier/`, `data/graphene/**`, `results/test_A/`, `results/M/_test_mnl/` |
-| `summarize_level1_maps.py` | `results/M/logs/specwd_{…}.out` |
-| `tag_vacancy_sublattice.py` | `data/graphene/supercell/qe/defect_{N}_{p,d}.save`, `results/M/M_*` (sidecars) |
-| `test_local_green_batch.py` | `wannier/NxN/wannier_tb.dat` |
-| `test_local_tmatrix_real.py` | `data/graphene/unit_cell/qe/defect_{N}.save`, scratch dense `.save`, `results/M/M_{dense,ed}_{N}.npy`, `wannier/{…}` |
-| `test_pad_vs_full_supercell.py`, `test_wannier.py` | `data/graphene/{supercell,unit_cell}/qe/…` |
-| `validate_ML_grid_7x7.py` | `data/graphene`, `results/M/M_L_{dense_NxN_coarsecheck,NxN}.npy`, `_ML_NxN_ref_b4.npy` |
+| `CLAUDE.md` | mettre à jour (§9) : commandes réelles, carte des modules complète (dont la chaîne T), `results_dir`/`matrices_dir`, tableau des campagnes R2–R10 + C, tests pytest ; retirer ce qui est dans les NOTES (conventions EPW, règles de ménage → renvoi) |
+| `README.md` | réécrire court : layout réel, v2/R10, série EM, `article/`, `memoire/` |
+| `NOTES_TGAMMA.md` | mettre à jour en R10 (C_N, WS, M2_plateau, `defect_mwr`, chiffres de `table_v2_plateau.md`), ajouter DOS/A_k (R8) ; §4/§5/§7 → journal ; puis c'est la source de tab:param_T / tab:tests_T |
+| `NOTES_EPW.md`, `NOTES_EPW_REPERES.md` | corriger §5-§6 et l. 8-9/20 ; trancher la chaîne citée (0.002 vs 0.02) ; fusionner REPERES dans NOTES_EPW §3 ou l'inverse (une seule copie des conventions) |
+| `CLEANUP.md`, `REECRITURE_HISTORIQUE_2026-09-29.md`, `INVENTAIRE_2026-09-16.md` | journaux d'administration : déplacer dans `admin/` (ou `docs/admin/`) avec un en-tête « clos le … » ; ce fichier devient `admin/CARTOGRAPHIE_2026-09-30.md` |
+| `requirements.txt` | régénérer depuis le venv (sans abipy/netCDF4, avec mpi4py, pytest, ase/spglib en optionnel) ou déclarer les dépendances dans `pyproject.toml` et supprimer le fichier |
+| `reports/`, `research_notes/` | regrouper sous `article/C_optique_lacunes/biblio/` (ils sont la base du PLAN C) |
 
-Aucun `Makefile` dans le dépôt ni dans `graphene/`. `jobs/` ne contient pas de scripts
-SLURM (seulement `run.py`, `run_mpi.py`, `NL.py`, `Lr.py`, `LG_*.py` de l'ère ABINIT).
-Dans `graphene/qe/epw/24k-24q/`, les runs `epw2_selfen_*` et `epw6_phself_*` pointent
-vers `../epw1/{epwdata,vmedata,wigner}.fmt` par **liens relatifs** (35 liens chacun) :
-déplacer `24k-24q/` en bloc est sûr, séparer `epw1/` des autres ne l'est pas.
+### Étape C — deux systèmes de tests
 
----
+1. Garder **pytest** comme unique lanceur : ajouter `[tool.pytest.ini_options] testpaths = ["tests"]` dans
+   `pyproject.toml`, marquer les tests lents (`test_kubo` 13 s).
+2. Envelopper les scripts autonomes exécutables sans données (`test_local_tmatrix`, `test_local_rcut`,
+   `test_local_green_batch`, `test_zero_pad_dense` test 1) dans `tests/test_tmatrix_golden.py` et
+   `tests/test_zero_pad.py` (appel de leurs fonctions, assert sur le résultat) ; corriger d'abord les codes de sortie.
+3. Marquer `@pytest.mark.needs_data` (skip si `data/graphene` ou le scratch manque) les scripts qui exigent des
+   `.save` : `test_ks_reconstruction`, `test_wannier`, `test_zero_pad_dense` test 2, `test_pad_vs_full_supercell`,
+   `test_local_tmatrix_real` (après réparation `matrices_dir`).
+4. Les scripts `scripts/validation/` restent comme outils de diagnostic (figures, rapports) mais ne portent plus le
+   PASS/FAIL de référence ; CLAUDE.md l. 44 corrigée.
 
-## 5. Doublons et anomalies
+### Étape D — `results/` et données
 
-### 5.1 Fichiers > 5 Go
+- Ajouter `results/M/README.md` (copie de `R6/phase0/README_results_M_gele.md`) à la liste blanche ; décider du sort
+  de `results/M/ved_analysis.npz` (doublon 13,5 Mio) et de `results/epw/ed_vs_ep_*.npz` (v1) ; supprimer
+  `results/test_recon`, `results/M/M_ed.npy` (local) ; `wannier/*_nb16` (4 dirs, aucun lecteur) → nearline ou suppression.
+- Réinstaller dans le mémoire les 8 figures R10 qui diffèrent (§8) et y ajouter `fig_em_coupling` quand le §2.5 sera écrit.
+- Traduire `23ee3bb` → `c2bc733` dans `article/R10_plateau/{README.md,R10_rapport.md}` (ou noter la table de REECRITURE).
 
-| Taille | Fichier | mtime / atime |
-|---|---|---|
-| 6,25 G ×4 | `results/M/M_{,L_,NL_}dense_8x8.npy`, `M_dense_8x8_norm.npy` | 2026-09-04 / 09-05..09 |
-| 6,20 G | scratch `qe_tmp/defect_12x12_p/defect_12x12_p.save/wfc1.hdf5` | 2026-06-18 / 06-18 |
-| 6,18 G | scratch `qe_tmp/defect_12x12_d/defect_12x12_d.save/wfc1.hdf5` | 2026-06-18 / 06-18 |
+### Étape E — `src/`
 
-Fichiers de 1 à 5 Go : 92 dans `graphene/abinit/pristine` (197,9 G), 40 dans `results/M`
-(106,6 G), 16 `.epb` dans `epw/24k-24q/epw1` (30,4 G), 8 sur le scratch (21,6 G),
-3 dans `graphene/abinit/defective` (6,5 G), 6 dans `ab-initio-defects/jobs` (11,2 G),
-1 dans `abinit_assignment` (1,2 G).
-
-### 5.2 Doublons volumineux (même nom + même taille, > 100 Mo) — 52 groupes, ≈ 212 G de copies excédentaires
-
-| Groupe | Copies | Total | Où |
-|---|---|---|---|
-| `graphene_w90o_DS4_WFK.nc` (7 tailles : 3,18 / 2,79 / 2,39 / 2,00 / 1,60 / 1,21 / 0,82 G) | 14 / 9 / 20 / 10 / 13 / 8 / 15 | **≈ 180 G** | `graphene/abinit/pristine/unit_cell/wannier/bands/{5..20}x…x1/{5wann,8wann}/{16..64}bands/` — même WFK recopié pour chaque nombre de bandes |
-| `graphene_w90o_DS3_WFK.nc`, `DS2_WFK.nc`, `graphene_w90_bandso_DS{1,2,3}_WFK` | 2 à 10 | ≈ 22 G | idem |
-| `M_{,L_,NL_}dense_7x7.npy`, `M_dense_7x7_norm.npy` (3,66 G) | 2 | 14,6 G (7,3 G excédentaires) | `results/M/` vs `results/M/obsolete_grid_7x7/` — même nom/taille mais grilles différentes (comparés par `_old_vs_new_7x7.py`), pas forcément identiques |
-| `defect_nro_{WFK,DEN,POT}.nc` | 2 | 5,3 G | `graphene/abinit/defective/10x10/defect_not_relaxed/test/` et `test/test2/` |
-| `graphene_pristine_sco_WFK.nc` (0,98 G) | 2 | 2,0 G | `graphene/abinit/defective/8x8/pristine/` et `abinit/pristine/supercell/8x8/64G/` |
-| `graphene_p_uc_5x5x1o_DS2_WFK.nc` | 2 | 1,5 G | `abinit/pristine/unit_cell/ground/5x5x1/calc{1,2}` |
-| `graphene_vac1_a1o_WFK.nc`, `…relaxo_WFK` | 3, 2 | 0,9 G | `abinit/defective/5x5/` et `defective/vacancies/1/atom1/…` |
-| `wfk_{p,d}[_sc].nc`, `wfk_uc.nc` (170,7 M, etc.) | 2–4 | ≈ 3 G | `ab-initio-defects/jobs/{6x6,8x8,16x16}` et `jobs/10x10x1_5x5_Sc/*/…` |
-| `charge-density.hdf5` (0,10–0,14 G) | 2 | 0,7 G | scratch `qe_conv/ecut_*` vs `qe_conv/kpoint/*` (même maille) |
-
-Sans même nom mais redondants : scratch `prefix.wfcN` en vrac vs `prefix.save/wfcN.hdf5`
-(≈ 49 G, §2) ; `results/M/*_norm.npy` dérivables (29 G, §3b).
-
-### 5.3 Répertoires vides (42)
-
-- `graphene/qe/epw/{24k-24q,8k-8q,36k-30q,24k-12q,30k-24q,16k-16q,36k-36q,16k-12q,12k-12q,30k-30q}/epw3` (10)
-- `graphene/qe/epw/16k-8q/phonon_line_coupling_strength`
-- `dft/compmatphys/basic/{NaCl, AlFe/relaxation, AlFe/atompos, Al/band, Al/kpt}`
-- `abinit_processing/cif`, `abinit_processing/venv/abienv/include/python3.11`, `ab-initio-defects/.venv/include/python3.11`
-- `codes/qe/external/{devxlib,qe-gipaw,fox,pw2qmcpack,wannier90,lapack,d3q,mbd}`, `codes/wannier90/build`
-- `codes/abinit/tests/modules_with_data/{MgO_eph_zpr,LiF_eph_varpeq,MgB2_eph4isotc,diamond_eph_gwpt}`
-- `.git/refs/tags`, `.git/objects/info` (×4 dépôts)
-- scratch : `compmatphys/basic/**` (9 sous-dirs vides), `jobs/`, `graphene/`
-
-### 5.4 Antérieur à juin 2026 et non accédé depuis (mtime et atime < 2026-06-01)
-
-Projet : **1 566 G, 83 701 fichiers**.
-
-| Répertoire | Taille | Fichiers | mtime max | atime max |
-|---|---|---|---|---|
-| `graphene/qe/epw/` (grilles test, hors 24k-24q) | 1 110,1 G | 45 222 | 2026-04-30 | 2026-05-05 |
-| `graphene/abinit/pristine/` | 403,1 G | 8 807 | 2026-02-02 | 2026-05-27 |
-| `graphene/qe/test/` | 31,5 G | 11 882 | 2026-04-21 | 2026-04-22 |
-| `graphene/abinit/defective/` | 17,6 G | 436 | 2025-12-21 | 2026-02-03 |
-| `abinit_assignment/` | 2,4 G | 208 | 2026-05-28 | 2026-05-29 |
-| `dft/{copper,diamond,compmatphys}` | 1,2 G | 695 | 2025-11-24 | 2025-11-26 |
-| `ab-initio-defects/.venv/lib` (partiel) | 0,25 G | 14 709 | 2025-11-26 | 2026-01-23 |
-
-(`ab-initio-defects/jobs/` date de déc. 2025 – févr. 2026 mais a été accédé après juin ;
-il figure en 3c.)
-
-Scratch : **48,9 G, 10 442 fichiers** (`qe_conv/` 44,9 G + `graphene_scf` 4,0 G),
-plus les 43,2 G de supercellules dont les wfc n'ont pas été lus depuis le 2026-06-18 (§0).
-
-### 5.5 Autres anomalies
-
-- 1 lien symbolique cassé : `codes/wannier90/test-suite/library-mode-test/ref/gaas.win → ../gaas.win`.
-- Dépôt git : 6 entrées non suivies (`scripts/_test_mnl_mpi.sh`, `wannier/24x24/`, `wannier/{25,27,28,32}x…_nb16/`).
-- `graphene/qe/epw/24k-24q/epw1/.epw1.in.swp` (vim, avril) et `epw1_oom_20637122.out` (run OOM).
-- `abinit_assignment/__ABI_MPIABORTFILE__.lock`, `fort.98`.
-- `ab-initio-defects/hamiltonian_reconstruction.png` à la racine du dépôt (août), hors `figures/`.
-- Le `_ph0` de `graphene/qe/epw/24k-24q/phonons` a été supprimé le 2026-09-10 : `phonons/save/`
-  (dvscf + dyn, 0,97 G) est désormais la seule source DFPT de la grille de production.
-
----
-
-## Fichiers de travail de la session (scratchpad, hors projet, effacés avec la session)
-
-`du_*.txt`, `project_files.tsv` (115 601 lignes : taille, mtime, atime, chemin),
-`scratch_files.tsv` (15 775 lignes), `project_symlinks.txt`, `project_emptydirs.txt`,
-`dups.txt`, `grep_{scripts,epw,src}.txt`, `paths_by_script.tsv`
-dans `/tmp/claude-3139538/-home-gregb26/04514fb5-014b-45e7-93dd-ade179002f69/scratchpad/`.
+- Supprimer ou isoler : `utils/interpolation.py`, `plotting/` (après avoir régénéré `KB_projectors_C.pdf` une fois et
+  consigné la commande), `local_G.py` (ou corriger son étiquetage v2 et le garder comme référence des tests de
+  zero-padding, qui sont ses seuls utilisateurs), `read_psp8`, `scattering_rate_from_wannier`, fonctions mortes listées §2.
+- Ranger `tb_models.py` sous `tests/` (banc synthétique) si R4 n'est plus rejoué.
+- Une seule définition de `HA2EV` ; défaut `load_M_checked(require_bloch_norm=UNIT_CELL)` ; défaut `ne_per_eta=8`.

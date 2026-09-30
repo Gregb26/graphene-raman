@@ -23,7 +23,7 @@ Sous-commandes (GO 2, partie C ; chaîne de production : defect_mwr, C_N de la c
   c1post   fin de C.1 : m_rcut_resigma.csv (porte : npz de M2 -> csv de M2 à 1e-9) ; tab:tests_M : test d'or et porte A.2 recopiés de M2 (D12).
   c2       tab:rcut_M à trois colonnes (tel quel / plateau, étiquettes actuelles / plateau, Wigner-Seitz ; porte : dernière colonne = csv de C.1) ;
            carte de Kaasbjerg D.1 et bloc D.2, plateau (i) + Wigner-Seitz (tel quel en regard) ; fig/kaasbjerg_plateau_ws.
-  c3       contrôles de l'audit : P-c2 (anneaux, porte : appartenance identique, valeurs à 1e-13 eV sous 0,433 a_sc), P-b2 (abscisses et poids = audit, M2),
+  c3       contrôles de l'audit : P-c2 (anneaux, porte : appartenance identique, valeurs à 1e-10 eV sous 0,433 a_sc), P-b2 (abscisses et poids = audit, M2),
            tab:tests_M par famille ; code 3 si une porte refuse.
   c4       planches avant (figures/) / après (fig/) : fig/avant_apres/ ; carte de M brute / alignée (fig/M_map_brut_aligne).
   c5       table de correspondance results/M2 -> results/M2_plateau (c/table_v2_plateau.md) ; README.md et MD5SUMS de results_dir.
@@ -1258,7 +1258,7 @@ def ved_plane_R(S):
 
 def cmd_c3(a):
     """
-    C.3 : (1) P-c2, anneaux d'analyze_Ved (porte : appartenance identique et valeurs à 1e-13 eV sur les anneaux entièrement sous 0,433 a_sc ; au-delà : contre
+    C.3 : (1) P-c2, anneaux d'analyze_Ved (porte : appartenance identique et valeurs à 1e-10 eV sur les anneaux entièrement sous 0,433 a_sc ; au-delà : contre
     l'audit) ; (2) P-b2, abscisses de mwr_locality (porte : distances vraies et nombre de points déplacés = audit, poids hors site = M2, sur site − M2 = −C_N) ;
     (3) tab:tests_M par famille (porte : max|M| = M2, écarts de famille recalculés = csv) ; (4) portes D6 d'analyze_M (lecture). Code 3 si une porte échoue.
     """
@@ -1291,7 +1291,7 @@ def cmd_c3(a):
                           r_at_max_change_beyond_A=float(rc[beyond][int(np.argmax(dch))]) if dch.size else None,
                           audit_n_bins_count_differs=ab["n_bins_count_differs"], audit_r_first_bin_differs_A=ab["r_first_bin_differs_A"],
                           audit_max_abs_diff_meV=ab["max_abs_diff_meV"], max_abs_vs_audit_true_meV=float(np.nanmax(d_aud)) if d_aud.size else None, n_bins_vs_audit=int(np.isfinite(d_aud).sum()))
-            out["gates"][f"P-c2 {S} {key} : anneaux sous 0,433 a_sc à 1e-13 eV"] = bool(dmax <= 1e-13 and nan_eq)
+            out["gates"][f"P-c2 {S} {key} : anneaux sous 0,433 a_sc à 1e-10 eV"] = bool(dmax <= 1e-10 and nan_eq)          # seuil : Greg, 2026-09-30 (1e-13 au GO 2)
         out["gates"][f"P-c2 {S} : appartenance aux anneaux identique"] = (n_move == 0)
         if S == "9x9":
             cnt = np.histogram(g["Rn"][g["Rn"] < rmax], edges)[0]; rcs = 0.5 * (edges[1:] + edges[:-1])

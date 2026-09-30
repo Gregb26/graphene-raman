@@ -75,3 +75,5 @@
 - max|M| (denses et grossiers) = M2 : True ; ligne « six tailles » absente : True
 
 Portes D6 d'`analyze_M.py` (C.1) : align_gate_closed_vs_wannier 2.9e-15 ; align_gate_coarse_wannier 1.3e-15 ; align_gate_frozen_bloch 1.4e-10 ; align_frozen_projector 1.4e-10
+
+Révision du seuil de la porte P-c2 (Greg, 2026-09-30) : 1e-10 eV au lieu de 1e-13 ; réévaluation sans recalcul sur les écarts enregistrés par le job 22058857 (max 1.21e-13 eV, 6×6 masqué) : 16/16 profils OK ; appartenance aux anneaux inchangée (8/8 OK).

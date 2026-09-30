@@ -835,3 +835,17 @@ conv_thr 1e-10, mixing_beta 0,3, K_POINTS gamma, assume_isolated '2D', ecutwfc 1
 
 **STOP — GO 2 terminé le 2026-09-30.** En suspens pour Greg : la porte refusée de C.3 (anneaux 6×6 masqué et 11×11, 1,21e-13 et 1,01e-13 eV contre 1e-13) ;
 installation des figures (GO séparé) ; commit de `results/M2_plateau` et de la copie `article/R10_plateau/`.
+
+## Clôture (Greg, 2026-09-30)
+
+- **Porte P-c2 de C.3** : seuil porté à **1e-10 eV** (au lieu de 1e-13) ; pas de recalcul. Réévaluation sur les écarts enregistrés par le job 22058857 : 16/16 profils
+  OK (max 1,21e-13 eV, 6×6 masqué) ; appartenance aux anneaux 8/8 OK. Toutes les portes de C.3 passent donc. Seuil changé dans le pilote (`cmd_c3`, docstrings ;
+  md5 7adb3c7c8d8e → bd07bb762be0) ; `c/c3_results.json` laissé tel que le job l'a écrit (valeurs et verdicts à 1e-13) ; ligne de révision ajoutée à `c/C3_tables.md`.
+- **Figures** : GO de Greg ; installées dans `figures/` les 12 figures qui diffèrent au pixel (C.4), PDF et PNG, copiées de `fig/` : fig_Ved, fig_Ved_radial,
+  fig_Ved_radial_masked, fig_convergence, fig_epw_vs_ed, fig_level2, fig_locality, fig_locality_final, fig_plateau, fig_rcut, fig_spectral, fig_spectral_final
+  (24 fichiers). Les 16 figures identiques au pixel ne sont pas touchées. Anciennes versions : historique git et planches `fig/avant_apres/`.
+- **Commits** : produits de C et copie `article/R10_plateau/` commités par Greg (f2dae43). Restent à commiter : les 24 fichiers de `figures/` et cette clôture
+  (rapport, README, pilote, `C3_tables.md`, copie `article/`).
+- **cache/** : gardé (1,6 Go ; `manifeste_R10.md`).
+
+**R10 CLOS le 2026-09-30.**

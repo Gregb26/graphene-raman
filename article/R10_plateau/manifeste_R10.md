@@ -1,6 +1,6 @@
 # R10 — manifeste de cache/ (2026-09-30)
 
-Statut TEST ; fichiers reconstructibles par `r10_driver.py b` (g₀ « res », chaîne de R9 B ; 300² en 1,3 min, 900² en 8,3 min à 16 fils). Rien supprimé (décision à Greg).
+Statut TEST ; fichiers reconstructibles par `r10_driver.py b` (g₀ « res », chaîne de R9 B ; 300² en 1,3 min, 900² en 8,3 min à 16 fils). Rien supprimé : cache gardé (décision de Greg, 2026-09-30).
 
 | fichier | taille (o) | taille sur disque | md5 |
 |---|---|---|---|

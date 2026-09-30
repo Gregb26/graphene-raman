@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
 Figure du §2.5 (couplage électron-photon, série EM), style figures/memoire.mplstyle, français. Données :
-memoire/EM/EM3/ (em3_ring_2p33.npz, em2_postw90_sigma_ti.npz : make_em3_data.py), memoire/EM/EM2/em2_A.npz (DFT directe)
-et la production M4 (memoire/EM/M4_sigma/ : em_sigma_*_N1200_eta0.04.npz, em_scalars.json).
+campagnes/EM/EM3/ (em3_ring_2p33.npz, em2_postw90_sigma_ti.npz : make_em3_data.py), campagnes/EM/EM2/em2_A.npz (DFT directe)
+et la production M4 (campagnes/EM/M4_sigma/ : em_sigma_*_N1200_eta0.04.npz, em_scalars.json).
   fig_em_coupling : (a) |ħv_cv| dans le plan sur l'anneau de 2.33 eV (532 nm) en fonction de θ, trois variantes de la
                     vitesse (complète, centres seuls, sans Berry) et les 48 points de la DFT directe (EM2) ;
                     (b) σ_xx(ω)/σ₀ des trois variantes, postw90 avec transl_inv (EM2, décision 7 d'EM.md), ħω_froz,
@@ -21,7 +21,7 @@ plt.style.use(ROOT / "figures" / "memoire.mplstyle")
 from _palette import NAVY, ORANGE, GREEN, GOLD, REF, INK, MUTED
 
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default=str(ROOT / "figures")); a = ap.parse_args()
-EM = ROOT / "memoire" / "EM"
+EM = ROOT / "campagnes" / "EM"
 LASERS = {1.96: "633", 2.33: "532", 2.54: "488"}        # eV : nm
 VARIANTS = ("full", "centres_only", "no_berry")
 # une couleur et un trait par variante de la vitesse, les mêmes dans les deux panneaux ; références en marqueurs gris ouverts

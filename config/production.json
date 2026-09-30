@@ -26,7 +26,7 @@
       "24x24": -0.013481540317473475,
       "27x27": -0.0130057717522539
     },
-    "source": "article/R10_plateau/a/a1_results.json",
+    "source": "campagnes/R/R10_plateau/a/a1_results.json",
     "source_md5": "3d98bbd244eba8e1c1c645dcf675432b",
     "labels_offgrid": "wigner_seitz"
   },

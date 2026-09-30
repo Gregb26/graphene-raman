@@ -1,8 +1,8 @@
 # C — Conductivité optique du graphène avec lacunes (plan, 2026-09-29)
 
-Statut : **plan**, aucun calcul. Perspective C d'`memoire/EM/EM.md` §11 : **article, pas le mémoire** (Greg, 2026-09-29). Préalables, dans l'ordre :
+Statut : **plan**, aucun calcul. Perspective C d'`campagnes/EM/EM.md` §11 : **article, pas le mémoire** (Greg, 2026-09-29). Préalables, dans l'ordre :
 le ménage du dépôt et la réappropriation de la chaîne matrice T par Greg, puis le mémoire, puis C0. Développement et tests sur le
-portable, production sur rorqual. Bibliographie : `reports/Optique du graphène avec lacunes.md` (niche : aucun σ(ω) tiré d'une matrice T ab initio ;
+portable, production sur rorqual. Bibliographie : `article/C_optique_lacunes/biblio/Optique du graphène avec lacunes.md` (notes de lecture dans `biblio/research_notes/`) (niche : aucun σ(ω) tiré d'une matrice T ab initio ;
 aucune matrice T ab initio spin-résolue de la lacune). Mode prévu : Greg code (technicien), Code écrit tests, docs et calculs de production.
 
 ## But et formule
@@ -19,13 +19,13 @@ aucune matrice T ab initio spin-résolue de la lacune). Mode prévu : Greg code 
 
 ## Ce qui existe (inventaire du 2026-09-29)
 
-- **Chaîne matrice T** : `article/R8_kaasbjerg/r8_driver.py` enchaîne déjà V_loc (`prep_size` l.582), g₀ (`g0_make` l.726), t et τ(D)
+- **Chaîne matrice T** : `campagnes/R/R8_kaasbjerg/r8_driver.py` enchaîne déjà V_loc (`prep_size` l.582), g₀ (`g0_make` l.726), t et τ(D)
   (`t_pi` l.777, `local_t_cache` + `tbar_reduce`), DOS (`dos_average` l.788), A_k (`tbar_k` + `spectral_path` l.1070) ;
   fonctions dans `defects/many_body/{local_tmatrix,disorder_average,pole_criterion}.py`. Production : 9×9, R_cut = 3 (29 mailles,
   dim 145), η = 0.02 eV, k_int = 300², c = 1 % (`config/production.json`).
 - **Même wannierisation que le §2.5** : manifeste `wannier/27x27/wannier_manifest.json` (tb, u, u_dis, sha256 vérifiés) ; mêmes
   conventions e^{+ik·R}/ndegen des deux côtés ; `tbar_k` cohérent (D = R_L − R_L').
-- **Données** : locales, seulement des produits (`results/M2/resonance_*.npz`, `article/R8_kaasbjerg/out/` : DOS à 0.1 et 1 %, Σ(K)) ;
+- **Données** : locales, seulement des produits (`results/M2/resonance_*.npz`, `campagnes/R/R8_kaasbjerg/out/` : DOS à 0.1 et 1 %, Σ(K)) ;
   sur rorqual : `M_dense_9x9` (3.4 Go), caches V_loc (`R6_production_corrigee/cache/Vloc_M2_9x9.npz`) et g₀. Aucun cache τ(D) local.
 - **Banc d'essai liaisons fortes déjà là** : `tb_models.removed_site_vloc` (site p_z retiré sur le vrai H de Wannier) : la « lacune de
   modèle » passe par la même chaîne, ce qui répond au « qu'apporte l'ab initio ? » d'un rapporteur.

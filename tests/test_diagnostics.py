@@ -1,7 +1,7 @@
 """
 Tests of the model diagnostics (diagnostics): hermiticity_report (F10) on the M0 model and on the
 27 x 27 data, symmetry_report (F11) on the 27 x 27 data, frozen_window_limit (F18) on both (reference
-values in w90_ref, conftest.py; see memoire/EM/EM.md, F10, F11 and F18).
+values in w90_ref, conftest.py; see campagnes/EM/EM.md, F10, F11 and F18).
 """
 
 import dataclasses

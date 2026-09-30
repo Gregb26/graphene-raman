@@ -145,7 +145,7 @@ def _read_tb_blocks(f, nrpts, nw, ncomp):
 
 def read_w90_tb(w90_path):
     """
-    Read a Wannier90 `seedname_tb.dat` (format: memoire/EM/EM.md, section 2). Values are raw: no
+    Read a Wannier90 `seedname_tb.dat` (format: campagnes/EM/EM.md, section 2). Values are raw: no
     division by ndegen, r not hermitized; the Hermiticity of H is checked.
 
     Returns

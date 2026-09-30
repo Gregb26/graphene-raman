@@ -6,6 +6,12 @@ build-backend = "setuptools.build_meta"
 name = "electron_defect_interaction"
 version = "0.1.0"
 requires-python = ">=3.9"
+dependencies = ["numpy", "scipy", "h5py", "matplotlib", "tqdm"]
+
+[project.optional-dependencies]
+mpi = ["mpi4py"]              # imported at module load by defects.local_R, local_G, non_local; needs an MPI library (rorqual: MPICH)
+test = ["pytest"]
+campaigns = ["ase", "spglib"]  # campagnes/R/R1, R2 (relaxation inputs and analysis)
 
 [tool.setuptools.packages.find]
 where = ["src"]

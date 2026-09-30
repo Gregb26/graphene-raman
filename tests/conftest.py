@@ -3,7 +3,7 @@ Shared fixtures of the electron_photon tests (loaded by pytest for every test fi
 
 Most tests run in two gauges, shift_B = (0,0,0) and (1,0,0), through an indirect parametrization of
 the `tb` fixture: gauge-independent properties must hold in both. Reference values and the
-derivations behind the tolerances: memoire/EM/EM.md (M0, implementation notes). The real data of M1
+derivations behind the tolerances: campagnes/EM/EM.md (M0, implementation notes). The real data of M1
 come from the 27 x 27 wannierisation tracked in wannier/27x27/ (fixtures w90_dir, tb_w90, eig_w90);
 everything the tests know about these data is in W90_REF (fixture w90_ref).
 

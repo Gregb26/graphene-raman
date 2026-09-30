@@ -18,7 +18,7 @@ of dependence:
                        with a complex kernel (gaussian_complex, lorentzian_complex; perspective B)
     diagnostics        reports on a model: hermiticity_report, symmetry_report (M1),
                        frozen_window_limit (M4)
-Plan, derivations and reference values: memoire/EM/EM.md.
+Plan, derivations and reference values: campagnes/EM/EM.md.
 
 Conventions:
     - Units: Angstrom, eV, 1/Angstrom; hbar v in eV*Angstrom.

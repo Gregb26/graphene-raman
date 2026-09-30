@@ -76,6 +76,7 @@ results/epw/*
 !results/wannier/
 !results/electron/
 !results/phonon/
+!results/campagnes/
 
 # Manifestes de ménage (13,6 Mo, dry-run) — hors dépôt
 cleanup/

@@ -1,10 +1,10 @@
 """Figures de contrôle du chapitre 4 retenues pour le mémoire (9), redessinées au style graphene_raman.plotting depuis les
-json/npz des campagnes (aucun calcul). Fonctions de tracé extraites le 2026-09-30 des pilotes de campagne, au contenu identique :
+json/npz des campagnes copiés dans <campaigns_results_dir> = results/campagnes/ (config ; aucun calcul). Fonctions de tracé extraites le 2026-09-30 des pilotes de campagne, au contenu identique :
 
   fig_size_3m, fig_localized_3m         R7 (`r7_driver.figs`) : état π quasi-lié et doublet σ contre 1/N, ajustements ε_∞ + a/N^p,
-                                        états localisés ; données campagnes/R/R7_tailles_3m/d1_8pts/d1_results.json
+                                        états localisés ; données R7_tailles_3m/d1_8pts/d1_results.json
   fig_resonance_vs_nkint,               R9 (`r9_driver.b_figure`, `cmd_synth`) : pic de Γ_T, pic de −Im T̄(K), E_res contre 1/N_k^int ;
-  fig_resonance_vs_nkint_plateau        données campagnes/R/R9_controles/b/b_results{,_plateau}.json
+  fig_resonance_vs_nkint_plateau        données R9_controles/b/b_results{,_plateau}.json
   fig_rcut_aligned                      R9 (`cmd_synth`) : max|ΔM|/max|M| contre R_cut, trois alignements ; a/a3_results{,_plateau}.json
   fig_folded_vs_R7                      R9 (`c_figure`) : chaîne repliée contre QE (R7), limite diluée ; c/c_results.json
   fig_offset_profiles_13                R10 (`a1_figure`) : profils ΔV et plateau des 13 tailles ; a/a1_results.json, a/profiles_<S>.npz
@@ -26,11 +26,13 @@ import matplotlib.pyplot as plt
 
 from graphene_raman.plotting import palette as pal
 from graphene_raman.plotting.palette import use_style, save
+from graphene_raman.config import load_production, campaigns_dir
 
 ROOT = Path(__file__).resolve().parents[2]            # scripts/fig/ -> racine
-R7 = ROOT / "campagnes" / "R" / "R7_tailles_3m"
-R9 = ROOT / "campagnes" / "R" / "R9_controles"
-R10 = ROOT / "campagnes" / "R" / "R10_plateau"
+CFG = load_production(verbose=False)                   # données : results/campagnes/<campagne>/… (config campaigns_results_dir)
+R7 = Path(campaigns_dir(CFG, "R7_tailles_3m"))
+R9 = Path(campaigns_dir(CFG, "R9_controles"))
+R10 = Path(campaigns_dir(CFG, "R10_plateau"))
 
 FAM3 = {6, 9, 12, 15, 18, 21, 24, 27}                 # famille N = 3m (K replié sur Γ)
 ALL13 = ["5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11", "12x12", "15x15", "18x18", "21x21", "24x24", "27x27"]

@@ -28,7 +28,8 @@ Work is conducted in French; code and docstrings are in English.
   (index `scripts/README.md`). `tests/` — pytest suite. `config/production.json` — frozen production parameters.
 - `results/M2_plateau/` — **live** production products (`results_dir`, R10: v2 + Kumagai–Oba alignment); `results/M2/` — the M
   matrices (`matrices_dir`; the `.npy` exist on rorqual only) and the frozen unaligned v2 products; `results/M/` — frozen v1;
-  `results/epw/` — chapter 5; `results/electron/`, `results/phonon/` — chapter 2 data (QE convergence, bands, DOS, matdyn). `results/wannier/<D>x<D>/` — tracked Wannier90 outputs per grid. `figures/` — thesis figures.
+  `results/epw/` — chapter 5; `results/electron/`, `results/phonon/` — chapter 2 data (QE convergence, bands, DOS, matdyn). `results/wannier/<D>x<D>/` — tracked Wannier90 outputs per grid. `results/campagnes/<campagne>/` — copies of the campaign json/npz
+  read by the figure scripts (F0bis, 2026-09-30). `figures/` — thesis figures.
 - `campagnes/<série>/<campagne>/` — versioned copies of every computation campaign, whatever its destination (thesis or article):
   series `R/` (R1…R10, chain M/T and DFT of the vacancy), `EM/` (electron–photon), `M/` (`ch4/`, numbers of chapter 4); index in
   `campagnes/README.md` (status live/archive, destination). `article/C_optique_lacunes/` — plan and bibliography of the future article.
@@ -123,7 +124,9 @@ paths such as `results/wannier/27x27` or `results/…` through `config`). The fo
 ## Module structure (`src/graphene_raman/`)
 
 - **config.py** — single loader of `config/production.json`: `load_production`, `results_dir` (products), `matrices_dir`
-  (M files), `epw_dir` (`results/epw`, chapter 5 products), `electron_dir`, `phonon_dir` (`results/{electron,phonon}`, chapter 2 data), `alignment_C(cfg, size)` (C_N in eV), `dense_paths(cfg, size)` (dense
+  (M files), `epw_dir` (`results/epw`, chapter 5 products), `electron_dir`, `phonon_dir` (`results/{electron,phonon}`, chapter 2 data), `wannier_dir(cfg, D=None)` (`results/wannier[/<D>x<D>]`, the tracked
+  Wannier90 outputs; the only way to that path), `campaigns_dir(cfg, *parts)` (`results/campagnes/…`, campaign json/npz read by the figure
+  scripts), `alignment_C(cfg, size)` (C_N in eV), `dense_paths(cfg, size)` (dense
   `.save`, M file, Wannier dir; the scratch path is rorqual's), `ROOT`, `HA2EV` (the only definition of the Ha→eV factor). **Every
   access to results goes through these functions**, never through a literal `results/...` path.
 - **io/matrix_io.py** — `save_M` / `load_M_checked` / `read_manifest`: every M file has a JSON sidecar (Bloch norm, units,
@@ -320,8 +323,10 @@ The standalone scripts take their data paths from `scripts/validation/_paths.py`
   + `fig_phfreq_phdos` (`make_figures_phonons.py`, données `results/phonon/`, même contenu que `fig_epw_phonons` de `make_figures_epw.py`). Les 9 figures de
   contrôle du ch. 4 retenues (R7 : `fig_size_3m`, `fig_localized_3m` ; R9 : `fig_resonance_vs_nkint{,_plateau}`, `fig_rcut_aligned`,
   `fig_folded_vs_R7` ; R10 : `fig_offset_profiles_13`, `fig_levels_vs_invN`, `fig_kaasbjerg_plateau_ws`) sont produites par
-  `make_figures_controles.py` depuis les json/npz de `campagnes/R/` (fonctions extraites des pilotes, retirés) ; les 5 figures R8 par
-  `campagnes/R/R8_kaasbjerg/r8_driver.py fig|sigeff` (données `out/`).
+  `make_figures_controles.py` (fonctions extraites des pilotes, retirés) ; les 5 figures R8 (`fig_kaasbjerg_{dos_c,spectral_GKM,sensibilites,
+  superposition,sigma_K}`) par `make_figures_kaasbjerg.py` (tracé extrait de `r8_driver.py fig|sigeff`, contenu identique). Ces deux scripts
+  et `make_figures_em.py` lisent les json/npz de campagne **copiés dans `results/campagnes/<campagne>/…`** (`config.campaigns_dir()`,
+  README et MD5SUMS sur place ; `spectral_GKM_9x9.npz` de R8 reste à rapatrier de rorqual), jamais `campagnes/` directement.
 - Données : lues uniquement dans le `results_dir` de `config/production.json` (`results/M2_plateau/` depuis R10, 2026-09-30 ;
   matrices M2 dans `results/M2/` = `matrices_dir` ; `results/M/` (v1) et `results/M2/` (v2 non aligné) gelés, `results_dir_frozen`)
   ou dans les `.save`, jamais dans les logs ;

@@ -951,26 +951,24 @@ contenu identique, données dans `results/electron/{ecut,ecut_cross,kpoint,smear
 ses autres panneaux). `.gitignore` : `!results/electron/`, `!results/phonon/`. Les 20 figures du mémoire ont maintenant toutes un producteur
 dans `scripts/fig/`. `dernieres_figures/` (non suivi) peut être supprimé par Greg ; `~/projects/qe_pp` n'est plus nécessaire au mémoire.
 
-### Étape F — alimenter le dépôt du mémoire `~/projects/msc-graphene-raman-defects` (ajout de la seconde passe, chemin mis à jour à la troisième)
+### Étape F — alimenter le dépôt du mémoire `~/projects/msc-graphene-raman-defects` (plan du 2026-09-30, sixième passe)
 
-Le dépôt du mémoire a été préparé le 2026-09-30 (`5debac2`, puis README, `requirements.txt` et venv jusqu'à `e07e0d5`)
-avec quatre dossiers vides. Correspondance proposée avec le §10 ; à faire **après** les étapes A–E pour copier un état
-propre, et après réparation des chemins du §11. À chaque copie, remplir la colonne « Dans msc- » de `PROVENANCE.md`
-avec le chemin d'arrivée et le commit source de ce dépôt.
+Le squelette de msc- a été refait par Greg (`2e1dc7c`, `PROVENANCE.md` §0) : **même arborescence que ce dépôt** (`pyproject.toml`,
+`src/graphene_raman/`, `scripts/{m,t,epw,fig,validation,slurm}/`, `tests/`, `config/`, `notes/`, `campagnes/` réduit), seul
+`results/` devient `donnees/`. La copie est donc un `cp -r` dont la seule adaptation est `config/production.json` (`*_dir` → `donnees/…`).
+Décisions de Greg (2026-09-30) : commit source = celui qui suit F0bis (pas `b9a0236`) ; `campagnes/` n'est **pas** copié en entier :
+les données lues par les scripts de figures sont copiées ici dans `results/campagnes/` et suivent `results/` ; `memoire/figures/`
+reste intact jusqu'à la réécriture (les figures régénérées vont dans `msc-/figures/<chapitre>/`) ; les README d'une ligne de msc- sont écrasés.
 
-| Dossier du mémoire | Ce qui y va (depuis ce dépôt) | Remarque |
+| Sous-étape | Contenu | Statut |
 |---|---|---|
-| `analyse/` (« copie figée du repo graphene-raman ») | `src/graphene_raman/` (sans les orphelins du §2), `config/production.json`, `tests/`, les scripts de production des chaînes M et T et EPW (§4.1 à §4.3, §4.5 hors obsolètes), `campagnes/R/R10_plateau/r10_driver.py`, `campagnes/R/R8_kaasbjerg/r8_driver.py`, `campagnes/M/ch4/ch4_chiffres.py`, `campagnes/EM/{M4_sigma,EM3,EM2}/*.py` | noter le commit d'origine dans le README ; `pyproject.toml` pour l'installation |
-| `calculs/` (un dossier par calcul) | hors dépôt pour l'essentiel : `graphene/qe/defects/{super_cell,unit_cell}` (scf, nscf denses, pp.x, Wannier90), `graphene/qe/epw/24k-24q{,_mv0.02}`, `graphene/qe/electron_photon/{EM1_tb,EM2}` sur rorqual ; depuis ce dépôt : `scripts/submit_*.sh` actifs, `campagnes/R/R10_plateau/submit_r10.sh`, `campagnes/EM/EM1_tb/wannier.win`, `campagnes/EM/EM2/{bands.in,bands_pp.in,submit_*.sh,postw90/}` ; l'annexe D du mémoire (`annexes/paramètres.tex`) liste les paramètres | les inputs QE ne sont pas versionnés ici : à prendre dans les répertoires de travail |
-| `donnees/` | `results/M2_plateau/*` (npz, csv, MD5SUMS, README), `results/epw/*.npz` (chaîne `_mv0.02` + celles que `fig_epw_kohn_degauss` lit), `campagnes/EM/M4_sigma/{em_scalars.json,em_sigma_*.npz,em_map_K.npz,em_table.tex}`, `campagnes/EM/EM3/*.npz`, `campagnes/EM/EM2/em2_A.npz`, `campagnes/R/R8_kaasbjerg/out/` (figures R8), `campagnes/M/ch4/{table_v1_final.md,alignement_regions.*}`, `results/wannier/27x27` (ou les 5 grilles de production) | ~60 Mo de npz ; `results/M2/*.npy` (matrices) restent sur rorqual/nearline |
-| `scripts_figures/` | `scripts/fig/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |
-| `memoire/figures/` | réinstaller les 8 figures R10 qui diffèrent ; ajouter les 5 figures R8, `fig_em_coupling`, éventuellement `alignement_regions`, et les figures de `article/` et `memoire/` retenues à l'arbitrage (tableau « Figures hors de `figures/` », §8) | voir §8 ; chaque figure retenue entraîne son pilote (`scripts_figures/` ou `analyse/`) et ses données (`donnees/`) |
-| `requirements.txt` du mémoire | le régénérer depuis un venv qui fait tourner `analyse/` et `scripts_figures/` (numpy, scipy, h5py, matplotlib, plus `mpi4py` si les noyaux de M sont copiés ; LaTeX pour `text.usetex`) | l'actuel est un gel généraliste (abipy, torch, netCDF4) sans rapport avec ces scripts |
-
-À corriger en même temps : toute note qui cite `~/LaTeX/master_thesis` (vide depuis 11 h 21) ou
-`~/LaTeX/msc-graphene-raman-defects` (supprimé) ; le skill `thesis-section-pass` est corrigé (cinquième passe).
-`PROVENANCE.md` est commité (`4da4d62`) ; il nomme déjà ce dépôt `graphene-raman`, mais cite ce fichier à HEAD
-`656c05c` : à porter au commit du ménage.
+| F0bis | clés `wannier_dir` et `campaigns_results_dir` de `production.json`, `config.wannier_dir()` / `config.campaigns_dir()` (dernier chemin `results/…` codé en dur : `dense_paths`, `tests/conftest.py`, `test_local_green_batch.py`, `test_local_tmatrix_real.py`, `mwr_locality_coarse_vs_dense.py`) ; copies `cp -p` des 37 json/npz/csv lus par `make_figures_{controles,em}.py` dans `results/campagnes/<campagne>/…` (5,2 Mo, README + `MD5SUMS_2026-09-30.txt`, `!results/campagnes/` dans `.gitignore`) ; nouveau `scripts/fig/make_figures_kaasbjerg.py` (tracé extrait tel quel de `r8_driver.py cmd_fig` et de la fin de `cmd_sigeff`, qui lit `sigma_K_9x9.npz`) → `figures/electron_defect/fig_kaasbjerg_{dos_c,spectral_GKM,sensibilites,superposition,sigma_K}` ; recette : 9 figures de contrôle + `fig_em_coupling` identiques au bit, 4 figures R8 identiques (PDF à 600 dpi ; PNG de `sensibilites` : 1 niveau de gris sur 145 pixels), pytest 201 + `local_green_batch` | **EXÉCUTÉE le 2026-09-30** ; `spectral_GKM_9x9.npz` (14 Mo, `out/spec/` de R8 sur rorqual, jamais copié) à rapatrier par Greg dans `results/campagnes/R8_kaasbjerg/spec/` |
+| F1 code | `cp -r` de `pyproject.toml`, `src/graphene_raman/`, `tests/`, `scripts/` (six sous-dossiers + README), `config/production.json`, `notes/*.md` ; `production.json` de msc- : `results_dir = donnees/M2_plateau`, `matrices_dir = donnees/M2`, `epw/electron/phonon/wannier/campaigns` → `donnees/…`, `results_dir_frozen = []` ; `requirements.txt` de msc- remplacé par `pip install -e ".[test,campaigns]"` | à faire |
+| F2 données | `results/{M2_plateau, epw, electron, phonon, wannier, campagnes}` → `donnees/` ; `results/M2/{README.md,MD5SUMS_2026-09-25.txt}` seulement (`matrices_dir` existe, md5 des matrices) ; `results/M` et les produits v2 non alignés de `results/M2` ne servent qu'à `ch4_chiffres.py`, dont on copie les sorties (`campagnes/M/ch4/*.md` → `donnees/ch4/`) | à faire |
+| F3 campagnes | `campagnes/` de msc- réduit à `README.md` (index) et `M/ch4/` (tables) ; R8 n'est plus nécessaire (F0bis) | à faire |
+| F4 calculs | inputs QE / Wannier90 / EPW + `submit.*` disponibles localement (R1, R2, R7, R10, EM2) ; le reste (chaîne M, EPW, Wannier90) est sur rorqual, listé dans `calculs/README.md` | à faire |
+| F5 figures + recette | depuis le venv de msc- : les huit `make_figures*.py` → `msc-/figures/<chapitre>/` ; md5 = ceux de `figures/` ici (20 + 9 + 5) ; `pytest -m "not slow"` depuis msc- | à faire |
+| F6 registres | `PROVENANCE.md` (commit source, colonne « Dans msc- »), README de msc- ; puis Greg : commit msc-, tags `memoire-avant-menage` (`656c05c`) et `memoire-apres-menage` (commit source), push | à faire |
 
 ### Étape « campagnes » — EXÉCUTÉE le 2026-09-30 (décision de Greg, solution 3 ; non commitée)
 

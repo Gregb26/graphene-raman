@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 """
-Figure du §2.5 (couplage électron-photon, série EM), style graphene_raman.plotting (memoire.mplstyle), français. Données :
-campagnes/EM/EM3/ (em3_ring_2p33.npz, em2_postw90_sigma_ti.npz : make_em3_data.py), campagnes/EM/EM2/em2_A.npz (DFT directe)
-et la production M4 (campagnes/EM/M4_sigma/ : em_sigma_*_N1200_eta0.04.npz, em_scalars.json).
+Figure du §2.5 (couplage électron-photon, série EM), style graphene_raman.plotting (memoire.mplstyle), français. Données lues dans
+<campaigns_results_dir>/EM = results/campagnes/EM (config ; copies des fichiers de campagnes/EM) : EM3/ (em3_ring_2p33.npz,
+em2_postw90_sigma_ti.npz : make_em3_data.py), EM2/em2_A.npz (DFT directe) et la production M4 (M4_sigma/ :
+em_sigma_*_N1200_eta0.04.npz, em_scalars.json).
   fig_em_coupling : (a) |ħv_cv| dans le plan sur l'anneau de 2.33 eV (532 nm) en fonction de θ, trois variantes de la
                     vitesse (complète, centres seuls, sans Berry) et les 48 points de la DFT directe (EM2) ;
                     (b) σ_xx(ω)/σ₀ des trois variantes, postw90 avec transl_inv (EM2, décision 7 d'EM.md), ħω_froz,
@@ -19,9 +20,10 @@ import matplotlib.pyplot as plt
 ROOT = Path(__file__).resolve().parents[2]            # scripts/fig/ -> racine
 from graphene_raman.plotting.palette import save as palette_save, use_style; use_style()
 from graphene_raman.plotting.palette import NAVY, ORANGE, GREEN, GOLD, REF, INK, MUTED
+from graphene_raman.config import load_production, campaigns_dir
 
 ap = argparse.ArgumentParser(); ap.add_argument("--outdir", default=str(ROOT / "figures" / "electron_photon")); a = ap.parse_args()
-EM = ROOT / "campagnes" / "EM"
+EM = Path(campaigns_dir(load_production(verbose=False), "EM"))   # results/campagnes/EM (config)
 LASERS = {1.96: "633", 2.33: "532", 2.54: "488"}        # eV : nm
 VARIANTS = ("full", "centres_only", "no_berry")
 # une couleur et un trait par variante de la vitesse, les mêmes dans les deux panneaux ; références en marqueurs gris ouverts

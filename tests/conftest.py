@@ -18,6 +18,7 @@ import pytest
 import numpy as np
 from graphene_raman.electron_photon import make_graphene_tb, make_grid_tb, make_wannier_tb
 from graphene_raman.io.wannier_io import read_w90_mat
+from graphene_raman.config import load_production, wannier_dir
 
 N = 100    # the k grid has N x N = 1e4 points: fast, yet covers the whole Brillouin zone
 
@@ -25,7 +26,7 @@ HW = 2.33  # eV, 532 nm laser
 
 # Reference data: the 27 x 27 wannierisation of the thesis. The values of W90_REF belong to these
 # exact files (sha256 prefixes, checked by w90_dir): a new reference changes both, here only.
-W90_DIR = Path(__file__).resolve().parents[1] / "results" / "wannier" / "27x27" # repo root from this file
+W90_DIR = Path(wannier_dir(load_production(verbose=False), 27))          # results/wannier/27x27 (config)
 W90_SHA256 = {"wannier_tb.dat": "baa17b88b1b69e51", "wannier.wout": "3db1203ed17c2558",
               "wannier.eig": "8ed92c792c499689", "wannier_u.mat": "64f31f661b4d5c6c"}
 W90_REF = SimpleNamespace(

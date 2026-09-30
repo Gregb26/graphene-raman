@@ -7,6 +7,8 @@
   "epw_results_dir": "results/epw",
   "electron_results_dir": "results/electron",
   "phonon_results_dir": "results/phonon",
+  "wannier_dir": "results/wannier",
+  "campaigns_results_dir": "results/campagnes",
   "results_dir_frozen": [
     "results/M",
     "results/M2"

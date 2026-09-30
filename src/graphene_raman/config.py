@@ -47,6 +47,20 @@ def phonon_dir(cfg, root=ROOT):
     return os.path.join(root, cfg.get("phonon_results_dir", "results/phonon"))
 
 
+def wannier_dir(cfg, D=None, root=ROOT):
+    """Directory of the tracked Wannier90 outputs: results/wannier, or results/wannier/<D>x<D> for a grid (D int or "DxD")."""
+    base = os.path.join(root, cfg.get("wannier_dir", "results/wannier"))
+    if D is None:
+        return base
+    return os.path.join(base, D if isinstance(D, str) else f"{D}x{D}")
+
+
+def campaigns_dir(cfg, *parts, root=ROOT):
+    """Directory of the campaign data read by the figure scripts (json/npz copied from campagnes/, same relative paths):
+    results/campagnes[/<campaign>/<sub>/...]."""
+    return os.path.join(root, cfg.get("campaigns_results_dir", "results/campagnes"), *parts)
+
+
 def alignment_C(cfg, size):
     """Far-field potential offset C_N (eV) of a supercell size (block "alignment", plateau (i), R10), subtracted as M_W(R,R) - C_N on the
     N x N box (defect_mwr). Raises KeyError if the size has no C_N (no silent default)."""
@@ -62,5 +76,5 @@ def dense_paths(cfg, size, scratch="/home/gregb26/links/scratch/qe_tmp", root=RO
     return dict(D=D, p=cfg["dense"][size]["p"],
                 uc=f"{scratch}/defect_uc_dense_{D}/defect_uc_dense_{D}.save",
                 mfile=os.path.join(matrices_dir(cfg, root), f"M_dense_{size}.npy"),
-                wdir=os.path.join(root, f"results/wannier/{D}x{D}"),
-                manifest=os.path.join(root, f"results/wannier/{D}x{D}/wannier_manifest.json"))
+                wdir=wannier_dir(cfg, D, root=root),
+                manifest=os.path.join(wannier_dir(cfg, D, root=root), "wannier_manifest.json"))

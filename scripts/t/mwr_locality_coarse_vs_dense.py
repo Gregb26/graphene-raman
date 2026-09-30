@@ -6,7 +6,7 @@ from graphene_raman.io import qe_io, matrix_io
 from graphene_raman.io.wannier_io import read_w90_mat
 from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order, ws_images
 from graphene_raman.defects.many_body import local_tmatrix as lt
-from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C
+from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C, wannier_dir
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau)
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule)
 import os
@@ -31,8 +31,8 @@ for S in ("5x5", "6x6", "7x7", "8x8", "9x9", "12x12"):
     dp = dense_paths(cfg, S)
     if not os.path.exists(dp["mfile"]) or not os.path.isdir(dp["wdir"]): print(f"[{S}] dense M or wannier missing; skipped"); continue
     run(dp["uc"], dp["mfile"], dp["wdir"], f"{S}_dense", S)
-    if os.path.isdir(f"results/wannier/{S}"):
-        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"{MAT}/M_ed_{S}.npy", f"results/wannier/{S}", f"{S}_coarse", S)
+    if os.path.isdir(wannier_dir(cfg, S)):
+        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"{MAT}/M_ed_{S}.npy", wannier_dir(cfg, S), f"{S}_coarse", S)
     else:
-        print(f"[{S}] no coarse wannierization (results/wannier/{S}); dense only")
+        print(f"[{S}] no coarse wannierization ({wannier_dir(cfg, S)}); dense only")
 np.savez(f"{RES}/mwr_locality.npz", **out); print("saved <results_dir>/mwr_locality.npz")

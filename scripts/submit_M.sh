@@ -29,17 +29,17 @@ N=${SIZES[$SLURM_ARRAY_TASK_ID]}
 module restore qe
 module load mpi4py/4.0.3 scipy-stack
 export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
-RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
-mkdir -p "$RES/logs"
+MAT=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, matrices_dir; print(matrices_dir(load_production(verbose=False)))')   # R10 : les matrices vont dans matrices_dir (results/M2), pas dans results_dir (produits)
+mkdir -p "$MAT/logs"
 
 UC=data/graphene/unit_cell/qe/defect_${N}.save
 SCP=data/graphene/supercell/qe/defect_${N}_p.save
 SCD=data/graphene/supercell/qe/defect_${N}_d.save
 PY="$PROJ/.venv/bin/python"
 
-ML="$RES/M_L_${N}.npy"
-NL="$RES/M_NL_${N}.npy"
-MED="$RES/M_ed_${N}.npy"
+ML="$MAT/M_L_${N}.npy"
+NL="$MAT/M_NL_${N}.npy"
+MED="$MAT/M_ed_${N}.npy"
 
 echo "[$(date)] size=$N  stage 1/3: M^L (MPI, $SLURM_NTASKS ranks)"
 # Pin all threading layers to 1: parallelism is over MPI ranks; oversubscribing BLAS

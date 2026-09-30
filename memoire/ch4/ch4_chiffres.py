@@ -11,8 +11,10 @@ Sous-commandes (toutes locales, quelques secondes, aucun calcul QE ni t/Γ) :
            (B) Kumagai–Oba 2D ≥ N·a/2, (C) Kumagai–Oba 3D min(N·a/2, c/2), (D) site unique) ;
   notes    partie 3 : vérifie que les valeurs finales citées dans NOTES_TGAMMA.md sont celles des sources ; écrit le diff
            non commité de NOTES_TGAMMA.md dans NOTES_TGAMMA_partie5.diff (NOTES_TGAMMA.diff = diff de la partie 3) ;
-  tex      parties 4 et 5.5 : memoire/ch4/defauts_nombres.md (tous les nombres de memoire/défauts.tex, appariés à la table
+  tex      parties 4 et 5.5 : memoire/ch4/defauts_nombres.md (tous les nombres du chapitre 4 du mémoire, appariés à la table
            principale et aux compléments ; pourcentages × 100, notation scientifique entière, entiers courts en tabular) ;
+           le chapitre est lu dans le dépôt du mémoire (memoire/chapitres/défauts.tex ; dépôt voisin
+           msc-graphene-raman-defects, ou $MSC_THESIS, ou --tex CHEMIN) : ce dépôt n'en garde plus de copie ;
   (la sous-commande table ajoute la section « Compléments » de la partie 5 : 5.1 tab:rcut_M, 5.2 niveau 1,
    5.3 tab:échantillonnage, 5.4 scalaires lus sur les courbes des npz, avec porte sur les valeurs publiées v1 / v2)
   all      table, regions, tex, notes.
@@ -55,6 +57,8 @@ CFG = ROOT / "config" / "production.json"
 TAB_R6 = R6 / "etape3" / "table_v1_v2.md"
 TAB_R10 = R10 / "c" / "table_v2_plateau.md"
 MD5SUMS = M2P / "MD5SUMS_2026-09-30.txt"
+THESIS = Path(os.environ.get("MSC_THESIS") or ROOT.parent / "msc-graphene-raman-defects")  # dépôt du mémoire (lecture seule)
+TEX = THESIS / "memoire" / "chapitres" / "défauts.tex"
 SIZES13 = ["5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11", "12x12", "15x15", "18x18", "21x21", "24x24", "27x27"]
 BOHR_A = 0.529177210903
 
@@ -68,9 +72,9 @@ def md5(p):
     return hashlib.md5(Path(p).read_bytes()).hexdigest()
 
 
-def head():
+def head(repo=ROOT):
     try:
-        return subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], text=True).strip()
+        return subprocess.check_output(["git", "-C", str(repo), "rev-parse", "--short", "HEAD"], text=True).strip()
     except Exception:  # noqa: BLE001
         return "?"
 
@@ -877,7 +881,7 @@ def compl_5_2():
             rr = {int(r["R_cut"]): r["med_Gamma_meV"] for r in csv.DictReader(f)}
         extra = rr.get(4, "—")
         idx.append({"g": "5.2 niveau 1 9x9 R_cut 4 (v1, m_rcut_resigma.csv)", "v1": extra, "v2": "—", "final": "—"})
-    out = ["### 5.2 Tableau niveau 1 du mémoire (tab:convergence_gamma, `memoire/défauts.tex` l.664–670) : médiane Γ·N_cells (meV), 240², η 0,02, N_k^int 300", "",
+    out = ["### 5.2 Tableau niveau 1 du mémoire (tab:convergence_gamma de `défauts.tex`, dépôt du mémoire) : médiane Γ·N_cells (meV), 240², η 0,02, N_k^int 300", "",
            "Sources : `level1_summary.csv` de `results/M` (v1), `results/M2` (non aligné), `results/M2_plateau` (final), colonne `median_Gamma_Ncells_meV` ; ordre des tailles = celui du mémoire.", "",
            md_table(["taille", "N mod 3", "R_cut", "v1", "non aligné", "final", "cité dans le mémoire"], rows), "",
            f"`results/M/level1_summary.csv` n'a aucune ligne R_cut 4 (carte v1 à R_cut 0–3). Le point 9×9, R_cut 4 du mémoire (2468) est dans `results/M/m_rcut_resigma.csv` : med_Gamma_meV = {extra}."]
@@ -1013,7 +1017,9 @@ def tex_value(s):
 
 
 def cmd_tex(args=None):
-    tex = ROOT / "memoire" / "défauts.tex"
+    tex = Path(getattr(args, "tex", None) or TEX).expanduser().resolve()
+    if not tex.is_file():
+        sys.exit(f"[tex] chapitre introuvable : {tex} (dépôt du mémoire attendu à côté de celui-ci ; sinon $MSC_THESIS ou --tex CHEMIN)")
     rows, _, _ = build_main_rows()
     _, crow, _, _ = complements()
     index = []  # (valeur, étiquette de ligne, colonne)
@@ -1053,8 +1059,8 @@ def cmd_tex(args=None):
         out_rows.append([line, s + (" %" if is_pct else ""), ctx, (" ; ".join(f"{lab} ({col})" for lab, col in hit[:6]) + (f" … (+{len(hit) - 6})" if len(hit) > 6 else "")) if hit else "non apparié"])
     never = [n for n in range(1, len(rows) + 1) if f"table l.{n}" not in cited]
     n_un = len(unmatched)
-    txt = [f"# Nombres cités dans `memoire/défauts.tex` (lecture seule ; {len(nums)} nombres)", "",
-           f"Date : {date.today().isoformat()} ; HEAD `{head()}` ; md5 défauts.tex {md5(tex)}. Généré par `ch4_chiffres.py tex` (appariement refait en partie 5.5). Exclusions : commentaires, \\label, \\ref, \\eqref, \\cite, "
+    txt = [f"# Nombres cités dans `défauts.tex` du mémoire (lecture seule ; {len(nums)} nombres)", "",
+           f"Date : {date.today().isoformat()} ; HEAD `{head()}` ; chapitre lu dans le dépôt du mémoire, `{'/'.join(tex.parts[-4:])}` (HEAD `{head(tex.parent)}`), md5 {md5(tex)}. Généré par `ch4_chiffres.py tex` (appariement refait en partie 5.5). Exclusions : commentaires, \\label, \\ref, \\eqref, \\cite, "
            "\\includegraphics, \\multicolumn, années (19xx/20xx), indices et exposants (précédés de ^ ou _). "
            "Appariement : le nombre du texte (virgule = point décimal) est comparé à tous les nombres des colonnes v1, final, non aligné de la table principale de `table_v1_final.md` (« table l.N » = rang dans cette table) "
            "et de sa section « Compléments » (« compl. 5.x … ») ; tolérance ½ unité de la dernière décimale du texte. "
@@ -1075,6 +1081,7 @@ def cmd_tex(args=None):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("cmd", choices=["check", "table", "regions", "notes", "tex", "all"])
+    ap.add_argument("--tex", help="chemin de défauts.tex (défaut : dépôt du mémoire voisin, ou $MSC_THESIS)")
     a = ap.parse_args()
     cmd_check(a, quiet=(a.cmd != "check"))
     if a.cmd in ("table", "all"):

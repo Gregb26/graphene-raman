@@ -1,6 +1,6 @@
 # Chiffres du chapitre 4 — table v1 → final
 
-Date : 2026-09-30 ; HEAD `90d2022` ; md5 `article/R6_production_corrigee/etape3/table_v1_v2.md` f8972c4de041dbd79e70b2899aa4f941 ; `article/R10_plateau/c/table_v2_plateau.md` 807bb352fcb989f01d94481955fe4c10 ; `results/M2_plateau/MD5SUMS_2026-09-30.txt` 9c29daedb9c417ba795bb39c0ed71bee. Généré par `memoire/ch4/ch4_chiffres.py table` (ne pas éditer à la main).
+Date : 2026-09-30 ; HEAD `7446981` ; md5 `article/R6_production_corrigee/etape3/table_v1_v2.md` f8972c4de041dbd79e70b2899aa4f941 ; `article/R10_plateau/c/table_v2_plateau.md` 807bb352fcb989f01d94481955fe4c10 ; `results/M2_plateau/MD5SUMS_2026-09-30.txt` 9c29daedb9c417ba795bb39c0ed71bee. Généré par `memoire/ch4/ch4_chiffres.py table` (ne pas éditer à la main).
 
 ## Nomenclature
 
@@ -657,7 +657,7 @@ Sources : `results/M/m_rcut_convergence.csv` (v1), `results/M2/m_rcut_convergenc
 
 Lignes en double : v1 : 14 lignes, couples (taille, R_cut) répétés : aucun ; non aligné : 14 lignes, couples (taille, R_cut) répétés : aucun ; final : 14 lignes, couples (taille, R_cut) répétés : aucun. **Aucune ligne en double dans les trois csv** (le csv v1 est seulement écrit en deux blocs : 9×9 et 12×12 R_cut 0–3, puis 9×9 et 12×12 R_cut 4–6). Colonnes égales dans le csv final (`max_dM_over_maxM` = `diag_max_dM_over_max`) : 12x12 R_cut 0, 12x12 R_cut 1, 12x12 R_cut 2, 12x12 R_cut 3, 9x9 R_cut 0 ; `diag_max_dM_over_max` = `diag_abs_mismatch` sur toutes les lignes des trois csv.
 
-### 5.2 Tableau niveau 1 du mémoire (tab:convergence_gamma, `memoire/défauts.tex` l.664–670) : médiane Γ·N_cells (meV), 240², η 0,02, N_k^int 300
+### 5.2 Tableau niveau 1 du mémoire (tab:convergence_gamma de `défauts.tex`, dépôt du mémoire) : médiane Γ·N_cells (meV), 240², η 0,02, N_k^int 300
 
 Sources : `level1_summary.csv` de `results/M` (v1), `results/M2` (non aligné), `results/M2_plateau` (final), colonne `median_Gamma_Ncells_meV` ; ordre des tailles = celui du mémoire.
 

@@ -14,8 +14,8 @@ from electron_defect_interaction.wannier.wannier_interpolation import (
 from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from electron_defect_interaction.defects.many_body.single_defect import compute_T
 from electron_defect_interaction.defects.many_body import local_tmatrix as lt
-from electron_defect_interaction.config import load_production, results_dir
-RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+from electron_defect_interaction.config import load_production, matrices_dir
+MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule)
 
 N = sys.argv[1] if len(sys.argv) > 1 else "5x5"
 dense = len(sys.argv) > 2 and sys.argv[2] == "--dense"
@@ -24,9 +24,9 @@ PF = {"5x5": (5, 25), "6x6": (4, 24), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3,
 if dense:
     D = PF[N][1]; W = f"wannier/{D}x{D}"
     uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
-    MFILE = f"{RES}/M_dense_{N}.npy"
+    MFILE = f"{MAT}/M_dense_{N}.npy"
 else:
-    W = f"wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"; MFILE = f"{RES}/M_ed_{N}.npy"
+    W = f"wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"; MFILE = f"{MAT}/M_ed_{N}.npy"
 k = qe_io.get_k_red(uc); Nc = len(k); MP = _infer_mp_grid(k)
 U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
 Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
@@ -60,4 +60,6 @@ print(f"[{N}] R_d={Rd.tolist()}  on-site ||V_loc(0,0)||={np.linalg.norm(on):.4f}
 print(f"[{N}] Gamma range dense*Nc: {Gd.min():.3e}..{Gd.max():.3e}  local: {Gl.min():.3e}..{Gl.max():.3e}")
 print(f"[{N}] REAL GOLDEN: max|local - dense*N_cells| rel = {rel:.2e} (seuil 1e-8) : {'PASS' if rel < 1e-8 else 'FAIL'}")
 print(f"[{N}] positivity min Gamma(local) = {Gl.min():.3e}")
-print("RESULT:", "PASS" if (rel < 1e-8 and Gl.min() >= -1e-8) else "FAIL")
+ok = rel < 1e-8 and Gl.min() >= -1e-8
+print("RESULT:", "PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

@@ -401,3 +401,12 @@ index c678547..e973270 100644
  | C15 | Règle de somme de Friedel, deux formules (Tr[t g₀′] vs Lloyd) | K | `resonance_criteria.py:57–75` ; R6 : par bloc (`--blocks full,pi,sigma`) | — | final : −1,0005 / −1,0005 états sur toute la bande (π −0,9981, σ −0,0024) ; +0,702 dans ±3 eV [v1 : −0,0569 / −0,0569 ; +1,78] |
  | C16 | Critère de résonance (det, valeur propre minimale) et position du pic | K | `resonance_criteria.py:41–55` ; R6 : par bloc, `--flag-eV` | — | final : minimum global à −0,785 eV (det) / −0,787 eV (\|λ\| = 0,0019), porté par le bloc σ ; bloc π sans zéro (min \|λ\| 0,3440 à −0,127 eV) ; pic de la courbe Γ_T −0,180 eV ; E_res(argmax Γ) retiré (R10 B.1 ; valeur −0,175 eV) [v1 : minimum unique à −2,530 eV ; E_res −1,24 eV] |
 ```
+
+## Addendum — chapitre lu dans le dépôt du mémoire (2026-09-30, après `6340c2f`)
+
+La copie `memoire/défauts.tex` a été retirée du dépôt (`6340c2f`) ; `ch4_chiffres.py tex` lisait ce chemin en dur. Le pilote lit maintenant
+`memoire/chapitres/défauts.tex` dans le dépôt du mémoire (`../msc-graphene-raman-defects`, sinon `$MSC_THESIS` ou `--tex CHEMIN`) et s'arrête avec
+un message si le fichier manque. `tex` et `table` relancés : mêmes comptes (606 nombres ; 234 / 63 / 309 ; 22/207), porte 5.4 PASS. Dans
+`defauts_nombres.md`, seuls l'en-tête (HEAD du mémoire `4da4d62`, md5 6d6c7c60…) et les numéros de ligne changent : **+1 partout**, l'original ayant
+une ligne vide de plus en tête que l'ancienne copie (md5 70140bc0…). Dans `table_v1_final.md`, seuls l'en-tête (HEAD) et le titre de 5.2 changent.
+Les mentions de `memoire/défauts.tex` plus haut dans ce rapport décrivent l'état d'avant.

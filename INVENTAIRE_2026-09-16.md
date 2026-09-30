@@ -16,6 +16,13 @@ dossier local de ce dépôt a été renommé `raman-graphene` → **`graphene-ra
 GitHub et que le clone rorqual) ; ce renommage **casse l'installation éditable du venv** (§0 bis, §11, §13 étape 0).
 Aucun fichier suivi n'a changé depuis la troisième passe ; tout le reste a été revérifié tel quel (comptes de fichiers
 suivis, 199 tests collectés avec `PYTHONPATH=src`, 20 figures du mémoire dont 8 diffèrent, md5 de `défauts.tex`).
+**Cinquième passe, courte (HEAD `7446981`, 2026-09-30 12:31, arbre propre, `main` = `origin/main`)** : trois commits de
+plus (`214ed02`, `6340c2f`, `7446981`). L'**étape 0 est faite** (installation éditable réparée par Greg, 199 tests
+collectés sans `PYTHONPATH`) ; la campagne `memoire/ch4/` a reçu sa **partie 5** (compléments, trois lignes de
+`NOTES_TGAMMA.md`) ; **`memoire/défauts.tex` a été retiré du dépôt**, ce qui casse `ch4_chiffres.py tex` (§6.2, §11) ;
+côté mémoire, `PROVENANCE.md` est commité et le PDF compilé n'est plus suivi (HEAD `4da4d62`). Détail au §0 bis ;
+sections touchées : §6.2, §7, §8, §9, §11, §12, §13. Rien d'autre n'a changé (comptes de fichiers suivis, `results/`,
+`scripts/`, `src/`, `article/`, `figures/` identiques ; les 8 mêmes figures diffèrent).
 
 Méthode : lecture de chaque fichier de `scripts/`, `src/`, `tests/`, `article/`, `memoire/`, `results/`, `config/`,
 `.md` racine ; résolution **par import réel** de tous les `from electron_defect_interaction… import …` (635 imports,
@@ -67,39 +74,46 @@ terminée, gardé pour la provenance, encore exécutable ; **obsolète** = rempl
 | `656c05c` « re-did inventory for eventual clean up » | ce fichier (première passe) | — |
 | `7ac2c69` « updated inventory for cleanup » | ce fichier (seconde passe) | — |
 | `e916500` « initialisation de PROVENANCE.md » | ce fichier (troisième passe) ; malgré son titre, ne touche que cet inventaire (le `PROVENANCE.md` est dans le dépôt du mémoire) | — |
+| `214ed02` « finished all calculations on the cluster » (12:19) | `memoire/ch4/` **partie 5** : `ch4_chiffres.py` (+187 l., fonctions `compl_5_1` … `compl_5_4`, appariement du tex refait), `table_v1_final.md` (section « Compléments »), `defauts_nombres.md` (refait), `ch4_rapport.md` (partie 5, annexe C), `README.md`, nouveau `NOTES_TGAMMA_partie5.diff` ; `NOTES_TGAMMA.md` : trois lignes (§2 ×2, C13). Aucun fichier de `results/`, `article/`, `scripts/`, `src/` ni `figures/` : le titre annonce la fin des calculs, le commit ne contient que des chiffres relus en local | §6.2, §9, §12 |
+| `6340c2f` « removed thesis chapter » (12:21) | suppression de `memoire/défauts.tex` (la copie du ch. 4 ; l'original reste dans le dépôt du mémoire) | §6.2, §11 (`ch4_chiffres.py tex` cassé), §12 (doublon résolu), §13 étape D |
+| `7446981` « inventory update » (12:22) | ce fichier (quatrième passe) | — |
 
 Hors dépôt, le même matin : **le dépôt du mémoire a changé deux fois de place, et de forme.** Emplacement actuel :
-**`~/projects/msc-graphene-raman-defects/`** (remote GitHub `Gregb26/msc-graphene-raman-defects`, HEAD `e07e0d5`
-« updated readme cosmetic », 11:37 ; inchangé à la quatrième passe). Des deux anciens emplacements, `~/LaTeX/master_thesis`
+**`~/projects/msc-graphene-raman-defects/`** (remote GitHub `Gregb26/msc-graphene-raman-defects`, HEAD **`4da4d62`**
+à la cinquième passe, arbre propre ; `e07e0d5` aux troisième et quatrième). Des deux anciens emplacements, `~/LaTeX/master_thesis`
 (première passe) existe encore, **vide** depuis 11 h 21 ; `~/LaTeX/msc-graphene-raman-defects` (seconde passe) **n'existe
 plus**. Le dossier parent s'appelle `~/projects` (minuscule), et `~/projects/qe_pp` est le voisin de ce dépôt.
 
 **Renommage local de ce dépôt (quatrième passe, vers 11 h 46)** : `~/projects/raman-graphene` → **`~/projects/graphene-raman`**.
 Le nom local rejoint celui du remote (`Gregb26/graphene-raman`), du clone rorqual, de CLAUDE.md l. 46-49 et de
-`PROVENANCE.md` ; `~/projects/raman-graphene` n'existe plus (aucun dépôt, ni de code ni du mémoire, à ce chemin).
-Effets vérifiés :
+`PROVENANCE.md` ; `~/projects/raman-graphene` n'existait plus à 11 h 53 ; à la cinquième passe c'est un **dossier vide**,
+recréé à 11 h 55 (ni dépôt ni fichier ; origine inconnue, probablement l'ancienne fenêtre de l'éditeur ouverte sur ce
+chemin) : à supprimer par `rmdir` s'il n'est pas voulu. Effets vérifiés (état de la quatrième passe, puis de la cinquième) :
 
 | Élément | État après renommage | Remarque |
 |---|---|---|
 | fichiers suivis | aucun chemin `raman-graphene` ni `/Users/gregou` (`git grep`, hors ce fichier) ; `config.ROOT` se déduit de `__file__` → `/Users/gregou/projects/graphene-raman` | rien à corriger dans le dépôt |
-| **installation éditable** | **cassée** : `.venv/lib/python3.13/site-packages/__editable__.electron_defect_interaction-0.1.0.pth` pointe vers `/Users/gregou/Projects/raman-graphene/src` (inexistant) ; `import electron_defect_interaction` → `ModuleNotFoundError` ; `.venv/bin/python -m pytest tests` échoue au chargement de `conftest.py` | contournement : `PYTHONPATH=src` (199 tests collectés) ; réparation : §13 étape 0 |
-| exécutables du venv | `.venv/bin/pytest` et `py.test` ont un shebang vers l'ancien chemin (morts) ; `activate` et `pyvenv.cfg` citent un chemin encore plus ancien (`~/electron_defect_interaction/.venv`) | `.venv/bin/python -m …` fonctionne ; venv jamais recréé depuis août 2025 |
+| **installation éditable** | **cassée** : `.venv/lib/python3.13/site-packages/__editable__.electron_defect_interaction-0.1.0.pth` pointe vers `/Users/gregou/Projects/raman-graphene/src` (inexistant) ; `import electron_defect_interaction` → `ModuleNotFoundError` ; `.venv/bin/python -m pytest tests` échoue au chargement de `conftest.py` | contournement : `PYTHONPATH=src` (199 tests collectés) ; **réparée à la cinquième passe** (étape 0 faite par Greg) : `.pth` et `direct_url.json` → `/Users/gregou/projects/graphene-raman`, import et collecte pytest (199 tests) sans `PYTHONPATH` |
+| exécutables du venv | `.venv/bin/pytest` et `py.test` ont un shebang vers l'ancien chemin (morts, **encore à la cinquième passe** ; `pip` a été réécrit) ; `activate` et `pyvenv.cfg` citent un chemin encore plus ancien (`~/electron_defect_interaction/.venv`) | `.venv/bin/python -m …` fonctionne ; venv jamais recréé depuis août 2025 |
 | liens symboliques, `data/` | aucun lien dans l'arbre (hors `.venv`) ; rien de cassé | — |
 | variables `PROJECTS`, `GRAPHENE_RAMAN` | non définies en local (elles le sont dans `~/.bashrc` de rorqual) ; le défaut `$PROJECTS/graphene-raman` des pilotes et d'EM2 correspond maintenant aussi au nom local | EM3 (`make_em3_data.py`) les pose lui-même depuis `__file__` |
 | mémoire persistante de Claude Code | rangée par chemin : l'ancienne est sous `~/.claude/projects/-Users-gregou-Projects-raman-graphene/memory/` (7 notes), la nouvelle (`-Users-gregou-projects-graphene-raman`) était vide | notes recopiées et mises à jour à la quatrième passe ; les transcriptions des anciennes sessions restent sous l'ancien chemin |
 
-État du dépôt du mémoire à `e07e0d5` :
+État du dépôt du mémoire à `e07e0d5`, mis à jour à `4da4d62` (deux commits de 11:59-12:00, « fin du suivi git du pdf
+compilé pour linstant » : `c844c22` retire `master_thesis.pdf` du suivi, `4da4d62` l'ajoute au `.gitignore` et commite
+`PROVENANCE.md`) :
 
 | Élément | Contenu | Remarque |
 |---|---|---|
-| `memoire/` | source LaTeX (`master_thesis.tex`, `chapitres/`, `annexes/`, `pages_liminaires/`, `tikz/`, `dms.cls`, `.latexmkrc`, `build/`) ; `figures/` réduit aux **20 PDF inclus** (les 19 figures non incluses ont été retirées) | `latexmk` depuis `memoire/`, PDF écrit à la racine (`master_thesis.pdf`) |
+| `memoire/` | source LaTeX (`master_thesis.tex`, `chapitres/`, `annexes/`, `pages_liminaires/`, `tikz/`, `dms.cls`, `.latexmkrc`, `build/`) ; `figures/` réduit aux **20 PDF inclus** (les 19 figures non incluses ont été retirées) | `latexmk` depuis `memoire/`, PDF écrit à la racine (`master_thesis.pdf`, **ignoré par git depuis `4da4d62`**) |
 | `analyse/`, `calculs/`, `donnees/`, `scripts_figures/` | dossiers d'accueil, **encore vides** (un README d'une ligne chacun) | à remplir : §13 étape F |
 | `README.md` | structure, compilation, installation du venv ; « Scripts : à venir », « Données lourdes : à venir » | — |
-| `PROVENANCE.md` (172 l. ; suivi mais **vide** dans `dfc3180`, contenu **non commité** à 11:53) | registre de provenance : les 20 figures incluses (label, `.tex:ligne`, producteur et données dans ce dépôt, état R10 ou R6), les figures à venir, les 16 tables, les chiffres cités par chapitre, annexe ligne par ligne | **s'appuie sur ce fichier** (`INVENTAIRE_2026-09-16.md` §8, §10, §13 étape F, HEAD `656c05c`) ; sa colonne « Dans msc- » est vide et se remplira à la copie, avec le commit source |
+| `PROVENANCE.md` (172 l. ; vide dans `dfc3180`, **commité dans `4da4d62`**) | registre de provenance : les 20 figures incluses (label, `.tex:ligne`, producteur et données dans ce dépôt, état R10 ou R6), les figures à venir, les 16 tables, les chiffres cités par chapitre, annexe ligne par ligne | **s'appuie sur ce fichier** (`INVENTAIRE_2026-09-16.md` §8, §10, §13 étape F, HEAD `656c05c`) ; sa colonne « Dans msc- » est vide et se remplira à la copie, avec le commit source |
 | `requirements.txt`, `.venv/` (Python 3.12.1) | gel de 154 paquets d'un environnement généraliste (abipy, netCDF4, torch, jupyterlab, numpy 1.26.4, matplotlib 3.8.2) | **ne correspond pas** au venv de ce dépôt (Python 3.13, numpy 2.3.5) ; sans `mpi4py`, `pytest` ni le paquet `electron_defect_interaction` : à refaire quand `analyse/` et `scripts_figures/` seront remplis |
 
 Conséquences pour cette carte : §8 (chemin et contenu de `figures/`), §10 et §13 étape F (où copier quoi, et
-articulation avec `PROVENANCE.md`). Le skill `thesis-section-pass` cite encore `~/LaTeX/master_thesis`.
+articulation avec `PROVENANCE.md`). Le skill `thesis-section-pass` citait encore `~/LaTeX/master_thesis` ; **corrigé à la
+cinquième passe** (description et SKILL.md l. 9 : `~/projects/msc-graphene-raman-defects`).
 
 Ce que la seconde passe change dans les constats ci-dessus : le point 3 est corrigé dans CLAUDE.md et NOTES_TGAMMA.md
 (reste README.md, PLAN C, `submit_post.sh`) ; le point 4 ne vaut plus pour NOTES_TGAMMA.md ; le point 5 est inchangé
@@ -171,7 +185,7 @@ en dur `/home/gregb26/links/scratch/qe_tmp` : tout script qui l'appelle ne tourn
 ## 2. `src/electron_defect_interaction/` (42 fichiers suivis)
 
 Paquet d'espace de noms (pas de `__init__.py` à la racine ni dans `io/`, `wannier/`, `wavefunctions/`, `plotting/`,
-`many_body/`), installé en éditable (`.pth` → `src/` ; **`.pth` périmé depuis le renommage du dossier, §0 bis**). `mpi4py` est importé au chargement de `local_G`, `local_R`,
+`many_body/`), installé en éditable (`.pth` → `src/` ; refait après le renommage du dossier, §0 bis). `mpi4py` est importé au chargement de `local_G`, `local_R`,
 `non_local` (donc `deltav_pw`) et absent de `requirements.txt`.
 
 | Module | Rôle | Importé par | Campagne | Statut |
@@ -468,6 +482,19 @@ emplacement (pas de répertoire de travail hors dépôt). But : source unique po
 finale (v2 + alignement de Kumagai–Oba, `results/M2_plateau`). Rien n'a été touché dans `src/`, `scripts/`, `config/`,
 `results/`, `article/`, `figures/` ; seul fichier modifié hors du répertoire : `NOTES_TGAMMA.md`.
 
+**Cinquième passe** : le tableau ci-dessous décrit l'état de `90d2022` ; ce qui a changé avec `214ed02` (partie 5) et
+`6340c2f` (chapitre retiré), 12 fichiers suivis dans `memoire/ch4/` :
+
+| Fichier | Changement | Conséquence |
+|---|---|---|
+| `ch4_chiffres.py` (904 → 1 091 l.) | fonctions `compl_5_1` … `compl_5_4`, `complements`, `curve_scalars` ; appariement du tex refait (pourcentages × 100, notation scientifique lue en entier, entiers < 100 comparés dans les `tabular`) ; `all` réécrit la date et le HEAD des en-têtes | `check` rejoué à la cinquième passe : PASS (13 C_N, écart 0) ; `tex` (et donc `all`) cassé par `6340c2f`, **réparé** : lit le chapitre dans le dépôt du mémoire (`THESIS`/`TEX`, `$MSC_THESIS`, `--tex`), §11 |
+| `table_v1_final.md` (631 → 738 l.) | section « Compléments » en fin de fichier : 5.1 tab:rcut_M en % (trois csv, 9×9 et 12×12, R_cut 0…6), 5.2 tableau niveau 1 (6 tailles × R_cut 0…4), 5.3 tab:échantillonnage (ΔE_F, V̄ à a_CC, aligné = non aligné − C_N), 5.4 scalaires lus sur les courbes des npz (Born/T min 1,050 / max 202,851 ; Γ_T à c = 0,1 % : 2,48 / 40,58 / 8,47 meV ; ħ/Γ 26 / 212 fs), porte PASS sur les 8 valeurs v1 et non alignées publiées | table principale (207 lignes) et sections a–l inchangées ; l'en-tête dit encore HEAD `90d2022` (généré avant le commit) |
+| `defauts_nombres.md` (565 → 685 l.) | refait : **606 nombres** ; appariés **234**, non appariés 63, entiers courts hors `tabular` non comparés 309 ; lignes de la table jamais citées 22/207 (avant : 553 ; 87 / 67 / 399 ; 59/207) | régénéré après réparation sur l'original du dépôt du mémoire (HEAD `4da4d62`, md5 6d6c7c60…) : mêmes comptes, numéros de ligne +1 |
+| `NOTES_TGAMMA_partie5.diff` (29 l., nouveau) | `git diff` des trois lignes de `NOTES_TGAMMA.md` | **redondant** avec l'annexe C de `ch4_rapport.md` et `git show 214ed02 -- NOTES_TGAMMA.md` |
+| `ch4_rapport.md` (333 → 403 l.) | « Partie 5 — compléments » et annexe C ; constats : aucune ligne en double dans les trois `m_rcut_convergence.csv` ; `results/M/level1_summary.csv` n'a pas de R_cut 4 (le 2 468 du mémoire vient de `m_rcut_resigma.csv`) | se termine sur « STOP — Greg relit et commit » (fait : `214ed02`) |
+| `README.md` | lignes `table_v1_final.md`, `defauts_nombres.md`, relance ; ligne `NOTES_TGAMMA_partie5.diff` | mentions de `memoire/défauts.tex` corrigées (dépôt du mémoire) ; dit toujours « `CLAUDE_md.diff` non appliqué » |
+| `memoire/défauts.tex` | **supprimé** (`6340c2f`) | unique exemplaire : `~/projects/msc-graphene-raman-defects/memoire/chapitres/défauts.tex` (md5 6d6c7c60…, 750 l., toujours v1, 0 occurrence de « Kumagai ») ; les mentions de l'ancien chemin ne subsistent que dans le corps historique de `ch4_rapport.md` (addendum en fin de rapport) |
+
 | Fichier | Rôle | Lit | Utilisé par / pour | Statut |
 |---|---|---|---|---|
 | `ch4/ch4_chiffres.py` (904 l.) | pilote unique, sous-commandes `check` (porte : 13 C_N de la config redonnés au bit par la règle ≥ 0,75 r_max), `table`, `regions`, `notes`, `tex`, `all` ; racine déduite de `__file__` ; **aucun import du paquet** (numpy, matplotlib ; `scripts/_palette` par `sys.path` l. 725 pour la figure) | `article/R{4,5,6,8,9,10}` (tables, json, npz), `results/M2`, `results/M2_plateau` (csv, npz, `MD5SUMS_2026-09-30.txt`), `config/production.json`, `memoire/défauts.tex`, `wannier/27x27/wannier.wout` | relance : `.venv/bin/python memoire/ch4/ch4_chiffres.py all` | **actif** ; `check` rejoué en local le 2026-09-30 : PASS (écart 0,0 eV) ; `regions` lit les `scf.in` des super-cellules **hors dépôt** (`/lustre09/project/…/graphene/qe/defects/super_cell/<N>/defective/scf.in`, chemins tirés d'`a1_results.json`) → rorqual seulement ; `notes` appelle `git diff` |
@@ -495,8 +522,9 @@ points 1–2 et 5 de R6 encore ouverts.
 | **pytest** `tests/` (12 fichiers, 199 tests, collecte 0,31 s sans erreur) | `conftest.py` (fixtures jouet + `wannier/27x27` avec sha256 `W90_SHA256`, valeurs de référence `W90_REF`), `test_diagnostics` (16), `test_kgrid` (6), `test_kubo` (27, un test ~13 s), `test_ring` (65), `test_tb_model` (23), `test_velocity_operator` (28), `test_wannier_io` (9) — **EM** ; `test_matrix_io_units` (5, `tmp_path`) — chaîne M ; `test_r8_functions` (8, `disorder_average`, `pole_criterion`, `tb_models`, résolvante directe 6×6), `test_r9_functions` (4, `alignment`, `Mwr_to_Mwk_pairs`, `cluster_ldos`, `ldos_from_eigenpairs`), `test_r10_functions` (8, `ws_images`, `ws_phase`, `defect_mwr`, `recenter_mwr`) — synthétiques | modules EM, `matrix_io`, fonctions R8/R9/R10 de la chaîne T ; **pas** `compute_ML_*`, `non_local`, `wannier_interpolate`, `scattering_rate(_fast)` | aucune donnée externe hors `wannier/27x27` (versionné) | `.venv/bin/python -m pytest tests` ; aucun `sys.path`, aucun import de `scripts/` ni des pilotes |
 | **scripts autonomes** `scripts/test_*.py` (8) + `validate_wannier_bands.py` | voir §4.6 | chaîne M (reconstruction KS, zero-padding, interpolation Wannier) et test d'or de la chaîne T | `.save` locaux 5×5/11×11 ou aucune ; 2 exigent le cluster | `.venv/bin/python scripts/test_X.py` ; PASS/FAIL, code 0/1 (sauf `test_local_green_batch` sans code, `test_local_tmatrix_real` toujours 0) |
 
-Depuis le renommage du dossier (quatrième passe), les deux systèmes exigent `PYTHONPATH=src` tant que le `.pth` n'est
-pas refait (§13 étape 0) ; la collecte redonne alors 199 tests. CLAUDE.md l. 44 (« no pytest ») contredit l. 50 et l'existence de `tests/` ; sa liste l. 139 omet
+Le renommage du dossier (quatrième passe) imposait `PYTHONPATH=src` ; le `.pth` est refait depuis la cinquième passe
+(§13 étape 0) et `.venv/bin/python -m pytest tests` collecte de nouveau 199 tests (`.venv/bin/pytest` reste mort,
+shebang périmé). CLAUDE.md l. 44 (« no pytest ») contredit l. 50 et l'existence de `tests/` ; sa liste l. 139 omet
 `test_matrix_io_units`, `test_r8/r9/r10_functions`. `pyproject.toml` n'a pas de `[tool.pytest]` ; `pytest` et
 `mpi4py` sont absents de `requirements.txt`.
 
@@ -515,7 +543,7 @@ Producteurs : `make_figures_memoire.py` (6 `_final`/`fig_convergence`/`fig_Ved`)
 
 Le dépôt du mémoire — **`~/projects/msc-graphene-raman-defects/memoire/`** depuis le 2026-09-30 (HEAD `e07e0d5` ;
 chapitres dans `chapitres/` ; historique des emplacements au §0 bis) — inclut **20 figures**, et son `figures/` ne
-contient plus que ces 20 PDF (liste et comparaison md5 revérifiées à `e07e0d5` : inchangées, 8 diffèrent) :
+contient plus que ces 20 PDF (liste et comparaison md5 revérifiées à `e07e0d5`, puis à `4da4d62` : inchangées, 8 diffèrent) :
 
 | Figure (mémoire) | Chapitre | Producteur ici | md5 mémoire vs `figures/` (2026-09-30) |
 |---|---|---|---|
@@ -535,9 +563,30 @@ par figure, avec le label LaTeX et la ligne du `.tex`.
 À venir pour le ch. 4 (décidées, pas encore dans le mémoire ni dans `figures/`) : les cinq figures de R8
 `article/R8_kaasbjerg/fig/{dos_c,spectral_GKM,sigma_K,sensibilites,superposition}.pdf` (produites par
 `r8_driver.py fig` et, pour `sigma_K`, `r8_driver.py sigeff` ; noms sans préfixe `fig_`) et, si elle est retenue, `memoire/ch4/alignement_regions.pdf`
-(`ch4_chiffres.py regions`). Le texte de `défauts.tex` est encore à l'état v1 (aucune occurrence de « Kumagai », 87
-nombres appariés à des valeurs v1) : la réécriture s'appuie sur `memoire/ch4/table_v1_final.md` et
-`defauts_nombres.md`.
+(`ch4_chiffres.py regions`). Le texte de `défauts.tex` (dépôt du mémoire, seul exemplaire depuis `6340c2f`) est encore à
+l'état v1 (aucune occurrence de « Kumagai » ; 234 nombres appariés sur 606 depuis la partie 5, contre 87 sur 553) : la
+réécriture s'appuie sur `memoire/ch4/table_v1_final.md` (table principale + compléments 5.1–5.4) et `defauts_nombres.md`.
+
+**Figures hors de `figures/` (cinquième passe ; Greg : « des figures dispersées dans `article/` et `memoire/` vont dans
+le mémoire aussi »).** `figures/` n'est donc pas la seule source de l'étape F. Recensement des figures suivies ailleurs
+(PDF + PNG), avec ce qui est déjà décidé ; la colonne de droite est **à arbitrer figure par figure** à l'étape F :
+
+| Emplacement | Figures (noms sans extension) | Producteur | Pour le mémoire ? |
+|---|---|---|---|
+| `article/R8_kaasbjerg/fig/` | `dos_c`, `spectral_GKM`, `sigma_K`, `sensibilites`, `superposition` | `r8_driver.py fig` / `sigeff` | **oui, décidé** (ch. 4 ; `241739e`, `PROVENANCE.md` l. 53) |
+| idem | `7a_controle`, `dos_c_rho0_300`, `superposition_rho0_300` | `r8_driver.py` | non (hors portée, README R8) |
+| `memoire/ch4/` | `alignement_regions` | `ch4_chiffres.py regions` (rorqual) | « si retenue » : à trancher |
+| `memoire/EM/EM2/` | `em2_A_anneaux`, `em2_B_sigma` | `em2_A_figure.py`, `em2_B_figure.py` | validation du §2.5 : à trancher (annexe ?) ; `fig_em_coupling`, elle, est déjà dans `figures/` |
+| `memoire/EM/B_sigma_complex/` | `b_sigma_complex` | `b_figure.py` | non (perspective B, hors mémoire) |
+| `article/R10_plateau/fig/` (hors les 28 `fig_*` identiques à `figures/`) | `offset_profiles_13`, `levels_vs_invN`, `eres_vs_grid`, `kaasbjerg_plateau_ws`, `M_map_brut_aligne`, `dV_z_profiles` ; `avant_apres/` (28) | `r10_driver.py` | contrôles de l'alignement : à trancher (candidats naturels si le ch. 4 justifie Kumagai–Oba) |
+| `article/R9_controles/fig/` | `offset_profiles`, `resonance_vs_nkint{,_R9,_plateau}`, `rcut_aligned`, `folded_vs_R7`, `kaasbjerg_fig3_map` | `r9_driver.py` | contrôles ch. 4, « non installées » : à trancher |
+| `article/R7_tailles_3m/fig/` | `size_3m`, `localized_3m` (+ `_d1_8pts`, `_d1_reg`) | `r7_driver.py` | prévu pour l'article : à confirmer |
+| `article/R4_quasi_lie/fig/`, `R5_base_vs_M/fig/`, `R6_production_corrigee/etape2/fig/` | `d1_states`, `d3_alpha_*`, `d4_ladder`, `d5_boundary`, `d6_*` ; `a_delta`, `a_ladder_corrected`, `size`, `delta_vs_n`, `ladder_bands` ; `b3_ladder_M2`, `d3_pole_M2`, `d4_ladder_M2` | `r4_driver.py`, `r5_driver.py`, `r6_d4.py` | prévu pour l'article (R4 en v1) : à confirmer |
+| `article/R6_production_corrigee/etape3/figures_{v2,fix}/` | versions R6 des figures de `figures/` | `make_figures*` (R6) | non (remplacées par R10) |
+
+Conséquence pour l'étape F : chaque figure retenue hors de `figures/` apporte son producteur (un pilote de campagne, pas
+un `make_figures*`) et ses données (`out/`, json, npz de la campagne) ; à inscrire dans `PROVENANCE.md` « figures à
+venir », qui ne liste aujourd'hui que les cinq R8, `alignement_regions` et `fig_em_coupling`.
 
 Tables du mémoire (labels `tab:`) et leur source ici : `tests_M` ← `M_tests_summary.csv` ; `L_NL` ← `lnl_frobenius.csv` ;
 `rcut_M` ← `m_rcut_convergence.csv` ; `échantillonnage` ← `sampling_table.csv` ; `convergence_gamma`, `tests_T`,
@@ -552,11 +601,11 @@ Tables du mémoire (labels `tab:`) et leur source ici : `tests_M` ← `M_tests_s
 
 | Fichier | Rôle | Statut | Points périmés (ligne) |
 |---|---|---|---|
-| `CLAUDE.md` (25,8 Ko) | guide Claude Code | partiellement périmé ; **corrigé par `90d2022`** : l. 243 (`results_dir` = M2_plateau, `matrices_dir`, `results_dir_frozen`), l. 255 (`sampling_table.csv`), nouvelle ligne « Alignement du potentiel de défaut » (→ `memoire/ch4/`), ligne `memoire/ch4/` du tableau des campagnes ; le reste de la colonne de droite vaut toujours (l. 44, 59, 63, 131, 156, 217, 240 revérifiées sur `656c05c`) | l. 44 « no pytest » ; l. 59/63-65/217 `run.py`, `compute_M_cluster.py` ; l. 91-94 `use_ws_distance` sans la nuance R10 (`ws_images`) ; l. 97-143 carte des modules sans `config`, `matrix_io`, `projwfc_io`, `qe_gamma_io`, `wannier_provenance`, `alignment`, `deltav_pw`, `many_body/*`, `supercell_fold`, `sc_projection`, `electron_phonon`, `plotting` ; l. 131 `single_defect` « orphan » ; l. 139 tests incomplets ; l. 156 « no defective 12×12 » ; l. 157/203 `M_ed.npy` à la racine et « not covered by .gitignore » (faux : `*.npy` ignoré) ; l. 240 figsize ; l. 243 `results/M2` vivant ; l. 302 règle 4 manquante ; l. 314-328 tableau sans R2–R10 ni C ; l. 46-49 nom du dossier : **de nouveau exact** depuis le renommage local en `graphene-raman` (quatrième passe), mais l. 38 et 50 (« already done in .venv », « The venv has the editable install ») sont fausses tant que le `.pth` n'est pas refait |
+| `CLAUDE.md` (25,8 Ko) | guide Claude Code | partiellement périmé ; **corrigé par `90d2022`** : l. 243 (`results_dir` = M2_plateau, `matrices_dir`, `results_dir_frozen`), l. 255 (`sampling_table.csv`), nouvelle ligne « Alignement du potentiel de défaut » (→ `memoire/ch4/`), ligne `memoire/ch4/` du tableau des campagnes ; le reste de la colonne de droite vaut toujours (l. 44, 59, 63, 131, 156, 217, 240 revérifiées sur `656c05c`) | l. 44 « no pytest » ; l. 59/63-65/217 `run.py`, `compute_M_cluster.py` ; l. 91-94 `use_ws_distance` sans la nuance R10 (`ws_images`) ; l. 97-143 carte des modules sans `config`, `matrix_io`, `projwfc_io`, `qe_gamma_io`, `wannier_provenance`, `alignment`, `deltav_pw`, `many_body/*`, `supercell_fold`, `sc_projection`, `electron_phonon`, `plotting` ; l. 131 `single_defect` « orphan » ; l. 139 tests incomplets ; l. 156 « no defective 12×12 » ; l. 157/203 `M_ed.npy` à la racine et « not covered by .gitignore » (faux : `*.npy` ignoré) ; l. 240 figsize ; l. 243 `results/M2` vivant ; l. 302 règle 4 manquante ; l. 314-328 tableau sans R2–R10 ni C ; l. 46-49 nom du dossier : **de nouveau exact** depuis le renommage local en `graphene-raman` (quatrième passe), et l. 38 et 50 (« already done in .venv », « The venv has the editable install ») sont de nouveau vraies depuis l'étape 0 (cinquième passe) |
 | `README.md` (4,4 Ko, anglais) | vitrine GitHub | périmé | l. 18-19 M^L « in reciprocal space » (production = noyau réel) ; l. 24-25 « Born fails by 3–16 » (v1 ; v2 : médian 46,5) ; l. 52-59 layout sans `article/`, `memoire/`, avec `notebooks/` inexistant ; l. 56 `results/M` production ; l. 63-65 `data/` en liens (vrais fichiers en local) ; série EM absente |
 | `CLEANUP.md` (23,3 Ko) | plan et journal du ménage P13 (rorqual) | clos ; en-tête périmé | l. 6-8 « dry-run… rien supprimé » ; l. 185 « non poussés » ; reste : 9 répertoires vides scratch (l. 235-244), `graphene_scf.save` 1,95 Gio, `phonons/graphene.wfcN` ~0,9 Gio, étage `codes/` éventuel (l. 154-156, nom « étage 7 » réattribué à R1) |
 | `INVENTAIRE_2026-09-16.md` | ce fichier (ex-inventaire rorqual) | réécrit 2026-09-30 | — |
-| `NOTES_TGAMMA.md` (45,1 Ko depuis `90d2022`) | chaîne t/Γ : étapes, paramètres, contrôles C1–C18, balayage N_k^int ; **état final R10** | **à jour sur le fond** (mis à jour le 2026-09-30 par la campagne `memoire/ch4/`) : en-tête « Mise à jour R10 — état final », §1 (ligne « Alignement du potentiel » = Kumagai–Oba, 13 C_N, `defect_mwr`, images WS ; coûts R10), §2 et §3 en valeurs finales (`results/M2_plateau`), C14 redéfini, E_res retiré, nouveau §6e (N_k^int final), nouveau §8 (R10 : décision, code, portes, non aligné → final pour Re Σ et Kaasbjerg, Fig. 13–14 de R8, constats ouverts) | reste périmé : l. 6 `ab-initio-defects` ; §0 décrit encore la chaîne sans `defect_mwr` (recentrage seul) ; `fichier:ligne` du 2026-09-18 dérivés (ex. positivité `local_tmatrix.py:269-271` → l. 229/305) ; §4, §5, §7 = états historiques v1/R6 assumés ; §8 cite le hash réécrit `23ee3bb` ; A_k/DOS de R8 résumés au §8 seulement (pas d'étapes `disorder_average` au §0) |
+| `NOTES_TGAMMA.md` (45,1 Ko depuis `90d2022` ; 45,5 Ko depuis `214ed02` : les trois « non publiés par R10 » du §2 et de C13 — Born/T min et max, Γ_T à c = 0,1 %, ħ/Γ — sont remplis par les compléments 5.4) | chaîne t/Γ : étapes, paramètres, contrôles C1–C18, balayage N_k^int ; **état final R10** | **à jour sur le fond** (mis à jour le 2026-09-30 par la campagne `memoire/ch4/`) : en-tête « Mise à jour R10 — état final », §1 (ligne « Alignement du potentiel » = Kumagai–Oba, 13 C_N, `defect_mwr`, images WS ; coûts R10), §2 et §3 en valeurs finales (`results/M2_plateau`), C14 redéfini, E_res retiré, nouveau §6e (N_k^int final), nouveau §8 (R10 : décision, code, portes, non aligné → final pour Re Σ et Kaasbjerg, Fig. 13–14 de R8, constats ouverts) | reste périmé : l. 6 `ab-initio-defects` ; §0 décrit encore la chaîne sans `defect_mwr` (recentrage seul) ; `fichier:ligne` du 2026-09-18 dérivés (ex. positivité `local_tmatrix.py:269-271` → l. 229/305) ; §4, §5, §7 = états historiques v1/R6 assumés ; §8 cite le hash réécrit `23ee3bb` ; A_k/DOS de R8 résumés au §8 seulement (pas d'étapes `disorder_average` au §0) |
 | `NOTES_EPW.md` (53,7 Ko) | état de la chaîne EPW P0–P18, note R6 | fond à jour ; §5-§6 périmés | l. 4 ancien nom ; l. 219-222 `_ph0` restants (supprimés) ; l. 222/228 « commits à pousser » (poussés) ; l. 226 point ouvert : quelle chaîne (0.002 ou 0.02) le chapitre cite |
 | `NOTES_EPW_REPERES.md` (4,9 Ko) | repères durables EPW | à jour sauf | l. 8-9 « production degauss 0.002 » (ambigu depuis P18, figures en mv0.02) ; l. 20 grilles restantes (étage 1 fait) |
 | `REECRITURE_HISTORIQUE_2026-09-29.md` (38,8 Ko) | compte rendu de la réécriture git **exécutée** (Co-Authored-By retirés, courriels, 238 commits, bundle nearline) | fait et effectif | reste (l. 17-20) : hash dans les sorties json/logs et le code gelé R6/R7/R9 ; `23ee3bb` de R10 non traduit |
@@ -620,12 +669,31 @@ Hors dépôt mais nécessaires au ch. 2 : `~/projects/qe_pp` (`plot_ebands_edos.
 
 ## 11. Cassé, obsolète, incohérent (liste exacte)
 
-**Cassé par le renommage local du dossier (quatrième passe)** : l'installation éditable du venv (`.pth` →
-`/Users/gregou/Projects/raman-graphene/src`, inexistant). Tout ce qui importe le paquet sans `PYTHONPATH=src` échoue en
-local : `.venv/bin/python -m pytest tests`, les 8 `scripts/test_*.py`, `make_figures{,_memoire,_epw}.py`, les pilotes
-EM qui importent `electron_photon` (`m4_prod.py`, `make_em3_data.py`, `b_prod.py`, `em2_{kpoints,A_*,B_ours}.py`).
-Épargnés (aucun import du paquet) : `memoire/ch4/ch4_chiffres.py`, `make_figures_em.py`. Aucun fichier suivi n'est en
-cause ; réparation au §13 étape 0.
+**Arbitrage du §11 (Greg, 2026-09-30) — réparations faites, non commitées ; les listes plus bas décrivent l'état d'avant.**
+
+| Fichier | Décision | Fait |
+|---|---|---|
+| `scripts/test_local_tmatrix_real.py` | réparer | lit les M dans `matrices_dir` ; sort en code 0 (PASS) ou 1 (FAIL) ; non rejouable en local (scratch, nommage cluster), syntaxe vérifiée seulement |
+| `scripts/tag_vacancy_sublattice.py` | réparer | cherche les sidecars dans `matrices_dir` |
+| `scripts/submit_M.sh`, `submit_M_dense.sh` | réparer | écrivent les `M_*` dans `matrices_dir` (`MAT`), plus dans `results_dir` ; `bash -n` OK ; non soumis |
+| `scripts/submit_golden_dense.sh` | réparer | code de sortie = celui du test d'or ; l'appel à `check_M_dense_vs_coarse.py` (obsolète) est retiré, `analyze_M.py` fait ce contrôle |
+| `check_ML_coarse_kernel.py`, `check_M_dense_vs_coarse.py`, `check_onsite_and_NL.py` | obsolètes (absorbés par `analyze_M.py`, `mwr_locality_coarse_vs_dense.py`) | non modifiés ; iront dans `scripts/_obsolete/` à l'étape A |
+| `_mcheck.py`, `_normtest.py`, `validate_ML_grid_7x7.py`, `check_M_dense_nb20_vs_nb16.py` | obsolètes (non rejouables) | idem |
+| `article/R9_controles/r9_driver.py`, `article/R6_production_corrigee/etape3/r6_compare_v1_v2.py`, dérives de sens R4/R5/R6 | **en suspens** : politique des campagnes figées à arbitrer (archives rejouables à leur commit, pas à HEAD ?) | rien |
+
+**Cassé par le renommage local du dossier (quatrième passe), réparé à la cinquième** : l'installation éditable du venv
+(`.pth` → `/Users/gregou/Projects/raman-graphene/src`, inexistant) faisait échouer tout import du paquet sans
+`PYTHONPATH=src` (pytest, `scripts/test_*.py`, `make_figures{,_memoire,_epw}.py`, pilotes EM). Étape 0 faite : il ne
+reste que les shebangs morts de `.venv/bin/pytest` et `py.test`.
+
+**Cassé par le retrait de `memoire/défauts.tex` (`6340c2f`, cinquième passe), réparé le même jour (non commité)** :
+`memoire/ch4/ch4_chiffres.py tex` et `all` plantaient (`FileNotFoundError`, chemin fixe `ROOT/memoire/défauts.tex`). Le
+pilote lit maintenant `memoire/chapitres/défauts.tex` dans le dépôt du mémoire (`THESIS` = dépôt voisin
+`msc-graphene-raman-defects`, sinon `$MSC_THESIS`, sinon `--tex CHEMIN` ; arrêt avec message si absent). `tex` et `table`
+relancés : mêmes comptes (606 ; 234 / 63 / 309 ; 22/207), porte 5.4 PASS ; dans `defauts_nombres.md` seuls l'en-tête et
+les numéros de ligne changent (+1 partout : l'original a une ligne vide de plus en tête). README et rapport (addendum)
+mis à jour. `notes` relancé aussi : 15/15 valeurs finales retrouvées (il ne réécrit `NOTES_TGAMMA_partie5.diff` que si
+`NOTES_TGAMMA.md` a un diff non commité). Reste hors de portée en local : `regions`, donc `all` (rorqual seulement).
 
 **Cassé à l'exécution (chemins R10 : `results_dir` = M2_plateau sans matrices)** :
 `scripts/check_ML_coarse_kernel.py:5,8-9` · `check_M_dense_vs_coarse.py:8,15-17` · `check_onsite_and_NL.py:9,16-17,32-33,44` ·
@@ -687,8 +755,8 @@ Nommage local `defect_unit_cell_<N>.save` (`_paths.py`) ≠ cluster `defect_<N>.
 | code promu de R5 | `article/R5_base_vs_M/r5_{deltav_pw,sc_projection}.py` ↔ `src/…/defects/deltav_pw.py`, `wavefunctions/sc_projection.py` (copies de campagne gardées, encore importées par R6) | |
 | données | `results/M/ved_analysis.npz` = `results/M2/ved_analysis.npz` ; `ks_reconstruction.npz` M2 = M2_plateau ; `results/M2/*.csv` = `R6/etape3/csv_v2/*.csv` ; 33 figures `figures/` = `R10_plateau/fig/` ou `R6/etape3/figures_v2/` ; `em_table.csv` M4 ≠ EM3 (contenus différents, même nom) | |
 | pilotes proposés vs finaux | `R9_controles/cloture/r9_driver_propose.py` ↔ `r9_driver.py` | |
-| chapitre 4 (seconde passe) | `memoire/défauts.tex` ↔ `~/projects/msc-graphene-raman-defects/memoire/chapitres/défauts.tex` (une ligne vide d'écart, revérifié à `e07e0d5`) | la copie du dépôt sert d'entrée à `ch4_chiffres.py tex` ; à resynchroniser ou à lire directement dans le dépôt du mémoire |
-| diffs de session (seconde passe) | `memoire/ch4/NOTES_TGAMMA.diff` ↔ annexe A de `ch4_rapport.md` ↔ `git show 90d2022 -- NOTES_TGAMMA.md` ; `memoire/ch4/CLAUDE_md.diff` ↔ `git show 90d2022 -- CLAUDE.md` (appliqué) | trois copies du même diff |
+| chapitre 4 (seconde passe) | `memoire/défauts.tex` ↔ `~/projects/msc-graphene-raman-defects/memoire/chapitres/défauts.tex` (une ligne vide d'écart, revérifié à `e07e0d5`) | la copie du dépôt servait d'entrée à `ch4_chiffres.py tex` ; **doublon résolu à la cinquième passe** : copie supprimée (`6340c2f`), reste à faire lire l'original par le pilote (§11) |
+| diffs de session (seconde passe) | `memoire/ch4/NOTES_TGAMMA.diff` ↔ annexe A de `ch4_rapport.md` ↔ `git show 90d2022 -- NOTES_TGAMMA.md` ; `memoire/ch4/CLAUDE_md.diff` ↔ `git show 90d2022 -- CLAUDE.md` (appliqué) ; cinquième passe : `memoire/ch4/NOTES_TGAMMA_partie5.diff` ↔ annexe C du rapport ↔ `git show 214ed02 -- NOTES_TGAMMA.md` | trois copies de chaque diff |
 | provenance des figures et tables du mémoire (troisième passe) | §8 et §10 de ce fichier ↔ `~/projects/msc-graphene-raman-defects/PROVENANCE.md` (§1 figures, §2 tables) | même information en deux endroits : ce fichier décrit l'état d'avant ménage, `PROVENANCE.md` deviendra la référence après la copie (colonne « Dans msc- ») |
 | tables de chiffres du ch. 4 | `R6/etape3/table_v1_v2.md` (v1 → v2), `R10/c/table_v2_plateau.md` (v2 → final), `memoire/ch4/table_v1_final.md` (fusion, 207 lignes), NOTES_TGAMMA.md §2–§3 | la table de `memoire/ch4/` fait foi pour la réécriture ; 31 écarts de forme entre les deux sources y sont listés |
 
@@ -700,7 +768,11 @@ Principe : ne rien déplacer qui casse un import ou un lanceur gelé sans mettre
 commit ; les campagnes `article/` et `memoire/` restent des copies figées (leurs `sys.path` pointent vers `scripts/`
 et vers les répertoires rorqual) ; `figures/` reste la cible d'installation.
 
-### Étape 0 — préalable : réparer l'installation éditable (ajout de la quatrième passe)
+### Étape 0 — préalable : réparer l'installation éditable (ajout de la quatrième passe) — **FAITE** (Greg, avant 12:31)
+
+Vérifié à la cinquième passe : `.pth` → `/Users/gregou/projects/graphene-raman/src`, `config.ROOT` correct, 199 tests
+collectés sans `PYTHONPATH`. Non fait (facultatif) : recréer le venv, seule façon de réparer `.venv/bin/pytest`. Texte
+d'origine, pour mémoire :
 
 Depuis le renommage du dossier en `graphene-raman`, le paquet ne s'importe plus en local (§0 bis). Avant toute autre
 étape (chaque déplacement des étapes A, C, E se valide par `pytest` et par les scripts autonomes) :
@@ -708,6 +780,9 @@ Depuis le renommage du dossier en `graphene-raman`, le paquet ne s'importe plus 
 venv ; réécrit le `.pth` et `direct_url.json`, ne touche aucun fichier suivi), puis `.venv/bin/python -m pytest tests`
 (199 tests attendus). Variante : recréer le venv (Python 3.13) et en profiter pour régénérer `requirements.txt`
 (étape B), ce qui répare aussi les shebangs morts de `.venv/bin/`.
+
+**Arbitrage (Greg, 2026-09-30)** : une étape à la fois, GO explicite par étape ; périmètre = réorganisation seulement
+(tableau « points hors étapes » en fin de section) ; git en lecture seule pour Claude, Greg commite.
 
 ### Étape A — `scripts/` en sous-dossiers (81 → 6 familles)
 
@@ -720,7 +795,7 @@ venv ; réécrit le `.pth` et `direct_url.json`, ne touche aucun fichier suivi),
 | `scripts/validation/` | `test_ks_reconstruction.py`, `test_wannier.py`, `test_zero_pad_dense.py`, `test_pad_vs_full_supercell.py`, `test_local_tmatrix.py`, `test_local_rcut.py`, `test_local_green_batch.py`, `test_local_tmatrix_real.py`, `validate_wannier_bands.py`, `compare_bands_qe.py`, `compare_bands_w90_qe.py`, `run_test_A_batch.py`, `_paths.py` | `test_local_rcut` importe `test_local_tmatrix` ; `r6_kernel_check` importe `test_ks_reconstruction` |
 | `scripts/slurm/` | les 14 `submit_*.sh` | `submit_r10.sh` (article) appelle `scripts/submit_*.sh` par chemin |
 | `scripts/_obsolete/` (ou suppression après arbitrage) | `compute_spectral.py`, `compute_tmatrix.py`, `compute_convergence.py`, `_eta_scan.py`, `_normtest.py`, `_mcheck.py`, `migrate_M_norm.py`, `_old_vs_new_7x7.py`, `check_M_dense_nb20_vs_nb16.py`, `check_M_dense_vs_coarse_bands.py`, `summarize_level1_maps.py`, `submit_spectral.sh`, `submit_tmatrix.sh`, `submit_spectral_wannier.sh`, `_bz_ratio_LNL.py` | cités par NOTES_TGAMMA, CLEANUP, rapports R6 : garder une ligne de renvoi |
-| à réparer avant de classer | `check_ML_coarse_kernel.py`, `check_M_dense_vs_coarse.py`, `check_onsite_and_NL.py`, `validate_ML_grid_7x7.py`, `test_local_tmatrix_real.py`, `tag_vacancy_sublattice.py`, `submit_golden_dense.sh`, `submit_M*.sh` (→ `matrices_dir`) ; ou décider que les trois premiers sont absorbés par `analyze_M` et vont en `_obsolete/` | correction d'une ligne chacun |
+| réparés ou classés (arbitrage du §11, 2026-09-30) | réparés : `test_local_tmatrix_real.py` (→ `validation/`), `tag_vacancy_sublattice.py` (→ `m/`), `submit_golden_dense.sh`, `submit_M*.sh` (→ `slurm/`) ; vers `_obsolete/` en plus de la ligne ci-dessus : `check_ML_coarse_kernel.py`, `check_M_dense_vs_coarse.py`, `check_onsite_and_NL.py`, `validate_ML_grid_7x7.py` | — |
 
 Alternative plus légère : ne créer que `fig/`, `epw/`, `validation/`, `slurm/`, `_obsolete/` et laisser M + T à plat
 (les ~25 scripts de production que `submit_r10.sh` appelle).
@@ -759,8 +834,9 @@ Alternative plus légère : ne créer que `fig/`, `epw/`, `validation/`, `slurm/
 - Traduire `23ee3bb` → `c2bc733` dans `article/R10_plateau/{README.md,R10_rapport.md}` et `NOTES_TGAMMA.md` §8 (ou noter
   la table de REECRITURE).
 - `memoire/ch4/` : corriger le README (« `CLAUDE_md.diff` non appliqué ») ; décider si `NOTES_TGAMMA.diff` et
-  `CLAUDE_md.diff` restent (traces redondantes avec git) ; décider du sort de `memoire/défauts.tex` (copie du chapitre
-  dans ce dépôt, ou lecture directe dans le dépôt du mémoire par un argument de `ch4_chiffres.py tex`).
+  `CLAUDE_md.diff` restent (traces redondantes avec git ; de même `NOTES_TGAMMA_partie5.diff` depuis `214ed02`). Le sort
+  de `memoire/défauts.tex` est **tranché** (copie supprimée, `6340c2f`) : `ch4_chiffres.py tex` lit
+  désormais le chapitre dans le dépôt du mémoire (fait, §11).
 
 ### Étape E — `src/`
 
@@ -783,13 +859,13 @@ avec le chemin d'arrivée et le commit source de ce dépôt.
 | `calculs/` (un dossier par calcul) | hors dépôt pour l'essentiel : `graphene/qe/defects/{super_cell,unit_cell}` (scf, nscf denses, pp.x, Wannier90), `graphene/qe/epw/24k-24q{,_mv0.02}`, `graphene/qe/electron_photon/{EM1_tb,EM2}` sur rorqual ; depuis ce dépôt : `scripts/submit_*.sh` actifs, `article/R10_plateau/submit_r10.sh`, `memoire/EM/EM1_tb/wannier.win`, `memoire/EM/EM2/{bands.in,bands_pp.in,submit_*.sh,postw90/}` ; l'annexe D du mémoire (`annexes/paramètres.tex`) liste les paramètres | les inputs QE ne sont pas versionnés ici : à prendre dans les répertoires de travail |
 | `donnees/` | `results/M2_plateau/*` (npz, csv, MD5SUMS, README), `results/epw/*.npz` (chaîne `_mv0.02` + celles que `fig_epw_kohn_degauss` lit), `memoire/EM/M4_sigma/{em_scalars.json,em_sigma_*.npz,em_map_K.npz,em_table.tex}`, `memoire/EM/EM3/*.npz`, `memoire/EM/EM2/em2_A.npz`, `article/R8_kaasbjerg/out/` (figures R8), `memoire/ch4/{table_v1_final.md,alignement_regions.*}`, `wannier/27x27` (ou les 5 grilles de production) | ~60 Mo de npz ; `results/M2/*.npy` (matrices) restent sur rorqual/nearline |
 | `scripts_figures/` | `scripts/make_figures.py`, `make_figures_memoire.py`, `make_figures_epw.py`, `make_figures_em.py`, `_palette.py`, `figures/memoire.mplstyle` ; les sous-commandes `fig` et `sigeff` de `r8_driver.py` ; `ch4_chiffres.py regions` ; hors dépôt : `~/projects/qe_pp` (`plot_ebands_edos.py`, `plot_convergence.py`) pour les figures du ch. 2 | adapter `results_dir` → `donnees/` par un seul argument ou une variable |
-| `memoire/figures/` | réinstaller les 8 figures R10 qui diffèrent ; ajouter les 5 figures R8, `fig_em_coupling`, éventuellement `alignement_regions` | voir §8 |
+| `memoire/figures/` | réinstaller les 8 figures R10 qui diffèrent ; ajouter les 5 figures R8, `fig_em_coupling`, éventuellement `alignement_regions`, et les figures de `article/` et `memoire/` retenues à l'arbitrage (tableau « Figures hors de `figures/` », §8) | voir §8 ; chaque figure retenue entraîne son pilote (`scripts_figures/` ou `analyse/`) et ses données (`donnees/`) |
 | `requirements.txt` du mémoire | le régénérer depuis un venv qui fait tourner `analyse/` et `scripts_figures/` (numpy, scipy, h5py, matplotlib, plus `mpi4py` si les noyaux de M sont copiés ; LaTeX pour `text.usetex`) | l'actuel est un gel généraliste (abipy, torch, netCDF4) sans rapport avec ces scripts |
 
-À corriger en même temps : le skill `thesis-section-pass` (son SKILL.md l. 9 dit encore « Dépôt : `~/LaTeX/master_thesis` »)
-et toute note qui cite `~/LaTeX/master_thesis` (vide depuis 11 h 21) ou `~/LaTeX/msc-graphene-raman-defects` (supprimé),
-et valider `PROVENANCE.md` (contenu non commité ; il nomme déjà ce dépôt `graphene-raman`, mais cite ce fichier à HEAD
-`656c05c` : à porter à `e916500` ou au commit du ménage).
+À corriger en même temps : toute note qui cite `~/LaTeX/master_thesis` (vide depuis 11 h 21) ou
+`~/LaTeX/msc-graphene-raman-defects` (supprimé) ; le skill `thesis-section-pass` est corrigé (cinquième passe).
+`PROVENANCE.md` est commité (`4da4d62`) ; il nomme déjà ce dépôt `graphene-raman`, mais cite ce fichier à HEAD
+`656c05c` : à porter au commit du ménage.
 
 ### Points hors étapes, à arbitrer aussi (liste de Greg du 2026-09-28, reprise à la quatrième passe)
 
@@ -797,7 +873,7 @@ Ces points figuraient dans la liste d'origine du ménage et ne sont couverts par
 
 | Point | État vérifié | Ce que cela engage |
 |---|---|---|
-| Périmètre : simple réorganisation, ou **extraction du paquet « défauts seulement »** de l'article (`defects/` dont `many_body/`, `wannier/`, `io/`, `utils/`, `wavefunctions/` ; hors périmètre `electron_photon/`, `electron_phonon/`, pilotes et figures) | rien de fait | à trancher **avant** les étapes A et E, pour ne pas découper le code deux fois |
+| Périmètre : simple réorganisation, ou **extraction du paquet « défauts seulement »** de l'article (`defects/` dont `many_body/`, `wannier/`, `io/`, `utils/`, `wavefunctions/` ; hors périmètre `electron_photon/`, `electron_phonon/`, pilotes et figures) | **tranché (Greg, 2026-09-30) : réorganisation seulement ; extraction du paquet après le mémoire** | les étapes A et E ne renomment ni ne découpent le paquet ; le renommage `defects` → `electron_defects` est reporté avec l'extraction |
 | Renommer le sous-paquet `defects` → `electron_defects` | 52 fichiers importent `config`, 19 `local_tmatrix`, etc. (§2) ; les pilotes figés `article/R4–R10` importent `defects.*` | casse le rejeu des campagnes figées sauf alias ; à lier au point précédent |
 | Wrapper `wannier_io.read_w90_HR` | gardé pour `article/R4`, `article/R9` (§2) | le supprimer casse ces deux pilotes |
 | `article/R8_kaasbjerg/ref/kaasbjerg_2020_prb101_045433.pdf` (3,1 Mo, suivi) | article sous droits d'auteur dans un dépôt GitHub | à retirer si le dépôt est ou devient public (il reste dans l'historique : pas de réécriture prévue) |

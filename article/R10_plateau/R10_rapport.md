@@ -622,3 +622,53 @@ Contrôles : import de `config` des 11 scripts de (b) OK ; `git check-ignore` : 
 Points de (b) toujours ouverts (section « (b) ») : seuil 1e-9 de la porte D6 (iii), colonne de `level2_families.py`, contrôle C.3 des anneaux (1e-14).
 
 **STOP — (c) appliquée le 2026-09-29, non commitée.** Suite : commit et push par Greg ; GO 2.
+
+## GO 2 (Greg, 2026-09-29) — décisions et soumission de C
+
+(b) `ea91d61`, (c) `23ee3bb`. Réponses de Greg aux points ouverts :
+- porte D6 (iii) : seuil 1e-9 accepté (limite = précision des .mat, V·V† = 𝕀 à 1,4e-10) ; (i) et (ii) restent à 1e-12 ;
+- grille grossière 9×9 = sous-grille de la dense 27×27 : accepté ;
+- `level2_families.py` : colonne `ReML_K_aligned_eV` gardée ;
+- C.3, anneaux : porte = appartenance aux anneaux identique et valeurs à 1e-13 ; pas de recalcul par `bincount` ;
+- scripts hors chaîne (D11) : laissés tels quels (ils échouent faute de matrices dans `results/M2_plateau`, voulu) ;
+- C_N : `C_i_eV` (plateau (i)), pas `C_retenu_eV` de R9 (repli Lu) : confirmé.
+- Ajout : **C.6** — contrôle de l'anomalie ⟨ΔV⟩_3D d'A.1 (N²⟨ΔV⟩ = 715–750 meV pour 5…12, écart pour 15…27, fort à 18, 24, 27) : pour 15…27 (d et p),
+  état de convergence des SCF et profil ⟨ΔV⟩(z) moyenné dans le plan. Lecture seule, chiffres bruts.
+
+Installation dans `figures/` : GO séparé. STOP après le rapport.
+
+**Contrôle préalable de la porte C.3 des anneaux** (scratchpad, `analyze_Ved.py` de (b) sur les 8 tailles contre `results/M2/ved_analysis.npz` ; l'ancien script
+redonne ce fichier à 0,0) : « anneaux sous 0,433 a_sc » lu comme les anneaux **entièrement** sous 0,433 a_sc (bord supérieur ≤ 0,433 a_sc ; l'anneau qui contient
+0,433 a_sc a des points au-delà, où la distance change : 5×5, 8×8, 10×10 à 1e-3 eV, comme dans l'audit dont le « premier anneau changé » est celui-là).
+Appartenance : aucun point ne change d'anneau (8 tailles). Valeurs : écart max 0,0 (5×5, 7×7 profil, 8×8 masqué, 10×10 masqué) à **1,21e-13** (6×6 masqué,
+r = 1,775 Å) et **1,01e-13** (11×11 profil, r = 9,025 Å) ; les autres ≤ 7,1e-14. Avec le seuil de 1e-13 décidé, la porte refusera 6×6 (masqué) et 11×11 (profil) ;
+porte écrite telle quelle.
+
+### Code de C (pilote et lanceur ; aucun autre script)
+
+- `r10_driver.py` : sous-commandes `c0`, `c1post`, `c2`, `c3`, `c4`, `c5`, `c6` (docstring) ; lectures de A et B dans `results/M2` fixées par une constante
+  (`M2_DIR`) au lieu de `results_dir(cfg)` (qui pointe sur `results/M2_plateau` depuis (c)) ; niveau 1 des portes par `lt.scattering_rate_fast` (fonction de
+  `compute_spectral_wannier.py`) ; tab:rcut_M et carte D.1 par les formules recopiées de `m_rcut_convergence.py` et de `r9_driver.cmd_d`.
+- `submit_r10.sh` : tâches `c0`, `c1` (macro : lanceurs de `scripts/` tels quels, `--output/--error` vers `results/M2_plateau/logs`), `p_ved`, `p_c14`, `c1f`, `c2`,
+  `c3` (c3 → c4 → c5), `c6`. Écart au plan de 0.7 : C2 dépend aussi du job `post_loc` de C1 (sa porte lit `m_rcut_convergence.csv` de C1).
+- Essais sur le nœud de connexion (5×5, grilles réduites ; géométrie) : V_loc aligné au bit ; colonne Wigner-Seitz de `rcut_rows` = sortie de
+  `m_rcut_convergence.py` (chaînes identiques) ; D.1 Wigner-Seitz en étiquettes brutes autour de R_d = recentrées (3e-13) ; M avec ws sur la grille MP 4e-16 ;
+  porte `mrr` sur les npz de M2 : 0,0 ; P-b2 : points déplacés et abscisses max = audit pour les 12 grilles (6 denses, 6 grossières) ; lecture des `scf.out`.
+
+### Soumission (2026-09-29 21 h 21 ; HEAD 23ee3bb ; diff dans `submitted/22058838/diff.txt`, 1 174 lignes ; listes des jobs dans `submitted/<jobid>/jobs.txt`)
+
+| job | nom | contenu | dépend de |
+|---|---|---|---|
+| 22058838 | `r10c0` | portes C.0 (a)–(d) | — |
+| 22058839–44 | `specwd_<S>` ×6 | `submit_spectral_wannier_dense.sh <S> prod` (grilles 60/120/240, η 0,05/0,02/0,01, R_cut 0…4) | 22058838 |
+| 22058845 | `nkint` | `submit_nkint_check.sh 9x9` | 22058838 |
+| 22058846, 47 | `resigma` | `submit_rcut_resigma.sh 9x9 0,1,2,3` et `9x9 4` | 22058838 |
+| 22058848 | `post_loc` | `submit_post.sh locality` (mwr_locality, m_rcut_convergence 9×9 et 12×12, R_cut 0…6) | 22058838 |
+| 22058849 | `post_ana` | `submit_post.sh analyze` (analyze_M, lnl_frobenius_all ; GOLDEN_RESULT de R6) | 22058838 |
+| 22058850–52 | `post_res9`, `post_res6`, `post_res12` | `submit_post.sh resonance <S>` (resonance_metrics, resonance_criteria) | 22058838 |
+| 22058853 | `r10ved` | analyze_Ved (8 tailles), copie md5 de ks_reconstruction, sampling_table | 22058838 |
+| 22058854 | `r10c14` | resonance_metrics 9×9 `--shift-L-meV 9.05,-9.05` | 22058838 |
+| 22058855 | `r10c1f` | c1post, puis figures (fig/) et csv de synthèse | les 16 jobs de C1 |
+| 22058856 | `r10c2` | tab:rcut_M à trois colonnes, Kaasbjerg | 22058838, 22058848 |
+| 22058857 | `r10c3` | C.3, C.4, C.5 | 22058855, 22058856 |
+| 22058858 | `r10c6` | C.6 | — |

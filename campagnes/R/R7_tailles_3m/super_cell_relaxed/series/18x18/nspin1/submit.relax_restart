@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --account=rrg-cotemich-ac
+#SBATCH --job-name=R7c_restart_18x18_nspin1
+#SBATCH --mail-type=NONE          # Mail events (NONE,BEGIN,END,FAIL,ALL)
+#SBATCH --nodes=1
+#SBATCH --ntasks=192
+#SBATCH --ntasks-per-node=192
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=0               # memory; default unit is megabytes
+#SBATCH --time=1-00:00:00          # time (DD-HH:MM) — BFGS de lacune, comme R1
+#SBATCH --output=slurm-%j.out
+#SBATCH --error=slurm-%j.err
+
+module restore qe
+
+export OMP_NUM_THREADS=1
+
+mkdir -p /home/gregb26/links/scratch/qe_tmp/vacancy_relaxed/series/18x18/nspin1
+srun pw.x < relax_restart.in > relax_restart.out

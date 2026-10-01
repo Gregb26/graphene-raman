@@ -1,0 +1,43 @@
+[16:32:28] [vp] prep : grille (270, 270, 192), Ndiag (9, 9, 1), Omega_sc 45694.992 bohr^3, pristine=True, bandes [0, 1, 2, 3]
+[16:32:40] [vp] noyau corrigé sur la super-cellule : M^L(V_p) (4, 81, 4, 81) en 11 s, max|.| 1.470618e+02 Ha
+[16:32:44] [vp] référence maille : <u|V_p|u> (81 k, 4 bandes) en 4 s ; périodicité de V_p (écart entre images) 0.018 meV
+[16:32:44] [vp] blocs k = k' : max|M^L(V_p) - 81 <u|V_p|u>_maille| / max = 1.07e-07 (contre <u|V_p|u> sans facteur : 8.00e+01) ; blocs k != k' : max 3.64e-06 Ha = 2.47e-08 x max|M| ; moyenne diagonale M^L(V_p) -3241.9155 eV, maille -40.0237 eV
+[16:32:44] saved kernel/vp.json
+[16:32:45] [compare] 9x9: max|v2 - 81 v1| / max|81 v1| = 8.97e-16 ; v2/(81 v1) médian 1.000000 (min 1.0000, max 1.0000) ; max|v2| 6.9228e-01 Ha ; hermiticité 2.3e-16 -> OK
+[16:32:45] [compare] 9x9: contre 81 x coarsecheck (noyau partagé, sept.) : 1.36e-15
+[16:32:46] [compare] 7x7: max|v2 - 49 v1| / max|49 v1| = 8.72e-16 ; v2/(49 v1) médian 1.000000 (min 1.0000, max 1.0000) ; max|v2| 6.3998e-01 Ha ; hermiticité 2.2e-16 -> OK
+[16:32:46] [compare] 5x5: pas de M_L v1 sur disque ; max|v2| 6.7101e-01 Ha, max|v2|/N_cells 2.6841e-02, hermiticité 2.2e-16
+[16:32:46] [compare] 6x6: pas de M_L v1 sur disque ; max|v2| 8.0253e-01 Ha, max|v2|/N_cells 2.2292e-02, hermiticité 2.2e-16
+[16:32:46] [compare] 8x8: pas de M_L v1 sur disque ; max|v2| 6.5188e-01 Ha, max|v2|/N_cells 1.0186e-02, hermiticité 2.2e-16
+[16:32:46] saved kernel/compare.json
+[16:33:06] [serial] compute_ML_R (fold_wfk_to_sc, ee051ec) 5x5 bandes 0-1 : max|M| 9.2304e+04 Ha ; noyau MPI corrigé 5.3417e-01 ; rapport série/MPI médian 172800 (min 172800, max 172800) ; N_uc(grille) = 172800, N_cells = 25 ; écart relatif 1.73e+05
+[16:33:06] saved kernel/serial.json
+[16:36:00] [ksrec] reconstruction KS 9x9 (grossier + dense) rejouée après ee051ec contre results/M/ks_reconstruction.npz : 24 clés, écart max 0.00e+00 ; coarse max 0.0015 meV (ancien 0.0015), dense max 0.4606 meV (ancien 0.4606)
+[16:36:00] saved kernel/ksrec.json
+[16:56:01] [shared] fichier absent : compute_ML_R_mpi_shared --coarse 5x5 n'a pas produit de sortie (voir le .err du job)
+[16:56:01] saved kernel/shared.json
+[17:07:03] [bases] 16 (grossier): 16 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238470 eV
+[17:07:04] [bases] 20 (dense ⊂ 81 k): 20 bandes x 81 k, ondes planes distinctes 771419/771419 (attendu 771419) -> OK, E_D(K) -4.238895 eV
+[17:07:04] [bases] bug 0.3 : index d'ondes planes différent pour 56/81 k avec k81 ; check_k_reference : check_k_reference: 56 of 81 k differ from the .save k by a non-zero integer vector (offset
+[17:07:06] [states] 30 états QE (bandes 297-326), décalage Lu -24.65 meV, E_D(SC) -4.2385 eV
+[17:07:12] [states] M2 base 16 : max|tot - L - NL| = 4.5e-15 eV ; max|L| 18.8380, max|NL| 7.3425 eV
+[17:07:12] [states] M2 base 20 : max|tot - L - NL| = 4.9e-15 eV ; max|L| 20.5965, max|NL| 7.5549 eV
+[17:07:14] [states] recouvrements des 30 états sur les bases 16 et 20 en 2 s
+[17:07:18] [ΔV] grille (270, 270, 192), <ΔV>_3D +9.09 meV, ΔV au site +116.243 eV ; projecteur KB de l'atome retiré (indice parfaite 81, 771419 g, |g|max 10.00 < qmax 20.0) en 1 s
+[17:07:19] [A.2 M2] base 16 états purs : max|direct - M2/81| = 6.80e-15 eV sur 6 paires (L 6.8e-15, NL 3.4e-15) -> OK ; rapport L direct/(M2_L/81) : [1.0, 1.0, 1.0, 1.0, 1.0]
+[17:07:29] [A.2 M2] base 16 : 30 états en 10 s ; max|(i)-(ii)| in-in L 2.7e-15, NL 3.6e-14 eV ; s_align médiane +24.66 meV (min +24.66, max +24.67) ; décalage Lu -24.65 meV, <ΔV>_3D +9.09 meV
+[17:07:29]        sigma_324: Σ|c|² 0.9638 ; c†(M/81)c tot +5.8490 (L +5.0523, NL +0.7967) ; <in|ΔV|out> L -1.5566, NL -0.5255 ; s +24.67 meV
+[17:07:29]        sigma_325: Σ|c|² 0.9638 ; c†(M/81)c tot +5.8485 (L +5.0519, NL +0.7966) ; <in|ΔV|out> L -1.5563, NL -0.5254 ; s +24.67 meV
+[17:07:29]        pi_320: Σ|c|² 0.9991 ; c†(M/81)c tot +0.3666 (L +0.3383, NL +0.0283) ; <in|ΔV|out> L -0.0382, NL -0.0151 ; s +24.66 meV
+[17:07:29]        pi_318: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0284 (L +0.0284, NL -0.0000) ; <in|ΔV|out> L -0.0091, NL +0.0000 ; s +24.66 meV
+[17:07:29]        pi_319: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0284 (L +0.0284, NL +0.0000) ; <in|ΔV|out> L -0.0091, NL -0.0000 ; s +24.66 meV
+[17:07:29]        pi_326: Σ|c|² 0.9995 ; c†(M/81)c tot +0.1480 (L +0.1338, NL +0.0143) ; <in|ΔV|out> L -0.0195, NL -0.0077 ; s +24.66 meV
+[17:07:30] [A.2 M2] base 20 états purs : max|direct - M2/81| = 3.54e-09 eV sur 7 paires (L 3.5e-09, NL 1.5e-09) -> OK ; rapport L direct/(M2_L/81) : [1.0, 1.0, 1.0, 1.0, 1.0]
+[17:07:40] [A.2 M2] base 20 : 30 états en 9 s ; max|(i)-(ii)| in-in L 6.7e-09, NL 8.6e-09 eV ; s_align médiane +25.07 meV (min +25.06, max +25.17) ; décalage Lu -24.65 meV, <ΔV>_3D +9.09 meV
+[17:07:40]        sigma_324: Σ|c|² 0.9759 ; c†(M/81)c tot +4.9296 (L +4.3434, NL +0.5862) ; <in|ΔV|out> L -1.0483, NL -0.3517 ; s +25.17 meV
+[17:07:40]        sigma_325: Σ|c|² 0.9759 ; c†(M/81)c tot +4.9296 (L +4.3434, NL +0.5862) ; <in|ΔV|out> L -1.0483, NL -0.3517 ; s +25.17 meV
+[17:07:40]        pi_320: Σ|c|² 0.9993 ; c†(M/81)c tot +0.3491 (L +0.3247, NL +0.0244) ; <in|ΔV|out> L -0.0289, NL -0.0121 ; s +25.06 meV
+[17:07:40]        pi_318: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0275 (L +0.0275, NL +0.0000) ; <in|ΔV|out> L -0.0085, NL -0.0000 ; s +25.07 meV
+[17:07:40]        pi_319: Σ|c|² 0.9998 ; c†(M/81)c tot +0.0275 (L +0.0275, NL +0.0000) ; <in|ΔV|out> L -0.0085, NL -0.0000 ; s +25.07 meV
+[17:07:40]        pi_326: Σ|c|² 0.9997 ; c†(M/81)c tot +0.1390 (L +0.1268, NL +0.0122) ; <in|ΔV|out> L -0.0146, NL -0.0062 ; s +25.07 meV
+[17:07:40] [states] terminé en 38 s ; states/states_results.json, states/states_tables.md

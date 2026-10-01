@@ -9,8 +9,9 @@ Figures du mémoire (matplotlib, style graphene_raman.plotting (memoire.mplstyle
   fig_M_map         |M_nn(k', k=K)| sur la zone de Brillouin (Ṽ = A_cell |M|, eV Å²), π et π*
   fig_Ved_boundary  V_ed^L du site de la lacune à la frontière de la super-cellule, quatre N
   fig_M_scaling     max|M| vs N et max|M| N_cells vs N (convention intensive)
-Écrit aussi <results_dir>/level1_summary.csv et level2_summary.csv.
-Usage : python scripts/fig/make_figures.py [--tag prod] [--sizes 5x5,7x7,8x8,9x9] [--outdir figures/electron_defect]
+Avec --write-summaries, écrit aussi <results_dir>/level1_summary.csv et level2_summary.csv (tables dérivées des cartes specwd ; à ne passer
+qu'en production, après un nouveau calcul des cartes : par défaut le script ne fait que lire <results_dir>).
+Usage : python scripts/fig/make_figures.py [--tag prod] [--sizes 5x5,7x7,8x8,9x9] [--outdir figures/electron_defect] [--write-summaries]
 """
 import argparse, csv, os, numpy as np
 import matplotlib; matplotlib.use("Agg")
@@ -32,6 +33,7 @@ LBL_G = r"Taux d'amortissement $\Gamma\,N_\mathrm{cells}$ (meV)"
 ap = argparse.ArgumentParser(); ap.add_argument("--tag", default="prod"); ap.add_argument("--sizes", default="5x5,6x6,7x7,8x8,9x9,12x12"); ap.add_argument("--outdir", default="figures/electron_defect")
 ap.add_argument("--resonance", default=f"{RES}/resonance_9x9.npz"); ap.add_argument("--locality", default=f"{RES}/mwr_locality.npz")
 ap.add_argument("--analysis", default=f"{RES}/M_analysis.npz")
+ap.add_argument("--write-summaries", action="store_true", help="réécrit <results_dir>/level{1,2}_summary.csv depuis les cartes specwd (production)")
 a = ap.parse_args(); cfg = load_production(); sizes = a.sizes.split(","); os.makedirs(a.outdir, exist_ok=True)
 RC, GRID, ETA = cfg["R_cut"], cfg["grid"], cfg["eta_eV"]
 def lab(S): return S.replace("x", r"$\times$")
@@ -49,15 +51,16 @@ maps = {S: m for S in sizes if (m := load_map(S))}
 
 if maps:
     rcs = sorted({k[0] for m in maps.values() for k in m}); grids = sorted({k[1] for m in maps.values() for k in m}); etas = sorted({k[2] for m in maps.values() for k in m}, reverse=True)
-    with open(f"{RES}/level1_summary.csv", "w", newline="") as f:
-        w = csv.writer(f); w.writerow(["size", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV", "argmax_E_minus_ED_eV"])
-        for S, m in maps.items():
-            for (rc, N, e), (med, er) in sorted(m.items()): w.writerow([S, rc, N, e, f"{med:.4f}", f"{er:.4f}"])
-    with open(f"{RES}/level2_summary.csv", "w", newline="") as f:
-        w = csv.writer(f); w.writerow(["size", "N", "N_cells", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV"])
-        for S, m in maps.items():
-            N = int(S.split("x")[0]); w.writerow([S, N, N * N, RC, GRID, ETA, f"{m[(RC, GRID, ETA)][0]:.4f}"])
-    print("écrit <results_dir>/level1_summary.csv, level2_summary.csv")
+    if a.write_summaries:
+        with open(f"{RES}/level1_summary.csv", "w", newline="") as f:
+            w = csv.writer(f); w.writerow(["size", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV", "argmax_E_minus_ED_eV"])
+            for S, m in maps.items():
+                for (rc, N, e), (med, er) in sorted(m.items()): w.writerow([S, rc, N, e, f"{med:.4f}", f"{er:.4f}"])
+        with open(f"{RES}/level2_summary.csv", "w", newline="") as f:
+            w = csv.writer(f); w.writerow(["size", "N", "N_cells", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV"])
+            for S, m in maps.items():
+                N = int(S.split("x")[0]); w.writerow([S, N, N * N, RC, GRID, ETA, f"{m[(RC, GRID, ETA)][0]:.4f}"])
+        print("écrit <results_dir>/level1_summary.csv, level2_summary.csv")
 
     # ---- fig_rcut
     fig, ax = plt.subplots()

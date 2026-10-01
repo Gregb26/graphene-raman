@@ -34,7 +34,7 @@ case "$TASK" in
               run scripts/t/resonance_criteria.py --size "$1" ;;
   criteria)   run scripts/t/resonance_criteria.py --size "${1:?size}" ;;
   c14)        run scripts/t/resonance_metrics.py --size 9x9 --shift-L-meV 25,-25 --out "$RES/resonance_9x9_shiftL.npz" ;;
-  figures)    run scripts/fig/make_figures.py
+  figures)    run scripts/fig/make_figures.py --write-summaries   # seul endroit où level{1,2}_summary.csv sont réécrits
               run scripts/t/level2_families.py
               run scripts/t/nkint_check_post.py --size 9x9 --nk 150,300,450,600
               run scripts/fig/make_figures_memoire.py

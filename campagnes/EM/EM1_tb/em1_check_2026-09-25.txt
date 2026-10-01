@@ -1,0 +1,67 @@
+new _tb.dat : 'written on 25Sep2026 at 12:53:29'  nw=5 nrpts=741
+ref _hr.dat : 'written on  4Sep2026 at 12:19:35'  nw=5 nrpts=741
+lattice (Ang, rows a_i):
+[[ 2.13549034 -1.23292592  0.        ]
+ [ 2.13549034  1.23292592  0.        ]
+ [ 0.          0.         15.87531626]]
+
+=== (a) H(R): new _hr.dat and H block of new _tb.dat vs reference _hr.dat ===
+same R list (order incl.)     new_hr vs ref_hr: True | tb vs ref_hr: True | tb vs ref_tb: True
+same ndegen                   new_hr vs ref_hr: True | tb vs ref_hr: True
+ndegen values: {1: 717, 2: 24, 3: 0}, sum = 729, N1*N2*N3 = 729
+max |H_new_hr - H_ref_hr|     = 0.000e+00 eV   (both files written with F12.6)
+max |H_tb - H_ref_hr|         = 4.998e-07 eV   (tb: E15.8 vs hr: F12.6 -> rounding of the hr file)
+max |H_tb - H_ref_tb|         = 0.000e+00 eV   (new _tb.dat vs reference _tb.dat)
+max |r_tb - r_ref_tb|         = 0.000e+00 Ang  (new r block vs reference _tb.dat r block)
+on-site energies <0i|H|0i> (eV): [-15.084664 -15.084664 -15.084667  -3.912484  -3.912484]
+
+=== (b) diagonal <0i|r|0i> vs final centres of the .wout ===
+max |Im <0i|r|0i>| = 0.000e+00 Ang
+  i   <0i|r|0i> (Ang)                         wout centre (Ang)                        diff (Ang)
+  1   [ 1.067745e+00  6.164618e-01 -9.307351e-12]   [ 1.067745  0.616462 -0.000000]   [ 4.0e-07 -1.9e-07 -9.3e-12]
+  2   [ 1.067745e+00 -6.164618e-01 -8.853600e-12]   [ 1.067745 -0.616462 -0.000000]   [ 4.0e-07  1.9e-07 -8.9e-12]
+  3   [ 2.135489e+00  6.709607e-13 -1.366921e-11]   [ 2.135489  0.000000 -0.000000]   [ 1.0e-07  6.7e-13 -1.4e-11]
+  4   [1.423660e+00 3.793817e-11 5.943153e-11]   [1.423660 0.000000 0.000000]   [0.0e+00 3.8e-11 5.9e-11]
+  5   [ 2.847320e+00 -3.486462e-11  5.699431e-11]   [ 2.847320 -0.000000  0.000000]   [ 0.0e+00 -3.5e-11  5.7e-11]
+max |diff| per component (x,y,z) = [4.00e-07 1.90e-07 5.94e-11] Ang   (wout prints 6 decimals)
+atoms: C1 = [1.42366 0.      0.     ]  C2 = [2.84732 0.      0.     ]  Ang
+bond midpoints C1-C2 (3 images): [[2.13549, 0.0, 0.0], [1.067745, 0.616463, 0.0], [1.067745, -0.616463, 0.0]]
+
+=== (c) hermiticity: max |r_ij(R) - conj(r_ji(-R))|, all (i,j,R) with (i,R) != (j,0) ===
+R vectors whose -R is absent from the list: 0
+pairs checked: 18520
+max |r_ij(R) - conj(r_ji(-R))| per component (x,y,z) = [2.542e-03 1.652e-03 1.000e-14] Ang
+max |H_ij(R) - conj(H_ji(-R))|                       = 1.001e-15 eV
+max |Im r_ii(0)| = 0.000e+00 Ang ; max |Im H_ii(0)| = 6.182e-18 eV
+
+=== (d) decay: max_{i!=j} |r_ij(R)| (any component) and max |H_ij(R)| vs |R| (Ang) ===
+ |R| (Ang)   n_R   max|r_ij| i!=j (Ang)   max|r_ii| (Ang)   max|H_ij| i!=j (eV)   max|H_ij| all (eV)
+   0.0000     1      2.204e-01            2.847e+00          2.909e+00             1.508e+01
+   2.4659     6      2.204e-01            3.350e-02          2.909e+00             2.909e+00
+   4.2710     6      8.642e-03            3.866e-07          2.688e-01             2.688e-01
+   4.9317     6      7.594e-03            2.428e-03          1.466e-01             1.466e-01
+   6.5240    12      2.554e-03            1.218e-03          1.987e-02             1.987e-02
+   7.3976     6      1.448e-03            2.490e-04          1.978e-02             1.978e-02
+   8.5420     6      3.345e-04            4.118e-07          3.747e-03             3.747e-03
+   8.8908    12      3.811e-04            2.086e-05          1.003e-03             1.003e-03
+   9.8634     6      4.152e-04            2.085e-04          3.551e-03             3.551e-03
+  10.7484    12      1.886e-04            6.322e-05          6.759e-04             6.759e-04
+  11.3000    12      1.907e-04            8.815e-05          6.759e-04             6.759e-04
+  12.3293     6      1.353e-04            3.162e-05          7.369e-04             7.369e-04
+  12.8129     6      1.110e-04            3.908e-07          4.077e-04             4.077e-04
+  13.0481    12      1.110e-04            3.788e-05          4.077e-04             4.077e-04
+ ... (70 shells in total, |R|max = 38.4388 Ang)
+  36.3243    12      4.265e-05            6.128e-06          1.412e-05             1.412e-05
+  36.4913     8      4.732e-05            3.218e-07          1.412e-05             1.412e-05
+  38.4388     2      4.183e-05            5.203e-12          5.792e-06             9.002e-06
+R=0 |r_ij| i!=j max = 2.2039e-01 Ang ; |r_ij| at R=0 (Ang, abs, x/y/z max over comp):
+[[1.0677 0.0988 0.0857 0.2204 0.0238]
+ [0.0988 1.0677 0.0857 0.2204 0.0238]
+ [0.0857 0.0857 2.1355 0.2204 0.2204]
+ [0.2204 0.2204 0.2204 1.4237 0.0018]
+ [0.0238 0.0238 0.2204 0.0018 2.8473]]
+
+=== (e) wsvec ===
+header: ## written on 25Sep2026 at 12:53:39  with use_ws_distance=.true.
+entries (R,i,j): 18525 = nrpts*nw*nw = 18525 | entries with ndeg>1: 462 | entries with a non-zero shift T: 806
+max |r_ij(R)| on entries with a non-zero T shift = 6.836e-05 Ang ; max |H_ij(R)| there = 1.412e-05 eV

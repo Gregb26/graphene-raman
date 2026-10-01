@@ -1,0 +1,1201 @@
+{
+ "head": "23ee3bb",
+ "sizes": {
+  "5x5": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 22,
+    "n_iterations_listed": 22,
+    "last_scf_accuracy_Ry": 8.1e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -589.69692552,
+    "fermi_eV": -4.5908,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "49",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_5x5_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 16,
+    "n_iterations_listed": 16,
+    "last_scf_accuracy_Ry": 9.1e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -602.35065226,
+    "fermi_eV": -4.3551,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "50",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_5x5_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 5,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 28.618369670298083,
+   "N2_mean3d_meV": 715.459241757452,
+   "A1_mean3d_meV": 28.618369670300847,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 32.78692938980798,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 34.12449263641268,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 34.081027052464876,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 32.64018330419493,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -10.875890390256279,
+   "vacuum_std_meV": 9.75573484087051,
+   "vacuum_min_meV": -32.823154392435804,
+   "vacuum_max_meV": -2.4623290392051813,
+   "at_cell_edge_meV": -13.295663946552835,
+   "sheet_plane_meV": 539.2585981258188,
+   "elapsed_s": 1.4628925323486328
+  },
+  "6x6": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 23,
+    "n_iterations_listed": 23,
+    "last_scf_accuracy_Ry": 1.2e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -854.69845523,
+    "fermi_eV": -4.239,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "71",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_6x6_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 26,
+    "n_iterations_listed": 26,
+    "last_scf_accuracy_Ry": 1.1e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -867.31136732,
+    "fermi_eV": -4.2185,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "72",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_6x6_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 6,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 20.82580554609759,
+   "N2_mean3d_meV": 749.7289996595132,
+   "A1_mean3d_meV": 20.82580554610125,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 26.07127082555681,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 27.58611044156567,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 27.671068917816314,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 26.810128682477075,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -16.182958340631842,
+   "vacuum_std_meV": 20.40574183453865,
+   "vacuum_min_meV": -59.58921190476218,
+   "vacuum_max_meV": -1.640429802083647,
+   "at_cell_edge_meV": -59.58921190476218,
+   "sheet_plane_meV": 414.7060030794718,
+   "elapsed_s": 2.1514906883239746
+  },
+  "7x7": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 20,
+    "n_iterations_listed": 20,
+    "last_scf_accuracy_Ry": 7e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -1168.07147324,
+    "fermi_eV": -4.6755,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "97",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_7x7_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 16,
+    "n_iterations_listed": 16,
+    "last_scf_accuracy_Ry": 6.1e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -1180.74219627,
+    "fermi_eV": -3.8093,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "98",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_7x7_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 7,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 14.553554054275692,
+   "N2_mean3d_meV": 713.1241486595089,
+   "A1_mean3d_meV": 14.553554054264506,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 16.553039412561905,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 17.174714245280967,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 17.137030623778365,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 16.38075139238045,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -4.941153365015684,
+   "vacuum_std_meV": 4.284817712934956,
+   "vacuum_min_meV": -14.979374138698505,
+   "vacuum_max_meV": -1.2334528120147885,
+   "at_cell_edge_meV": -3.823126428454459,
+   "sheet_plane_meV": 273.27273146022105,
+   "elapsed_s": 2.8637301921844482
+  },
+  "8x8": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 24,
+    "n_iterations_listed": 24,
+    "last_scf_accuracy_Ry": 4.4e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -1529.46517508,
+    "fermi_eV": -4.5488,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "127",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_8x8_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 17,
+    "n_iterations_listed": 17,
+    "last_scf_accuracy_Ry": 9.8e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -1542.13085756,
+    "fermi_eV": -3.9655,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "128",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_8x8_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 8,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 11.229852574145752,
+   "N2_mean3d_meV": 718.7105647453282,
+   "A1_mean3d_meV": 11.229852574144328,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 13.244564854493518,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 13.810394242045195,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 13.794013711479277,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 13.206176774605273,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -5.3444260068764535,
+   "vacuum_std_meV": 5.339722616198683,
+   "vacuum_min_meV": -16.2890547783873,
+   "vacuum_max_meV": -0.9073280790636374,
+   "at_cell_edge_meV": -11.970974921093305,
+   "sheet_plane_meV": 216.32256707034415,
+   "elapsed_s": 3.6239259243011475
+  },
+  "9x9": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 24,
+    "n_iterations_listed": 24,
+    "last_scf_accuracy_Ry": 8.6e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -1939.03777059,
+    "fermi_eV": -4.2219,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "161",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_9x9_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 19,
+    "n_iterations_listed": 19,
+    "last_scf_accuracy_Ry": 1.7e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -1951.67354614,
+    "fermi_eV": -4.2195,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "162",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_9x9_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 9,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 9.087407856160715,
+   "N2_mean3d_meV": 736.0800363490179,
+   "A1_mean3d_meV": 9.087407856163132,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 11.495476523881964,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 12.118046664211976,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 12.1357332414816,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 11.678512473851308,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -7.006930797135127,
+   "vacuum_std_meV": 8.667051116821487,
+   "vacuum_min_meV": -25.497524846732713,
+   "vacuum_max_meV": -0.7705420088450139,
+   "at_cell_edge_meV": -25.497524846732713,
+   "sheet_plane_meV": 183.56096032824524,
+   "elapsed_s": 4.230051279067993
+  },
+  "10x10": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 23,
+    "n_iterations_listed": 23,
+    "last_scf_accuracy_Ry": 5.8e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -2396.94841705,
+    "fermi_eV": -4.5837,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "199",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_10x10_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 18,
+    "n_iterations_listed": 18,
+    "last_scf_accuracy_Ry": 3.6e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -2409.61657127,
+    "fermi_eV": -4.075,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "200",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_10x10_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 10,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 7.173000097175685,
+   "N2_mean3d_meV": 717.3000097175686,
+   "A1_mean3d_meV": 7.173000097179916,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 8.386698900844593,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 8.735631643434997,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 8.72367231394369,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 8.345410778370399,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -3.1704626871744415,
+   "vacuum_std_meV": 3.046920190743012,
+   "vacuum_min_meV": -9.627903590663658,
+   "vacuum_max_meV": -0.6140978577348563,
+   "at_cell_edge_meV": -6.165771094898824,
+   "sheet_plane_meV": 137.3054518944428,
+   "elapsed_s": 4.940789699554443
+  },
+  "11x11": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 26,
+    "n_iterations_listed": 26,
+    "last_scf_accuracy_Ry": 3.5e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -2902.93599922,
+    "fermi_eV": -4.5038,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "241",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_11x11_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 18,
+    "n_iterations_listed": 18,
+    "last_scf_accuracy_Ry": 7.7e-12,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -2915.6010242,
+    "fermi_eV": -4.2945,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "242",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_11x11_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 11,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 5.946608321612843,
+   "N2_mean3d_meV": 719.5396069151541,
+   "A1_mean3d_meV": 5.946608321612423,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 7.067804828324437,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 7.374139306974096,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 7.365901794668849,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 7.054425299975517,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -2.995786758389199,
+   "vacuum_std_meV": 3.0761740559575617,
+   "vacuum_min_meV": -9.254154498347823,
+   "vacuum_max_meV": -0.5348563779241529,
+   "at_cell_edge_meV": -7.334288429633597,
+   "sheet_plane_meV": 115.22015696797153,
+   "elapsed_s": 7.2591938972473145
+  },
+  "12x12": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 27,
+    "n_iterations_listed": 27,
+    "last_scf_accuracy_Ry": 7.7e-12,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -3457.09139568,
+    "fermi_eV": -4.2172,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "287",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_12x12_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 17,
+    "n_iterations_listed": 17,
+    "last_scf_accuracy_Ry": 7e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -3469.7359223,
+    "fermi_eV": -4.2197,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "288",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_12x12_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 12,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 5.058902986927519,
+   "N2_mean3d_meV": 728.4820301175628,
+   "A1_mean3d_meV": 5.058902986926128,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 6.382981314665692,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 6.7099719949870416,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 6.713204165069737,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 6.4388782773419235,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -3.731764165627686,
+   "vacuum_std_meV": 4.51795845001777,
+   "vacuum_min_meV": -13.191588825958505,
+   "vacuum_max_meV": -0.4806315518416015,
+   "at_cell_edge_meV": -13.186695636690152,
+   "sheet_plane_meV": 102.32638476028569,
+   "elapsed_s": 7.4289727210998535
+  },
+  "15x15": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 29,
+    "n_iterations_listed": 29,
+    "last_scf_accuracy_Ry": 5.1e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -5408.86552118,
+    "fermi_eV": -4.2174,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "449",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_15x15_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 19,
+    "n_iterations_listed": 19,
+    "last_scf_accuracy_Ry": 6.3e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -5421.51446966,
+    "fermi_eV": -4.2198,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "450",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_15x15_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 15,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 1.4157659381566785,
+   "N2_mean3d_meV": 318.54733608525265,
+   "A1_mean3d_meV": 1.4157659381535126,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 4.036783030168279,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 4.233833895481413,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 4.232656506705147,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 4.04954220856094,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -7.122324562219972,
+   "vacuum_std_meV": 8.585177186616276,
+   "vacuum_min_meV": -25.12348373125766,
+   "vacuum_max_meV": 6.046610058463659,
+   "at_cell_edge_meV": -25.12348373125766,
+   "sheet_plane_meV": 64.93755493797833,
+   "elapsed_s": 11.509581565856934
+  },
+  "18x18": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 30,
+    "n_iterations_listed": 30,
+    "last_scf_accuracy_Ry": 4.5e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -7794.36212492,
+    "fermi_eV": -4.2188,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "647",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_18x18_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 18,
+    "n_iterations_listed": 18,
+    "last_scf_accuracy_Ry": 8.8e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -7807.01354247,
+    "fermi_eV": -4.2199,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "648",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_18x18_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 18,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": -8.481730789349267,
+   "N2_mean3d_meV": -2748.080775749163,
+   "A1_mean3d_meV": -8.481730789323905,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 2.776771012721139,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 2.907272659439134,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 2.9047627911496976,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 2.769455096300545,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -30.425742113306534,
+   "vacuum_std_meV": 22.533417228289263,
+   "vacuum_min_meV": -64.98992783897768,
+   "vacuum_max_meV": 2.4748721285495328,
+   "at_cell_edge_meV": -64.98992783897768,
+   "sheet_plane_meV": 44.78315108848126,
+   "elapsed_s": 15.47846508026123
+  },
+  "21x21": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 30,
+    "n_iterations_listed": 30,
+    "last_scf_accuracy_Ry": 3.3e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -10613.58213655,
+    "fermi_eV": -4.2205,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "881",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_21x21_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 18,
+    "n_iterations_listed": 18,
+    "last_scf_accuracy_Ry": 6.6e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -10626.2350596,
+    "fermi_eV": -4.2199,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "882",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_21x21_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 21,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": 1.033712816714808,
+   "N2_mean3d_meV": 455.8673521712303,
+   "A1_mean3d_meV": 1.0337128167221543,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 2.0246478278530375,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 2.1170109808652926,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 2.1145810034463883,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": 1.9865174137575683,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -2.576598346932535,
+   "vacuum_std_meV": 1.4061320209102772,
+   "vacuum_min_meV": -6.562862953402525,
+   "vacuum_max_meV": -0.2923383998522667,
+   "at_cell_edge_meV": -3.966487122453761,
+   "sheet_plane_meV": 32.72698251266477,
+   "elapsed_s": 20.621957778930664
+  },
+  "24x24": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 33,
+    "n_iterations_listed": 33,
+    "last_scf_accuracy_Ry": 3.2e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -13866.526093,
+    "fermi_eV": -4.2222,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "1151",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_24x24_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 20,
+    "n_iterations_listed": 20,
+    "last_scf_accuracy_Ry": 4.2e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -13879.18001899,
+    "fermi_eV": -4.2199,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "1152",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_24x24_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 24,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": -62.73899109959698,
+   "N2_mean3d_meV": -36137.65887336786,
+   "A1_mean3d_meV": -62.73899109958503,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 1.5400349303973206,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 1.6085087233876654,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 1.6052656547074151,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": -0.8056126817926433,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -167.48181205941455,
+   "vacuum_std_meV": 36.97291004017807,
+   "vacuum_min_meV": -212.699134674176,
+   "vacuum_max_meV": -94.38674145196318,
+   "at_cell_edge_meV": -211.89472728983557,
+   "sheet_plane_meV": 24.939961129425146,
+   "elapsed_s": 27.466434240341187
+  },
+  "27x27": {
+   "scf_d": {
+    "converged": true,
+    "n_iter_reported": 30,
+    "n_iterations_listed": 30,
+    "last_scf_accuracy_Ry": 7.9e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -17553.19434454,
+    "fermi_eV": -4.2237,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "1457",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_d": {
+    "plot_num": "1",
+    "filplot": "'Vks_27x27_d'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "scf_p": {
+    "converged": true,
+    "n_iter_reported": 19,
+    "n_iterations_listed": 19,
+    "last_scf_accuracy_Ry": 1.8e-11,
+    "job_done": true,
+    "not_converged": false,
+    "total_energy_Ry": -17565.84899959,
+    "fermi_eV": -4.2199,
+    "params": {
+     "conv_thr": "1.d-10",
+     "mixing_beta": "0.3",
+     "electron_maxstep": "400",
+     "ecutwfc": "100",
+     "degauss": "0.01",
+     "occupations": "'smearing'",
+     "nspin": null,
+     "nat": "1458",
+     "assume_isolated": "'2D'",
+     "tot_charge": null
+    },
+    "k_points": "gamma"
+   },
+   "pp_p": {
+    "plot_num": "1",
+    "filplot": "'Vks_27x27_p'",
+    "output_format": "6",
+    "iflag": "3"
+   },
+   "N": 27,
+   "c_A": 15.87531632709,
+   "nz": 192,
+   "z_sheet_red": 0.0,
+   "mean3d_meV": -99.91305943910427,
+   "N2_mean3d_meV": -72836.62033110701,
+   "A1_mean3d_meV": -99.91305943908868,
+   "contributions": {
+    "|z|<=1A": {
+     "sum_over_nz_meV": 1.2098140102145967,
+     "n_planes": 25
+    },
+    "|z|<=2A": {
+     "sum_over_nz_meV": 1.2624861739141349,
+     "n_planes": 49
+    },
+    "|z|<=3A": {
+     "sum_over_nz_meV": 1.2607314558298595,
+     "n_planes": 73
+    },
+    "|z|<=5A": {
+     "sum_over_nz_meV": -6.387930971933249,
+     "n_planes": 121
+    }
+   },
+   "vacuum_mean_meV": -252.91302346051881,
+   "vacuum_std_meV": 42.28307192350877,
+   "vacuum_min_meV": -329.66893185965324,
+   "vacuum_max_meV": -148.20576411142497,
+   "at_cell_edge_meV": -329.66893185965324,
+   "sheet_plane_meV": 19.62911388605013,
+   "elapsed_s": 34.00883388519287
+  }
+ }
+}

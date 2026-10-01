@@ -1,0 +1,185 @@
+[check] 9x9 defective: scf.in regenere == existant : True
+[check] 9x9 pristine: scf.in regenere == existant : True
+[check] 9x9 defective: pp.in regenere == existant : True
+[check] 12x12 defective: scf.in regenere == existant : True
+[check] 12x12 pristine: scf.in regenere == existant : True
+[check] 12x12 defective: pp.in regenere == existant : True
+[check] REGRESSION PASS
+[15x15] lacune A (i,j)=(7,7) -> (0.4888888889, 0.4888888889), indice 1-based dans la parfaite 225 ; nat p/d 450/449 ; nbnd p/d 930/928 ; ressources {'ntasks_per_node': 8, 'mem_per_cpu': '8G', 'time': '03:00:00'}
+--- 12x12/defective/scf.in
++++ 15x15/defective/scf.in
+@@ -1,2 +1,2 @@
+-! ground state SCF of graphene 12x12 supercell
+-! monovacancy at center of 12x12 supercell
++! ground state SCF of graphene 15x15 supercell
++! monovacancy at center of 15x15 supercell
+@@ -6,2 +6,2 @@
+-  prefix      = 'defect_12x12_d'        ! prefix of output files
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_d'   ! directory of tempory files
++  prefix      = 'defect_15x15_d'        ! prefix of output files
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_15x15_d'   ! directory of tempory files
+@@ -12 +12 @@
+-  nat         = 287       ! number of atoms (287 = 2 x 12 x 12 - 1 vacancy)
++  nat         = 449       ! number of atoms (449 = 2 x 15 x 15 - 1 vacancy)
+@@ -18 +18 @@
+-  nbnd        = 604      ! 1148 valence electrons -> 574 occupied; adjust as needed
++  nbnd        = 928      ! 1796 valence electrons -> 898 occupied; adjust as needed
+@@ -31,2 +31,2 @@
+-  48.4259028732  -27.9587080596   0.0000000000
+-  48.4259028732   27.9587080596   0.0000000000
++  60.5323785915  -34.9483850745   0.0000000000
++  60.5323785915   34.9483850745   0.0000000000
+--- 12x12/defective/submit.scf
++++ 15x15/defective/submit.scf
+@@ -5,0 +6 @@
++#SBATCH --ntasks-per-node=8
+@@ -7,2 +8,2 @@
+-#SBATCH --mem-per-cpu=4G               # memory; default unit is megabytes
+-#SBATCH --time=04-00:00          # time (DD-HH:MM)
++#SBATCH --mem-per-cpu=8G               # memory; default unit is megabytes
++#SBATCH --time=03:00:00          # time (DD-HH:MM)
+--- 12x12/defective/pp.in
++++ 15x15/defective/pp.in
+@@ -2,2 +2,2 @@
+-  prefix   = 'defect_12x12_d'
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_d'   ! directory of tempory files
++  prefix   = 'defect_15x15_d'
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_15x15_d'   ! directory of tempory files
+@@ -5 +5 @@
+-  filplot  = 'Vks_12x12_d'
++  filplot  = 'Vks_15x15_d'
+--- 15x15/defective/submit.pp: identique au 12x12
+    (15x15/defective/scf.in : 449 lignes de positions, non montrees)
+--- 12x12/pristine/scf.in
++++ 15x15/pristine/scf.in
+@@ -1,2 +1,2 @@
+-! ground state SCF of graphene 12x12 supercell
+-! pristine 12x12 supercell
++! ground state SCF of graphene 15x15 supercell
++! pristine 15x15 supercell
+@@ -6,2 +6,2 @@
+-  prefix      = 'defect_12x12_p'        ! prefix of output files
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_p'   ! directory of tempory files
++  prefix      = 'defect_15x15_p'        ! prefix of output files
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_15x15_p'   ! directory of tempory files
+@@ -12 +12 @@
+-  nat         = 288       ! number of atoms (288 = 2 x 12 x 12)
++  nat         = 450       ! number of atoms (450 = 2 x 15 x 15)
+@@ -18 +18 @@
+-  nbnd        = 606      ! 1152 valence electrons -> 576 occupied; adjust as needed
++  nbnd        = 930      ! 1800 valence electrons -> 900 occupied; adjust as needed
+@@ -31,2 +31,2 @@
+-  48.4259028732  -27.9587080596   0.0000000000
+-  48.4259028732   27.9587080596   0.0000000000
++  60.5323785915  -34.9483850745   0.0000000000
++  60.5323785915   34.9483850745   0.0000000000
+--- 12x12/pristine/submit.scf
++++ 15x15/pristine/submit.scf
+@@ -5,0 +6 @@
++#SBATCH --ntasks-per-node=8
+@@ -7,2 +8,2 @@
+-#SBATCH --mem-per-cpu=4G               # memory; default unit is megabytes
+-#SBATCH --time=04-00:00          # time (DD-HH:MM)
++#SBATCH --mem-per-cpu=8G               # memory; default unit is megabytes
++#SBATCH --time=03:00:00          # time (DD-HH:MM)
+--- 12x12/pristine/pp.in
++++ 15x15/pristine/pp.in
+@@ -2,2 +2,2 @@
+-  prefix   = 'defect_12x12_p'
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_p'   ! directory of tempory files
++  prefix   = 'defect_15x15_p'
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_15x15_p'   ! directory of tempory files
+@@ -5 +5 @@
+-  filplot  = 'Vks_12x12_p'
++  filplot  = 'Vks_15x15_p'
+--- 15x15/pristine/submit.pp: identique au 12x12
+    (15x15/pristine/scf.in : 450 lignes de positions, non montrees)
+[18x18] lacune A (i,j)=(9,9) -> (0.5185185185, 0.5185185185), indice 1-based dans la parfaite 343 ; nat p/d 648/647 ; nbnd p/d 1326/1324 ; ressources {'ntasks_per_node': 8, 'mem_per_cpu': '16G', 'time': '06:00:00'}
+--- 12x12/defective/scf.in
++++ 18x18/defective/scf.in
+@@ -1,2 +1,2 @@
+-! ground state SCF of graphene 12x12 supercell
+-! monovacancy at center of 12x12 supercell
++! ground state SCF of graphene 18x18 supercell
++! monovacancy at center of 18x18 supercell
+@@ -6,2 +6,2 @@
+-  prefix      = 'defect_12x12_d'        ! prefix of output files
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_d'   ! directory of tempory files
++  prefix      = 'defect_18x18_d'        ! prefix of output files
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_18x18_d'   ! directory of tempory files
+@@ -12 +12 @@
+-  nat         = 287       ! number of atoms (287 = 2 x 12 x 12 - 1 vacancy)
++  nat         = 647       ! number of atoms (647 = 2 x 18 x 18 - 1 vacancy)
+@@ -18 +18 @@
+-  nbnd        = 604      ! 1148 valence electrons -> 574 occupied; adjust as needed
++  nbnd        = 1324      ! 2588 valence electrons -> 1294 occupied; adjust as needed
+@@ -31,2 +31,2 @@
+-  48.4259028732  -27.9587080596   0.0000000000
+-  48.4259028732   27.9587080596   0.0000000000
++  72.6388543098  -41.9380620894   0.0000000000
++  72.6388543098   41.9380620894   0.0000000000
+--- 12x12/defective/submit.scf
++++ 18x18/defective/submit.scf
+@@ -5,0 +6 @@
++#SBATCH --ntasks-per-node=8
+@@ -7,2 +8,2 @@
+-#SBATCH --mem-per-cpu=4G               # memory; default unit is megabytes
+-#SBATCH --time=04-00:00          # time (DD-HH:MM)
++#SBATCH --mem-per-cpu=16G               # memory; default unit is megabytes
++#SBATCH --time=06:00:00          # time (DD-HH:MM)
+--- 12x12/defective/pp.in
++++ 18x18/defective/pp.in
+@@ -2,2 +2,2 @@
+-  prefix   = 'defect_12x12_d'
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_d'   ! directory of tempory files
++  prefix   = 'defect_18x18_d'
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_18x18_d'   ! directory of tempory files
+@@ -5 +5 @@
+-  filplot  = 'Vks_12x12_d'
++  filplot  = 'Vks_18x18_d'
+--- 18x18/defective/submit.pp: identique au 12x12
+    (18x18/defective/scf.in : 647 lignes de positions, non montrees)
+--- 12x12/pristine/scf.in
++++ 18x18/pristine/scf.in
+@@ -1,2 +1,2 @@
+-! ground state SCF of graphene 12x12 supercell
+-! pristine 12x12 supercell
++! ground state SCF of graphene 18x18 supercell
++! pristine 18x18 supercell
+@@ -6,2 +6,2 @@
+-  prefix      = 'defect_12x12_p'        ! prefix of output files
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_p'   ! directory of tempory files
++  prefix      = 'defect_18x18_p'        ! prefix of output files
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_18x18_p'   ! directory of tempory files
+@@ -12 +12 @@
+-  nat         = 288       ! number of atoms (288 = 2 x 12 x 12)
++  nat         = 648       ! number of atoms (648 = 2 x 18 x 18)
+@@ -18 +18 @@
+-  nbnd        = 606      ! 1152 valence electrons -> 576 occupied; adjust as needed
++  nbnd        = 1326      ! 2592 valence electrons -> 1296 occupied; adjust as needed
+@@ -31,2 +31,2 @@
+-  48.4259028732  -27.9587080596   0.0000000000
+-  48.4259028732   27.9587080596   0.0000000000
++  72.6388543098  -41.9380620894   0.0000000000
++  72.6388543098   41.9380620894   0.0000000000
+--- 12x12/pristine/submit.scf
++++ 18x18/pristine/submit.scf
+@@ -5,0 +6 @@
++#SBATCH --ntasks-per-node=8
+@@ -7,2 +8,2 @@
+-#SBATCH --mem-per-cpu=4G               # memory; default unit is megabytes
+-#SBATCH --time=04-00:00          # time (DD-HH:MM)
++#SBATCH --mem-per-cpu=16G               # memory; default unit is megabytes
++#SBATCH --time=06:00:00          # time (DD-HH:MM)
+--- 12x12/pristine/pp.in
++++ 18x18/pristine/pp.in
+@@ -2,2 +2,2 @@
+-  prefix   = 'defect_12x12_p'
+-  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_12x12_p'   ! directory of tempory files
++  prefix   = 'defect_18x18_p'
++  outdir      = '/home/gregb26/links/scratch/qe_tmp/defect_18x18_p'   ! directory of tempory files
+@@ -5 +5 @@
+-  filplot  = 'Vks_12x12_p'
++  filplot  = 'Vks_18x18_p'
+--- 18x18/pristine/submit.pp: identique au 12x12
+    (18x18/pristine/scf.in : 648 lignes de positions, non montrees)

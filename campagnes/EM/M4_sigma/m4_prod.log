@@ -1,0 +1,8 @@
+sigma full            47.5 s | xx at lasers [1.26367 1.40555 1.51148]
+sigma centres_only    48.1 s | xx at lasers [1.21903 1.33724 1.42576]
+sigma no_berry        34.7 s | xx at lasers [1.36481 1.55476 1.69435]
+maps done, deps 0.01809-6.211 eV
+hbar v_F = 5.46919 eV A, hbar omega_froz = 4.9595 eV
+production vs pilot (full, N = 1200, eta = 0.04): max |diff| = 0.0e+00
+DONE in 145 s
+exit 0

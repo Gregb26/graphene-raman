@@ -1,0 +1,8 @@
+cells identical (bohr), tb.lattice = cell x 0.529177210903 to 6.9e-08 A
+K = [ 1.4711341  -0.84935967  0.        ] 1/A, crystal [0.66666667 0.33333333 0.        ]
+ring  2.33 eV: 48 k, |k-K| 0.192212-0.261712 1/A, centre - K 3.1e-07
+ring  1.96 eV: 12 k, |k-K| 0.163757-0.210230 1/A, centre - K 9.5e-07
+ring  2.54 eV: 12 k, |k-K| 0.208125-0.294003 1/A, centre - K 8.3e-07
+dirac 0.00 eV: 12 k, |k-K| 0.005000-0.005000 1/A, centre - K 0.0e+00
+first point at 2.33 eV: [0.73959906 0.40626573 0.        ]
+wrote 84 k points

@@ -1,0 +1,24 @@
+EM2 B — postw90 (default, 1201) - M4 = sum of the terms below (sigma/sigma_0, g_s = 2 applied to postw90)
+
+xx: term               |  0.20 eV  |  1.96 eV  |  2.33 eV  |  2.54 eV  |  4.05 eV  | max |term| (at eV)
+    prefactor 1/Delta  | -1.8e-04 | -2.6e-04 | -3.1e-04 | -3.5e-04 | -1.7e-03 | 1.09e-02 (4.11)
+    grid Gamma 1201    | +8.1e-07 | +1.3e-15 | +1.3e-15 | -4.4e-16 | -1.4e-14 | 8.15e-07 (0.20)
+    residual           | -2.5e-05 | +3.5e-05 | +5.4e-06 | -5.3e-05 | -4.3e-05 | 2.11e-04 (3.89)
+    use_ws_distance    | -7.3e-05 | -1.5e-05 | -1.3e-04 | -9.4e-05 | -1.2e-03 | 1.73e-03 (4.02)
+    diagonal of r      | -1.0e-05 | -1.2e-03 | -1.7e-03 | -2.2e-03 | -1.9e-02 | 1.86e-02 (4.06)
+    TOTAL postw90 - M4 | -2.9e-04 | -1.4e-03 | -2.2e-03 | -2.7e-03 | -2.1e-02 | 2.86e-02 (4.01)
+
+yy: term               |  0.20 eV  |  1.96 eV  |  2.33 eV  |  2.54 eV  |  4.05 eV  | max |term| (at eV)
+    prefactor 1/Delta  | -1.8e-04 | -2.6e-04 | -3.1e-04 | -3.5e-04 | -1.8e-03 | 1.09e-02 (4.11)
+    grid Gamma 1201    | -8.5e-07 | +3.8e-15 | -2.2e-15 | -5.8e-15 | -3.6e-15 | 8.50e-07 (0.20)
+    residual           | +2.1e-05 | +4.2e-05 | -3.7e-05 | -7.9e-05 | -3.8e-05 | 1.14e-04 (3.24)
+    use_ws_distance    | +6.5e-05 | +4.7e-05 | +9.5e-05 | +5.8e-05 | +6.2e-04 | 9.32e-04 (4.02)
+    diagonal of r      | -2.5e-06 | -2.6e-04 | -4.2e-04 | -5.4e-04 | -6.2e-03 | 6.21e-03 (4.06)
+    TOTAL postw90 - M4 | -1.0e-04 | -4.3e-04 | -6.7e-04 | -9.1e-04 | -7.4e-03 | 1.50e-02 (4.00)
+
+|sigma_yy - sigma_xx| max over the curve (at the lasers):
+    M4                         2.7e-03  (7.0e-05, 1.9e-04, 1.3e-04)
+    ours 1/Delta Gamma 1201    2.7e-03  (7.0e-05, 1.9e-04, 1.3e-04)
+    postw90 default            1.2e-02  (9.0e-04, 1.3e-03, 1.6e-03)
+    postw90 transl_inv         2.6e-05  (5.7e-07, 2.2e-06, 1.9e-06)
+    postw90 transl_inv, no ws  2.7e-03  (6.2e-05, 2.3e-04, 1.5e-04)

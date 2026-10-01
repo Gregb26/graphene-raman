@@ -1,0 +1,12 @@
+{
+  "bloch_norm": "unit_cell",
+  "units": "hartree",
+  "shape": [
+    16,
+    25,
+    16,
+    25
+  ],
+  "part": "M_L",
+  "M_normalization": "v2 : L et NL en norme unit_cell, 2026-09-25"
+}

@@ -1,0 +1,48 @@
+# Chiffres du §2.5 (EM3)
+
+Généré par `make_em3_data.py` (ne pas éditer à la main). Wannierisation 27×27, μ = E_D = -4.238895 eV ; σ : N = 1200, η = 0.04 eV.
+
+## Vitesse de Fermi
+
+| | ħv_F (eV·Å) | v_F (10⁵ m/s) |
+|---|---|---|
+| Wannier (complet, q = 10⁻³ Å⁻¹) | 5.4692 | 8.309 |
+| DFT directe (pentes, q = 0.005 Å⁻¹) | 5.46977 | 8.310 |
+
+## |ħv_cv| dans le plan contre la DFT directe (écart relatif k par k, %, min / moy. / max)
+
+| Anneau | k | complet | centres seuls | sans Berry |
+|---|---|---|---|---|
+| 1.96 eV (633 nm) | 12 | -0.042 / -0.013 / +0.002 | -1.956 / -1.830 / -1.752 | -33.831 / -0.093 / +22.490 |
+| 2.33 eV (532 nm) | 48 | -0.040 / -0.017 / -0.000 | -2.747 / -2.551 / -2.394 | -42.208 / -0.015 / +28.132 |
+| 2.54 eV (488 nm) | 12 | -0.035 / -0.017 / -0.005 | -3.252 / -3.002 / -2.782 | -47.265 / +0.049 / +29.411 |
+
+## Moyennes sur les anneaux (F15), unités (ħv_F)²/2
+
+| Anneau | ⟨\|e_x·ħv_cv\|²⟩ complet / centres / sans Berry | ⟨\|e_y·ħv_cv\|²⟩ complet / centres / sans Berry | centres/complet x ; y |
+|---|---|---|---|
+| 1.96 eV | 1.0375 / 1.0006 / 1.1307 | 1.0374 / 1.0005 / 1.0005 | 0.9644 ; 0.9644 |
+| 2.33 eV | 1.0512 / 0.9995 / 1.1835 | 1.0511 / 0.9994 / 0.9994 | 0.9508 ; 0.9508 |
+| 2.54 eV | 1.0594 / 0.9984 / 1.2170 | 1.0594 / 0.9983 / 0.9983 | 0.9424 ; 0.9424 |
+
+## σ(ω)/σ₀ aux énergies laser
+
+| λ (nm) | ħω (eV) | complet xx | centres xx | sans Berry xx | sans Berry yy | postw90 (`transl_inv`) xx | postw90 − complet |
+|---|---|---|---|---|---|---|---|
+| 633 | 1.96 | 1.2637 | 1.2190 | 1.3648 | 1.2190 | 1.2634 | -2.4e-04 |
+| 532 | 2.33 | 1.4056 | 1.3372 | 1.5548 | 1.3370 | 1.4051 | -4.4e-04 |
+| 488 | 2.54 | 1.5115 | 1.4258 | 1.6943 | 1.4256 | 1.5110 | -5.0e-04 |
+
+Pic de van Hove (position seulement) : 4.05 eV ; ħω_froz = 4.9595 eV (N = 800).
+
+## Budgets d'erreur (à 2.33 eV)
+
+| Source | Grandeur | Valeur |
+|---|---|---|
+| hermiticité de r (partie jetée par `hermitize`) | max \|δħv_cv\|/ħv_F sur l'anneau | 1.3e-03 |
+| DFT directe (contrôle du budget précédent) | max \|écart relatif\| de \|ħv_cv\| complet, 72 k | 4.2e-04 |
+| élargissement η = 0.04 eV | σ_xx(η) − σ_xx(0) | +6.6e-04 |
+| préfacteur 1/(ε_c − ε_v) de postw90 contre 1/ħω | Δσ_xx | -3.1e-04 |
+| `use_ws_distance` (non appliqué, décision 4) | Δσ_xx (postw90) | -1.3e-04 |
+
+Commit 13978aa (src modifié). Sources : `M4_sigma/` (σ, anneaux, scalaires, pilote), `EM2/em2_A.npz` (DFT), `EM2/postw90/k1201_ti*`, `EM2/em2_B_ours.npz` ; hermiticité : EM.md §5 (F10).

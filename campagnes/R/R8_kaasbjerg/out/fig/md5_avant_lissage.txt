@@ -1,0 +1,3 @@
+dfb1dcaa2f17c0e5d4017f540517cb76  out/dos/dos_results.json
+e9663744d35517ec0720c893edbb3d76  out/dos/dos_9x9.npz
+5a44123c4dc253ce76a15399fc7cf69f  out/sens/sens_results.json

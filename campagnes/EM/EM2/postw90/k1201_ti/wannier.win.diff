@@ -1,0 +1,14 @@
+22a23,35
+> ! --- EM2 B: postw90 kubo; Gaussian of std 0.04 eV = W90 width sqrt(2)*0.04 (utility_w0gauss: exp(-x^2)/sqrt(pi)) ---
+>  berry = true
+>  berry_task = kubo
+>  berry_kmesh = 1201 1201 1
+>  fermi_energy = -4.238895
+>  kubo_freq_min = 0.2
+>  kubo_freq_max = 6.0
+>  kubo_freq_step = 0.01
+>  kubo_adpt_smr = false
+>  kubo_smr_type = gauss
+>  kubo_smr_fixed_en_width = 0.0565685425
+>  kubo_eigval_max = 1000.0
+>  transl_inv = true

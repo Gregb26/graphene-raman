@@ -1,0 +1,1657 @@
+diff --git a/article/R7_tailles_3m/R7_rapport.md b/article/R7_tailles_3m/R7_rapport.md
+index 478bb54..9ddd187 100644
+--- a/article/R7_tailles_3m/R7_rapport.md
++++ b/article/R7_tailles_3m/R7_rapport.md
+@@ -392,3 +392,50 @@ Faits bruts :
+ - 2026-09-26, 09 h 05 : miroir léger 21/24/27 fait (XML, charge-density, C.upf, prefix.xml : 24 fichiers, `MD5SUMS_R7_2026-09-26.txt`,
+   `md5sum -c` 24/24, source = miroir sur les 18 fichiers de données, groupe rrg-cotemich-ac). Miroir des six `wfc1.hdf5` (678 Go) :
+   job 21850526 (`submit_mirror_wfc_21_24_27.sh`, 10 h ; rsync, chgrp, md5 source et miroir, ajout à `MD5SUMS_R7_2026-09-26.txt`).
++
++## R7c — Relaxation des lacunes 15×15 à 27×27, nspin 1, depuis la géométrie relaxée de la 12×12 (demande de Greg le 2026-09-26)
++
++### Phase 0 (2026-09-26 ; inputs écrits, **rien soumis, GO attendu**)
++
++Cadre : « on ajoute à R7 la relaxation des super-cellules défectives pas encore faite (15, 18, 21, 24, 27). Part de la géométrie
++relaxée de la 12×12. Pas de spin pour l'instant. » Protocole R2 pour tout sauf la géométrie initiale : `calculation = 'relax'`
++(cellule fixe), BFGS, `nstep 200`, `forc_conv_thr 1e-4`, `etot_conv_thr 1e-5`, `tprnfor`, `nosym`, `noinv` ; le reste des namelists =
++`scf.in` R7 de la même taille (cutoffs, Γ, mv 0,01 Ry, `conv_thr 1e-10`, nbnd R7, pseudo). Emplacements comme R2 :
++`super_cell_relaxed/series/NxN/nspin1/{relax.in, submit.relax}`, `series/NxN/transplant.log`, `outdir` scratch
++`qe_tmp/vacancy_relaxed/series/NxN/nspin1/`, prefix `vac_NxN_relax_nspin1`. Générateur `make_inputs_r7_relax.py` (ce répertoire),
++sortie de phase 0 dans `relax_phase0.txt`.
++
++**Géométrie initiale (écart au protocole R2, consigné).** R2 partait de la maille idéale avec la paire de voisins rapprochée de
++0,03 Å ; ici, champ de déplacements u(r) = x_relax − x_idéal de la 12×12 R2 nspin1 (coordonnées finales de `relax.out`, 31 pas BFGS,
++ΔE_relax −367 meV, paire 2,15980 Å) transplanté autour de la lacune de la cellule N×N. La 12×12 a sa lacune sur le sous-réseau B, les
++cellules R7 sur A : transplant **par inversion autour de la lacune** (r → −r, u → −u), qui échange A et B sur le nid d'abeille
++(vérifié : 225/225 sites idéaux appariés à 1e-4 Å). Rayon de transplant R_cut = 14,5 Å (< L₁₂/2 = 14,795 Å, unicité de l'image
++minimale) : 225 atomes déplacés, les autres idéaux. Profil du champ 12×12 (|u| max par couronne) : 0,161 Å (3 voisins), 0,151 (2–4 Å),
++0,073 (4–6), 0,054 (6–8), 0,031 (8–10), 0,018 (10–12), 0,014 (12–14,5), et **0,013 Å pour les 62 atomes au-delà de R_cut** : le champ
++de la 12×12 n'est pas nul à sa frontière (images périodiques), d'où une discontinuité ≈ 0,01 Å à la troncature, à résorber par le
++BFGS. |u_z| max 3e-7 Å (conservé). Régressions (`--check`, PASS) : (1) auto-transplant de la 12×12 sans inversion = coordonnées
++finales R2 à 4e-11 ; (2) namelists et cellule dérivés du `scf.in` 12×12 = `relax.in` R2 12×12 nspin1 hors titre et positions ;
++(3) inversion exacte B → A. Contrôles des cinq géométries : distances entre voisins de la lacune 2,15980 / 2,56934 / 2,56934 Å
++(= 12×12 R2 final), distance interatomique minimale 1,3626 Å (idem 12×12 relaxée), |u| max 0,16084 Å.
++
++| N | nat | nbnd (R7) | lacune A | voisins (1-based) | `submit.relax` (nœuds × rangs, `--mem=0`, limite) | par cycle SCF estimé | 10 / 20 / 30 cycles |
++|---|---|---|---|---|---|---|---|
++| 15 | 449 | 928 | 225 | 225, 224, 196 | 1 × 192, 12 h | ≈ 12 min | 2 / 4 / 6 h |
++| 18 | 647 | 1324 | 343 | 343, 308, 342 | 1 × 192, 1 j | ≈ 29 min | 5 / 10 / 15 h |
++| 21 | 881 | 1854 | 441 | 441, 440, 400 | 2 × 96, 2 j | ≈ 48 min | 8 / 16 / 24 h |
++| 24 | 1151 | 2422 | 601 | 601, 554, 600 | 3 × 64, 3 j | ≈ 110 min | 18 / 37 / 55 h |
++| 27 | 1457 | 3066 | 729 | 729, 728, 676 | 6 × 32, 6 j | ≈ 175 min | 29 / 58 / 88 h |
++
++Coût : un cycle SCF de BFGS ≈ 0,45 × le scf complet de la même taille (R2 12×12 : 6,7 min par cycle contre 15 min), scf complets
++mesurés en R7 (15/18 à 64 rangs ramenés à 192 rangs avec l'efficacité 0,55 mesurée). Nombre de cycles inconnu : R2 en a pris 16–32
++depuis la maille perturbée ; le départ transplanté devrait en demander moins, mais la relaxation « vraie » dépend de N (paire 2,16 Å
++dans la 12×12, à confirmer). Limites choisies pour ≥ 30 cycles. En cas de dépassement : QE écrit les positions à chaque pas ionique,
++reprise possible par `restart_mode = 'restart'` dans le même `outdir` (à décider le cas échéant). Mémoire : celle des scf R7 (15/18
++sur un nœud à 192 rangs : ≈ 190 / 380 G sur 768). Disque : cinq `.save` ≈ 387 Go de wfc sur le scratch (R7 total ≈ 1,26 To sur 20 To) ;
++miroir `qe_tmp_backup/vacancy_relaxed/series/` en fin de campagne, comme R2.
++
++Après relaxation (à préciser au GO) : analyse R2 étendue (`analyze_relax_series.py` : ΔE_relax contre le scf non relaxé R7 de même
++taille, distances de la paire et du troisième voisin, déplacement max, spglib), et, si voulu, pp.x + D1 sur les cellules relaxées
++(E_D de la parfaite R7, alignement Lu avec le potentiel relaxé, comme R4 sur R1).
++
++**STOP — attente du GO R7c** (cinq relax nspin 1 ; ordre : en parallèle ou en cascade ; analyse post-relax).
+diff --git a/article/R7_tailles_3m/README.md b/article/R7_tailles_3m/README.md
+index 25d089c..e32bea4 100644
+--- a/article/R7_tailles_3m/README.md
++++ b/article/R7_tailles_3m/README.md
+@@ -26,3 +26,6 @@
+ - Jobs (fichier `JOBID`) : scf 15×15 p 21818658, d 21818685 ; 18×18 p 21818687, d 21818689 ; pp.x chaînés afterok 21818684 / 21818686 /
+   21818688 / 21818690 ; D1 régression 6/9/12 21818859 (`d1_reg/`) ; D1 complet (6, 9, 12, 15, 18) à soumettre en afterok des quatre pp.x
+   une fois la régression PASS. Surveillance sans relance. Pilote `r7_driver.py` (d1, tables) + `submit_r7.sh` (16 cœurs, 64 G, 1 h).
++- R7c (demande de Greg, 2026-09-26) : relaxation BFGS nspin 1 des lacunes 15/18/21/24/27 depuis la géométrie relaxée de la 12×12 (R2 nspin1)
++  transplantée par inversion (B → A, R_cut 14,5 Å) ; inputs écrits dans `super_cell_relaxed/series/{15x15,…,27x27}/nspin1/` (`make_inputs_r7_relax.py`,
++  régressions PASS, `relax_phase0.txt`, `transplant.log` par taille) ; **rien soumis, GO attendu** (rapport §R7c).
+diff --git a/scripts/_bz_ratio_LNL.py b/scripts/_bz_ratio_LNL.py
+index ac78222..5109804 100644
+--- a/scripts/_bz_ratio_LNL.py
++++ b/scripts/_bz_ratio_LNL.py
+@@ -10,6 +10,7 @@ for S in sys.argv[1:]:
+     U, kU = read_w90_mat(f"{dp['wdir']}/wannier_u.mat"); U = U[_match_kpoint_order(kU, kd)]; Ud, kUd = read_w90_mat(f"{dp['wdir']}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, kd)]
+     V = np.einsum("kbw,kwv->kbv", Ud, U); w = np.abs(V[:, :, 3]) ** 2 + np.abs(V[:, :, 4]) ** 2                     # pz weight per (k, band)
+     pi_idx = np.array([sorted(np.argsort(-w[k])[:2], key=lambda n: eps[k, n]) for k in range(len(kd))])
++    for _f in (dp["mfile"].replace("M_dense_", "M_L_dense_"), dp["mfile"].replace("M_dense_", "M_NL_dense_")): matrix_io.check_manifest(_f, require_normalization=matrix_io.M_NORM_V2)
+     ML = np.load(dp["mfile"].replace("M_dense_", "M_L_dense_"), mmap_mode="r"); MN = np.load(dp["mfile"].replace("M_dense_", "M_NL_dense_"), mmap_mode="r"); nk = len(kd)
+     fL = np.zeros((nk, nk)); fN = np.zeros((nk, nk))
+     for ik in range(nk):
+diff --git a/scripts/_eta_scan.py b/scripts/_eta_scan.py
+index 66fb2f0..5af1a95 100644
+--- a/scripts/_eta_scan.py
++++ b/scripts/_eta_scan.py
+@@ -3,11 +3,14 @@ import sys
+ import numpy as np
+ from electron_defect_interaction.io import qe_io, matrix_io
+ from electron_defect_interaction.defects.many_body.single_defect import compute_T
++from electron_defect_interaction.config import load_production, results_dir
++raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ HA2EV = 27.211386245988
+ N = sys.argv[1]
+ etas = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else [0.05,0.10,0.15,0.20,0.30,0.40]
+ uc = f"data/graphene/unit_cell/qe/defect_{N}.save"
+-M = matrix_io.load_M_checked(f"results/M/M_ed_{N}_norm.npy", units=matrix_io.EV)
++M = matrix_io.load_M_checked(f"{RES}/M_ed_{N}_norm.npy", units=matrix_io.EV)
+ eigs = qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True) * HA2EV
+ nb, nk = eigs.shape; NN = nb*nk; Ncells = nk; eflat = eigs.reshape(NN)
+ lvl = 6.0 / max(1, int((np.abs(eigs) <= 3.0).sum()))
+diff --git a/scripts/_mcheck.py b/scripts/_mcheck.py
+index c48abb1..14e37b0 100644
+--- a/scripts/_mcheck.py
++++ b/scripts/_mcheck.py
+@@ -1,12 +1,14 @@
+ import numpy as np
+-from electron_defect_interaction.io import qe_io
++from electron_defect_interaction.io import qe_io, matrix_io
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ print(f"{'N':>4} {'N_cells':>8} {'max|M|':>10} {'||M||_F':>10} {'max|M|*Nc':>10} {'||M||_F/Nc':>11}")
+ for N in ["5x5","6x6","7x7","8x8"]:
+-    M=np.load(f"results/M/M_ed_{N}.npy"); n=int(N.split("x")[0]); Nc=n*n
++    matrix_io.check_manifest(f"{RES}/M_ed_{N}.npy", require_normalization=matrix_io.M_NORM_V2); M=np.load(f"{RES}/M_ed_{N}.npy"); n=int(N.split("x")[0]); Nc=n*n
+     print(f"{N:>4} {Nc:>8} {np.max(np.abs(M)):>10.4e} {np.linalg.norm(M):>10.4e} {np.max(np.abs(M))*Nc:>10.4e} {np.linalg.norm(M)/Nc:>11.4e}")
+ print("=== assert structurel: aligned_eigenvalues ===")
+ for N in ["5x5","11x11"]:
+-    uc=f"data/graphene/unit_cell/qe/defect_{N}.save"; M=np.load(f"results/M/M_ed_{N}.npy")
++    uc=f"data/graphene/unit_cell/qe/defect_{N}.save"; matrix_io.check_manifest(f"{RES}/M_ed_{N}.npy", require_normalization=matrix_io.M_NORM_V2); M=np.load(f"{RES}/M_ed_{N}.npy")
+     try:
+         e=qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True)
+         print(f"{N}: OK eps{e.shape} aligne sur M (nk={M.shape[1]})")
+diff --git a/scripts/_normtest.py b/scripts/_normtest.py
+index dd391a4..a74acb4 100644
+--- a/scripts/_normtest.py
++++ b/scripts/_normtest.py
+@@ -1,12 +1,14 @@
+ import numpy as np
+-from electron_defect_interaction.io import qe_io
++from electron_defect_interaction.io import qe_io, matrix_io
+ from electron_defect_interaction.defects.many_body.single_defect import compute_T
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ HA2EV = 27.211386245988
+ 
+ 
+ def medgamma(N, norm):
+     uc = f"data/graphene/unit_cell/qe/defect_{N}.save"
+-    M = np.load(f"results/M/M_ed_{N}.npy")
++    matrix_io.check_manifest(f"{RES}/M_ed_{N}.npy", require_normalization=matrix_io.M_NORM_V2); M = np.load(f"{RES}/M_ed_{N}.npy")
+     eigs = qe_io.get_eigenvalues(uc, shift_Fermi=True) * HA2EV
+     nb, nk = eigs.shape
+     NN = nb * nk
+diff --git a/scripts/_old_vs_new_7x7.py b/scripts/_old_vs_new_7x7.py
+index c235b67..fe36347 100644
+--- a/scripts/_old_vs_new_7x7.py
++++ b/scripts/_old_vs_new_7x7.py
+@@ -1,7 +1,11 @@
+ import numpy as np
+ from electron_defect_interaction.io import matrix_io
+-old = np.load("results/M/obsolete_grid_7x7/M_L_dense_7x7.npy", mmap_mode="r"); new = np.load("results/M/M_L_dense_7x7.npy", mmap_mode="r")
+-oM = np.load("results/M/obsolete_grid_7x7/M_dense_7x7.npy", mmap_mode="r"); nM = np.load("results/M/M_dense_7x7.npy", mmap_mode="r")
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
++import os
++if not os.path.isdir(f"{RES}/obsolete_grid_7x7"): raise SystemExit(f"[non rejouable] {RES}/obsolete_grid_7x7 absent (ancien M 7x7 sur grille 216 supprimé au ménage de septembre 2026)")
++old = np.load(f"{RES}/obsolete_grid_7x7/M_L_dense_7x7.npy", mmap_mode="r"); new = np.load(f"{RES}/M_L_dense_7x7.npy", mmap_mode="r")
++oM = np.load(f"{RES}/obsolete_grid_7x7/M_dense_7x7.npy", mmap_mode="r"); nM = np.load(f"{RES}/M_dense_7x7.npy", mmap_mode="r")
+ rng = np.random.default_rng(0); ks = rng.choice(784, 40, replace=False); dL = dM = 0.0; svL = svM = 0.0
+ for i in ks:
+     for j in ks:
+diff --git a/scripts/_test_mnl_mpi.sh b/scripts/_test_mnl_mpi.sh
+index 08e2908..7e48c35 100644
+--- a/scripts/_test_mnl_mpi.sh
++++ b/scripts/_test_mnl_mpi.sh
+@@ -6,8 +6,8 @@
+ #SBATCH --cpus-per-task=1
+ #SBATCH --mem=0
+ #SBATCH --time=00:45:00
+-#SBATCH --output=results/M/logs/%x_%j.out
+-#SBATCH --error=results/M/logs/%x_%j.err
++#SBATCH --output=results/M2/logs/%x_%j.out
++#SBATCH --error=results/M2/logs/%x_%j.err
+ 
+ # #3 root-cause test: does the chunked-Allreduce fix make compute_M_NL_mpi work at 9x9
+ # (nk=81, the heap-corruption regime)? Run the MPI M^NL (faulthandler on), the serial
+@@ -17,13 +17,16 @@ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-top
+ cd "$PROJ" || exit 1
+ module restore qe
+ module load mpi4py/4.0.3 scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"; export RES
+ PY="$PROJ/.venv/bin/python"
+ 
+ N=9x9
+ UC=data/graphene/unit_cell/qe/defect_${N}.save
+ SCP=data/graphene/supercell/qe/defect_${N}_p.save
+ SCD=data/graphene/supercell/qe/defect_${N}_d.save
+-OUT=results/M/_test_mnl
++OUT=$RES/_test_mnl
+ mkdir -p "$OUT"
+ 
+ echo "[$(date)] MPI M^NL (32 ranks, chunked Allreduce + faulthandler, FLEXIBLAS=IMKL)"
+@@ -45,8 +48,9 @@ export OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 FLEXIBLAS_NUM_THREADS=8 MKL_NUM_
+ echo "[$(date)] compare MPI vs serial"
+ "$PY" - <<'PYEOF'
+ import numpy as np, os
+-mpi_f = "results/M/_test_mnl/M_NL_mpi.npy"
+-ser_f = "results/M/_test_mnl/M_NL_serial.npy"
++RES = os.environ["RES"]                                   # exporté par le script (results_dir de la config, R6)
++mpi_f = f"{RES}/_test_mnl/M_NL_mpi.npy"
++ser_f = f"{RES}/_test_mnl/M_NL_serial.npy"
+ if not os.path.exists(mpi_f):
+     print("RESULT: FAIL (MPI M^NL never written -> it crashed; see faulthandler trace above)")
+     raise SystemExit(1)
+diff --git a/scripts/analyze_M.py b/scripts/analyze_M.py
+index 28af33c..d51c7b0 100644
+--- a/scripts/analyze_M.py
++++ b/scripts/analyze_M.py
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env python
+ """
+-analyze_M.py -- post-processing of the M matrix for §4.1.5 (no new physics runs). Produces results/M/M_analysis.npz
+-and results/M/M_tests_summary.csv, read by scripts/make_figures.py (fig_M_map, fig_Ved_boundary, fig_M_scaling).
++analyze_M.py -- post-processing of the M matrix for §4.1.5 (no new physics runs). Produces <results_dir>/M_analysis.npz
++and <results_dir>/M_tests_summary.csv, read by scripts/make_figures.py (fig_M_map, fig_Ved_boundary, fig_M_scaling).
+   1. |M| map on the BZ for k=K (reference size, dense grid), Kaasbjerg Fig. 3 convention: Vt = A_cell |M| (eV A^2),
+      unit-cell Bloch normalization; pi/pi* selected by pz Wannier weight; gauge-invariant sum over the degenerate pair at K.
+   2. V_ed^L along a lattice-vector line from the vacancy to the supercell boundary, four N; boundary/site ratio.
+@@ -14,16 +14,17 @@ from scipy.ndimage import map_coordinates
+ from electron_defect_interaction.io import qe_io, matrix_io
+ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+ from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, Mwr_to_Mwk, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order
+-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
++from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ BOHR = 0.529177210903
+ cfg = load_production(); import os as _os
+-SIZES = [S for S in ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"] if _os.path.exists(f"results/M/M_dense_{S}.npy") and _os.path.exists(f"results/M/M_ed_{S}.npy")]; REF = cfg["reference_size"]
++SIZES = [S for S in ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"] if _os.path.exists(f"{RES}/M_dense_{S}.npy") and _os.path.exists(f"{RES}/M_ed_{S}.npy")]; REF = cfg["reference_size"]
+ print("[sizes]", SIZES)
+ DATA = "data/graphene"; out = {}; tests = []
+ 
+ def mmap_M(path):
+     """mmap a Hartree-tagged M without loading it (gate: manifest must say units=hartree)."""
+-    meta = matrix_io.read_manifest(path); assert meta and meta.get("units") == matrix_io.HARTREE, f"{path}: untagged/non-Hartree sidecar"
++    matrix_io.check_manifest(path, require_normalization=matrix_io.M_NORM_V2)     # R6 : sidecar v2 exigé (refus sinon)
+     return np.load(path, mmap_mode="r")
+ def wannier_V(wdir, k):
+     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
+@@ -112,7 +113,7 @@ for S in SIZES:
+     print(f"[LNL] {S}: nearest grid point to K at |dk|={dK:.4f} A^-1 (k={np.round(kd[iK],4)}), pair bands {pr} eps={np.round(eps[iK, pr],3)} eV: "
+           f"Re M^L = {reL:+.4f} eV, Re M^NL = {reN:+.4f} eV, |M^L| {abs(np.trace(bL))/2:.4f}, |M^NL| {abs(np.trace(bN))/2:.4f}, NL/L = {reN/reL:.2f}", flush=True)
+     M16 = np.array(Md[:16, :, :16, :]); mx_d = float(np.abs(M16).max()) * HA2EV
+-    Mc = mmap_M(f"results/M/M_ed_{S}.npy"); Mc16 = np.array(Mc[:16, :, :16, :]); mx_c = float(np.abs(Mc16).max()) * HA2EV
++    Mc = mmap_M(f"{RES}/M_ed_{S}.npy"); Mc16 = np.array(Mc[:16, :, :16, :]); mx_c = float(np.abs(Mc16).max()) * HA2EV
+     herm = float(np.abs(M16 - M16.transpose(2, 3, 0, 1).conj()).max() / np.abs(M16).max())
+     ncell = int(S.split("x")[0]) ** 2
+     print(f"[scale] {S}: max|M| bands 1-16: dense {mx_d:.4f} eV (x N_cells = {mx_d*ncell:.2f}), coarse {mx_c:.4f} eV (x N_cells = {mx_c*ncell:.2f}); hermiticity {herm:.2e}", flush=True)
+@@ -131,18 +132,23 @@ for S in SIZES:
+             print(f"[pad] {S}: coincident k ({len(pairs)}), bands 1..{nsub}: max rel SV mismatch dense vs coarse = {worst:.2e}", flush=True)
+             tests.append((f"padding : k coïncidents, bandes 1–{nsub}, {S}", "max écart relatif des valeurs singulières (dense vs N×N)", f"{worst:.1e}", "2e-3 (tolérance nscf)", "OK" if worst < 2e-3 else "À VOIR", "analyze_M.py"))
+         # nb20 vs nb16 non-regression
+-        A16 = mmap_M(f"results/M/M_dense_{S}_nb16.npy"); rng = np.random.default_rng(0); ks = rng.choice(len(kd), 30, replace=False); worst = 0.0
+-        for i in ks:
+-            for j in ks:
+-                sa = np.linalg.svd(np.array(A16[:15, i, :15, j]), compute_uv=False); sb = np.linalg.svd(M16[:15, i, :15, j], compute_uv=False); worst = max(worst, np.abs(sa - sb).max() / sa[0])
+-        print(f"[pad] {S}: nb20[:16] vs nb16, bands 1..15, 30x30 k pairs: {worst:.2e}", flush=True)
+-        tests.append((f"non-régression nbnd 16 → 20, {S}", "max écart relatif des valeurs singulières, bandes 1–15", f"{worst:.1e}", "1e-5", "OK" if worst < 1e-5 else "ÉCHEC", "analyze_M.py"))
++        p16 = f"{RES}/M_dense_{S}_nb16.npy"
++        if _os.path.exists(p16):
++            A16 = mmap_M(p16); rng = np.random.default_rng(0); ks = rng.choice(len(kd), 30, replace=False); worst = 0.0
++            for i in ks:
++                for j in ks:
++                    sa = np.linalg.svd(np.array(A16[:15, i, :15, j]), compute_uv=False); sb = np.linalg.svd(M16[:15, i, :15, j], compute_uv=False); worst = max(worst, np.abs(sa - sb).max() / sa[0])
++            print(f"[pad] {S}: nb20[:16] vs nb16, bands 1..15, 30x30 k pairs: {worst:.2e}", flush=True)
++            tests.append((f"non-régression nbnd 16 → 20, {S}", "max écart relatif des valeurs singulières, bandes 1–15", f"{worst:.1e}", "1e-5", "OK" if worst < 1e-5 else "ÉCHEC", "analyze_M.py"))
++        else:
++            print(f"[pad] {S}: nb20 vs nb16 non rejouable (fichier absent : {p16}, artefacts nbnd 16 supprimés au ménage de septembre)", flush=True)
++            tests.append((f"non-régression nbnd 16 → 20, {S}", "max écart relatif des valeurs singulières, bandes 1–15", "non rejouable", "1e-5", "fichier absent", "analyze_M.py"))
+         # plumbing: dense kernel on the coarse grid vs coarse kernel
+-        pc = f"results/M/M_L_dense_{S}_coarsecheck.npy"
++        pc = f"{RES}/M_L_dense_{S}_coarsecheck.npy"
+         import os
+         if os.path.exists(pc):
+-            Xa = np.array(mmap_M(pc)); pb = f"results/M/M_L_{S}.npy"
+-            Xb = np.array(mmap_M(pb)) if matrix_io.read_manifest(pb) else np.load(pb)   # legacy coarse-kernel output (Hartree, no sidecar): plumbing test only
++            Xa = np.array(mmap_M(pc)); pb = f"{RES}/M_L_{S}.npy"
++            Xb = np.array(mmap_M(pb))
+             rel = float(np.abs(Xa - Xb).max() / np.abs(Xb).max())
+             print(f"[pad] {S}: real-space dense kernel at p=1 vs coarse M^L: rel {rel:.2e}", flush=True)
+             tests.append((f"padding : noyau dense à p=1 vs noyau N×N, {S}", r"max|M^L_dense - M^L| / max|M^L|", f"{rel:.1e}", "1e-10", "OK" if rel < 1e-10 else "ÉCHEC", "analyze_M.py"))
+@@ -165,7 +171,7 @@ tests.append(("convention intensive (cellule unitaire)", "(max−min)/moyenne de
+ # recorded results of the other gates (log references)
+ tests.append(("test d'or (local vs compute_T), 5×5 dense", r"max|\Gamma_{loc} - \Gamma_{dense} N_c| / max", "2.3e-14", "1e-10", "OK", "golden_dense_20294198"))
+ tests.append(("g0 par lots vs référence, R_cut 0–3", "max écart relatif", "1.2e-14", "1e-12", "OK", "test_local_green_batch_20238555"))
+-with open("results/M/M_tests_summary.csv", "w", newline="") as f:
++with open(f"{RES}/M_tests_summary.csv", "w", newline="") as f:
+     w = csv.writer(f); w.writerow(["test", "quantité", "valeur", "seuil", "verdict", "source"]); w.writerows(tests)
+ print("\n=== TESTS DE M ==="); [print(f"  {t[0]:55s} {t[1]:60s} {t[2]:>9s}  seuil {t[3]:20s} {t[4]}") for t in tests]
+-out["tests"] = np.array(tests, dtype=object); np.savez("results/M/M_analysis.npz", **out); print("saved results/M/M_analysis.npz, results/M/M_tests_summary.csv")
++out["tests"] = np.array(tests, dtype=object); np.savez(f"{RES}/M_analysis.npz", **out); print("saved <results_dir>/M_analysis.npz, <results_dir>/M_tests_summary.csv")
+diff --git a/scripts/analyze_Ved.py b/scripts/analyze_Ved.py
+index a995493..3803f05 100644
+--- a/scripts/analyze_Ved.py
++++ b/scripts/analyze_Ved.py
+@@ -5,16 +5,17 @@ analyze_Ved.py -- checks of V_ed^L = V_d - V_p (local defect potential), existin
+   2. profile along a1 WITH and WITHOUT the G=0 (3D mean) subtraction; 3D mean and in-plane mean
+   3. azimuthal average in the plane vs distance to the vacancy, four N
+ Boundary values (max |V| on the half-box planes along a1/a2, all z and in-plane only), raw and mean-subtracted.
+-Output: results/M/ved_analysis.npz
++Output: <results_dir>/ved_analysis.npz
+ """
+ import numpy as np
+ from scipy.ndimage import map_coordinates
+ from electron_defect_interaction.io import qe_io
+-from electron_defect_interaction.config import HA2EV
++from electron_defect_interaction.config import HA2EV, load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ BOHR = 0.529177210903; DATA = "data/graphene"; out = {}
+ import sys
+ SIZES = sys.argv[1].split(",") if len(sys.argv) > 1 else ["5x5", "7x7", "8x8", "9x9"]
+-if len(sys.argv) > 2 and sys.argv[2] == "--merge": out.update(dict(np.load("results/M/ved_analysis.npz")))
++if len(sys.argv) > 2 and sys.argv[2] == "--merge": out.update(dict(np.load(f"{RES}/ved_analysis.npz")))
+ for S in SIZES:
+     scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
+     A, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
+@@ -51,11 +52,11 @@ for S in SIZES:
+     out.update(**{f"{S}_x": t / 0.5, f"{S}_line_raw": line, f"{S}_line_sub": line - mean3d, f"{S}_mean3d": mean3d, f"{S}_mean_plane": mean_plane, f"{S}_site": site,
+                   f"{S}_rc": rc, f"{S}_rad": rad, f"{S}_a": a1_len / int(S.split('x')[0]), f"{S}_halfbox": rmax, f"{S}_b_all": b_all, f"{S}_b_all_sub": b_all_s, f"{S}_b_pl": b_pl, f"{S}_b_pl_sub": b_pl_s, f"{S}_zC": zC, f"{S}_zgrid": zgrid})
+     del dV
+-np.savez("results/M/ved_analysis.npz", **out); print("saved results/M/ved_analysis.npz")
++np.savez(f"{RES}/ved_analysis.npz", **out); print("saved <results_dir>/ved_analysis.npz")
+ 
+ # ---------------- anomaly at r = 1.42 A: sublattice, grid alignment, neighbour displacements, core-masked radial profile
+ print("\n=== anomaly checks ===", flush=True)
+-out2 = dict(np.load("results/M/ved_analysis.npz"))
++out2 = dict(np.load(f"{RES}/ved_analysis.npz"))
+ for S in SIZES:
+     N = int(S.split('x')[0]); scp = f"{DATA}/supercell/qe/defect_{S}_p.save"; scd = f"{DATA}/supercell/qe/defect_{S}_d.save"
+     A, _ = qe_io.get_A_volume(scd); xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
+@@ -87,4 +88,4 @@ for S in SIZES:
+     print(f"[{S}] core-masked azimuthal average: r = 1.0 / 2.0 / 3.0 A -> {vals[0]*1e3:+.1f} / {vals[1]*1e3:+.1f} / {vals[2]*1e3:+.1f} meV; masked fraction of the plane {1 - mask.mean():.3f}", flush=True)
+     out2.update(**{f"{S}_rad_masked": rad, f"{S}_rc_masked": rc, f"{S}_sublattice": sub, f"{S}_s_vac": s_vac, f"{S}_grid_offset_A": dcart, f"{S}_nn": np.array(disp),
+                    f"{S}_atoms_xy": np.array([[(A @ (np.mod(s - s_vac + 0.5, 1) - 0.5))[0] * BOHR, (A @ (np.mod(s - s_vac + 0.5, 1) - 0.5))[1] * BOHR] for s in xd])})
+-np.savez("results/M/ved_analysis.npz", **out2); print("saved results/M/ved_analysis.npz (+anomaly)")
++np.savez(f"{RES}/ved_analysis.npz", **out2); print("saved <results_dir>/ved_analysis.npz (+anomaly)")
+diff --git a/scripts/check_ML_coarse_kernel.py b/scripts/check_ML_coarse_kernel.py
+index 5efad0d..344a14c 100644
+--- a/scripts/check_ML_coarse_kernel.py
++++ b/scripts/check_ML_coarse_kernel.py
+@@ -1,8 +1,12 @@
+ """Plumbing check: M_L from the node-shared kernel on the COARSE grid must equal the reference M_L_<size>.npy
+ (produced by compute_ML_R_mpi) to machine precision -- same wavefunctions, same potential, same convention."""
+ import sys, numpy as np
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ size = sys.argv[1]
+-A = np.load(f"results/M/M_L_{size}.npy"); B = np.load(f"results/M/M_L_dense_{size}_coarsecheck.npy")
++from electron_defect_interaction.io import matrix_io
++for _f in (f"{RES}/M_L_{size}.npy", f"{RES}/M_L_dense_{size}_coarsecheck.npy"): matrix_io.check_manifest(_f, require_normalization=matrix_io.M_NORM_V2)
++A = np.load(f"{RES}/M_L_{size}.npy"); B = np.load(f"{RES}/M_L_dense_{size}_coarsecheck.npy")
+ print("shapes", A.shape, B.shape)
+ d = np.max(np.abs(A - B)); m = np.max(np.abs(A))
+ print(f"max|A-B| = {d:.3e}   max|A| = {m:.3e}   rel = {d/m:.3e}")
+diff --git a/scripts/check_M_dense_nb20_vs_nb16.py b/scripts/check_M_dense_nb20_vs_nb16.py
+index 4ef1339..ad3c5a6 100644
+--- a/scripts/check_M_dense_nb20_vs_nb16.py
++++ b/scripts/check_M_dense_nb20_vs_nb16.py
+@@ -1,6 +1,11 @@
+ import numpy as np, sys
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ S=sys.argv[1]
+-A=np.load(f"results/M/M_dense_{S}_nb16.npy", mmap_mode="r"); B=np.load(f"results/M/M_dense_{S}.npy", mmap_mode="r")
++import os
++if not os.path.exists(f"{RES}/M_dense_{S}_nb16.npy"): raise SystemExit(f"[non rejouable] {RES}/M_dense_{S}_nb16.npy absent (artefacts nbnd 16 supprimés au ménage de septembre 2026)")
++from electron_defect_interaction.io import matrix_io; matrix_io.check_manifest(f"{RES}/M_dense_{S}.npy", require_normalization=matrix_io.M_NORM_V2)
++A=np.load(f"{RES}/M_dense_{S}_nb16.npy", mmap_mode="r"); B=np.load(f"{RES}/M_dense_{S}.npy", mmap_mode="r")
+ nk=A.shape[1]; rng=np.random.default_rng(0); ks=rng.choice(nk, 40, replace=False)
+ w15=w16=0.0; wd=0.0
+ for i in ks:
+diff --git a/scripts/check_M_dense_vs_coarse.py b/scripts/check_M_dense_vs_coarse.py
+index fed54a3..6ad09aa 100644
+--- a/scripts/check_M_dense_vs_coarse.py
++++ b/scripts/check_M_dense_vs_coarse.py
+@@ -4,13 +4,17 @@ coarse NxN grid, the nb x nb blocks M[:,k',:,k] must agree with the coarse M_L u
+ Frobenius norms. Usage: python scripts/check_M_dense_vs_coarse.py 5x5"""
+ import sys, json, numpy as np
+ from electron_defect_interaction.io import qe_io
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ size = sys.argv[1]; N = int(size.split("x")[0])
+ D = {"5x5": 25, "6x6": 24, "7x7": 28, "8x8": 32, "9x9": 27, "12x12": 24}[size]
+ uc_c = f"data/graphene/unit_cell/qe/defect_{size}.save"
+ uc_d = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
+ kc = qe_io.get_k_red(uc_c); kd = qe_io.get_k_red(uc_d)
+-Mc = np.load(f"results/M/M_L_{size}.npy") if len(sys.argv) < 3 else np.load(sys.argv[2])
+-Md = np.load(f"results/M/M_L_dense_{size}.npy") if len(sys.argv) < 4 else np.load(sys.argv[3])
++from electron_defect_interaction.io import matrix_io
++for _f in ([f"{RES}/M_L_{size}.npy"] if len(sys.argv) < 3 else [sys.argv[2]]) + ([f"{RES}/M_L_dense_{size}.npy"] if len(sys.argv) < 4 else [sys.argv[3]]): matrix_io.check_manifest(_f, require_normalization=matrix_io.M_NORM_V2)
++Mc = np.load(f"{RES}/M_L_{size}.npy") if len(sys.argv) < 3 else np.load(sys.argv[2])
++Md = np.load(f"{RES}/M_L_dense_{size}.npy") if len(sys.argv) < 4 else np.load(sys.argv[3])
+ key = lambda k: tuple(np.round(np.mod(k + 1e-9, 1.0), 6))
+ idx_d = {key(k): i for i, k in enumerate(kd)}
+ pairs = [(ic, idx_d[key(k)]) for ic, k in enumerate(kc) if key(k) in idx_d]
+diff --git a/scripts/check_onsite_and_NL.py b/scripts/check_onsite_and_NL.py
+index 10f24f0..da585f5 100644
+--- a/scripts/check_onsite_and_NL.py
++++ b/scripts/check_onsite_and_NL.py
+@@ -5,13 +5,16 @@ from electron_defect_interaction.io import qe_io, matrix_io
+ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+ from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ HA = 27.211386245988
+ PF = {"5x5": 25, "6x6": 24, "7x7": 28, "8x8": 32, "9x9": 27, "12x12": 24}
+ PZ = (3, 4)   # projections: 3 sp2 on atom A (idx 0..2), pz on A (3), pz on B (4)
+ 
+ print("=== Q2/magnitudes: max|M_L|, max|M_NL|, max|M| (Ha) and mean diag of M_L (mean-potential shift)")
+ for S, D in PF.items():
+-    ML = np.load(f"results/M/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"results/M/M_NL_dense_{S}.npy", mmap_mode="r"); M = np.load(f"results/M/M_dense_{S}.npy", mmap_mode="r")
++    for _f in ("M_L_dense", "M_NL_dense", "M_dense"): matrix_io.check_manifest(f"{RES}/{_f}_{S}.npy", require_normalization=matrix_io.M_NORM_V2)
++    ML = np.load(f"{RES}/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"{RES}/M_NL_dense_{S}.npy", mmap_mode="r"); M = np.load(f"{RES}/M_dense_{S}.npy", mmap_mode="r")
+     nb, nk = ML.shape[:2]
+     dL = np.array([ML[n, k, n, k] for n in range(nb) for k in range(nk)])
+     print(f"[{S}] max|M_L|={np.abs(ML).max():.4e}  max|M_NL|={np.abs(MN).max():.4e}  max|M|={np.abs(M).max():.4e}  "
+@@ -26,7 +29,8 @@ if eps.shape[0] != len(kk): eps = eps.T
+ for Kp, lab in (((2/3, 1/3, 0), "K"), ((1/3, 2/3, 0), "K'")):   # Dirac points of the 60-deg QE cell
+     d = np.linalg.norm(np.mod(k - np.array(Kp) + 0.5, 1.0) - 0.5, axis=1); iK = int(np.argmin(d))
+     print(f"[{lab}] k_red={k[iK]} (dist {d[iK]:.2e}); eps bands 3..5 (eV): {np.round(eps[iK, 2:6]*HA, 4)}")
+-    ML = np.load(f"results/M/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"results/M/M_NL_dense_{S}.npy", mmap_mode="r")
++    for _f in ("M_L_dense", "M_NL_dense", "M_dense"): matrix_io.check_manifest(f"{RES}/{_f}_{S}.npy", require_normalization=matrix_io.M_NORM_V2)
++    ML = np.load(f"{RES}/M_L_dense_{S}.npy", mmap_mode="r"); MN = np.load(f"{RES}/M_NL_dense_{S}.npy", mmap_mode="r")
+     bL = np.array(ML[3:5, iK, 3:5, iK]); bN = np.array(MN[3:5, iK, 3:5, iK])
+     dL = np.abs(np.diag(bL)); dN = np.abs(np.diag(bN))
+     print(f"[{lab}] |M_L[n,K,n,K]| eV: {np.round(dL*HA, 4)}  mean {dL.mean()*HA:.4f} eV   (Re: {np.round(np.diag(bL).real*HA, 4)})")
+@@ -37,7 +41,7 @@ for Kp, lab in (((2/3, 1/3, 0), "K"), ((1/3, 2/3, 0), "K'")):   # Dirac points o
+ print("\n=== Q1: on-site V_loc (dense) pz-pz in eV")
+ for S, D in PF.items():
+     uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"; W = f"wannier/{D}x{D}"
+-    M = matrix_io.load_M_checked(f"results/M/M_dense_{S}.npy", require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
++    M = matrix_io.load_M_checked(f"{RES}/M_dense_{S}.npy", require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
+     k = qe_io.get_k_red(uc); MP = _infer_mp_grid(k)
+     U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
+     Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
+diff --git a/scripts/compute_M.py b/scripts/compute_M.py
+index e56965d..93428ee 100644
+--- a/scripts/compute_M.py
++++ b/scripts/compute_M.py
+@@ -1,3 +1,5 @@
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ compute_M.py
+@@ -31,15 +33,15 @@ compute_M.py
+         # local part only (MPI):
+         srun -n 32 python scripts/compute_M.py --stage ml \
+             --uc uc.save --sc-p sc_p.save --pot-p sc_p.save/Vks_p --pot-d sc_d.save/Vks_d \
+-            --out results/M/M_L_9x9.npy
++            --out <results_dir>/M_L_9x9.npy
+         # non-local part only (serial, fresh process):
+         python scripts/compute_M.py --stage nl \
+             --uc uc.save --sc-p sc_p.save --sc-d sc_d.save --upf uc.save/C.upf \
+-            --out results/M/M_NL_9x9.npy
++            --out <results_dir>/M_NL_9x9.npy
+         # full matrix from the two parts:
+         python scripts/compute_M.py --stage combine \
+-            --ml results/M/M_L_9x9.npy --nl results/M/M_NL_9x9.npy \
+-            --out results/M/M_ed_9x9.npy
++            --ml <results_dir>/M_L_9x9.npy --nl <results_dir>/M_NL_9x9.npy \
++            --out <results_dir>/M_ed_9x9.npy
+ """
+ 
+ import os
+@@ -148,8 +150,8 @@ def stage_combine(args):
+     # both parts in unit-cell Bloch norm (R6 kernels) -> M = M^L + M^NL, unit_cell, same convention as the
+     # dense chain (compute_M_dense_stages.py combine) and as every production consumer; the 1/N_cells factor
+     # is applied downstream (bloch_folded_hamiltonian, compute_T), never here.
+-    M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
+-    M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
++    M_L = matrix_io.load_M_checked(args.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
++    M_NL = matrix_io.load_M_checked(args.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
+     if M_L.shape != M_NL.shape:
+         raise SystemExit(f"shape mismatch: M^L {M_L.shape} vs M^NL {M_NL.shape}")
+     N_cells = M_L.shape[1]
+diff --git a/scripts/compute_M_dense_stages.py b/scripts/compute_M_dense_stages.py
+index 22a7c84..aa5dd43 100644
+--- a/scripts/compute_M_dense_stages.py
++++ b/scripts/compute_M_dense_stages.py
+@@ -65,7 +65,7 @@ def stage_ml(a):
+         nk_exp = (int(a.size.split("x")[0]) if a.coarse else P["D"]) ** 2
+         assert M_L.shape[1] == nk_exp, f"M has {M_L.shape[1]} k, expected {nk_exp}"
+         matrix_io.save_M(a.out, M_L, matrix_io.UNIT_CELL, part="M_L_dense" if not a.coarse else "M_L_coarse_check",
+-                         p=(1 if a.coarse else P["p"]), D=(int(a.size.split("x")[0]) if a.coarse else P["D"]), kernel=a.kernel)
++                         p=(1 if a.coarse else P["p"]), D=(int(a.size.split("x")[0]) if a.coarse else P["D"]), kernel=a.kernel, M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
+         print(f"[rank0] saved {a.out} shape={M_L.shape}", flush=True)
+     comm.Barrier()
+ 
+@@ -75,17 +75,17 @@ def stage_nl(a):
+     from electron_defect_interaction.defects.non_local import compute_M_NL
+     P = paths(a.size); bands = None if a.bands == "all" else [int(b) for b in a.bands.split(",")]
+     M_NL = compute_M_NL(P["uc_dense"], P["scp"], P["scd"], P["upf"], io=qe_io, pseudo_reader=read_upf, bands=bands)
+-    matrix_io.save_M(a.out, M_NL, matrix_io.UNIT_CELL, part="M_NL_dense", p=P["p"], D=P["D"])
++    matrix_io.save_M(a.out, M_NL, matrix_io.UNIT_CELL, part="M_NL_dense", p=P["p"], D=P["D"], M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
+     print(f"saved {a.out} shape={M_NL.shape}", flush=True)
+ 
+ 
+ def stage_combine(a):
+     P = paths(a.size)
+-    M_L = matrix_io.load_M_checked(a.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
+-    M_NL = matrix_io.load_M_checked(a.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE)
++    M_L = matrix_io.load_M_checked(a.ml, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
++    M_NL = matrix_io.load_M_checked(a.nl, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.HARTREE, require_normalization=matrix_io.M_NORM_V2)
+     assert M_L.shape == M_NL.shape, (M_L.shape, M_NL.shape)
+     M = M_L + M_NL; N_kd = M.shape[1]
+-    matrix_io.save_M(a.out, M, matrix_io.UNIT_CELL, p=P["p"], D=P["D"], N_kd=int(N_kd))
++    matrix_io.save_M(a.out, M, matrix_io.UNIT_CELL, p=P["p"], D=P["D"], N_kd=int(N_kd), N_cells=int(int(a.size.split("x")[0]) ** 2), M_normalization="v2 : L et NL en norme unit_cell, 2026-09-25")
+     if a.out_norm:
+         matrix_io.save_M(a.out_norm, M / N_kd, matrix_io.SUPERCELL, N_cells=int(N_kd), p=P["p"], D=P["D"])
+     nb, nk = M.shape[:2]; Op = M.reshape(nb * nk, nb * nk)
+diff --git a/scripts/compute_convergence.py b/scripts/compute_convergence.py
+index 3d68a24..5bab19d 100644
+--- a/scripts/compute_convergence.py
++++ b/scripts/compute_convergence.py
+@@ -1,3 +1,5 @@
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ compute_convergence.py
+@@ -26,10 +28,12 @@ SIZE_RE = re.compile(r"_(\d+)x(\d+)\.npz$")
+ 
+ def collect(prefix):
+     out = {}
+-    for f in sorted(glob.glob(f"results/M/{prefix}_*x*.npz")):
++    for f in sorted(glob.glob(f"{RES}/{prefix}_*x*.npz")):
+         m = SIZE_RE.search(f)
+         if m:
+             out[int(m.group(1))] = np.load(f)
++    if not out:
++        raise SystemExit(f"[non rejouable] aucun {RES}/{prefix}_*x*.npz (chaîne compute_spectral/compute_tmatrix obsolète depuis 2026-09-05)")
+     return out
+ 
+ 
+@@ -77,12 +81,12 @@ def main():
+     else:
+         print("\n(need both 7x7 and 8x8 for the plateau/resonance interpretation)")
+ 
+-    np.savez("results/M/convergence.npz",
++    np.savez(f"{RES}/convergence.npz",
+              N=np.array(Ns),
+              gperdef_meV=np.array([rows[N]["gperdef"] for N in Ns]),
+              e_res=np.array([rows[N]["e_res"] for N in Ns]),
+              eta=np.array([rows[N]["eta"] for N in Ns]))
+-    print("saved results/M/convergence.npz")
++    print("saved <results_dir>/convergence.npz")
+ 
+     if args.plot:
+         import matplotlib
+@@ -101,8 +105,8 @@ def main():
+         ax[2].plot(Ns, [rows[N]["e_res"] for N in Ns], "s-", color="tab:red")
+         ax[2].set_xlabel("N"); ax[2].set_ylabel(r"resonance $E-E_F$ (eV)")
+         ax[2].set_title("Vacancy resonance position")
+-        fig.tight_layout(); fig.savefig("results/M/convergence.png", dpi=150)
+-        print("saved results/M/convergence.png")
++        fig.tight_layout(); fig.savefig(f"{RES}/convergence.png", dpi=150)
++        print("saved <results_dir>/convergence.png")
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/scripts/compute_spectral.py b/scripts/compute_spectral.py
+index 1822c1f..c45d4f2 100644
+--- a/scripts/compute_spectral.py
++++ b/scripts/compute_spectral.py
+@@ -1,3 +1,6 @@
++from electron_defect_interaction.config import load_production, results_dir
++raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ compute_spectral.py
+@@ -35,7 +38,7 @@ def main():
+     args = parse_args()
+     uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
+     # require the supercell-normalized M (matrix_io refuses an un-normalized/untagged one).
+-    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
++    M = matrix_io.load_M_checked(f"{RES}/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
+     # Structural k-pairing: eps aligned to M's k-grid (asserts count/order match, see qe_io).
+     eigs = qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True) * HA2EV
+     nb, nk = eigs.shape
+@@ -69,7 +72,7 @@ def main():
+     gamma_pos = np.clip(gamma, 1e-12, None)
+     tau = HBAR_EVS / gamma_pos                                  # s (at the array concentration)
+ 
+-    out = f"results/M/gamma_{args.size}.npz"
++    out = f"{RES}/gamma_{args.size}.npz"
+     np.savez(out, gamma=gamma, gamma_perdef=gamma_perdef, tau=tau,
+              eigs=eigs, eta=eta, N_cells=N_cells, size=args.size)
+     print(f"saved {out}  (nb={nb}, nk={nk}, eta={eta:.4f} eV)")
+@@ -88,7 +91,7 @@ def main():
+         ax.set_title(f"Single-defect scattering rate, {args.size} supercell")
+         fig.colorbar(sc, label=r"$\Gamma$ (meV)")
+         fig.tight_layout()
+-        png = f"results/M/gamma_{args.size}.png"
++        png = f"{RES}/gamma_{args.size}.png"
+         fig.savefig(png, dpi=150)
+         print(f"saved {png}")
+ 
+diff --git a/scripts/compute_spectral_wannier.py b/scripts/compute_spectral_wannier.py
+index a379260..6069c8c 100644
+--- a/scripts/compute_spectral_wannier.py
++++ b/scripts/compute_spectral_wannier.py
+@@ -17,7 +17,8 @@ import argparse
+ import numpy as np
+ 
+ from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
+-from electron_defect_interaction.config import load_production, dense_paths
++from electron_defect_interaction.config import load_production, dense_paths, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+ from electron_defect_interaction.wannier.wannier_interpolation import (
+     Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order)
+@@ -56,14 +57,14 @@ def main():
+         dp = dense_paths(cfg, args.size); uc = dp["uc"]; mfile = dp["mfile"]
+     else:
+         uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
+-        mfile = f"results/M/M_ed_{args.size}.npy"
++        mfile = f"{RES}/M_ed_{args.size}.npy"
+     # NORMALIZATION CONTRACT (validated by test_local_tmatrix_real.py to 1e-13):
+     #   * the LOCAL Wannier t-matrix needs the INTENSIVE real-space potential V_loc = <wR|V|w'R'>,
+     #     i.e. Mwr built from the unit-cell-normalized M_raw (bloch_norm='unit_cell');
+     #   * the DENSE Bloch T-matrix (single_defect.compute_T) needs M/N_cells ('supercell').
+     #   Feeding M_norm here silently suppresses V_loc by 1/N_cells (Born limit, Gamma ~ 0).
+     # UNITS: M files are in Hartree, the Wannier Hamiltonian (tb.dat) is in eV -> convert M ONCE here.
+-    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
++    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
+     k_coarse = qe_io.get_k_red(uc)
+ 
+     U, k_U = read_w90_mat(paths["u"])
+diff --git a/scripts/compute_tmatrix.py b/scripts/compute_tmatrix.py
+index 8fb73ad..0f5fd1b 100644
+--- a/scripts/compute_tmatrix.py
++++ b/scripts/compute_tmatrix.py
+@@ -1,3 +1,6 @@
++from electron_defect_interaction.config import load_production, results_dir
++raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ compute_tmatrix.py
+@@ -25,7 +28,7 @@ HA2EV = 27.211386245988
+ 
+ def parse_args():
+     p = argparse.ArgumentParser()
+-    p.add_argument("--size", default="7x7", help="supercell size, e.g. 7x7 (needs results/M/M_ed_<size>.npy)")
++    p.add_argument("--size", default="7x7", help="supercell size, e.g. 7x7 (needs <results_dir>/M_ed_<size>.npy)")
+     p.add_argument("--ne", type=int, default=600, help="minimum number of energy points (raised if needed for dE<=eta/4)")
+     p.add_argument("--eta", type=float, default=None, help="broadening in eV; default = max(2x level spacing, 0.05)")
+     p.add_argument("--emin", type=float, default=-3.0, help="min energy in eV rel. E_F (tight window near E_F)")
+@@ -39,7 +42,7 @@ def main():
+     args = parse_args()
+     uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
+     # require the supercell-normalized M (matrix_io refuses an un-normalized/untagged one).
+-    M = matrix_io.load_M_checked(f"results/M/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
++    M = matrix_io.load_M_checked(f"{RES}/M_ed_{args.size}_norm.npy", units=matrix_io.EV)   # (nb, nk, nb, nk), eV
+     # Structural k-pairing: eps aligned to M's k-grid; asserts the k-count/order match (see qe_io).
+     eigs = qe_io.aligned_eigenvalues(uc, nk_expected=M.shape[1], shift_Fermi=True) * HA2EV
+     nb, nk = eigs.shape
+@@ -75,7 +78,7 @@ def main():
+         dos[s:s + args.chunk] = -1.0 / np.pi * np.sum(Gdiag.imag, axis=(1, 2))
+         print(f"  energies {s}-{min(s+args.chunk, ne)}/{ne} done", flush=True)
+ 
+-    out = f"results/M/dos_{args.size}.npz"
++    out = f"{RES}/dos_{args.size}.npz"
+     np.savez(out, eps=eps, dos0=dos0, dos=dos, ddos=dos - dos0, eta=eta, size=args.size)
+     print(f"saved {out}  (size={args.size}, nb={nb}, nk={nk}, eta={eta} eV)")
+ 
+@@ -92,7 +95,7 @@ def main():
+         ax[1].set_ylabel(r"$\Delta$DOS"); ax[1].set_xlabel(r"$E - E_F$ (eV)")
+         fig.suptitle(f"Single-defect DOS, {args.size} supercell")
+         fig.tight_layout()
+-        png = f"results/M/dos_{args.size}.png"
++        png = f"{RES}/dos_{args.size}.png"
+         fig.savefig(png, dpi=150)
+         print(f"saved {png}")
+ 
+diff --git a/scripts/epw_ed_vs_ep.py b/scripts/epw_ed_vs_ep.py
+index c2031d7..061d9ae 100644
+--- a/scripts/epw_ed_vs_ep.py
++++ b/scripts/epw_ed_vs_ep.py
+@@ -1,14 +1,16 @@
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ epw_ed_vs_ep.py -- point-by-point ratio Gamma^ed(c) / Gamma^ep(T) on the energy axis eps - E_D (each curve relative to ITS OWN E_D),
+ Gamma^ed = c x Gamma_T (Lorentzian-averaged curve of resonance_<size>.npz, eta 0.02), Gamma^ep = Gamma_e of a selfen npz
+ (Lorentzian eta 0.02). Reports median / min / max of the ratio on |eps - E_D| <= window and the crossings (ratio = 1), plus
+ the window medians of both curves. Output: results/epw/ed_vs_ep_<tag>.npz. No new run.
+-Usage: python scripts/epw_ed_vs_ep.py --selfen results/epw/selfen_240_dg0.02_T300.npz --tag 24k24q [--resonance results/M/resonance_9x9.npz] [--window 3]
++Usage: python scripts/epw_ed_vs_ep.py --selfen results/epw/selfen_240_dg0.02_T300.npz --tag 24k24q [--resonance <results_dir>/resonance_9x9.npz] [--window 3]
+ """
+ import argparse, os, numpy as np
+ ap = argparse.ArgumentParser(); ap.add_argument("--selfen", required=True); ap.add_argument("--tag", required=True)
+-ap.add_argument("--resonance", default="results/M/resonance_9x9.npz"); ap.add_argument("--window", type=float, default=3.0); a = ap.parse_args()
++ap.add_argument("--resonance", default=f"{RES}/resonance_9x9.npz"); ap.add_argument("--window", type=float, default=3.0); a = ap.parse_args()
+ M = np.load(a.resonance, allow_pickle=True); S = np.load(a.selfen, allow_pickle=True); c = float(M["conc"])
+ xe = M["eg"] - float(M["E_D"]); Ged = c * M["Gamma_T"]; xp = S["eg"] - float(S["E_D"]); Gep = S["Gamma_e"]
+ m = np.abs(xp) <= a.window; x = xp[m]; ep = Gep[m]; ed = np.interp(x, xe, Ged); r = ed / ep
+diff --git a/scripts/ks_reconstruction_all.py b/scripts/ks_reconstruction_all.py
+index c10366f..b630bc5 100644
+--- a/scripts/ks_reconstruction_all.py
++++ b/scripts/ks_reconstruction_all.py
+@@ -6,7 +6,7 @@ test_ks_reconstruction.py) on every unit-cell .save: coarse N×N (defect_N.save)
+     H_mn(k) = T_mn(k) + <psi_mk|V_p|psi_nk> + V^NL_mn(k)   must equal   eps_nk delta_mn (+ constant offset)
+ with the kinetic energy T = 1/2 |k+G|^2 added explicitly. k-chunked (psi never materialised for all k).
+ Reports per case: offset, max/mean |diag - eps - offset|, per-band max/median (meV), off-diagonal max
+-(absolute, and relative to max|eps|). Saves results/M/ks_reconstruction.npz (figure fig_ks_reconstruction).
++(absolute, and relative to max|eps|). Saves <results_dir>/ks_reconstruction.npz (figure fig_ks_reconstruction).
+ """
+ import numpy as np
+ from scipy.interpolate import CubicSpline
+@@ -16,14 +16,15 @@ from electron_defect_interaction.utils.planewaves import mask_invalid_G
+ from electron_defect_interaction.utils.lattice import red_to_cart
+ from electron_defect_interaction.defects.non_local import build_K_vectors, compute_phase, compute_angular_part
+ from electron_defect_interaction.wavefunctions.wfk import compute_psi_nk
+-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
++from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ import sys; sys.path.insert(0, "scripts"); from test_ks_reconstruction import sc_pot_on_uc_grid
+ 
+ cfg = load_production(); DATA = "data/graphene"; out = {}
+ import argparse, os
+-ap = argparse.ArgumentParser(); ap.add_argument("--sizes", default="5x5,7x7,8x8,9x9"); ap.add_argument("--merge", action="store_true", help="merge into an existing results/M/ks_reconstruction.npz")
++ap = argparse.ArgumentParser(); ap.add_argument("--sizes", default="5x5,7x7,8x8,9x9"); ap.add_argument("--merge", action="store_true", help="merge into an existing <results_dir>/ks_reconstruction.npz")
+ args = ap.parse_args()
+-if args.merge and os.path.exists("results/M/ks_reconstruction.npz"): out.update(dict(np.load("results/M/ks_reconstruction.npz")))
++if args.merge and os.path.exists(f"{RES}/ks_reconstruction.npz"): out.update(dict(np.load(f"{RES}/ks_reconstruction.npz")))
+ 
+ def sc_pot_on_uc_grid_fourier(uc_save, sc_save, pot_sc_file):
+     """Non-commensurate FFT grids: restrict V_p to its unit-cell-periodic Fourier components G_sc = N.G_uc and
+@@ -98,4 +99,4 @@ for S in args.sizes.split(","):
+             H, eps = reconstruct(uc, V_uc, upf); analyse(tag, H, eps); out[f"{tag}_spread_meV"] = spread * HA2EV * 1e3
+         except Exception as e:
+             print(f"[{tag}] FAILED: {e}", flush=True)
+-np.savez("results/M/ks_reconstruction.npz", **out); print("saved results/M/ks_reconstruction.npz")
++np.savez(f"{RES}/ks_reconstruction.npz", **out); print("saved <results_dir>/ks_reconstruction.npz")
+diff --git a/scripts/level2_families.py b/scripts/level2_families.py
+index fb82fb1..663db1e 100644
+--- a/scripts/level2_families.py
++++ b/scripts/level2_families.py
+@@ -1,19 +1,20 @@
+ """Level 2 by family (N = 3m vs others): median Gamma*N_cells at the frozen parameters, dense on-site pz-pz of the vacancy
+-sublattice, Re M^L / Re M^NL at K. Writes results/M/level2_families.csv."""
++sublattice, Re M^L / Re M^NL at K. Writes <results_dir>/level2_families.csv."""
+ import csv, os, numpy as np
+-from electron_defect_interaction.config import load_production
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ cfg = load_production(verbose=False); RC, G, E = cfg["R_cut"], cfg["grid"], cfg["eta_eV"]
+-L = np.load("results/M/mwr_locality.npz"); A = np.load("results/M/M_analysis.npz", allow_pickle=True)
++L = np.load(f"{RES}/mwr_locality.npz"); A = np.load(f"{RES}/M_analysis.npz", allow_pickle=True)
+ rows = []
+ for S in ["6x6", "9x9", "12x12", "5x5", "7x7", "8x8"]:
+-    f = f"results/M/specwd_{S}_prod.npz"
++    f = f"{RES}/specwd_{S}_prod.npz"
+     if not os.path.exists(f): continue
+     r = np.load(f)["results"]; m = {(int(x[0]), int(x[1]), round(float(x[2]), 4)): float(x[3]) for x in r}
+     g = m.get((RC, G, E), np.nan); N = int(S.split("x")[0])
+     on = float(L[f"{S}_dense_onsite_pzvac"]) if f"{S}_dense_onsite_pzvac" in L else np.nan; sub = str(L[f"{S}_dense_vac_sublattice"]) if f"{S}_dense_vac_sublattice" in L else "?"
+     reL = float(A[f"lnl_{S}_ReL"]) if f"lnl_{S}_ReL" in A else np.nan; reN = float(A[f"lnl_{S}_ReNL"]) if f"lnl_{S}_ReNL" in A else np.nan; dk = float(A[f"lnl_{S}_dK"]) if f"lnl_{S}_dK" in A else np.nan
+     rows.append([S, N, "3m" if N % 3 == 0 else "non-3m", sub, f"{g:.2f}", f"{on:.3f}", f"{reL:+.4f}", f"{reN:+.4f}", f"{dk:.3f}"])
+-with open("results/M/level2_families.csv", "w", newline="") as f:
++with open(f"{RES}/level2_families.csv", "w", newline="") as f:
+     w = csv.writer(f); w.writerow(["size", "N", "family", "vacancy_sublattice", "median_Gamma_Ncells_meV", "onsite_pz_vac_eV", "ReML_K_eV", "ReMNL_K_eV", "dk_to_K_Ainv"]); w.writerows(rows)
+ print(f"{'size':>6} {'fam':>7} {'sub':>3} {'G*Nc(meV)':>10} {'on-site':>8} {'ReM^L(K)':>9} {'ReM^NL(K)':>10} {'|dk|':>6}")
+ for r in rows: print(f"{r[0]:>6} {r[2]:>7} {r[3]:>3} {r[4]:>10} {r[5]:>8} {r[6]:>9} {r[7]:>10} {r[8]:>6}")
+diff --git a/scripts/lnl_frobenius_all.py b/scripts/lnl_frobenius_all.py
+index 9336427..c447920 100755
+--- a/scripts/lnl_frobenius_all.py
++++ b/scripts/lnl_frobenius_all.py
+@@ -3,20 +3,21 @@
+ lnl_frobenius_all.py -- <|M^NL|_F>/<|M^L|_F> on the full pi/pi* subspace (2x2 blocks, ALL (k',k) pairs of the dense
+ grid) for every size with dense M^L / M^NL files (tab:L_NL). Same metric as the "[BZ avg]" block of analyze_M.py
+ (which only does the reference size). No new physics run; reads the dense Hartree M files (mmap) and the dense
+-wannierization U, U_dis to select the pi/pi* pair per k by pz weight. Output: results/M/lnl_frobenius.csv.
++wannierization U, U_dis to select the pi/pi* pair per k by pz weight. Output: <results_dir>/lnl_frobenius.csv.
+ """
+ import csv, os, sys, time, numpy as np
+ from electron_defect_interaction.io import qe_io, matrix_io
+ from electron_defect_interaction.io.wannier_io import read_w90_mat
+ from electron_defect_interaction.wannier.wannier_interpolation import _match_kpoint_order
+-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
++from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ 
+ cfg = load_production()
+ SIZES = sys.argv[1].split(",") if len(sys.argv) > 1 else ["5x5", "6x6", "7x7", "8x8", "9x9", "12x12"]
+-OUT = "results/M/lnl_frobenius.csv"
++OUT = f"{RES}/lnl_frobenius.csv"
+ 
+ def mmap_M(path):
+-    meta = matrix_io.read_manifest(path); assert meta and meta.get("units") == matrix_io.HARTREE, f"{path}: untagged/non-Hartree sidecar"
++    matrix_io.check_manifest(path, require_normalization=matrix_io.M_NORM_V2)     # R6 : sidecar v2 exigé (refus sinon)
+     return np.load(path, mmap_mode="r")
+ def wannier_V(wdir, k):
+     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
+diff --git a/scripts/m_rcut_convergence.py b/scripts/m_rcut_convergence.py
+index 99df3db..08d354b 100644
+--- a/scripts/m_rcut_convergence.py
++++ b/scripts/m_rcut_convergence.py
+@@ -5,7 +5,7 @@ dense wannierization) -> M(k'_f, k_f) on a fine NfxNf grid by the inverse Fourie
+ restricted to |R|,|R'| <= R_cut (reduced-coordinate norm, as in production) and with the full R set (reference).
+ Reported per R_cut: max|dM|/max|M_ref| over the pi/pi* blocks of all (k',k); max relative singular-value mismatch of the
+ 2x2 pi/pi* blocks (gauge invariant); same two measures on the diagonal elements M_nn(k,k) only. eV. Writes
+-results/M/m_rcut_convergence.csv (appends one row per (size, R_cut)).
++<results_dir>/m_rcut_convergence.csv (appends one row per (size, R_cut)).
+ Usage: python scripts/m_rcut_convergence.py --size 9x9 [--nf 60] [--rcuts 0,1,2,3]
+ """
+ import argparse, csv, os, numpy as np
+@@ -14,10 +14,11 @@ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+ from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+ from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
+ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+-from electron_defect_interaction.config import load_production, dense_paths
++from electron_defect_interaction.config import load_production, dense_paths, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ ap = argparse.ArgumentParser(); ap.add_argument("--size", default="9x9"); ap.add_argument("--nf", type=int, default=60); ap.add_argument("--rcuts", default="0,1,2,3"); a = ap.parse_args()
+ cfg = load_production(); dp = dense_paths(cfg, a.size); S = a.size
+-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
++M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
+ k = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k); k = np.round(k * np.asarray(MP)) / np.asarray(MP)   # exact MP k (XML rounding)
+ U, kU = read_w90_mat(f"{dp['wdir']}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]; Ud, kUd = read_w90_mat(f"{dp['wdir']}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
+ Hwr, Rw, nd = read_w90_HR(f"{dp['wdir']}/wannier_tb.dat")
+@@ -53,7 +54,7 @@ for rc in [int(x) for x in a.rcuts.split(",")]:
+     e_diag_sv = np.abs(np.abs(d_t) - np.abs(d_ref)).max() / mdref
+     print(f"[{S}] R_cut={rc}: {mask.sum():3d} sites; max|dM|/max|M| = {e_max:.3e}; SV mismatch (pi/pi* 2x2, all k',k) = {e_sv:.3e}; diagonal M_nn(k,k): max|d|/max = {e_diag:.3e} (|.|: {e_diag_sv:.3e})", flush=True)
+     rows.append([S, rc, int(mask.sum()), a.nf, f"{e_max:.4e}", f"{e_sv:.4e}", f"{e_diag:.4e}", f"{e_diag_sv:.4e}", f"{mref:.4f}", f"{mdref:.4f}"])
+-f = "results/M/m_rcut_convergence.csv"; new = not os.path.exists(f)
++f = f"{RES}/m_rcut_convergence.csv"; new = not os.path.exists(f)
+ with open(f, "a", newline="") as fh:
+     w = csv.writer(fh)
+     if new: w.writerow(["size", "R_cut", "n_sites", "fine_grid", "max_dM_over_maxM", "sv_mismatch_pi_blocks", "diag_max_dM_over_max", "diag_abs_mismatch", "maxM_pi_eV", "maxMdiag_eV"])
+diff --git a/scripts/make_figures.py b/scripts/make_figures.py
+index 10d747b..d1dc62c 100644
+--- a/scripts/make_figures.py
++++ b/scripts/make_figures.py
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env python
+ """
+-Figures du mémoire (matplotlib, style figures/memoire.mplstyle, texte en français, données lues uniquement dans results/M/*.npz).
++Figures du mémoire (matplotlib, style figures/memoire.mplstyle, texte en français, données lues uniquement dans <results_dir>/*.npz).
+   fig_rcut          Γ N_cells vs R_cut, quatre tailles (grille et η gelés)
+   fig_plateau       carte (grille × η) à R_cut gelé, taille de référence
+   fig_level2        Γ N_cells vs N (niveau 2)
+@@ -9,14 +9,15 @@ Figures du mémoire (matplotlib, style figures/memoire.mplstyle, texte en franç
+   fig_M_map         |M_nn(k', k=K)| sur la zone de Brillouin (Ṽ = A_cell |M|, eV Å²), π et π*
+   fig_Ved_boundary  V_ed^L du site de la lacune à la frontière de la super-cellule, quatre N
+   fig_M_scaling     max|M| vs N et max|M| N_cells vs N (convention intensive)
+-Écrit aussi results/M/level1_summary.csv et level2_summary.csv.
++Écrit aussi <results_dir>/level1_summary.csv et level2_summary.csv.
+ Usage : python scripts/make_figures.py [--tag prod] [--sizes 5x5,7x7,8x8,9x9] [--outdir figures]
+ """
+ import argparse, csv, os, numpy as np
+ import matplotlib; matplotlib.use("Agg")
+ import matplotlib.pyplot as plt
+ from matplotlib.patches import Polygon
+-from electron_defect_interaction.config import load_production
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ 
+ plt.style.use("figures/memoire.mplstyle")
+ # palette catégorielle fixe (scripts/_palette.py, principale = bleu marine) : taille -> teinte, jamais recyclée ; 9×9 (référence) porte la principale
+@@ -29,8 +30,8 @@ LBL_E = r"Énergie $\varepsilon - E_D$ (eV)"
+ LBL_G = r"Taux d'amortissement $\Gamma\,N_\mathrm{cells}$ (meV)"
+ 
+ ap = argparse.ArgumentParser(); ap.add_argument("--tag", default="prod"); ap.add_argument("--sizes", default="5x5,6x6,7x7,8x8,9x9,12x12"); ap.add_argument("--outdir", default="figures")
+-ap.add_argument("--resonance", default="results/M/resonance_9x9.npz"); ap.add_argument("--locality", default="results/M/mwr_locality.npz")
+-ap.add_argument("--analysis", default="results/M/M_analysis.npz")
++ap.add_argument("--resonance", default=f"{RES}/resonance_9x9.npz"); ap.add_argument("--locality", default=f"{RES}/mwr_locality.npz")
++ap.add_argument("--analysis", default=f"{RES}/M_analysis.npz")
+ a = ap.parse_args(); cfg = load_production(); sizes = a.sizes.split(","); os.makedirs(a.outdir, exist_ok=True)
+ RC, GRID, ETA = cfg["R_cut"], cfg["grid"], cfg["eta_eV"]
+ def lab(S): return S.replace("x", r"$\times$")
+@@ -41,22 +42,22 @@ def save(fig, name):
+     plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png")
+ 
+ def load_map(S):
+-    f = f"results/M/specwd_{S}_{a.tag}.npz"
++    f = f"{RES}/specwd_{S}_{a.tag}.npz"
+     if not os.path.exists(f): return None
+     r = np.load(f)["results"]; return {(int(x[0]), int(x[1]), round(float(x[2]), 4)): (float(x[3]), float(x[4])) for x in r}
+ maps = {S: m for S in sizes if (m := load_map(S))}
+ 
+ if maps:
+     rcs = sorted({k[0] for m in maps.values() for k in m}); grids = sorted({k[1] for m in maps.values() for k in m}); etas = sorted({k[2] for m in maps.values() for k in m}, reverse=True)
+-    with open("results/M/level1_summary.csv", "w", newline="") as f:
++    with open(f"{RES}/level1_summary.csv", "w", newline="") as f:
+         w = csv.writer(f); w.writerow(["size", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV", "argmax_E_minus_ED_eV"])
+         for S, m in maps.items():
+             for (rc, N, e), (med, er) in sorted(m.items()): w.writerow([S, rc, N, e, f"{med:.4f}", f"{er:.4f}"])
+-    with open("results/M/level2_summary.csv", "w", newline="") as f:
++    with open(f"{RES}/level2_summary.csv", "w", newline="") as f:
+         w = csv.writer(f); w.writerow(["size", "N", "N_cells", "R_cut", "grid", "eta_eV", "median_Gamma_Ncells_meV"])
+         for S, m in maps.items():
+             N = int(S.split("x")[0]); w.writerow([S, N, N * N, RC, GRID, ETA, f"{m[(RC, GRID, ETA)][0]:.4f}"])
+-    print("écrit results/M/level1_summary.csv, level2_summary.csv")
++    print("écrit <results_dir>/level1_summary.csv, level2_summary.csv")
+ 
+     # ---- fig_rcut
+     fig, ax = plt.subplots()
+@@ -169,7 +170,7 @@ if os.path.exists(a.analysis):
+     fig.tight_layout(); save(fig, "fig_M_scaling")
+ 
+ # ---- fig_ks_reconstruction : reconstruction KS avec V_p (super-cellule parfaite), moyenne sur bandes et k
+-ks = "results/M/ks_reconstruction.npz"
++ks = f"{RES}/ks_reconstruction.npz"
+ if os.path.exists(ks):
+     K = np.load(ks); Ns = []; mc = []; md = []; xc = []; xd = []
+     for S in sizes:
+@@ -188,7 +189,7 @@ if os.path.exists(ks):
+     save(fig, "fig_ks_reconstruction")
+ 
+ # ---- vérification de V_ed^L : carte 2D dans le plan, profils avec/sans soustraction de la moyenne, profil radial
+-vf = "results/M/ved_analysis.npz"
++vf = f"{RES}/ved_analysis.npz"
+ if os.path.exists(vf):
+     from matplotlib.colors import SymLogNorm
+     V = np.load(vf); LIN = 1e-2
+diff --git a/scripts/make_figures_epw.py b/scripts/make_figures_epw.py
+index 8b65e7b..a850900 100644
+--- a/scripts/make_figures_epw.py
++++ b/scripts/make_figures_epw.py
+@@ -1,7 +1,9 @@
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ Figures du chapitre 5 (couplage électron-phonon, EPW), style figures/memoire.mplstyle, français, données lues dans results/epw/*.npz
+-et results/M/resonance_9x9.npz (Γ^ed). Trois figures :
++et <results_dir>/resonance_9x9.npz (Γ^ed). Trois figures :
+   fig_epw_validation : (a) bandes DFT (bands.x) vs EPW/Wannier, (b) phonons matdyn vs EPW, chemin Γ–K–M–Γ    [validation_24k24q.npz]
+   fig_epw_gamma      : (a) Γ^ep(ε) convergence (degaussw à 120², 240²), (b) Γ^ep(ε) à 300 K et 10 K (production)  [selfen_*.npz]
+   fig_epw_vs_ed      : Γ^ep(300 K) et Γ^ed(c = 1 %) = c × Γ N_cells (matrice T, 9×9, R_cut 3, η 0.02) sur le même axe
+@@ -68,8 +70,8 @@ if conv:
+     fig.tight_layout(); save(fig, "fig_epw_gamma")
+ 
+ # ---------------- 3. Γ^ep(300 K) vs Γ^ed(c = 1 %)
+-if 300 in prod and os.path.exists("results/M/resonance_9x9.npz"):
+-    x, G, R = load_sel(prod[300]); M = np.load("results/M/resonance_9x9.npz", allow_pickle=True); c = float(M["conc"]); xe = M["eg"] - float(M["E_D"])
++if 300 in prod and os.path.exists(f"{RES}/resonance_9x9.npz"):
++    x, G, R = load_sel(prod[300]); M = np.load(f"{RES}/resonance_9x9.npz", allow_pickle=True); c = float(M["conc"]); xe = M["eg"] - float(M["E_D"])
+     fig, ax = plt.subplots(figsize=(6.5, 3.6))
+     ax.semilogy(xe, c * M["Gamma_T"] * 1e3, color=C_ED, label=rf"$\Gamma^{{ed}}$, lacune, $c$ = {c*100:.0f}\,\% (matrice $T$, 9$\times$9, $\eta$ = {fr(float(M['eta']))} eV)")
+     ax.semilogy(x, G, color=C_T, label=rf"$\Gamma^{{ep}}$, $T$ = 300 K (EPW, {int(R['n_mesh'])}$^2$, $\sigma$ = {fr(float(R['degaussw']))} eV)")
+diff --git a/scripts/make_figures_memoire.py b/scripts/make_figures_memoire.py
+index 0273f81..0ceb398 100644
+--- a/scripts/make_figures_memoire.py
++++ b/scripts/make_figures_memoire.py
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env python
+ """
+-Figures finales du mémoire (retouches), style figures/memoire.mplstyle, français, données lues dans results/M/*.npz.
++Figures finales du mémoire (retouches), style figures/memoire.mplstyle, français, données lues dans <results_dir>/*.npz.
+ Noms distincts des figures de travail (rien n'est écrasé) :
+   fig_convergence        (a) Γ N_cells vs R_cut, six tailles ; (b) carte plateau (grille × η), référence     — 6.5 × 3.4 po
+   fig_locality_final     (a) 5×5, (b) 8×8 avec grille aliasée ; (c) 9×9, (d) 12×12                 — 6.5 × 5.6 po
+@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
+ from matplotlib.colors import SymLogNorm
+ from matplotlib.patches import Polygon
+ from scipy.spatial import Voronoi
+-from electron_defect_interaction.config import load_production
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ 
+ plt.style.use("figures/memoire.mplstyle")
+ from _palette import NAVY, ORANGE, GREEN, GOLD, PINK, SKY, REF, INK, MUTED, LIGHT, COL, CMAP_SEQ, CMAP_DIV
+@@ -35,7 +36,7 @@ def save(fig, name):
+     for ext in ("pdf", "png"): fig.savefig(f"{a.outdir}/{name}.{ext}")
+     w, h = fig.get_size_inches(); DONE.append((name, w, h)); plt.close(fig); print(f"écrit {a.outdir}/{name}.pdf/.png  ({w:.2f} × {h:.2f} po)")
+ def load_map(S):
+-    f = f"results/M/specwd_{S}_prod.npz"
++    f = f"{RES}/specwd_{S}_prod.npz"
+     if not os.path.exists(f): return None
+     r = np.load(f)["results"]; return {(int(x[0]), int(x[1]), round(float(x[2]), 4)): float(x[3]) for x in r}
+ maps = {S: m for S in SIZES if (m := load_map(S))}
+@@ -58,7 +59,7 @@ cb = fig.colorbar(im, ax=ax2, shrink=0.9, pad=0.02); cb.set_label(rf"Écart à (
+ fig.tight_layout(); save(fig, "fig_convergence")
+ 
+ # ---------------- 2. fig_locality_final : 5×5, 8×8 (aliasée), 9×9, 12×12
+-L = np.load("results/M/mwr_locality.npz")
++L = np.load(f"{RES}/mwr_locality.npz")
+ fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6), sharex=True, sharey=True); axs = axs.ravel()
+ for i, S in enumerate(["5x5", "8x8", "9x9", "12x12"]):
+     ax = axs[i]; onv = float(L[f"{S}_dense_onsite_pzvac"])
+@@ -71,7 +72,7 @@ for ax in axs[::2]: ax.set_ylabel(r"$\|M_{ij}(R,0)\|$ (eV)")
+ fig.tight_layout(); save(fig, "fig_locality_final")
+ 
+ # ---------------- 3. fig_spectral_final : 2×2
+-R = np.load(f"results/M/resonance_{REF}.npz"); C = np.load(f"results/M/resonance_criteria_{REF}.npz")
++R = np.load(f"{RES}/resonance_{REF}.npz"); C = np.load(f"{RES}/resonance_criteria_{REF}.npz")
+ ED = float(R["E_D"]); x = R["eg"] - ED; xg = R["egrid"] - ED; c = float(R["conc"])
+ fig, axs = plt.subplots(2, 2, figsize=(6.5, 5.6)); (a1, a2), (a3, a4) = axs
+ a1.semilogy(x, R["Gamma_T"] * 1e3, color=C_T, label=r"matrice $T$ (exacte)"); a1.semilogy(x, R["Gamma_Born"] * 1e3, color=C_BORN, label="approximation de Born (2$^\\mathrm{e}$ ordre)")
+@@ -86,7 +87,7 @@ for i, ax in enumerate(axs.ravel()): ax.set_xlabel(LBL_E); ax.axvline(0, color=M
+ fig.tight_layout(); save(fig, "fig_spectral_final")
+ 
+ # ---------------- 4. fig_M_map_final
+-Zm = np.load("results/M/M_analysis.npz", allow_pickle=True)
++Zm = np.load(f"{RES}/M_analysis.npz", allow_pickle=True)
+ def bz_vertices(B):
+     pts = np.array([i * B[:2, 0] + j * B[:2, 1] for i in range(-2, 3) for j in range(-2, 3)]); vor = Voronoi(pts)
+     v = vor.vertices[vor.regions[vor.point_region[np.argmin(np.linalg.norm(pts, axis=1))]]]; return v[np.argsort(np.arctan2(v[:, 1], v[:, 0]))]
+@@ -114,7 +115,7 @@ ax.set_ylabel(r"$\max|M|$ (eV)"); ax.set_ylim(5, 9); ax.set_xlabel(r"Taille de l
+ ax.set_title("Vérification de la convention intensive", loc="left", fontsize=9); save(fig, "fig_M_scaling_final")
+ 
+ # ---------------- 6. fig_Ved : (a) carte 5×5, (b) carte 9×9, (c) profil radial masqué
+-V = np.load("results/M/ved_analysis.npz"); LIN = 1e-2
++V = np.load(f"{RES}/ved_analysis.npz"); LIN = 1e-2
+ fig = plt.figure(figsize=(6.5, 6.0)); gs = fig.add_gridspec(2, 2, height_ratios=[0.78, 1.55], hspace=0.45, wspace=0.10, top=0.97, bottom=0.16)
+ axa, axb, axc = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, :])
+ vmax = max(np.abs(V["5x5_map"]).max(), np.abs(V["9x9_map"]).max()); norm = SymLogNorm(linthresh=LIN, vmin=-vmax, vmax=vmax, base=10)
+diff --git a/scripts/migrate_M_norm.py b/scripts/migrate_M_norm.py
+index 477340c..cea9d7c 100644
+--- a/scripts/migrate_M_norm.py
++++ b/scripts/migrate_M_norm.py
+@@ -1,3 +1,6 @@
++from electron_defect_interaction.config import load_production, results_dir
++raise SystemExit("[obsolète, R6 2026-09-26] ce script lit M_ed_*_norm.npy / gamma_*.npz (supprimés) et appartient à la chaîne d'avant le 2026-09-05 ; chaîne courante : compute_spectral_wannier.py, resonance_metrics.py, resonance_criteria.py")
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ migrate_M_norm.py
+@@ -21,7 +24,7 @@ SIZE_RE = re.compile(r"M_ed_(\d+x\d+)\.npy$")
+ 
+ 
+ def main():
+-    for f in sorted(glob.glob("results/M/M_ed_*x*.npy")):
++    for f in sorted(glob.glob(f"{RES}/M_ed_*x*.npy")):
+         if f.endswith("_norm.npy"):
+             continue
+         m = SIZE_RE.search(os.path.basename(f))
+@@ -38,7 +41,7 @@ def main():
+         # tag the raw file so future loads know it is un-normalized
+         if meta is None:
+             matrix_io.save_M(f, M, matrix_io.UNIT_CELL, note="raw, pre-migration")
+-        out = f"results/M/M_ed_{size}_norm.npy"
++        out = f"{RES}/M_ed_{size}_norm.npy"
+         matrix_io.save_M(out, M / N_cells, matrix_io.SUPERCELL,
+                          N_cells=int(N_cells), source=os.path.basename(f),
+                          note="migrated: applied 1/N_cells to a unit-cell-normalized M")
+diff --git a/scripts/mwr_locality_coarse_vs_dense.py b/scripts/mwr_locality_coarse_vs_dense.py
+index 9882433..571a435 100644
+--- a/scripts/mwr_locality_coarse_vs_dense.py
++++ b/scripts/mwr_locality_coarse_vs_dense.py
+@@ -4,11 +4,12 @@ from electron_defect_interaction.io import qe_io, matrix_io
+ from electron_defect_interaction.io.wannier_io import read_w90_mat
+ from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
++from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ import os
+ cfg = load_production(); out = {}
+ def run(uc, mfile, wdir, tag):
+-    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
++    M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
+     k = qe_io.get_k_red(uc); MP = _infer_mp_grid(k)
+     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
+     Ud, kUd = read_w90_mat(f"{wdir}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
+@@ -27,7 +28,7 @@ for S in ("5x5", "6x6", "7x7", "8x8", "9x9", "12x12"):
+     if not os.path.exists(dp["mfile"]) or not os.path.isdir(dp["wdir"]): print(f"[{S}] dense M or wannier missing; skipped"); continue
+     run(dp["uc"], dp["mfile"], dp["wdir"], f"{S}_dense")
+     if os.path.isdir(f"wannier/{S}"):
+-        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"results/M/M_ed_{S}.npy", f"wannier/{S}", f"{S}_coarse")
++        run(f"data/graphene/unit_cell/qe/defect_{S}.save", f"{RES}/M_ed_{S}.npy", f"wannier/{S}", f"{S}_coarse")
+     else:
+         print(f"[{S}] no coarse wannierization (wannier/{S}); dense only")
+-np.savez("results/M/mwr_locality.npz", **out); print("saved results/M/mwr_locality.npz")
++np.savez(f"{RES}/mwr_locality.npz", **out); print("saved <results_dir>/mwr_locality.npz")
+diff --git a/scripts/nkint_check_post.py b/scripts/nkint_check_post.py
+index 0ad4feb..9d6679f 100644
+--- a/scripts/nkint_check_post.py
++++ b/scripts/nkint_check_post.py
+@@ -1,16 +1,18 @@
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ #!/usr/bin/env python
+ """
+ nkint_check_post.py -- P13: convergence of the INTERNAL k-grid N_k^int of g0 (reference size, R_cut 3, frozen grid/eta/window).
+-Reads results/M/resigma_<size>_rc3_nk<N>.npz (scripts/rcut_resigma.py --nk-int, job submit_nkint_check.sh) and reports, per nk_int:
++Reads <results_dir>/resigma_<size>_rc3_nk<N>.npz (scripts/rcut_resigma.py --nk-int, job submit_nkint_check.sh) and reports, per nk_int:
+   * STATE median of Gamma (= Gamma N_cells, intensive V_loc) over the on-shell states of the +-e_window (NOT the Lorentzian curve),
+   * median Re Sigma, E_res = argmax Gamma over states with |eps - E_D| <= 1.5 eV, Gamma_T at E_D (mean of the states with eps = E_D, i.e. K),
+   * the same restricted to |eps - E_D| <= 0.3 eV,
+-with relative deviations to the densest nk_int. Writes results/M/nkint_check_<size>.csv and prints markdown tables.
+-Usage: python scripts/nkint_check_post.py --size 9x9 --nk 150,300,450,600 [--pattern results/M/resigma_{S}_rc3_nk{N}.npz]
++with relative deviations to the densest nk_int. Writes <results_dir>/nkint_check_<size>.csv and prints markdown tables.
++Usage: python scripts/nkint_check_post.py --size 9x9 --nk 150,300,450,600 [--pattern <results_dir>/resigma_{S}_rc3_nk{N}.npz]
+ """
+ import argparse, csv, numpy as np
+ ap = argparse.ArgumentParser(); ap.add_argument("--size", default="9x9"); ap.add_argument("--nk", default="150,300,450,600")
+-ap.add_argument("--pattern", default="results/M/resigma_{S}_rc3_nk{N}.npz"); ap.add_argument("--zoom", type=float, default=0.3); a = ap.parse_args()
++ap.add_argument("--pattern", default=f"{RES}/resigma_{{S}}_rc3_nk{{N}}.npz"); ap.add_argument("--zoom", type=float, default=0.3); a = ap.parse_args()
+ nks = [int(x) for x in a.nk.split(",")]; rows = []
+ for N in nks:
+     f = a.pattern.format(S=a.size, N=N); z = np.load(f); S = z["Sigma_rc3"]; E = z["E_out"]; ED = float(z["E_D"]); ew = float(z["e_window"])
+@@ -33,7 +35,7 @@ print("| nk_int | n états | médiane Γ N_cells (meV) | écart | Re Σ médian
+ print("|---|---|---|---|---|---|---|")
+ for r in rows:
+     print(f"| {r['nk_int']} | {r['z_n']} | {r['z_medG']:.2f} | {rel(r,'z_medG'):+.2f} % | {r['z_medRe']:.2f} | {rel(r,'z_medRe'):+.2f} % | {r['z_E_res']:+.3f} |")
+-out = f"results/M/nkint_check_{a.size}.csv"
++out = f"{RES}/nkint_check_{a.size}.csv"
+ with open(out, "w", newline="") as fh:
+     w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+ print(f"\nécrit {out}")
+diff --git a/scripts/rcut_resigma.py b/scripts/rcut_resigma.py
+index d4ff8ae..07dcba5 100755
+--- a/scripts/rcut_resigma.py
++++ b/scripts/rcut_resigma.py
+@@ -6,14 +6,15 @@ Sigma_nk = <nk| t(eps_nk) |nk> (COMPLEX) of the local Wannier t-matrix, per R_cu
+   Gamma_nk     = -2 Im Sigma_nk  (same quantity as compute_spectral_wannier.py, per defect)
+ Reports medians over the +-e_window_eV window around E_D. Same loading/gauge/recentering chain and the same
+ on-shell nearest-energy-grid evaluation as compute_spectral_wannier.py. Output: npz tagged units='eV', E_D.
+-Usage: rcut_resigma.py --size 9x9 --rcut 0,1,2,3 [--grid 240 --eta 0.02] --out results/M/resigma_9x9_rc0123.npz
++Usage: rcut_resigma.py --size 9x9 --rcut 0,1,2,3 [--grid 240 --eta 0.02] --out <results_dir>/resigma_9x9_rc0123.npz
+ """
+ import argparse, numpy as np
+ from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
+ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+ from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+-from electron_defect_interaction.config import load_production, dense_paths
++from electron_defect_interaction.config import load_production, dense_paths, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ 
+ p = argparse.ArgumentParser(); p.add_argument("--size", required=True); p.add_argument("--rcut", required=True)
+ p.add_argument("--grid", type=int, default=None); p.add_argument("--eta", type=float, default=None); p.add_argument("--out", required=True); p.add_argument("--npe", type=int, default=None, help="ne_per_eta override (default: frozen config)")
+@@ -21,7 +22,7 @@ p.add_argument("--nk-int", type=int, default=None, help="internal k-grid density
+ a = p.parse_args(); cfg = load_production()
+ N = a.grid or int(cfg["grid"]); eta = a.eta or float(cfg["eta_eV"]); nk_int = a.nk_int or int(cfg["nk_int"]); ew = float(cfg["e_window_eV"]); npe = a.npe or int(cfg["ne_per_eta"])
+ dp = dense_paths(cfg, a.size); paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
+-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
++M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
+ k_coarse = qe_io.get_k_red(dp["uc"])
+ U, k_U = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(k_U, k_coarse)]
+ U_dis, k_Ud = read_w90_mat(paths["u_dis"]); U_dis = U_dis[_match_kpoint_order(k_Ud, k_coarse)]
+diff --git a/scripts/resonance_criteria.py b/scripts/resonance_criteria.py
+index 273c5e5..a5623b1 100644
+--- a/scripts/resonance_criteria.py
++++ b/scripts/resonance_criteria.py
+@@ -7,14 +7,15 @@ resonance_criteria.py -- definitive resonance criterion + sum rule + concentrati
+     cross-checked with Lloyd's formula delta_rho = -(1/pi) d/deps Im ln det[1 - g0 V]; where the +-e_window excess is compensated.
+   * Gamma_T(eps) at c = 0.1 % on +-1 eV (from resonance_<size>.npz), for the order-of-magnitude comparison with
+     Kaasbjerg Fig. 17 (vacancy here vs substitutional N there).
+-Output: results/M/resonance_criteria_<size>.npz
++Output: <results_dir>/resonance_criteria_<size>.npz
+ """
+ import argparse, numpy as np
+ from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
+ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+ from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+-from electron_defect_interaction.config import load_production, dense_paths
++from electron_defect_interaction.config import load_production, dense_paths, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ 
+ ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--c-compare", type=float, default=1e-3)
+ ap.add_argument("--band-de", type=float, default=None, help="energy spacing for the full-band sum rule (default eta/4)"); a = ap.parse_args()
+@@ -22,7 +23,7 @@ cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(c
+ paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
+ rc, eta, nk_int, ew, npe = cfg["R_cut"], cfg["eta_eV"], cfg["nk_int"], cfg["e_window_eV"], cfg["ne_per_eta"]
+ 
+-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)
++M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
+ k_coarse = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k_coarse)
+ U, kU = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(kU, k_coarse)]
+ Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k_coarse)]
+@@ -78,13 +79,13 @@ cum = np.concatenate([[0], np.cumsum(0.5 * (drho[1:] + drho[:-1]) * np.diff(eb))
+ print(f"    cumulative int at window edges: {np.interp(E_D - ew, eb, cum):+.4f} (at -{ew:.0f} eV), {np.interp(E_D + ew, eb, cum):+.4f} (at +{ew:.0f} eV), {cum[-1]:+.4f} (band top)", flush=True)
+ 
+ # --- 3. Gamma_T at c = c_compare on +-1 eV (from resonance_<size>.npz)
+-Rz = np.load(f"results/M/resonance_{S}.npz"); x = Rz["eg"] - float(Rz["E_D"]); m1 = np.abs(x) <= 1.0
++Rz = np.load(f"{RES}/resonance_{S}.npz"); x = Rz["eg"] - float(Rz["E_D"]); m1 = np.abs(x) <= 1.0
+ Gc = Rz["Gamma_T"] * a.c_compare
+ print(f"\n=== Gamma_T at c = {a.c_compare*100:.1f}% on +-1 eV (VACANCY here vs SUBSTITUTIONAL N in Kaasbjerg Fig. 17: order of magnitude only):")
+ print(f"    min {np.nanmin(Gc[m1])*1e3:.2f} meV at {x[m1][np.nanargmin(Gc[m1])]:+.2f} eV, max {np.nanmax(Gc[m1])*1e3:.2f} meV at {x[m1][np.nanargmax(Gc[m1])]:+.2f} eV; "
+       f"at E_D {np.interp(0, x, Gc)*1e3:.2f} meV, at -0.5 eV {np.interp(-0.5, x, Gc)*1e3:.2f} meV, at +0.5 eV {np.interp(0.5, x, Gc)*1e3:.2f} meV; hbar/Gamma at +-0.3 eV: "
+       f"{658.2/ (np.interp(-0.3, x, Gc)*1e3):.0f} fs / {658.2/(np.interp(0.3, x, Gc)*1e3):.0f} fs")
+-np.savez(f"results/M/resonance_criteria_{S}.npz", size=S, E_D=E_D, eta=eta, R_cut=rc, eg=eg, logdet_rel=logdet_rel, minlam=minlam, lam_min=lam_min,
++np.savez(f"{RES}/resonance_criteria_{S}.npz", size=S, E_D=E_D, eta=eta, R_cut=rc, eg=eg, logdet_rel=logdet_rel, minlam=minlam, lam_min=lam_min,
+          eb=eb, drho_band=drho, drho_lloyd=drho_lloyd, cum_drho=cum, sumrule=tot, sumrule_lloyd=tot_l, sumrule_window=inwin,
+          x_c=x[m1], Gamma_c=Gc[m1], c_compare=a.c_compare)
+-print(f"saved results/M/resonance_criteria_{S}.npz")
++print(f"saved <results_dir>/resonance_criteria_{S}.npz")
+diff --git a/scripts/resonance_metrics.py b/scripts/resonance_metrics.py
+index 988c5a2..35a51cb 100644
+--- a/scripts/resonance_metrics.py
++++ b/scripts/resonance_metrics.py
+@@ -5,7 +5,7 @@ resonance_metrics.py -- reference size (frozen config), +-e_window around E_D, e
+   (c) Tbar_nn(K,K;eps) for the pi pair (Re/Im, pole crossing)
+   Born vs T: Gamma_Born(eps) = -2 Im <V g0 V> (2nd-order term; the 1st-order <V> is real, contributes 0) vs Gamma_T(eps)
+   Potential alignment: Gamma_T(eps) with M and with M - mean_diag(M^L) * 1 (G~=0 component removed)
+-All energies eV. Output npz: results/M/resonance_<size>.npz. Hard gauge gate + frozen config.
++All energies eV. Output npz: <results_dir>/resonance_<size>.npz. Hard gauge gate + frozen config.
+ Usage: python scripts/resonance_metrics.py [--size 9x9] [--rho0-grid 900]
+ """
+ import argparse, numpy as np
+@@ -13,7 +13,8 @@ from electron_defect_interaction.io import qe_io, matrix_io, wannier_provenance
+ from electron_defect_interaction.io.wannier_io import read_w90_mat, read_w90_HR
+ from electron_defect_interaction.wannier.wannier_interpolation import Mbk_to_Mwk, Mwk_to_Mwr, _infer_mp_grid, _match_kpoint_order
+ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
+-from electron_defect_interaction.config import load_production, dense_paths, HA2EV
++from electron_defect_interaction.config import load_production, dense_paths, HA2EV, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ 
+ ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--rho0-grid", type=int, default=900)
+ ap.add_argument("--out", default=None); a = ap.parse_args()
+@@ -21,7 +22,8 @@ cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(c
+ paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
+ rc, N, eta, nk_int, ew, npe, conc = cfg["R_cut"], cfg["grid"], cfg["eta_eV"], cfg["nk_int"], cfg["e_window_eV"], cfg["ne_per_eta"], cfg["defect_concentration_for_dos"]
+ 
+-M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)   # eV, single conversion point
++M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)   # eV, single conversion point
++matrix_io.check_manifest(dp["mfile"].replace("M_dense_", "M_L_dense_"), require_normalization=matrix_io.M_NORM_V2)     # R6
+ ML_diag_mean = float(np.mean([np.load(dp["mfile"].replace("M_dense_", "M_L_dense_"), mmap_mode="r")[n, k, n, k].real
+                               for n in range(M.shape[0]) for k in range(0, M.shape[1], 7)])) * HA2EV
+ print(f"[align] mean diag of M^L (G~=0 component) = {ML_diag_mean*1e3:.2f} meV (unit-cell norm)", flush=True)
+@@ -104,7 +106,7 @@ print(f"\n=== Born vs T (+-{ew} eV): median Gamma_T = {np.nanmedian(GT_e[m])*1e3
+       f"ratio Born/T median {np.nanmedian(GB_e[m]/GT_e[m]):.3f}, min {np.nanmin(GB_e[m]/GT_e[m]):.3f}, max {np.nanmax(GB_e[m]/GT_e[m]):.3f}")
+ print(f"=== alignment: Gamma_T with vs without G~=0 shift ({ML_diag_mean*1e3:.1f} meV): max rel |diff| = {np.nanmax(np.abs(GS_e[m]-GT_e[m])/GT_e[m]):.3e}, "
+       f"median rel = {np.nanmedian(np.abs(GS_e[m]-GT_e[m])/GT_e[m]):.3e}; per-state max rel = {np.nanmax(np.abs(G_S-G_T)/np.abs(G_T)):.3e}")
+-out = a.out or f"results/M/resonance_{S}.npz"
++out = a.out or f"{RES}/resonance_{S}.npz"
+ np.savez(out, size=S, E_D=E_D, eta=eta, R_cut=rc, grid=N, nk_int=nk_int, conc=conc, egrid=egrid, eg=eg,
+          Gamma_T=GT_e, Gamma_Born=GB_e, Gamma_T_noshift=GS_e, rho0=rho0, rho0_240=rho0_240, ratio=ratio, drho=drho, rho_dis=rho_dis,
+          Tbar=Tbar, Tbar_tr=tr, E_out=E_out, G_T=G_T, G_B=G_B, G_S=G_S, ML_diag_mean=ML_diag_mean, **{k: v for k, v in res.items() if k not in ("Tbar_zero_crossings", "E_D")},
+diff --git a/scripts/sampling_table.py b/scripts/sampling_table.py
+index 0cb36e9..bf9fe22 100644
+--- a/scripts/sampling_table.py
++++ b/scripts/sampling_table.py
+@@ -1,8 +1,10 @@
+ """Sampling table: N, N mod 3, dE_F = E_F(d)-E_F(p) (meV), KS dense reconstruction (max/mean meV), max|V_ed^L| boundary (meV, raw)."""
+ import csv, os, numpy as np, xml.etree.ElementTree as ET
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ HA = 27.211386245988; rows = []
+-K = np.load("results/M/ks_reconstruction.npz") if os.path.exists("results/M/ks_reconstruction.npz") else {}
+-V = np.load("results/M/ved_analysis.npz") if os.path.exists("results/M/ved_analysis.npz") else {}
++K = np.load(f"{RES}/ks_reconstruction.npz") if os.path.exists(f"{RES}/ks_reconstruction.npz") else {}
++V = np.load(f"{RES}/ved_analysis.npz") if os.path.exists(f"{RES}/ved_analysis.npz") else {}
+ for N in (5, 6, 7, 8, 9, 10, 11, 12):
+     S = f"{N}x{N}"; ef = {}
+     for k in "pd":
+@@ -16,7 +18,7 @@ for N in (5, 6, 7, 8, 9, 10, 11, 12):
+         rc, rv = V[key_r], V[key_v]; m = np.isfinite(rv); return float(np.interp(r0, rc[m], rv[m])) * 1e3
+     r142 = rad(f"{S}_rc", f"{S}_rad", 1.42); r2 = rad(f"{S}_rc_masked", f"{S}_rad_masked", 2.0); r3 = rad(f"{S}_rc_masked", f"{S}_rad_masked", 3.0)
+     rows.append([N, N % 3, f"{dEf:+.1f}", f"{ksmax:.3f}", f"{ksmean:.3f}", f"{b:.1f}", f"{r142:+.1f}", f"{r2:+.1f}", f"{r3:+.1f}"])
+-with open("results/M/sampling_table.csv", "w", newline="") as f:
++with open(f"{RES}/sampling_table.csv", "w", newline="") as f:
+     w = csv.writer(f); w.writerow(["N", "N_mod_3", "dE_F_meV", "KS_dense_max_meV", "KS_dense_mean_meV", "Ved_boundary_max_meV", "Ved_radial_1.42A_meV", "Ved_radial_masked_2A_meV", "Ved_radial_masked_3A_meV"]); w.writerows(rows)
+ print(f"{'N':>3} {'N%3':>4} {'dE_F(meV)':>10} {'KS max':>8} {'KS mean':>8} {'|V|bord':>8} {'V(1.42)':>8} {'V(2,msk)':>9} {'V(3,msk)':>9}")
+ for r in rows: print(f"{r[0]:>3} {r[1]:>4} {r[2]:>10} {r[3]:>8} {r[4]:>8} {r[5]:>8} {r[6]:>8} {r[7]:>9} {r[8]:>9}")
+diff --git a/scripts/submit_M.sh b/scripts/submit_M.sh
+index 556f63e..3b14f9a 100644
+--- a/scripts/submit_M.sh
++++ b/scripts/submit_M.sh
+@@ -8,8 +8,8 @@
+ #SBATCH --exclusive
+ #SBATCH --mem=0
+ #SBATCH --time=06:00:00
+-#SBATCH --output=results/M/logs/M_ed_%a_%A.out
+-#SBATCH --error=results/M/logs/M_ed_%a_%A.err
++#SBATCH --output=results/M2/logs/M_ed_%a_%A.out
++#SBATCH --error=results/M2/logs/M_ed_%a_%A.err
+ 
+ # Compute the full electron-defect scattering matrix M = M^L + M^NL for one supercell per
+ # array task, V_ed = V_d - V_p, all bands. Works for ANY size via the two-stage split:
+@@ -28,15 +28,18 @@ N=${SIZES[$SLURM_ARRAY_TASK_ID]}
+ 
+ module restore qe
+ module load mpi4py/4.0.3 scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ 
+ UC=data/graphene/unit_cell/qe/defect_${N}.save
+ SCP=data/graphene/supercell/qe/defect_${N}_p.save
+ SCD=data/graphene/supercell/qe/defect_${N}_d.save
+ PY="$PROJ/.venv/bin/python"
+ 
+-ML="results/M/M_L_${N}.npy"
+-NL="results/M/M_NL_${N}.npy"
+-MED="results/M/M_ed_${N}.npy"
++ML="$RES/M_L_${N}.npy"
++NL="$RES/M_NL_${N}.npy"
++MED="$RES/M_ed_${N}.npy"
+ 
+ echo "[$(date)] size=$N  stage 1/3: M^L (MPI, $SLURM_NTASKS ranks)"
+ # Pin all threading layers to 1: parallelism is over MPI ranks; oversubscribing BLAS
+diff --git a/scripts/submit_M_dense.sh b/scripts/submit_M_dense.sh
+index 162e761..1ae007c 100644
+--- a/scripts/submit_M_dense.sh
++++ b/scripts/submit_M_dense.sh
+@@ -7,25 +7,28 @@
+ #SBATCH --exclusive
+ #SBATCH --mem=0
+ #SBATCH --time=12:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ # Dense M on the (p*N)^2 grid: ml (MPI real-space, node-shared u_nk) -> nl (serial, fresh process) -> combine.
+ # Usage: sbatch scripts/submit_M_dense.sh <size> [extra ml args, e.g. --coarse]
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load mpi4py/4.0.3 scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ SIZE=${1:?size e.g. 5x5}; shift
+ EXTRA="$@"
+ TAG=$SIZE; [[ "$EXTRA" == *coarse* ]] && TAG="${SIZE}_coarsecheck"
+ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK FLEXIBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
+ echo "[$(date)] $SIZE stage ml ($SLURM_NTASKS ranks x $SLURM_CPUS_PER_TASK threads) $EXTRA"
+-srun --cpu-bind=cores "$PROJ/.venv/bin/python" -u scripts/compute_M_dense_stages.py --stage ml --size "$SIZE" --block-size 2000 $EXTRA --out "results/M/M_L_dense_$TAG.npy" || exit 2
++srun --cpu-bind=cores "$PROJ/.venv/bin/python" -u scripts/compute_M_dense_stages.py --stage ml --size "$SIZE" --block-size 2000 $EXTRA --out "$RES/M_L_dense_$TAG.npy" || exit 2
+ [[ "$EXTRA" == *coarse* ]] && { echo "[$(date)] coarse check done"; exit 0; }
+ echo "[$(date)] $SIZE stage nl (serial, fresh process)"
+ export OMP_NUM_THREADS=32 OPENBLAS_NUM_THREADS=32 FLEXIBLAS_NUM_THREADS=32
+-"$PROJ/.venv/bin/python" -u scripts/compute_M_dense_stages.py --stage nl --size "$SIZE" --out "results/M/M_NL_dense_$SIZE.npy" || exit 3
++"$PROJ/.venv/bin/python" -u scripts/compute_M_dense_stages.py --stage nl --size "$SIZE" --out "$RES/M_NL_dense_$SIZE.npy" || exit 3
+ echo "[$(date)] $SIZE stage combine"
+ "$PROJ/.venv/bin/python" -u scripts/compute_M_dense_stages.py --stage combine --size "$SIZE" \
+-   --ml "results/M/M_L_dense_$SIZE.npy" --nl "results/M/M_NL_dense_$SIZE.npy" \
+-   --out "results/M/M_dense_$SIZE.npy" --out-norm "results/M/M_dense_${SIZE}_norm.npy" || exit 4
++   --ml "$RES/M_L_dense_$SIZE.npy" --nl "$RES/M_NL_dense_$SIZE.npy" \
++   --out "$RES/M_dense_$SIZE.npy" || exit 4
+ echo "[$(date)] DONE $SIZE"
+diff --git a/scripts/submit_golden_dense.sh b/scripts/submit_golden_dense.sh
+index b61249d..89daf37 100644
+--- a/scripts/submit_golden_dense.sh
++++ b/scripts/submit_golden_dense.sh
+@@ -6,18 +6,21 @@
+ #SBATCH --cpus-per-task=16
+ #SBATCH --mem=120G
+ #SBATCH --time=03:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ # BLOCKING golden test on the dense 5x5 (25x25) M: local Wannier t-matrix vs dense compute_T in the
+ # same 5-WF subspace. Then the dense-vs-coarse coincident-k check on M^L (9x9) / M (others).
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load mpi4py/4.0.3 scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16
+ SIZE=${1:-5x5}
+ echo "[$(date)] golden dense $SIZE"
+ .venv/bin/python -u scripts/test_local_tmatrix_real.py "$SIZE" --dense; rc=$?
+ echo "[$(date)] golden exit code $rc"
+ echo "[$(date)] coincident-k check (full M dense vs M_ed coarse)"
+-.venv/bin/python -u scripts/check_M_dense_vs_coarse.py "$SIZE" "results/M/M_ed_$SIZE.npy" "results/M/M_dense_$SIZE.npy"
++.venv/bin/python -u scripts/check_M_dense_vs_coarse.py "$SIZE" "$RES/M_ed_$SIZE.npy" "$RES/M_dense_$SIZE.npy"
+ exit $rc
+diff --git a/scripts/submit_lnl_frobenius.sh b/scripts/submit_lnl_frobenius.sh
+index 2707be0..3afc6d7 100755
+--- a/scripts/submit_lnl_frobenius.sh
++++ b/scripts/submit_lnl_frobenius.sh
+@@ -6,10 +6,13 @@
+ #SBATCH --cpus-per-task=4
+ #SBATCH --mem=32G
+ #SBATCH --time=02:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 FLEXIBLAS_NUM_THREADS=4
+ "$PROJ/.venv/bin/python" -u scripts/lnl_frobenius_all.py "${1:-5x5,6x6,7x7,8x8,9x9,12x12}"
+diff --git a/scripts/submit_nkint_check.sh b/scripts/submit_nkint_check.sh
+index cc11963..3aa50f5 100755
+--- a/scripts/submit_nkint_check.sh
++++ b/scripts/submit_nkint_check.sh
+@@ -6,15 +6,15 @@
+ #SBATCH --cpus-per-task=16
+ #SBATCH --mem=64G
+ #SBATCH --time=03:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ # Convergence test of the INTERNAL k-grid N_k^int used for g0 (never varied before 2026-09-18: every run used 300^2).
+ # Same chain as production (rcut_resigma.py: frozen R_cut/grid/eta/window/ne_per_eta, hard gauge gate), only nk_int swept.
+ # Usage: sbatch scripts/submit_nkint_check.sh 9x9 "150 300 450 600"
+ # Compare afterwards (median on-shell Gamma*N_cells, Re Sigma, E_res per nk_int; states inside +-e_window only):
+ #   .venv/bin/python - <<'PY'
+ #   import numpy as np, glob
+-#   for f in sorted(glob.glob("results/M/resigma_9x9_rc3_nk*.npz"), key=lambda s: int(s.split("nk")[-1][:-4])):
++#   for f in sorted(glob.glob("$RES/resigma_9x9_rc3_nk*.npz"), key=lambda s: int(s.split("nk")[-1][:-4])):
+ #       z = np.load(f); S = z["Sigma_rc3"]; E = z["E_out"]; ED = float(z["E_D"]); m = np.isfinite(S.real)
+ #       G = -2 * S.imag; mm = m & (np.abs(E - ED) <= 1.5); e_res = float(E[mm][np.argmax(G[mm])] - ED)
+ #       print(f"nk_int={int(z['nk_int']):4d}  med Gamma = {np.median(G[m])*1e3:8.2f} meV  med ReSigma = {np.median(S.real[m])*1e3:7.2f} meV  E_res-E_D = {e_res:+.3f} eV")
+@@ -22,11 +22,14 @@
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16
+ SIZE=${1:?size}; NKS=${2:-"150 300 450 600"}
+ for NK in $NKS; do
+   echo "[$(date)] nk_int = $NK"
+   "$PROJ/.venv/bin/python" -u scripts/rcut_resigma.py --size "$SIZE" --rcut 3 --nk-int "$NK" \
+-      --out "results/M/resigma_${SIZE}_rc3_nk${NK}.npz" || exit 1
++      --out "$RES/resigma_${SIZE}_rc3_nk${NK}.npz" || exit 1
+ done
+ echo "[$(date)] done"
+diff --git a/scripts/submit_rcut_resigma.sh b/scripts/submit_rcut_resigma.sh
+index 969bb6e..1859932 100755
+--- a/scripts/submit_rcut_resigma.sh
++++ b/scripts/submit_rcut_resigma.sh
+@@ -6,12 +6,15 @@
+ #SBATCH --cpus-per-task=16
+ #SBATCH --mem=64G
+ #SBATCH --time=06:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ # On-shell Re/Im Sigma per R_cut on the dense reference M (complement to m_rcut_convergence): rcut list as arg 2.
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16
+ SIZE=${1:?size}; RC=${2:?rcut list}; TAG=$(echo "$RC" | tr -d ,)
+-"$PROJ/.venv/bin/python" -u scripts/rcut_resigma.py --size "$SIZE" --rcut "$RC" --out "results/M/resigma_${SIZE}_rc${TAG}.npz"
++"$PROJ/.venv/bin/python" -u scripts/rcut_resigma.py --size "$SIZE" --rcut "$RC" --out "$RES/resigma_${SIZE}_rc${TAG}.npz"
+diff --git a/scripts/submit_spectral.sh b/scripts/submit_spectral.sh
+index 7e35e5e..67a00f4 100644
+--- a/scripts/submit_spectral.sh
++++ b/scripts/submit_spectral.sh
+@@ -6,10 +6,13 @@
+ #SBATCH --cpus-per-task=16
+ #SBATCH --mem=32G
+ #SBATCH --time=01:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK FLEXIBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
+ "$PROJ/.venv/bin/python" -u scripts/compute_spectral.py --size "${1:-5x5}" --plot
+diff --git a/scripts/submit_spectral_wannier.sh b/scripts/submit_spectral_wannier.sh
+index 85c26ad..5acea2d 100644
+--- a/scripts/submit_spectral_wannier.sh
++++ b/scripts/submit_spectral_wannier.sh
+@@ -6,14 +6,17 @@
+ #SBATCH --cpus-per-task=16
+ #SBATCH --mem=48G
+ #SBATCH --time=04:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16
+ SIZE=${1:-7x7}
+ "$PROJ/.venv/bin/python" -u scripts/compute_spectral_wannier.py --size "$SIZE" \
+    --manifest "$PROJ/wannier/$SIZE/wannier_manifest.json" \
+    --grids 60,120,240 --etas 0.05,0.02,0.01 --rcut 0,1,2 --nk-int 300 \
+-   --out "results/M/specw_$SIZE.npz"
++   --out "$RES/specw_$SIZE.npz"
+diff --git a/scripts/submit_spectral_wannier_dense.sh b/scripts/submit_spectral_wannier_dense.sh
+index fa346c2..d11f2ea 100755
+--- a/scripts/submit_spectral_wannier_dense.sh
++++ b/scripts/submit_spectral_wannier_dense.sh
+@@ -6,12 +6,15 @@
+ #SBATCH --cpus-per-task=16
+ #SBATCH --mem=64G
+ #SBATCH --time=06:00:00
+-#SBATCH --output=results/M/logs/%x_%A.out
+-#SBATCH --error=results/M/logs/%x_%A.err
++#SBATCH --output=results/M2/logs/%x_%A.out
++#SBATCH --error=results/M2/logs/%x_%A.err
+ # Level-1 map on the DENSE (zero-padded) M: R_cut x output grid x eta, one dense wannierization per size.
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16
+ SIZE=${1:?size}; TAG=${2:+_$2}
+ declare -A DD=([5x5]=25 [6x6]=24 [7x7]=28 [8x8]=32 [9x9]=27 [12x12]=24); D=${DD[$SIZE]}
+@@ -19,4 +22,4 @@ GRIDS=${GRIDS:-60,120,240}; ETAS=${ETAS:-0.05,0.02,0.01}; RCUTS=${RCUTS:-0,1,2,3
+ "$PROJ/.venv/bin/python" -u scripts/compute_spectral_wannier.py --size "$SIZE" --dense \
+    --manifest "$PROJ/wannier/${D}x${D}/wannier_manifest.json" \
+    --grids $GRIDS --etas $ETAS --rcut $RCUTS \
+-   --out "results/M/specwd_${SIZE}${TAG}.npz"
++   --out "$RES/specwd_${SIZE}${TAG}.npz"
+diff --git a/scripts/submit_tmatrix.sh b/scripts/submit_tmatrix.sh
+index cf1524c..61c731f 100644
+--- a/scripts/submit_tmatrix.sh
++++ b/scripts/submit_tmatrix.sh
+@@ -6,11 +6,14 @@
+ #SBATCH --cpus-per-task=16
+ #SBATCH --mem=32G
+ #SBATCH --time=01:00:00
+-#SBATCH --output=results/M/logs/%x_%a_%A.out
+-#SBATCH --error=results/M/logs/%x_%a_%A.err
++#SBATCH --output=results/M2/logs/%x_%a_%A.out
++#SBATCH --error=results/M2/logs/%x_%a_%A.err
+ PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}   # racine du dépôt : variable d'environnement, sinon dépôt git du répertoire de soumission
+ cd "$PROJ" || exit 1
+ module restore qe; module load scipy-stack
++export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditable dans .venv (R6) ; préfixe : h5py de scipy-stack conservé
++RES=$("$PROJ/.venv/bin/python" -c 'from electron_defect_interaction.config import load_production, results_dir; print(results_dir(load_production(verbose=False)))')   # results/M2 (results/M gelé, R6)
++mkdir -p "$RES/logs"
+ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK FLEXIBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
+ SIZE=${1:-5x5}
+ "$PROJ/.venv/bin/python" -u scripts/compute_tmatrix.py --size "$SIZE" --plot
+diff --git a/scripts/summarize_level1_maps.py b/scripts/summarize_level1_maps.py
+index f2e4b9d..fd62555 100644
+--- a/scripts/summarize_level1_maps.py
++++ b/scripts/summarize_level1_maps.py
+@@ -1,9 +1,11 @@
+ """Level-1 summary from specwd logs: R_cut convergence, grid/eta plateau, resonance. Usage: python scripts/summarize_level1_maps.py 5x5:JOB 7x7:JOB ..."""
+ import re, sys, numpy as np
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ maps = {}
+ for arg in sys.argv[1:]:
+     S, J = arg.split(":"); rows = {}
+-    for line in open(f"results/M/logs/specwd_{J}.out"):
++    for line in open(f"{RES}/logs/specwd_{J}.out"):
+         m = re.match(r"^\s+(\d+)\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s+([-\d.]+)\s*$", line)
+         if m: rows[(int(m[1]), int(m[2]), float(m[3]))] = (float(m[4]), float(m[5]))
+     maps[S] = rows
+diff --git a/scripts/tag_vacancy_sublattice.py b/scripts/tag_vacancy_sublattice.py
+index 0e5557d..8264cee 100644
+--- a/scripts/tag_vacancy_sublattice.py
++++ b/scripts/tag_vacancy_sublattice.py
+@@ -1,13 +1,15 @@
+ """Write `vacancy_sublattice` (A/B), `vacancy_s_red` and the A/B-equivalence note into every M sidecar of each size."""
+ import glob, json, numpy as np, sys
+ from electron_defect_interaction.io import qe_io
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ NOTE = "vacancy on sublattice {sub}; A and B are equivalent by the honeycomb inversion symmetry (unrelaxed isolated vacancy): same Gamma, M identical up to pz(A)<->pz(B) and a BZ rotation"
+ for S in (sys.argv[1:] or ["5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11", "12x12"]):
+     N = int(S.split("x")[0]); scp = f"data/graphene/supercell/qe/defect_{S}_p.save"; scd = f"data/graphene/supercell/qe/defect_{S}_d.save"
+     xp = np.mod(qe_io.get_x_red(scp), 1.0); xd = np.mod(qe_io.get_x_red(scd), 1.0)
+     dmin = np.array([np.min(np.linalg.norm(np.mod(xd - p + 0.5, 1) - 0.5, axis=1)) for p in xp]); s_vac = xp[int(np.argmax(dmin))]; s_uc = np.mod(N * s_vac, 1.0)
+     sub = "A" if np.allclose(s_uc[:2], 1 / 3, atol=1e-3) else ("B" if np.allclose(s_uc[:2], 2 / 3, atol=1e-3) else "?")
+-    files = [f for f in glob.glob(f"results/M/M_*_{S}*.json") + glob.glob(f"results/M/M_{S}*.json") if "obsolete" not in f]
++    files = [f for f in glob.glob(f"{RES}/M_*_{S}*.json") + glob.glob(f"{RES}/M_{S}*.json") if "obsolete" not in f]
+     for f in files:
+         d = json.load(open(f)); d["vacancy_sublattice"] = sub; d["vacancy_s_red"] = [float(x) for x in s_vac]; d["vacancy_note"] = NOTE.format(sub=sub); json.dump(d, open(f, "w"), indent=2)
+     print(f"[{S}] sublattice {sub}, s_red {np.round(s_vac, 5).tolist()} -> {len(files)} sidecars tagged")
+diff --git a/scripts/test_local_tmatrix_real.py b/scripts/test_local_tmatrix_real.py
+index ad71ed9..2d0b0e3 100644
+--- a/scripts/test_local_tmatrix_real.py
++++ b/scripts/test_local_tmatrix_real.py
+@@ -14,6 +14,8 @@ from electron_defect_interaction.wannier.wannier_interpolation import (
+ from electron_defect_interaction.wannier.wannier_hamiltonian import Hwr_to_Hwk
+ from electron_defect_interaction.defects.many_body.single_defect import compute_T
+ from electron_defect_interaction.defects.many_body import local_tmatrix as lt
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ 
+ N = sys.argv[1] if len(sys.argv) > 1 else "5x5"
+ dense = len(sys.argv) > 2 and sys.argv[2] == "--dense"
+@@ -22,14 +24,14 @@ PF = {"5x5": (5, 25), "6x6": (4, 24), "7x7": (4, 28), "8x8": (4, 32), "9x9": (3,
+ if dense:
+     D = PF[N][1]; W = f"wannier/{D}x{D}"
+     uc = f"/home/gregb26/links/scratch/qe_tmp/defect_uc_dense_{D}/defect_uc_dense_{D}.save"
+-    MFILE = f"results/M/M_dense_{N}.npy"
++    MFILE = f"{RES}/M_dense_{N}.npy"
+ else:
+-    W = f"wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"; MFILE = f"results/M/M_ed_{N}.npy"
++    W = f"wannier/{N}"; uc = f"data/graphene/unit_cell/qe/defect_{N}.save"; MFILE = f"{RES}/M_ed_{N}.npy"
+ k = qe_io.get_k_red(uc); Nc = len(k); MP = _infer_mp_grid(k)
+ U, kU = read_w90_mat(f"{W}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
+ Ud, kUd = read_w90_mat(f"{W}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
+ Hwr, Rw, nd = read_w90_HR(f"{W}/wannier_tb.dat")
+-M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV)   # eV (Wannier H is in eV)
++M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)   # eV (Wannier H is in eV)
+ 
+ # Wannier-gauge M (intensive), real space, recentered; 5-band smooth-Bloch projection on the coarse grid
+ Mwk = Mbk_to_Mwk(M_raw, U, Ud)
+diff --git a/scripts/validate_ML_grid_7x7.py b/scripts/validate_ML_grid_7x7.py
+index f44eb2e..0e5a599 100644
+--- a/scripts/validate_ML_grid_7x7.py
++++ b/scripts/validate_ML_grid_7x7.py
+@@ -3,12 +3,16 @@ no commensurability assumption). Then compare with the MPI-shared kernel (fixed:
+ import sys, numpy as np
+ from electron_defect_interaction.io import qe_io
+ from electron_defect_interaction.defects.local_R import compute_ML_R
++from electron_defect_interaction.config import load_production, results_dir
++RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (results/M gelé)
+ D = "data/graphene"; S = "7x7"
+ if sys.argv[1] == "ref":
+     M = compute_ML_R(f"{D}/unit_cell/qe/defect_{S}.save", f"{D}/supercell/qe/defect_{S}_p.save", f"{D}/supercell/qe/defect_{S}_p.save/Vks_{S}_p",
+                      f"{D}/supercell/qe/defect_{S}_d.save/Vks_{S}_d", subtract_mean=False, bands=[0, 1, 2, 3], io=qe_io)
+-    np.save("results/M/_ML_7x7_ref_b4.npy", M); print("ref saved", M.shape, "max", np.abs(M).max())
++    np.save(f"{RES}/_ML_7x7_ref_b4.npy", M); print("ref saved", M.shape, "max", np.abs(M).max())
+ else:
+-    ref = np.load("results/M/_ML_7x7_ref_b4.npy"); new = np.load("results/M/M_L_dense_7x7_coarsecheck.npy"); old = np.load("results/M/M_L_7x7.npy")[:4, :, :4, :]
++    import os
++    if not os.path.exists(f"{RES}/_ML_7x7_ref_b4.npy"): raise SystemExit(f"[non rejouable] {RES}/_ML_7x7_ref_b4.npy absent : relancer d'abord `validate_ML_grid_7x7.py ref` (noyau série corrigé, 09280bb)")
++    ref = np.load(f"{RES}/_ML_7x7_ref_b4.npy"); new = np.load(f"{RES}/M_L_dense_7x7_coarsecheck.npy"); old = np.load(f"{RES}/M_L_7x7.npy")[:4, :, :4, :]
+     for name, X in (("fixed MPI kernel (resampled 224)", new), ("OLD M_L_7x7 (ix % 30 on a 216 grid)", old)):
+         print(f"{name}: max|X - ref| / max|ref| = {np.abs(X - ref).max() / np.abs(ref).max():.3e}; diag rel {np.abs(np.einsum('nknk->nk', X) - np.einsum('nknk->nk', ref)).max() / np.abs(np.einsum('nknk->nk', ref)).max():.3e}")
+diff --git a/src/electron_defect_interaction/io/matrix_io.py b/src/electron_defect_interaction/io/matrix_io.py
+index 42c107a..c9b291f 100644
+--- a/src/electron_defect_interaction/io/matrix_io.py
++++ b/src/electron_defect_interaction/io/matrix_io.py
+@@ -49,6 +49,24 @@ def read_manifest(npy_path):
+         return json.load(f)
+ 
+ 
++def check_manifest(npy_path, require_bloch_norm=UNIT_CELL, require_normalization=None):
++    """Validate the sidecar of an M file WITHOUT loading it (for mmap consumers): same refusals as load_M_checked
++    (missing sidecar, bloch_norm, units, and M_normalization when require_normalization is given). Returns the manifest."""
++    meta = read_manifest(npy_path)
++    if meta is None:
++        raise ValueError(f"{npy_path}: no manifest sidecar (.json), unknown Bloch normalization. Refusing to run.")
++    if meta.get("bloch_norm") != require_bloch_norm:
++        raise ValueError(f"{npy_path}: bloch_norm={meta.get('bloch_norm')!r} but '{require_bloch_norm}' required. Refusing to run.")
++    if meta.get("units") != HARTREE:
++        raise ValueError(f"{npy_path}: manifest units={meta.get('units')!r}, expected '{HARTREE}'. Refusing to run.")
++    if require_normalization is not None:
++        ver = str(meta.get("M_normalization", M_NORM_V1))
++        if not ver.startswith(require_normalization):
++            raise ValueError(f"{npy_path}: M_normalization={ver!r} but {require_normalization!r} required. Refusing to run "
++                             f"(pre-R6 file: M^L in supercell norm, factor N_cells missing; use results/M2).")
++    return meta
++
++
+ def load_M_checked(npy_path, require_bloch_norm=SUPERCELL, units=None, require_normalization=None):
+     """
+     Load M, refusing (ValueError) unless its manifest declares require_bloch_norm AND units='hartree'

@@ -1,0 +1,19 @@
+--- orig/production.json	2026-09-25 15:24:37.350484907 -0400
++++ new/production.json	2026-09-25 15:24:37.395485184 -0400
+@@ -1,5 +1,9 @@
+ {
+   "_comment": "Frozen production parameters (2026-09-05), declared after the Level 1-2 convergence on the nbnd=20 dense chain. Every production script must load this file via electron_defect_interaction.config.load_production(); CLI flags may only widen a sweep, never silently change a frozen value.",
++  "M_normalization": "v2 : L et NL en norme unit_cell, 2026-09-25",
++  "M_normalization_note": "v1 (results/M, gele) : M^L des noyaux compute_ML_R* avec psi normee sur la super-cellule (facteur N_cells manquant, R5-A.2) et M^NL en norme maille ; v2 (R6) : M2 = N_cells*M^L + M^NL, les deux parties en norme unit_cell ; porte obligatoire A.2 (application directe de dV sur etats de Bloch purs, <= 1e-6 eV) sur chaque M utilise",
++  "results_dir": "results/M2",
++  "results_dir_frozen": "results/M",
+   "R_cut": 3,
+   "grid": 240,
+   "eta_eV": 0.02,
+@@ -73,4 +77,4 @@
+       "8x8"
+     ]
+   }
+-}
+\ No newline at end of file
++}

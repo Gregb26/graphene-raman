@@ -331,7 +331,7 @@ The standalone scripts take their data paths from `scripts/validation/_paths.py`
   `make_figures_controles.py` (fonctions extraites des pilotes, retirés) ; les 5 figures R8 (`fig_kaasbjerg_{dos_c,spectral_GKM,sensibilites,
   superposition,sigma_K}`) par `make_figures_kaasbjerg.py` (tracé extrait de `r8_driver.py fig|sigeff`, contenu identique). Ces deux scripts
   et `make_figures_em.py` lisent les json/npz de campagne **copiés dans `results/campagnes/<campagne>/…`** (`config.campaigns_dir()`,
-  README et MD5SUMS sur place ; `spectral_GKM_9x9.npz` de R8 reste à rapatrier de rorqual), jamais `campagnes/` directement.
+  README et MD5SUMS sur place), jamais `campagnes/` directement.
 - Données : lues uniquement dans le `results_dir` de `config/production.json` (`results/M2_plateau/` depuis R10, 2026-09-30 ;
   matrices M2 dans `results/M2/` = `matrices_dir` ; `results/M/` (v1) et `results/M2/` (v2 non aligné) gelés, `results_dir_frozen`)
   ou dans les `.save`, jamais dans les logs ;

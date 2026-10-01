@@ -1,0 +1,44 @@
+--- /lustre09/project/6004866/gregb26/graphene/qe/defects/R9_controles/submit_r9.sh	2026-09-28 08:49:30.000000000 -0400
++++ /tmp/claude-3139538/-home-gregb26/ff842037-a8eb-4d73-82f4-a4360e7d2878/scratchpad/submit_r9_cloture.sh	2026-09-28 14:52:54.875256581 -0400
+@@ -16,6 +16,7 @@
+ #   a3 [args]   A.3 (variantes alignées ; args de « r9_driver.py a3 ») puis a3pole à 1 fil BLAS + 16 fils Python. 16 cœurs, 160 Go.
+ #   c [args]    C (porte C.0, C.1, C.2 bloc π jusqu'à N = 81, C.3). 16 cœurs, 160 Go.
+ #   d           D (porte D.0, D.2, D.1). 16 cœurs, 96 Go.
++#   r0          clôture, porte R.0 (--cn lu redonne R9). 16 cœurs, 96 Go.
+ #SBATCH --account=rrg-cotemich-ac
+ #SBATCH --output=slurm-r9-%x-%j.out
+ #SBATCH --error=slurm-r9-%x-%j.err
+@@ -23,7 +24,7 @@
+ if [ -z "${SLURM_JOB_ID:-}" ]; then
+   # ------------------------------------------------------------------ côté nœud de connexion : diff puis soumission
+   WORK=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
+-  TASK=${1:?"tâche : box <S> | b [args] | a | a3 [args] | c [args] | d"}; shift
++  TASK=${1:?"tâche : box <S> | b [args] | a | a3 [args] | c [args] | d | r0"}; shift
+   case "$TASK" in
+     box) S=${1:?"taille : 9x9 | 5x5"}
+          case "$S" in 9x9) T=03:00:00 ;; 5x5) T=02:00:00 ;; *) echo "box : taille $S non prévue (9x9, 5x5)"; exit 1 ;; esac
+@@ -33,6 +34,7 @@
+     a3)  RES=(--nodes=1 --ntasks=1 --cpus-per-task=16 --mem=160G --time=08:00:00); NAME="r9a3" ;;
+     c)   RES=(--nodes=1 --ntasks=1 --cpus-per-task=16 --mem=160G --time=08:00:00); NAME="r9c" ;;
+     d)   RES=(--nodes=1 --ntasks=1 --cpus-per-task=16 --mem=96G --time=02:00:00); NAME="r9d" ;;
++    r0)  RES=(--nodes=1 --ntasks=1 --cpus-per-task=16 --mem=96G --time=01:00:00); NAME="r9r0" ;;
+     *)   echo "tâche inconnue : $TASK"; exit 1 ;;
+   esac
+   mkdir -p "$WORK/submitted"; LAST="$WORK/submitted/last"; DIFF="$WORK/submitted/pending_diff.txt"
+@@ -87,12 +89,15 @@
+     threads "$SLURM_CPUS_PER_TASK"
+     "$PY" -u "$DRV" a3 "$@" || { echo "[$(date)] a3 ÉCHEC"; exit 2; }
+     threads 1; export R4_EIG_WORKERS=$SLURM_CPUS_PER_TASK                          # eig par lots : 1 fil BLAS + fils Python (leçon R4/R6)
+-    "$PY" -u "$DRV" a3pole; rc=$?; echo "[$(date)] a3pole rc=$rc"; exit $rc ;;
++    "$PY" -u "$DRV" a3pole $(echo "$@" | grep -o -- '--cn [a-z]*'); rc=$?; echo "[$(date)] a3pole rc=$rc"; exit $rc ;;   # --cn transmis (clôture)
+   c)
+     threads "$SLURM_CPUS_PER_TASK"
+     "$PY" -u "$DRV" c "$@"; rc=$?; echo "[$(date)] c rc=$rc"; exit $rc ;;
+   d)
+     threads "$SLURM_CPUS_PER_TASK"
+     "$PY" -u "$DRV" d; rc=$?; echo "[$(date)] d rc=$rc"; exit $rc ;;
++  r0)
++    threads "$SLURM_CPUS_PER_TASK"
++    "$PY" -u "$DRV" r0; rc=$?; echo "[$(date)] r0 rc=$rc"; exit $rc ;;
+   *) echo "tâche inconnue $TASK"; exit 1 ;;
+ esac

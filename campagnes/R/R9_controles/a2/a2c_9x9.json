@@ -1,0 +1,25 @@
+{
+ "size": "9x9",
+ "bands": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "N_cells": 81,
+ "shape": [
+  4,
+  81,
+  4,
+  81
+ ],
+ "max_rel_dev_from_Ncells_identity": 1.5582932543706198e-13,
+ "threshold": 1e-12,
+ "ok": true,
+ "hermiticity_rel": 9.807542333816374e-17,
+ "diag_min": 80.99999999999983,
+ "diag_max": 81.00000000000011,
+ "max_offdiag_abs": 1.262217536040202e-11,
+ "elapsed_s": 19.717464685440063,
+ "head": "e4122ab"
+}

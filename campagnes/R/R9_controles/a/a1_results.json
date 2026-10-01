@@ -1,0 +1,358 @@
+{
+ "sizes": {
+  "5x5": {
+   "N": 5,
+   "N_cells": 25,
+   "r_max_A": 7.118301170928329,
+   "n_atoms": 49,
+   "plateau_i_10": {
+    "mean": -0.0575626062015234,
+    "rms": 0.09413647407375364,
+    "max_abs_dev": 0.23370320732269242,
+    "n": 13
+   },
+   "plateau_i_05": {
+    "mean": -0.05997577619793814,
+    "rms": 0.10839761012327825,
+    "max_abs_dev": 0.3152900798264474,
+    "n": 13
+   },
+   "plateau_ii_periodic_pz": {
+    "mean": -0.05122060684482462,
+    "rms": 0.09036284512816253,
+    "max_abs_dev": 0.2357434896802712,
+    "n": 13
+   },
+   "plateau_ii_periodic_sp2": {
+    "mean": -0.03213349120048341,
+    "rms": 0.087693466799784,
+    "max_abs_dev": 0.15598132395541242,
+    "n": 18
+   },
+   "plateau_ii_box_pz": {
+    "mean": -0.11153612146499367,
+    "rms": 0.0,
+    "max_abs_dev": 0.0,
+    "n": 1
+   },
+   "mean3d_meV": 28.618369670300847,
+   "Lu": {
+    "P1_at_far_atom_meV": -122.32935833955594,
+    "far_atom_alignment_meV": -122.32935833955594,
+    "published_meV": -122.33,
+    "same_as_function": true,
+    "P1_05_at_far_atom_meV": -131.6433135878583,
+    "far_atom_alignment_05_meV": -131.6433135878583
+   },
+   "far_atom": {
+    "index1": 49,
+    "dist_axis_A": 9.965621638870608,
+    "dist_true_A": 6.205591091537014
+   },
+   "orbital_site_match_max_A": 8.54227032591496e-10,
+   "has_plateau": false,
+   "ok_i_ii": false,
+   "C_i_eV": -0.0575626062015234,
+   "C_ii_eV": -0.05122060684482462,
+   "C_retenu_eV": -0.12232935833955594,
+   "etiquette": "sans plateau : valeur Lu (1,0 Å)",
+   "elapsed_s": 3.5837862491607666
+  },
+  "6x6": {
+   "N": 6,
+   "N_cells": 36,
+   "r_max_A": 8.541961405113993,
+   "n_atoms": 71,
+   "plateau_i_10": {
+    "mean": -0.05050914517629934,
+    "rms": 0.02455991723470971,
+    "max_abs_dev": 0.050040885327099716,
+    "n": 26
+   },
+   "plateau_i_05": {
+    "mean": -0.052330788451159765,
+    "rms": 0.036064533342997376,
+    "max_abs_dev": 0.07516175788359028,
+    "n": 26
+   },
+   "plateau_ii_periodic_pz": {
+    "mean": -0.04855161439145942,
+    "rms": 0.024860292042265614,
+    "max_abs_dev": 0.0526505480124743,
+    "n": 26
+   },
+   "plateau_ii_periodic_sp2": {
+    "mean": -0.05051134468855541,
+    "rms": 0.018546735281629544,
+    "max_abs_dev": 0.03464432696363477,
+    "n": 27
+   },
+   "plateau_ii_box_pz": {
+    "mean": -0.04403743846007846,
+    "rms": 0.026109927679481153,
+    "max_abs_dev": 0.04348700271941927,
+    "n": 4
+   },
+   "mean3d_meV": 20.82580554610125,
+   "Lu": {
+    "P1_at_far_atom_meV": -98.61571051992257,
+    "far_atom_alignment_meV": -98.61571051991547,
+    "published_meV": -98.62,
+    "same_as_function": true,
+    "P1_05_at_far_atom_meV": -125.82857796208202,
+    "far_atom_alignment_05_meV": -125.82857796208202
+   },
+   "far_atom": {
+    "index1": 71,
+    "dist_axis_A": 12.812942106387187,
+    "dist_true_A": 7.3975555757151765
+   },
+   "orbital_site_match_max_A": 1.2813455277148218e-09,
+   "has_plateau": false,
+   "ok_i_ii": true,
+   "C_i_eV": -0.05050914517629934,
+   "C_ii_eV": -0.04855161439145942,
+   "C_retenu_eV": -0.09861571051991547,
+   "etiquette": "sans plateau : valeur Lu (1,0 Å)",
+   "elapsed_s": 11.482287883758545
+  },
+  "7x7": {
+   "N": 7,
+   "N_cells": 49,
+   "r_max_A": 9.96562163929771,
+   "n_atoms": 97,
+   "plateau_i_10": {
+    "mean": -0.02691429425434127,
+    "rms": 0.018525932765631827,
+    "max_abs_dev": 0.03557841616550111,
+    "n": 31
+   },
+   "plateau_i_05": {
+    "mean": -0.027811277608891724,
+    "rms": 0.01809758620994512,
+    "max_abs_dev": 0.03200125334804364,
+    "n": 31
+   },
+   "plateau_ii_periodic_pz": {
+    "mean": -0.025957205269664694,
+    "rms": 0.01783932959599664,
+    "max_abs_dev": 0.03336149523542329,
+    "n": 31
+   },
+   "plateau_ii_periodic_sp2": {
+    "mean": -0.022485258198941444,
+    "rms": 0.02214763790366723,
+    "max_abs_dev": 0.04230768052269693,
+    "n": 36
+   },
+   "plateau_ii_box_pz": {
+    "mean": -0.031163455146301665,
+    "rms": 0.01946733821974995,
+    "max_abs_dev": 0.03856259425289967,
+    "n": 5
+   },
+   "mean3d_meV": 14.553554054264506,
+   "Lu": {
+    "P1_at_far_atom_meV": -38.53881844096918,
+    "far_atom_alignment_meV": -38.538818440962075,
+    "published_meV": -38.54,
+    "same_as_function": true,
+    "P1_05_at_far_atom_meV": -37.92834888952257,
+    "far_atom_alignment_05_meV": -37.928348889494146
+   },
+   "far_atom": {
+    "index1": 97,
+    "dist_axis_A": 14.23660234356226,
+    "dist_true_A": 8.65978712922328
+   },
+   "orbital_site_match_max_A": 1.281344579365546e-09,
+   "has_plateau": false,
+   "ok_i_ii": true,
+   "C_i_eV": -0.02691429425434127,
+   "C_ii_eV": -0.025957205269664694,
+   "C_retenu_eV": -0.038538818440962075,
+   "etiquette": "sans plateau : valeur Lu (1,0 Å)",
+   "elapsed_s": 21.640040159225464
+  },
+  "8x8": {
+   "N": 8,
+   "N_cells": 64,
+   "r_max_A": 11.389281873485329,
+   "n_atoms": 127,
+   "plateau_i_10": {
+    "mean": -0.014410274533323343,
+    "rms": 0.018868375924447074,
+    "max_abs_dev": 0.05919450065487321,
+    "n": 49
+   },
+   "plateau_i_05": {
+    "mean": -0.014577441845911993,
+    "rms": 0.01988252491483274,
+    "max_abs_dev": 0.07604209810403624,
+    "n": 49
+   },
+   "plateau_ii_periodic_pz": {
+    "mean": -0.01362627689807639,
+    "rms": 0.018374833919004283,
+    "max_abs_dev": 0.05952038637561027,
+    "n": 48
+   },
+   "plateau_ii_periodic_sp2": {
+    "mean": -0.014074701547802694,
+    "rms": 0.019226088898271286,
+    "max_abs_dev": 0.04857786569761626,
+    "n": 78
+   },
+   "plateau_ii_box_pz": {
+    "mean": 0.0072226641653586,
+    "rms": 0.018579549066505854,
+    "max_abs_dev": 0.038687281152479526,
+    "n": 10
+   },
+   "mean3d_meV": 11.229852574144328,
+   "Lu": {
+    "P1_at_far_atom_meV": -22.965857127417166,
+    "far_atom_alignment_meV": -22.965857127417166,
+    "published_meV": -22.97,
+    "same_as_function": true,
+    "P1_05_at_far_atom_meV": -24.61997622916101,
+    "far_atom_alignment_05_meV": -24.6199762291468
+   },
+   "far_atom": {
+    "index1": 1,
+    "dist_axis_A": 17.08392281193303,
+    "dist_true_A": 9.863407434286902
+   },
+   "orbital_site_match_max_A": 1.2813284574457578e-09,
+   "has_plateau": false,
+   "ok_i_ii": true,
+   "C_i_eV": -0.014410274533323343,
+   "C_ii_eV": -0.01362627689807639,
+   "C_retenu_eV": -0.022965857127417166,
+   "etiquette": "sans plateau : valeur Lu (1,0 Å)",
+   "elapsed_s": 38.6090784072876
+  },
+  "9x9": {
+   "N": 9,
+   "N_cells": 81,
+   "r_max_A": 12.81294210767099,
+   "n_atoms": 161,
+   "plateau_i_10": {
+    "mean": -0.02514371002267805,
+    "rms": 0.009050935331807373,
+    "max_abs_dev": 0.024098466653886447,
+    "n": 53
+   },
+   "plateau_i_05": {
+    "mean": -0.025293795257683105,
+    "rms": 0.013687303671147767,
+    "max_abs_dev": 0.03685193914740931,
+    "n": 53
+   },
+   "plateau_ii_periodic_pz": {
+    "mean": -0.024711580504917296,
+    "rms": 0.009384186099558368,
+    "max_abs_dev": 0.02534817868974235,
+    "n": 53
+   },
+   "plateau_ii_periodic_sp2": {
+    "mean": -0.02476025359200189,
+    "rms": 0.008702105164684412,
+    "max_abs_dev": 0.01636387430231887,
+    "n": 78
+   },
+   "plateau_ii_box_pz": {
+    "mean": -0.0259930521324746,
+    "rms": 0.00978603330603445,
+    "max_abs_dev": 0.024062965982031736,
+    "n": 13
+   },
+   "mean3d_meV": 9.087407856163132,
+   "Lu": {
+    "P1_at_far_atom_meV": -24.65140127665677,
+    "far_atom_alignment_meV": -24.65140127665677,
+    "published_meV": -24.65,
+    "same_as_function": true,
+    "P1_05_at_far_atom_meV": -21.593938958474723,
+    "far_atom_alignment_05_meV": -21.593938958474723
+   },
+   "far_atom": {
+    "index1": 161,
+    "dist_axis_A": 18.507583046972616,
+    "dist_true_A": 11.119141883716845
+   },
+   "orbital_site_match_max_A": 1.7084479009173503e-09,
+   "has_plateau": false,
+   "ok_i_ii": true,
+   "C_i_eV": -0.02514371002267805,
+   "C_ii_eV": -0.024711580504917296,
+   "C_retenu_eV": -0.02465140127665677,
+   "etiquette": "sans plateau : valeur Lu (1,0 Å)",
+   "elapsed_s": 10.213209390640259
+  },
+  "12x12": {
+   "N": 12,
+   "N_cells": 144,
+   "r_max_A": 17.083922810227993,
+   "n_atoms": 287,
+   "plateau_i_10": {
+    "mean": -0.01868959310083182,
+    "rms": 0.005415014150579857,
+    "max_abs_dev": 0.01387667811067575,
+    "n": 95
+   },
+   "plateau_i_05": {
+    "mean": -0.019082201406594904,
+    "rms": 0.008281131336371665,
+    "max_abs_dev": 0.020618364338867864,
+    "n": 95
+   },
+   "plateau_ii_periodic_pz": {
+    "mean": -0.018377235215880087,
+    "rms": 0.005494263870497198,
+    "max_abs_dev": 0.014652441744533711,
+    "n": 94
+   },
+   "plateau_ii_periodic_sp2": {
+    "mean": -0.018710860328441555,
+    "rms": 0.004928582194257767,
+    "max_abs_dev": 0.009409261357144393,
+    "n": 126
+   },
+   "plateau_ii_box_pz": {
+    "mean": -0.018018730835207955,
+    "rms": 0.005398779168397503,
+    "max_abs_dev": 0.015002700097896941,
+    "n": 36
+   },
+   "mean3d_meV": 5.058902986926128,
+   "Lu": {
+    "P1_at_far_atom_meV": -29.235084249123133,
+    "far_atom_alignment_meV": -29.235084249116028,
+    "published_meV": -29.24,
+    "same_as_function": true,
+    "P1_05_at_far_atom_meV": -36.0660307293017,
+    "far_atom_alignment_05_meV": -36.06603072928749
+   },
+   "far_atom": {
+    "index1": 287,
+    "dist_axis_A": 25.625884217899532,
+    "dist_true_A": 14.795111151430351
+   },
+   "orbital_site_match_max_A": 2.1355474290762635e-09,
+   "has_plateau": false,
+   "ok_i_ii": true,
+   "C_i_eV": -0.01868959310083182,
+   "C_ii_eV": -0.018377235215880087,
+   "C_retenu_eV": -0.029235084249116028,
+   "etiquette": "sans plateau : valeur Lu (1,0 Å)",
+   "elapsed_s": 20.971058130264282
+  }
+ },
+ "rule": {
+  "plateau_frac": 0.75,
+  "plateau_tol_meV": 5.0,
+  "tol_i_ii_meV": 5.0
+ },
+ "head": "e4122ab"
+}

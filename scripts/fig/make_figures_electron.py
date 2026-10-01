@@ -2,7 +2,7 @@
 
   fig_kb_pseudo_C            parties locale et non locale du pseudo-potentiel ONCV du carbone (fig:KB ; redessinée le 2026-09-30) :
                              (a) V_PPL(r) contre −Z_val/r (Z_val = 4) ; (b) projecteurs de Kleinman–Bylander tels que le UPF les tabule
-                             (PP_BETA = r·β(r), nuls à l'origine, nuls au-delà de r_c ≈ 1,2–1,3 bohr). Données : C.upf de la maille (`--upf`).
+                             (PP_BETA = r·β(r), nuls à l'origine, nuls au-delà de r_c ≈ 1,2–1,3 bohr). Données : <electron_dir>/C.upf (copie du pseudo du `.save` de la maille ; `--upf`).
   fig_electron_convergence   tests de convergence SCF (ex `qe_pp/plot_convergence.py`, fonction plot_all, rapatriée le 2026-09-30) :
                              (a) E_cut à grille modérée, (b) grille k, (c) E_cut à grille optimale, (d) élargissement par type de smearing ;
                              ΔE = (E − E_réf)/N_at en meV/atome, seuil 0,1 meV/atome. Données : <electron_dir>/{ecut,kpoint,ecut_cross,smearing}.dat.
@@ -27,8 +27,6 @@ from graphene_raman.io.pseudo_io import read_upf
 from graphene_raman.plotting.palette import use_style, save, NAVY, ORANGE, SKY, GOLD, GREEN, PINK, REF, MUTED, INK
 
 ROOT = Path(__file__).resolve().parents[2]            # scripts/fig/ -> racine
-sys.path.insert(0, str(ROOT / "scripts" / "validation"))   # _paths.py (chemins des .save locaux, EDI_DATA)
-import _paths  # noqa: E402
 
 Z_VAL = 4.0                                            # électrons de valence du carbone (2s2 2p2)
 R_MAX = 6.0                                            # bohr, fenêtre tracée en (a)
@@ -173,7 +171,7 @@ FIGURES = {"kb_pseudo_C": fig_kb_pseudo_C, "electron_convergence": fig_electron_
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--only", default="", help="noms séparés par des virgules (sans le préfixe fig_)")
-    ap.add_argument("--upf", default=str(ROOT / _paths.upf()))
+    ap.add_argument("--upf", default=os.path.join(ELECTRON, "C.upf"))
     ap.add_argument("--outdir", default=str(ROOT / "figures" / "electron"))
     a = ap.parse_args()
     use_style()

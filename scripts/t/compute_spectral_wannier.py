@@ -18,12 +18,12 @@ import numpy as np
 
 from graphene_raman.io import qe_io, matrix_io, wannier_provenance
 from graphene_raman.config import load_production, dense_paths, matrices_dir, alignment_C
-MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule) ; produits dans results_dir
 from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
+from graphene_raman.wannier.wannier_hamiltonian import dirac_point
 from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 
-from graphene_raman.config import HA2EV   # noqa: E402
+MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule) ; produits dans results_dir
 
 
 def parse_args():
@@ -57,11 +57,11 @@ def main():
     else:
         uc = f"data/graphene/unit_cell/qe/defect_{args.size}.save"
         mfile = f"{MAT}/M_ed_{args.size}.npy"
-    # NORMALIZATION CONTRACT (validated by test_local_tmatrix_real.py to 1e-13):
-    #   * the LOCAL Wannier t-matrix needs the INTENSIVE real-space potential V_loc = <wR|V|w'R'>,
-    #     i.e. Mwr built from the unit-cell-normalized M_raw (bloch_norm='unit_cell');
+    # NORMALIZATION CONTRACT (golden test test_cluster_tmatrix_real.py, 1e-13):
+    #   * the cluster t-matrix needs the INTENSIVE real-space potential M_cluster = <wR|V|w'R'>,
+    #     i.e. Mwr built from the unit-cell-normalized M (bloch_norm='unit_cell', v2);
     #   * the DENSE Bloch T-matrix (single_defect.compute_T) needs M/N_cells ('supercell').
-    #   Feeding M_norm here silently suppresses V_loc by 1/N_cells (Born limit, Gamma ~ 0).
+    #   Feeding M/N_cells here silently suppresses M_cluster by 1/N_cells (Born limit, Gamma ~ 0).
     # UNITS: M files are in Hartree, the Wannier Hamiltonian (tb.dat) is in eV -> convert M ONCE here.
     M = matrix_io.load_M_checked(mfile, require_bloch_norm=matrix_io.UNIT_CELL, units=matrix_io.EV, require_normalization=matrix_io.M_NORM_V2)
     k_coarse = qe_io.get_k_red(uc)
@@ -77,35 +77,34 @@ def main():
     # interpolate coarse M -> Wannier real space once; locality guardrail (hard)
     # R10 : rotation -> double TF -> alignement M_W(R,R) - C_N sur la boîte N x N (approximation (i)) -> recentrage (defect_mwr)
     MP = _infer_mp_grid(k_coarse); N_sc = int(args.size.split("x")[0]); C_N = alignment_C(cfg, args.size)
-    d = lt.defect_mwr(M, U, U_dis, k_coarse, MP, n_box=N_sc, C_N=C_N)
+    d = ct.defect_mwr(M, U, U_dis, k_coarse, MP, n_box=N_sc, C_N=C_N)
     Mwr, R_mwr, R_d = d["Mwr"], d["Rn"], d["R_d"]                     # defect -> origin, applied ONCE
     print(f"[align] C_N = {C_N*1e3:+.4f} meV subtracted from M_W(R,R), {int(d['in_box'].sum())} cells of the {N_sc}x{N_sc} box (MP {MP})", flush=True)
     print(f"[recenter] defect site detected at R_d={R_d.tolist()} (supercell cell index); labels shifted so R0=0", flush=True)
-    dist, wt = lt.mwr_locality(Mwr, R_mwr)                            # guardrail a (raises if off-center)
+    dist, wt = ct.mwr_locality(Mwr, R_mwr)                            # guardrail a (raises if off-center)
     print("[locality] ||Mwr(R,R0)|| (eV) vs |R-R0|:", [(float(d), round(float(w), 4)) for d, w in zip(dist[:12], wt[:12])], "...", flush=True)
 
     grids = [int(x) for x in args.grids.split(",")]
     etas = [float(x) for x in args.etas.split(",")]
     rcuts = [float(x) for x in args.rcut.split(",")]
-    k_int = lt.mp_grid(args.nk_int, args.nk_int, 1)
+    k_int = ct.mp_grid(args.nk_int, args.nk_int, 1)
 
     # Dirac point from the Wannier bands (min pi/pi* gap on a fine grid); energies from _tb.dat are eV
-    _, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=ndegen)
-    gap = E_ref[:, 4] - E_ref[:, 3]
-    iD = int(np.argmin(gap)); E_dirac = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4]))
+    _, E_ref, _ = ct.Hwr_to_Hwk(Hwr, Rw, ct.mp_grid(90, 90, 1), ndegen=ndegen)
+    E_dirac, gap_D = dirac_point(E_ref)
     win = (E_dirac - float(cfg["e_window_eV"]), E_dirac + float(cfg["e_window_eV"]))
-    print(f"[dirac] E_Dirac = {E_dirac:.4f} eV (Wannier, min gap {gap[iD]*1e3:.1f} meV); window {win}", flush=True)
+    print(f"[dirac] E_Dirac = {E_dirac:.4f} eV (Wannier, min gap {gap_D*1e3:.1f} meV); window {win}", flush=True)
 
-    print(f"\n{'Rcut':>5} {'grid':>6} {'eta(eV)':>9} {'median G*Ncells(meV)':>22} {'resonance E-ED(eV)':>19}")
+    print(f"\n{'Rcut':>5} {'grid':>6} {'eta(eV)':>9} {'median |Gamma|(meV)':>22} {'resonance E-ED(eV)':>19}")
     results = {}
     for rc in rcuts:
-        Rloc = R_mwr[np.linalg.norm(R_mwr, axis=1) <= rc + 1e-9]
-        V_loc, _ = lt.extract_V_loc(Mwr, R_mwr, Rloc)                # guardrail b
+        R_cluster = ct.cluster_cells(R_mwr, rc)
+        M_cluster, _ = ct.cluster_potential(Mwr, R_mwr, R_cluster)                # guardrail b
         for N in grids:
-            k_out = lt.mp_grid(N, N, 1)
-            _, E_out, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=ndegen)
+            k_out = ct.mp_grid(N, N, 1)
+            _, E_out, _ = ct.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=ndegen)
             for eta in etas:
-                gamma = lt.scattering_rate_fast(Hwr, Rw, ndegen, V_loc, Rloc, k_out, eta,
+                gamma = ct.scattering_rate_fast(Hwr, Rw, ndegen, M_cluster, R_cluster, k_out, eta,
                                                 k_int=k_int, e_window=win, ne_per_eta=int(cfg["ne_per_eta"]))
                 med = float(np.nanmedian(np.abs(gamma))) * 1e3
                 # resonance: energy (rel. Dirac) of max on-shell rate within +-1.5 eV of Dirac
@@ -116,7 +115,7 @@ def main():
                 print(f"{rc:>5.0f} {N:>6} {eta:>9.3f} {med:>22.2f} {e_res:>19.3f}", flush=True)
 
     # joint plateau: region stable both as eta decreases AND grid refines (<=5%)
-    print("\n[Level 1] joint plateau = a (Rcut, grid, eta) box where median G*Ncells varies <= 5% "
+    print("\n[Level 1] joint plateau = a (Rcut, grid, eta) box where median |Gamma| varies <= 5% "
           "when eta halves AND grid doubles. Inspect the map above.")
     if args.out:
         np.savez(args.out, results=np.array([(rc, N, e, m, r) for (rc, N, e), (m, r) in results.items()]))

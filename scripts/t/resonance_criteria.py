@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 resonance_criteria.py -- definitive resonance criterion + sum rule + concentration-scaled rate (reference size, frozen config).
-  * |det[1 - V_loc g0(eps)]| and the eigenvalue of [1 - V_loc g0(eps)] closest to zero, on +-e_window around E_D:
+  * |det[1 - M_cluster g0(eps)]| and the eigenvalue of [1 - M_cluster g0(eps)] closest to zero, on +-e_window around E_D:
     local minima (energy rel. E_D, depth) of both.
   * Friedel sum rule: int delta_rho d(eps) over the FULL Wannier bandwidth, delta_rho = (1/pi) Im Tr[t dg0/deps],
     cross-checked with Lloyd's formula delta_rho = -(1/pi) d/deps Im ln det[1 - g0 V]; where the +-e_window excess is compensated.
@@ -13,13 +13,14 @@ import argparse, numpy as np
 from graphene_raman.io import qe_io, matrix_io, wannier_provenance
 from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
 from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.wannier.wannier_hamiltonian import dirac_point
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.config import load_production, dense_paths, results_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--c-compare", type=float, default=1e-3)
 ap.add_argument("--band-de", type=float, default=None, help="energy spacing for the full-band sum rule (default eta/4)")
-ap.add_argument("--blocks", default="full,pi,sigma", help="R6 (3.4): blocks of V_loc to analyse; 'full' = whole matrix, 'pi' = p_z Wannier functions, 'sigma' = sp2 (same g0, same grids)")
+ap.add_argument("--blocks", default="full,pi,sigma", help="R6 (3.4): blocks of M_cluster to analyse; 'full' = whole matrix, 'pi' = p_z Wannier functions, 'sigma' = sp2 (same g0, same grids)")
 ap.add_argument("--flag-eV", type=float, default=-0.81, help="R6 (3.4): report the sigma-block minimum closest to this energy (eV rel. E_D)"); a = ap.parse_args()
 cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(cfg, S)
 paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
@@ -30,16 +31,16 @@ k_coarse = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k_coarse)
 U, kU = read_w90_mat(paths["u"]); U = U[_match_kpoint_order(kU, k_coarse)]
 Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k_coarse)]
 Hwr, Rw, nd, _, _ = read_w90_tb(paths["tb"])
-C_N = alignment_C(cfg, S); d = lt.defect_mwr(M, U, Ud, k_coarse, MP, n_box=int(S.split("x")[0]), C_N=C_N)   # R10 : M_W(R,R) - C_N (approximation (i))
-Mwr, Rn = d["Mwr"], d["Rn"]; lt.mwr_locality(Mwr, Rn); del M, d
-Rloc = Rn[np.linalg.norm(Rn, axis=1) <= rc + 1e-9]; V, _ = lt.extract_V_loc(Mwr, Rn, Rloc); dim = V.shape[0]
-k_int = lt.mp_grid(nk_int, nk_int, 1); Hwk_int, E_int, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)
-_, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=nd)
-gap = E_ref[:, 4] - E_ref[:, 3]; iD = int(np.argmin(gap)); E_D = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4]))
+C_N = alignment_C(cfg, S); d = ct.defect_mwr(M, U, Ud, k_coarse, MP, n_box=int(S.split("x")[0]), C_N=C_N)   # R10 : M_W(R,R) - C_N (approximation (i))
+Mwr, Rn = d["Mwr"], d["Rn"]; ct.mwr_locality(Mwr, Rn); del M, d
+R_cluster = ct.cluster_cells(Rn, rc); V, _ = ct.cluster_potential(Mwr, Rn, R_cluster); dim = V.shape[0]
+k_int = ct.mp_grid(nk_int, nk_int, 1); Hwk_int, E_int, _ = ct.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)
+_, E_ref, _ = ct.Hwr_to_Hwk(Hwr, Rw, ct.mp_grid(90, 90, 1), ndegen=nd)
+E_D, _ = dirac_point(E_ref)
 print(f"[setup] {S}: C_N = {C_N*1e3:+.4f} meV (config alignment), R_cut={rc} dim={dim}, E_D={E_D:.4f} eV, Wannier bands span [{E_int.min():.2f}, {E_int.max():.2f}] eV", flush=True)
 I = np.eye(dim)
-# R6 (3.4): blocks of V_loc by Wannier character (projections C1:sp2;pz C2:pz -> w = 0,1,2 sigma, 3,4 pi ; flat index L*nw + w)
-nw = Hwr.shape[1]; nL = len(Rloc)
+# R6 (3.4): blocks of M_cluster by Wannier character (projections C1:sp2;pz C2:pz -> w = 0,1,2 sigma, 3,4 pi ; flat index L*nw + w)
+nw = Hwr.shape[1]; nL = len(R_cluster)
 BLK = {"full": np.arange(dim), "pi": np.array([L * nw + w for L in range(nL) for w in (3, 4)]), "sigma": np.array([L * nw + w for L in range(nL) for w in (0, 1, 2)])}
 blocks = [b for b in a.blocks.split(",") if b in BLK]
 def local_minima(y, x, n=6):
@@ -48,7 +49,7 @@ def local_minima(y, x, n=6):
 
 # --- 1. det / eigenvalue criterion on +-ew (per block: V and g0 restricted to the block)
 de = eta / npe; eg = np.arange(E_D - ew, E_D + ew + de / 2, de)
-g0 = lt.local_green_batch(Hwk_int, k_int, Rloc, eg, eta)
+g0 = ct.cluster_green_batch(Hwk_int, k_int, R_cluster, eg, eta)
 crit = {}
 for b in blocks:
     ix = BLK[b]; Vb = V[np.ix_(ix, ix)]; g0b = g0[:, ix][:, :, ix]; Ib = np.eye(len(ix))
@@ -77,7 +78,7 @@ eb = np.arange(lo, hi + deb / 2, deb); nb_ = len(eb)
 DR = {b: np.zeros(nb_) for b in blocks}; PH = {b: np.zeros(nb_) for b in blocks}
 print(f"[sum rule] {nb_} energies on [{lo:.2f}, {hi:.2f}] eV, spacing {deb*1e3:.1f} meV; blocks {blocks}", flush=True)
 for s0 in range(0, nb_, 400):
-    ee = eb[s0:s0 + 400]; gb = lt.local_green_batch(Hwk_int, k_int, Rloc, ee, eta); gp = lt.local_green_batch(Hwk_int, k_int, Rloc, ee, eta, deriv=True)
+    ee = eb[s0:s0 + 400]; gb = ct.cluster_green_batch(Hwk_int, k_int, R_cluster, ee, eta); gp = ct.cluster_green_batch(Hwk_int, k_int, R_cluster, ee, eta, deriv=True)
     for b in blocks:
         ix = BLK[b]; Vb = V[np.ix_(ix, ix)]; Ib = np.eye(len(ix))
         for j in range(len(ee)):

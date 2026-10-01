@@ -14,8 +14,8 @@ import argparse, csv, os, numpy as np
 from graphene_raman.io import qe_io, matrix_io
 from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
 from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order, ws_images, ws_phase
-from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk, dirac_point
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.config import load_production, dense_paths, results_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default="9x9"); ap.add_argument("--nf", type=int, default=60); ap.add_argument("--rcuts", default="0,1,2,3"); a = ap.parse_args()
@@ -24,15 +24,15 @@ M = matrix_io.load_M_checked(dp["mfile"], require_bloch_norm=matrix_io.UNIT_CELL
 k = qe_io.get_k_red(dp["uc"]); MP = _infer_mp_grid(k); k = np.round(k * np.asarray(MP)) / np.asarray(MP)   # exact MP k (XML rounding)
 U, kU = read_w90_mat(f"{dp['wdir']}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]; Ud, kUd = read_w90_mat(f"{dp['wdir']}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
 Hwr, Rw, nd, _, _ = read_w90_tb(f"{dp['wdir']}/wannier_tb.dat")
-C_N = alignment_C(cfg, S); d = lt.defect_mwr(M, U, Ud, k, MP, n_box=int(S.split("x")[0]), C_N=C_N); del M    # R10 : approximation (i)
-Mwr, Rn, Rd = d["Mwr"], d["Rn"], d["R_d"]; del d; lt.mwr_locality(Mwr, Rn)
+C_N = alignment_C(cfg, S); d = ct.defect_mwr(M, U, Ud, k, MP, n_box=int(S.split("x")[0]), C_N=C_N); del M    # R10 : approximation (i)
+Mwr, Rn, Rd = d["Mwr"], d["Rn"], d["R_d"]; del d; ct.mwr_locality(Mwr, Rn)
 nw, nR = Mwr.shape[0], Mwr.shape[1]; print(f"[{S}] Mwr {Mwr.shape}, R grid {MP}, defect at R_d={Rd.tolist()} (recentred); C_N = {C_N*1e3:+.4f} meV (config alignment)", flush=True)
 A_uc, _ = qe_io.get_A_volume(dp["uc"]); ws = ws_images(Rn, np.zeros(3, int), MP, A_uc)                # R10 (P-c4) : images de Wigner-Seitz, cellule en bohr
 print(f"[{S}] Wigner-Seitz: {int((ws['n_tie'] > 1).sum())} labels with tied images, {len(ws['w'])} images for {nR} labels", flush=True)
-kf = lt.mp_grid(a.nf, a.nf, 1); nk = len(kf)
+kf = ct.mp_grid(a.nf, a.nf, 1); nk = len(kf)
 # pi/pi* eigenvectors of H_W(k) on the fine grid (same gauge for reference and truncations)
 _, Ef, Uf = Hwr_to_Hwk(Hwr, Rw, kf, ndegen=nd)                         # Uf (nk, nw, nw), bands sorted by energy
-gap = Ef[:, 4] - Ef[:, 3]; iD = int(np.argmin(gap)); ED = 0.5 * (Ef[iD, 3] + Ef[iD, 4]); print(f"[{S}] E_D (fine grid) = {ED:.4f} eV", flush=True)
+ED, _ = dirac_point(Ef); print(f"[{S}] E_D (fine grid) = {ED:.4f} eV", flush=True)
 Upi = np.ascontiguousarray(Uf[:, :, 3:5])                             # (nk, nw, 2)
 # Fourier matrices: Mwk[w k', w' k] = sum_{R,R'} e^{-2pi i k'.R} Mwr[w R, w' R'] e^{+2pi i k.R'}   (Mwr_to_Mwk convention)
 Pm = ws_phase(kf, ws, nR, -1)                                          # (nk, nR): conj side for k' (Wigner-Seitz images, R10)

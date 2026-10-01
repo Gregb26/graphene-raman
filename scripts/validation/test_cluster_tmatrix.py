@@ -1,13 +1,13 @@
 """
-Golden test (synthetic, no Wannier files needed): the local t-matrix scattering rate must reproduce
+Golden test (synthetic, no Wannier files needed): the cluster t-matrix scattering rate must reproduce
 the dense single_defect.compute_T rate on the SAME coarse grid with full R_cut, to noise. Also checks
-positivity (Gamma>=0) and Hermiticity of V_loc. Blocking before production.
+positivity (Gamma>=0) and Hermiticity of M_cluster. Blocking before production.
 """
 import numpy as np
 
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.defects.many_body.single_defect import compute_T
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 
 
 def random_H(nw, seed=0):
@@ -29,20 +29,20 @@ def random_H(nw, seed=0):
 def main():
     nw, Nc, eta = 3, 5, 0.10
     Hwr, Rw, ndeg = random_H(nw)
-    R_local = np.array([[0, 0, 0]])                # on-site defect, full support -> exact
+    R_cluster = np.array([[0, 0, 0]])                # on-site defect, full support -> exact
     rng = np.random.default_rng(1)
     v = rng.normal(size=(nw, nw)) + 1j * rng.normal(size=(nw, nw))
-    V_loc = 0.5 * (v + v.conj().T)                 # (nw, nw) Hermitian, at R0=0
-    assert np.allclose(V_loc, V_loc.conj().T, atol=1e-12), "V_loc not Hermitian"
+    M_cluster = 0.5 * (v + v.conj().T)                 # (nw, nw) Hermitian, at R0=0
+    assert np.allclose(M_cluster, M_cluster.conj().T, atol=1e-12), "M_cluster not Hermitian"
 
-    kc = lt.mp_grid(Nc, Nc, 1)                      # coarse grid = internal = output (golden)
+    kc = ct.mp_grid(Nc, Nc, 1)                      # coarse grid = internal = output (golden)
     _, Ec, Uc = Hwr_to_Hwk(Hwr, Rw, kc, ndegen=ndeg)   # (Nk,nw),(Nk,nw,nw)
     Nk = len(kc)
 
-    # dense reference M_bk[n,k,n',k'] = (1/Nk) phi_nk^dag V_loc phi_n'k'
-    ph = lt._phase(kc, R_local)                     # (Nk, 1)
-    phi = np.einsum("kL,kwn->knLw", ph, Uc, optimize=True).reshape(Nk, nw, len(R_local) * nw)
-    M_bk = np.einsum("kna,ab,KMb->nkMK", np.conj(phi), V_loc, phi, optimize=True) / Nk
+    # dense reference M_bk[n,k,n',k'] = (1/Nk) phi_nk^dag M_cluster phi_n'k'
+    ph = ct._phase(kc, R_cluster)                     # (Nk, 1)
+    phi = np.einsum("kL,kwn->knLw", ph, Uc, optimize=True).reshape(Nk, nw, len(R_cluster) * nw)
+    M_bk = np.einsum("kna,ab,KMb->nkMK", np.conj(phi), M_cluster, phi, optimize=True) / Nk
 
     # dense on-shell Gamma via compute_T (eigs = Ec.T is (nw,Nk))
     eigs = Ec.T
@@ -54,7 +54,7 @@ def main():
     Gd_perdef = Gd * Nk                              # dense is ~1/Nk; per-defect = *Nk
 
     # local scheme (same grids)
-    Gl = lt.scattering_rate(Hwr, Rw, ndeg, V_loc, R_local, kc, eta, k_int=kc, perdef=True)
+    Gl = ct.scattering_rate(Hwr, Rw, ndeg, M_cluster, R_cluster, kc, eta, k_int=kc)
 
     err = np.max(np.abs(Gl - Gd_perdef))
     rel = err / max(1e-30, np.max(np.abs(Gd_perdef)))

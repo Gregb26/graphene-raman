@@ -13,6 +13,7 @@ Usage: python scripts/epw/epw_validate.py --root <grid dir> --tag 24k24q [--band
 """
 import argparse, os, re, numpy as np
 from graphene_raman.config import load_production, epw_dir
+from graphene_raman.wannier.wannier_hamiltonian import dirac_point
 EPW = epw_dir(load_production(verbose=False))          # results/epw (config, ménage 2026-09-30)
 from graphene_raman.config import HA2EV   # noqa: E402
 CM2MEV = 1.0 / 8.06554
@@ -63,7 +64,7 @@ def path_coord_epw(kptfile):
 # ---------------- bands
 if os.path.exists(P(a.bands)) and os.path.exists(P(a.epw_band)):
     s_d, E_d = read_bandsx(P(a.bands)); s_e, nkf = path_coord_epw(P(a.epw_kpt)); E_e = read_epw_plot(P(a.epw_band), nkf); nw = E_e.shape[1]
-    gap = E_d[:, 4] - E_d[:, 3]; iD = int(np.argmin(gap)); ED_d = 0.5 * (E_d[iD, 3] + E_d[iD, 4])
+    ED_d, _ = dirac_point(E_d)
     Epi = np.interp(s_d, s_e, E_e[:, 3]); Eps = np.interp(s_d, s_e, E_e[:, 4]); iDe = int(np.argmin(Eps - Epi)); ED_e = 0.5 * (Epi[iDe] + Eps[iDe]); shift = ED_e - ED_d
     print(f"[bands] E_D bands.x {ED_d:.4f} eV, EPW {ED_e:.4f} eV, reference offset {shift:+.4f} eV removed; DFT nk {len(s_d)}, EPW nkf {nkf}, nw {nw}")
     rows = []

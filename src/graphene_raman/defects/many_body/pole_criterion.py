@@ -1,7 +1,7 @@
 """
 pole_criterion.py
-    Pole criterion of the local t-matrix, as a function (R4, 2026-09-25). The production script
-    scripts/t/resonance_criteria.py evaluates, inline (lines 39-54), for A(e) = 1 - V_loc g0(e):
+    Pole criterion of the cluster t-matrix, as a function (R4, 2026-09-25). The production script
+    scripts/t/resonance_criteria.py evaluates, inline (lines 39-54), for A(e) = 1 - M_cluster g0(e):
         |det A| relative to its maximum on the window, the eigenvalue of A closest to zero, local minima.
     This module reproduces those lines (same products, same numpy calls) for an arbitrary sub-block of
     indices (parity blocks), adds the right eigenvector of the smallest eigenvalue, sign changes of Re lambda
@@ -35,14 +35,14 @@ def _batched(fn, A, workers=None):
 
 
 def block_indices(nL, nw, wfs):
-    """Flat indices L*nw + w (the local_tmatrix layout) of the Wannier functions `wfs` on all nL cells."""
+    """Flat indices L*nw + w (the cluster_tmatrix layout) of the Wannier functions `wfs` on all nL cells."""
     wfs = list(wfs)
     return np.array([L * nw + w for L in range(nL) for w in wfs], dtype=int)
 
 
-def det_eig_criterion(V, g0, idx=None, vectors=True):
+def det_eig_criterion(M_cluster, g0, idx=None, vectors=True):
     """
-    For each energy j: A_j = I - V_b @ g0_j,b with V_b = V[idx][:, idx], g0_j,b = g0[j][idx][:, idx]
+    For each energy j: A_j = I - M_b @ g0_j,b with M_b = M_cluster[idx][:, idx], g0_j,b = g0[j][idx][:, idx]
     (resonance_criteria.py l. 41: A = I - V g0). Returns dict:
         logabs      (nE,)   log|det A|            (slogdet)
         logdet_rel  (nE,)   logabs - max(logabs) over the energies given
@@ -53,12 +53,12 @@ def det_eig_criterion(V, g0, idx=None, vectors=True):
     """
     if idx is not None:
         idx = np.asarray(idx, int)
-        Vb = V[np.ix_(idx, idx)]; gb = g0[:, idx][:, :, idx]
+        Mb = M_cluster[np.ix_(idx, idx)]; gb = g0[:, idx][:, :, idx]
     else:
-        Vb = V; gb = g0
-    n = Vb.shape[0]; nE = gb.shape[0]
+        Mb = M_cluster; gb = g0
+    n = Mb.shape[0]; nE = gb.shape[0]
     I = np.eye(n)
-    A = I[None] - Vb[None] @ gb
+    A = I[None] - Mb[None] @ gb
     sign, logabs = _batched(np.linalg.slogdet, A)
     if vectors:
         lam, vec = _batched(np.linalg.eig, A)
@@ -74,14 +74,14 @@ def det_eig_criterion(V, g0, idx=None, vectors=True):
     return out
 
 
-def nontrivial_eigenvalues(V, g0, support):
+def nontrivial_eigenvalues(M_cluster, g0, support):
     """
-    Eigenvalues of A = I - V g0 that differ from 1 when V is supported on the index set `support`:
-    they are the eigenvalues of I_S - V_SS g0_SS (the other ones are exactly 1). Returns (nE, |S|) complex.
+    Eigenvalues of A = I - M g0 that differ from 1 when M is supported on the index set `support`:
+    they are the eigenvalues of I_S - M_SS g0_SS (the other ones are exactly 1). Returns (nE, |S|) complex.
     """
     S = np.asarray(support, int)
-    Vs = V[np.ix_(S, S)]; gs = g0[:, S][:, :, S]
-    A = np.eye(len(S))[None] - Vs[None] @ gs
+    Ms = M_cluster[np.ix_(S, S)]; gs = g0[:, S][:, :, S]
+    A = np.eye(len(S))[None] - Ms[None] @ gs
     return _batched(np.linalg.eigvals, A)
 
 
@@ -113,12 +113,12 @@ def eigvec_weights(vec, groups):
     return {g: float(p[np.asarray(ix, int)].sum()) for g, ix in groups.items()}
 
 
-def local_t_cache(V, g0):
-    """t_j = V [1 - g0_j V]^{-1} for every energy (local_tmatrix.local_t, batched over energies)."""
-    n = V.shape[0]; I = np.eye(n)
-    A = I[None] - g0 @ V[None]
+def cluster_t_cache(M_cluster, g0):
+    """t_j = M [1 - g0_j M]^{-1} for every energy (cluster_tmatrix.cluster_t, batched over energies)."""
+    n = M_cluster.shape[0]; I = np.eye(n)
+    A = I[None] - g0 @ M_cluster[None]
     X = _batched(lambda a: np.linalg.solve(a, np.broadcast_to(I, a.shape).copy()), A)
-    return V[None] @ X
+    return M_cluster[None] @ X
 
 
 def tbar_pair(t_cache, phi_pair):

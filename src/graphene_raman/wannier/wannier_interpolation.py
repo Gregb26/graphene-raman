@@ -8,65 +8,64 @@ import numpy as np
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
 
+def _rotate(M, X):
+    """
+    Gauge rotation at both k-points, M'(k', k) = X(k')^dag M(k', k) X(k).
+    Inputs:
+        M: (nb, nk, nb, nk) complex, index [bra band, k', ket band, k].
+        X: (nk, nb, nw) complex, rotation matrix at each k.
+    Returns:
+        (nw, nk, nw, nk) complex, contiguous.
+    """
+    X_dag = X.transpose(0, 2, 1).conj()
+
+    M_ = X_dag[:, None, ...] @ M.transpose(1, 3, 0, 2) @ X[None, ...]
+
+    return np.ascontiguousarray(M_.transpose(2, 0, 3, 1))
+    
+
 def Mbk_to_Mwk(Mbk, U, U_dis=None):
     """
-    Rotates an object Mbk in Bloch gauge into Wannier gauge using the Wannier gauge matrix U (or V=U_dis @ U in the case of entangled bands)
+    Bloch gauge -> Wannier gauge, Mwk(k', k) = V(k')^dag Mbk(k', k) V(k) with V = U_dis U (or U alone); checks that
+    V V^dag is a Hermitian projector of rank nw.
     Inputs:
-        Mbk: (nb, nk, nb, nk) array of complex
-            Matrix in Bloch gauge to rotate. This can be e.g. a Hamiltonian or a scattering matrix. nk is the number of kpoints, nb is the number
-            of Bloch bands and nw is the number of Wannier functions.
-        U: (nk, nb, nw) or (nk, nw, nw) array of complex
-            Wannier gauge matrix. First shape if no entangled bands (U_dis is None). Second shape if entangled bands (U_dis is not None).
-        U_dis: (nk, nb, nw) array of complex
-            Disentanglement matrix if the number of Wannier functions is less than the number of Bloch bands.
+        Mbk:   (nb, nk, nb, nk) complex, index [bra band, k', ket band, k].
+        U:     (nk, nw, nw) complex with U_dis, or (nk, nb, nw) without, Wannier90 gauge matrix.
+        U_dis: (nk, nb, nw) complex or None, disentanglement matrix.
     Returns:
-        Mwk: (nw, nk, nw, nk)
-            Object in the Wannier gauge: Mwk = V^dag Mbk V
+        Mwk: (nw, nk, nw, nk) complex.
     """
 
-    nk, nw, _ = U.shape
     # Entangled case, rotation matrix is V = U_dis @ U
     if U_dis is not None:
-        nb = U_dis.shape[1]
-        V = np.zeros((nk, nb, nw), dtype=complex)
-        for ik in range(nk):
 
-            V[ik] = U_dis[ik] @ U[ik] # (nk, nb, nw)
+        V = U_dis @ U # (nk, nb, nw)
 
-            # testing
-            with np.errstate(all='ignore'):
-                P = V[ik] @ V[ik].conj().T
-                assert np.allclose(P, P.conj().T, atol=1e-10)     
-                assert np.allclose(P @ P, P, atol=1e-8)           
-                assert np.allclose(np.trace(P), V.shape[-1], 1e-10)
+        # V must be an isometry: P = V V^dag is a Hermitian projector of rank nw
+        P = V @ V.conj().transpose(0, 2, 1) # (nk, nb, nb)
+
+        assert np.allclose(P, P.conj().transpose(0, 2, 1), atol=1e-10)     
+        assert np.allclose(P @ P, P, atol=1e-8)           
+        assert np.allclose(np.trace(P, axis1=1, axis2=2), V.shape[-1], 1e-10)
 
     else:
-        V = U # (nk, nb, nw) with nw = nb
+        V = U # (nk, nb, nw) 
     
-    # Rotate Mb from Bloch gauge to Wannier gauge Mw
-    Mwk = np.zeros((nw, nk, nw, nk), dtype=complex)
-    for ik in range(nk):
-        Vk_h = V[ik].conj().T # Hermitian conjugate
-        for ikp in range(nk):
+    Mwk = _rotate(Mbk, V)
 
-            Mwk[:, ik, :, ikp] = Vk_h @ Mbk[:, ik, :, ikp] @ V[ikp] # (nw, nk, nw, nk)
-    
     return Mwk
 
 def Mwk_to_Mwr(Mwk, k_red, MP_grid):
     """
-    Transforms the object Mwk from reciprocal space to real space using a double Fourier transform.
+    Double Fourier transform k -> R on a full MP grid, Mwr(R, R') = (1/nk^2) sum_{k', k} e^{+2 pi i k'.R} Mwk(k', k)
+    e^{-2 pi i k.R'}, on the box arange(N) - N//2 per axis (labels defined modulo N; no ndegen, no Wigner-Seitz).
     Inputs:
-        Mwk: (nw, nk, nw, nk) array of complex
-            Object in reciprocal space to transform to real space, nk is the number of kpoints and nw the number of Wannier functions. This is e.g.
-            a scattering matrix in reciprocal space in the Wannier gauge.
-        MP_grid: tuple of ints
-            Monkhorst-Pack grid used to define the kpoint grid. Assuming no symmetry reduction has been applied! This is important! 
-    Returns
-        Mwr: (nw, nr, nw, nr) array of complex
-            Double Fourier transform of Mwk; nr is the number of R vectors, inferred from the Monkhorst-Pack grid.
-        R:  (nr, 3) array of ints
-            R vectors in real space used to compute the double FT. Is dual to the kpoint grid.
+        Mwk:     (nw, nk, nw, nk) complex, Wannier gauge.
+        k_red:   (nk, 3) floats, the full unshifted MP grid (reduced coordinates), any order.
+        MP_grid: (3,) ints, (N1, N2, N3) with N1 N2 N3 = nk (no symmetry reduction).
+    Returns:
+        Mwr: (nw, nR, nw, nR) complex, nR = nk.
+        R:   (nR, 3) ints, the R labels ('ij' order).
     """
 
     nk = Mwk.shape[1]
@@ -80,64 +79,42 @@ def Mwk_to_Mwr(Mwk, k_red, MP_grid):
     R = np.stack((rr1, rr2, rr3), axis=-1).reshape(-1, 3)
 
     # Compute phase
-    phase_kp = np.exp(2j*np.pi * (k_red @ R.T)) # (nk, nr)
-    phase_k = phase_kp.conj() # (nk, nr)
+    bra = np.exp(2j*np.pi * (k_red @ R.T)) # (nk, nr)
+    ket = bra.conj() # (nk, nr)
 
-    # Double sum over k and k'
-    Mwr = np.einsum('kr, nkNK, KR -> nrNR', phase_kp, Mwk, phase_k, optimize=True)  / nk **2 # (nw, nr, nk, nr)
+    # M is (nw', nk', nw, nk), want (nr', nk') @ (nw', nw, nk', nk) @ (nk, nr)
+    Mwr = bra.T @ Mwk.transpose(0, 2, 1, 3) @ ket / (nk**2) # (nw', nw, nr', nr)
 
-    return Mwr, R
+    # want (nw', nr', nw, nr)
+    return np.ascontiguousarray(Mwr.transpose(0, 2, 1, 3)), R
 
 def Mwr_to_Mwk(Mwr, R, k, ws=None):
     """
-    Transforms the object in Mwr in real space in Wannier gauge to Mwk in reciprocal space in Wannier gauge. Here, the kpoint grid k can be any arbitrarily dense grid hence this function can be used to interpolate Mwk on a finer grid.
+    Inverse transform R -> k at any k-points (square case of Mwr_to_Mwk_pairs), Mwk(k', k) = sum_{R, R'} e^{-2 pi i k'.R}
+    Mwr(R, R') e^{+2 pi i k.R'} (no 1/nk^2).
     Inputs:
-        Mwr: (nw, nr, nw, nr) array of complex
-            Object in real space in Wannier gauge to transform to reciprocal space in Wannier gauge. nr is the number of R vectors in real space and nw is the number of Wannier functions.
-        R: (nr, 3) array of ints
-            Real space lattice vectors in reduced coordinates for which Mwr is defined.
-        k: (nk, 3) array of floats
-            k vectors in reduced coordinates for which to transform Mwr.
-        ws: dict or None
-            Wigner-Seitz images of R (ws_images); if given, exp(-/+ 2 pi i k.R) -> ws_phase(k, ws, nR, -/+1), for off-grid k.
+        Mwr: (nw, nR, nw, nR) complex.
+        R:   (nR, 3) ints, labels of Mwr.
+        k:   (nk, 3) floats, k-points (reduced coordinates), on or off the MP grid.
+        ws:  dict or None, Wigner-Seitz images of R (ws_images), for off-grid k.
     Returns:
-        Mwk: (nw, nk, nw, nk) array of complex
-            Object in reciprocal space in Wannier gauge.
+        Mwk: (nw, nk, nw, nk) complex.
     """
 
-    nR = R.shape[0]
-
-    # precompute phases
-    if ws is not None:
-        assert len(ws["dist"]) == nR, "ws was built on other R labels than Mwr (len(ws['dist']) != len(R))"
-        bra = ws_phase(k, ws, nR, -1)
-        ket = ws_phase(k, ws, nR, +1)
-
-    else:
-        bra = np.exp(-2j*np.pi * (k @ R.T)) # (nk, nr)
-        ket = bra.conj() # (nk, nr)
-
-    # sum over R 
-    Mwk = np.einsum("kr, wrWR, KR -> wkWK", bra, Mwr, ket, optimize=True)  
-
-    return Mwk
+    return Mwr_to_Mwk_pairs(Mwr, R, k, k, ws=ws)
 
 def Mwr_to_Mwk_pairs(Mwr, R, k_bra, k_ket, ws=None):
     """
-    Rectangular version of Mwr_to_Mwk (R9, 2026-09-28): the bra and ket k-points are two independent lists, so a few fixed k
-    against a large map of k' costs O(n' + n) phases instead of the (nw*nk)^2 square array.
-
-        Mwk[w, k', W, k] = sum_{R, R'} exp(-2 pi i k'.R) Mwr[w, R, W, R'] exp(+2 pi i k.R')
-
-    (same convention as Mwr_to_Mwk, which is recovered for k_bra = k_ket = k).
+    Mwr_to_Mwk with independent bra and ket k-lists, Mwk[w, k', W, k] = sum_{R, R'} e^{-2 pi i k'.R} Mwr[w, R, W, R']
+    e^{+2 pi i k.R'}.
     Inputs:
-        Mwr: (nw, nr, nw, nr) complex, Wannier-gauge object in real space (Mwk_to_Mwr).
-        R: (nr, 3) ints, the R vectors of Mwr (reduced coordinates).
-        k_bra: (nk', 3) floats, bra k-points k' (reduced coordinates).
-        k_ket: (nk, 3) floats, ket k-points k (reduced coordinates).
-        ws: dict or None, Wigner-Seitz images of R (ws_images); if given, the phases are ws_phase(k_bra, ws, nR, -1) and ws_phase(k_ket, ws, nR, +1).
+        Mwr:   (nw, nR, nw, nR) complex.
+        R:     (nR, 3) ints, labels of Mwr.
+        k_bra: (nk', 3) floats, bra k-points k'.
+        k_ket: (nk, 3) floats, ket k-points k.
+        ws:    dict or None, Wigner-Seitz images of R (ws_images); phases ws_phase(k, ws, nR, -/+1).
     Returns:
-        Mwk: (nw, nk', nw, nk) complex, Wannier gauge, index [w, k', W, k] = [bra WF, k', ket WF, k].
+        Mwk: (nw, nk', nw, nk) complex.
     """
 
     R = np.asarray(R, dtype=float)
@@ -152,34 +129,30 @@ def Mwr_to_Mwk_pairs(Mwr, R, k_bra, k_ket, ws=None):
         bra = np.exp(-2j*np.pi * (np.asarray(k_bra, dtype=float) @ R.T)) # (nk', nr)
         ket = np.exp(+2j*np.pi * (np.asarray(k_ket, dtype=float) @ R.T)) # (nk, nr)
 
-    # sum over R (bra side) and R' (ket side)
-    return np.einsum("kr, wrWR, KR -> wkWK", bra, Mwr, ket, optimize=True)
+    # M is (nw', nr', nw, nr), want (nk', nr') @ (nw', nw ,nr', nr) @ (nr, nk)
+    Mwk = bra @ Mwr.transpose(0, 2, 1, 3) @ ket.T # (nw', nw, nk', nk)
+
+    # want (nw', nk', nw, nk)
+    return np.ascontiguousarray(Mwk.transpose(0, 2, 1, 3))
 
 
 def Mwk_to_Mbk(Mwk, Hwr, Rw, k, ndegen=None):
     """
-    Transforms the object Mwk in reciprocal space in Wannier gauge to Bloch gauge using the Wannier Hamiltonian.
+    Wannier gauge -> smooth Bloch gauge (eigenbasis of the interpolated H(k)), Mbk(k', k) = U(k')^dag Mwk(k', k) U(k).
     Inputs:
-        Mwk: (nw, nk, nw, nk) array of complex
-            Object in reciprocal space in Wannier gauge to transform to Bloch gauge. nw is the number of Wannier functions and nk is the number of kpoints.
-        Hwr: (nrpts, nw, nw) array of complex
-            Hamtilontian in Wannier (real space) basis. This Hamiltonian is computed on the kpoint grid k via a Fourier transformed and diagonalized to obtain the unitary gauge rotation matrix U. nrw is the number of R vectors used internally by Wannier90 to compute the Hamiltonian in real space.
-        Rw: (nrpts, 3) array of ints:
-            Real space lattice vectors used internally by Wannier90.
-        k: (nk, 3) array of floats
-            kpoint grid on which to transform Hwr. Can arbitrarily dense and must match the one on which Mwk is defined.
-        ndegen: (nrpts,) array of ints, optional
-            Wigner-Seitz degeneracies passed through to Hwr_to_Hwk (H(k)=sum_R e^{ik.R} H(R)/ndegen(R)).
+        Mwk:    (nw, nk, nw, nk) complex.
+        Hwr:    (nRw, nw, nw) complex, H(R) of the Wannier model (eV).
+        Rw:     (nRw, 3) ints, its R vectors.
+        k:      (nk, 3) floats, the k-points of Mwk.
+        ndegen: (nRw,) ints or None, Wigner-Seitz degeneracies.
     Returns:
-        Mbk: (nw, nk, nw, nk) array of complex
-            Object transformed to the smooth Bloch gauge (eigenbasis of the interpolated Hamiltonian).
+        Mbk: (nw, nk, nw, nk) complex, band basis.
     """
 
     # compute rotation matrix from Wannier Hamiltonian
     _, _, Uwk = Hwr_to_Hwk(Hwr, Rw, k, ndegen=ndegen) # (nk, nw, nw)
 
-    # Rotate Mwk to Bloch gauge: per-k unitary similarity Mbk[:,k,:,K] = Uwk[k]^dag Mwk[:,k,:,K] Uwk[K]
-    Mbk = np.einsum('kwb, wkWK, KWB -> bkBK', Uwk.conj(), Mwk, Uwk, optimize=True)
+    Mbk = _rotate(Mwk, Uwk)
 
     return Mbk
 

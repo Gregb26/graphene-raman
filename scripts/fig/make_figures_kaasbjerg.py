@@ -36,7 +36,7 @@ C_LIST = (0.001, 0.01)                   # c_i, défauts par maille
 GRID_SENS, NK_MAIN = 600, 900
 P0 = 1200                                # ρ₀ des figures : 1 200², η 15 meV (Greg, 2026-09-29)
 col = {"tel_quel": NAVY, "aligne": ORANGE, "eta_unique": GREEN}
-lab = {"tel_quel": "tel quel", "aligne": r"aligné ($C_N$ plateau)", "eta_unique": r"$\eta_t = \eta_G$"}
+lab = {"tel_quel": "non aligné", "aligne": "Kumagai–Oba", "eta_unique": r"$\eta_t = \eta_G$"}
 
 
 def jload(*p):
@@ -65,7 +65,7 @@ def fig_dos_c(a):
             ax[i + 1].plot(egr, D[f"{name}_{GRID_SENS}_c{cv}"] - D[f"{name}_{GRID_SENS}_rho0"], color=col[name], lw=0.9, label=lab[name])
             ax[i + 1].plot(egr, D[f"{name}_300_c{cv}"] - D[f"{name}_300_rho0"], color=col[name], lw=0.5, ls=":")
         ax[i + 1].set_title(rf"({'bc'[i]}) $\rho - \rho_0$, $c_i$ = {cv * 100:g}".replace(".", ",") + r"\,\%", fontsize=9)
-    ax[0].set_title(r"(a) $\rho(\varepsilon)$, tel quel", fontsize=9)
+    ax[0].set_title(r"(a) $\rho(\varepsilon)$, non aligné", fontsize=9)
     ax[0].set_ylabel(r"DOS (états/eV/maille/spin)"); ax[1].legend(fontsize=6); ax[0].legend(fontsize=6)
     for x in ax:
         x.set_xlabel(r"Énergie $\varepsilon - E_D$ (eV)"); x.set_xlim(-1.2, 1.2)
@@ -144,7 +144,7 @@ def fig_sigma_K(a):
         x.plot(eg, Se[:, 0].real, color=NAVY, lw=1.0, label=r"Re $\Sigma^\mathrm{eff}_{nK}$")
         x.plot(eg, Se[:, 0].imag, color=ORANGE, lw=1.0, label=r"Im $\Sigma^\mathrm{eff}_{nK}$")
         x.set_xlim(-1, 1); x.set_ylim(-0.35, 0.35); x.set_xlabel(r"Énergie $\varepsilon - E_D$ (eV)")
-        x.set_title(f"({'ab'[iv]}) " + ("tel quel" if var == "tel_quel" else r"aligné ($C_N$ plateau)") + r", $c_i$ = 1\,\%, $k = K$", fontsize=9)
+        x.set_title(f"({'ab'[iv]}) " + ("non aligné" if var == "tel_quel" else "Kumagai–Oba") + r", $c_i$ = 1\,\%, $k = K$", fontsize=9)
     axs[0].set_ylabel(r"$\Sigma$ (eV)"); axs[0].legend(fontsize=6, loc="lower left")
     fig.tight_layout(); save(fig, "fig_kaasbjerg_sigma_K", a.outdir); plt.close(fig)
 

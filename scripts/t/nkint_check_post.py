@@ -4,7 +4,7 @@ RES = results_dir(load_production(verbose=False))          # R6 : results/M2 (re
 """
 nkint_check_post.py -- P13: convergence of the INTERNAL k-grid N_k^int of g0 (reference size, R_cut 3, frozen grid/eta/window).
 Reads <results_dir>/resigma_<size>_rc3_nk<N>.npz (scripts/t/rcut_resigma.py --nk-int, job submit_nkint_check.sh) and reports, per nk_int:
-  * STATE median of Gamma (= Gamma N_cells, intensive V_loc) over the on-shell states of the +-e_window (NOT the Lorentzian curve),
+  * STATE median of Gamma (per defect, intensive M_cluster) over the on-shell states of the +-e_window (NOT the Lorentzian curve),
   * median Re Sigma, E_res = argmax Gamma over states with |eps - E_D| <= 1.5 eV, Gamma_T at E_D (mean of the states with eps = E_D, i.e. K),
   * the same restricted to |eps - E_D| <= 0.3 eV,
 with relative deviations to the densest nk_int. Writes <results_dir>/nkint_check_<size>.csv and prints markdown tables.

@@ -2,7 +2,7 @@
 Run: PYTHONPATH=src pytest tests/test_r10_functions.py"""
 import numpy as np
 import graphene_raman.wannier.wannier_interpolation as wi
-import graphene_raman.defects.many_body.local_tmatrix as lt
+import graphene_raman.defects.many_body.cluster_tmatrix as ct
 
 
 def _graphene_cell(a=2.4659, c=8.0):
@@ -109,8 +109,8 @@ def _random_unitary(nk, n, rng):
 
 def test_defect_mwr_coarse_identity():
     """T5: coarse grid D = N = 4, M = 0, C_N = 1: the box is the whole cell, Mwr = -identity on every (R, R), Mwk = -N_cells delta_kk' identity."""
-    rng = np.random.default_rng(20); D = 4; nw = 2; k = lt.mp_grid(D); nk = len(k)
-    out = lt.defect_mwr(np.zeros((nw, nk, nw, nk), complex), _random_unitary(nk, nw, rng), None, k, (D, D, 1), D, C_N=1.0)
+    rng = np.random.default_rng(20); D = 4; nw = 2; k = ct.mp_grid(D); nk = len(k)
+    out = ct.defect_mwr(np.zeros((nw, nk, nw, nk), complex), _random_unitary(nk, nw, rng), None, k, (D, D, 1), D, C_N=1.0)
     nR = len(out["R"])
     assert out["in_box"].dtype == bool and out["in_box"].all() and out["Rn"].shape == out["R"].shape == (nR, 3)
     assert np.allclose(out["Mwr"].reshape(nw * nR, nw * nR), -np.eye(nw * nR), rtol=0, atol=1e-12)
@@ -121,8 +121,8 @@ def test_defect_mwr_coarse_identity():
 def test_defect_mwr_dense_box():
     """T6: dense grid D = 6, box n_box = N = 3, M = 0, C_N = 1: 9 cells in the box, Mwk[w, k', W, k] = -D_N(k - k') delta_wW,
     D_N(q) = sum_{i, j < N} exp(2 pi i (q1 i + q2 j))."""
-    rng = np.random.default_rng(21); D, N = 6, 3; nw = 2; k = lt.mp_grid(D); nk = len(k)
-    out = lt.defect_mwr(np.zeros((nw, nk, nw, nk), complex), _random_unitary(nk, nw, rng), None, k, (D, D, 1), N, C_N=1.0)
+    rng = np.random.default_rng(21); D, N = 6, 3; nw = 2; k = ct.mp_grid(D); nk = len(k)
+    out = ct.defect_mwr(np.zeros((nw, nk, nw, nk), complex), _random_unitary(nk, nw, rng), None, k, (D, D, 1), N, C_N=1.0)
     assert out["in_box"].sum() == N * N
     box = np.array([[i, j, 0] for i in range(N) for j in range(N)])
     q = k[None, :, :] - k[:, None, :]                                             # q[k', k] = k - k'
@@ -135,10 +135,10 @@ def test_defect_mwr_no_shift_is_manual_chain():
     """T7: with C_N = 0, Mwr, R, Rn and R_d are bitwise those of the manual chain Mbk_to_Mwk -> Mwk_to_Mwr -> recenter_mwr."""
     rng = np.random.default_rng(22); nw = 2
     for D, N in ((4, 4), (6, 3)):
-        k = lt.mp_grid(D); nk = len(k); MP = (D, D, 1)
+        k = ct.mp_grid(D); nk = len(k); MP = (D, D, 1)
         Mbk = rng.standard_normal((nw, nk, nw, nk)) + 1j * rng.standard_normal((nw, nk, nw, nk)); U = _random_unitary(nk, nw, rng)
-        out = lt.defect_mwr(Mbk, U, None, k, MP, N)
+        out = ct.defect_mwr(Mbk, U, None, k, MP, N)
         Mwr, R = wi.Mwk_to_Mwr(wi.Mbk_to_Mwk(Mbk, U, None), k, MP)
-        Rn, R_d = lt.recenter_mwr(Mwr, R, MP)
+        Rn, R_d = ct.recenter_mwr(Mwr, R, MP)
         for key, ref in (("Mwr", Mwr), ("R", R), ("Rn", Rn), ("R_d", R_d)):
             assert np.array_equal(out[key], ref), key

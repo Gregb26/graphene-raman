@@ -1,9 +1,9 @@
 """
-REAL golden test (blocking): on the coarse 5x5 grid, the local Wannier t-matrix rate must equal the
+REAL golden test (blocking): on the coarse 5x5 grid, the cluster Wannier t-matrix rate must equal the
 dense compute_T rate when both are posed in the SAME 5-WF subspace: M is projected to the Wannier
 smooth-Bloch gauge (5 bands, Wannier-interpolated energies), dense uses M/N_cells (supercell Bloch
-norm), local uses the intensive Mwr from M_raw with R_local = full MP-dual grid (exact) and the
-same coarse internal grid. Also reports the on-site V_loc and positivity. Usage: python ... [5x5]
+norm), the cluster rate uses the intensive Mwr from M_raw (unit-cell norm) with R_cluster = full MP-dual grid (exact)
+and the same coarse internal grid. Also reports the on-site M_cluster and positivity. Usage: python ... [5x5]
 """
 import sys
 import numpy as np
@@ -13,7 +13,7 @@ from graphene_raman.wannier.wannier_interpolation import (
     Mbk_to_Mwk, Mwk_to_Mwr, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order)
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.defects.many_body.single_defect import compute_T
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.config import load_production, matrices_dir, wannier_dir
 CFG = load_production(verbose=False)
 MAT = matrices_dir(CFG)         # R10 : matrices M2 brutes (results/M2, lecture seule)
@@ -37,7 +37,7 @@ M_raw = matrix_io.load_M_checked(MFILE, require_bloch_norm=matrix_io.UNIT_CELL, 
 # Wannier-gauge M (intensive), real space, recentered; 5-band smooth-Bloch projection on the coarse grid
 Mwk = Mbk_to_Mwk(M_raw, U, Ud)
 Mwr, R = Mwk_to_Mwr(Mwk, k, MP)
-Rn, Rd = lt.recenter_mwr(Mwr, R, MP)
+Rn, Rd = ct.recenter_mwr(Mwr, R, MP)
 Mbk5 = Mwk_to_Mbk(Mwk, Hwr, Rw, k, ndegen=nd)              # (5, Nc, 5, Nc), intensive
 _, Ew, _ = Hwr_to_Hwk(Hwr, Rw, k, ndegen=nd)               # (Nc, 5) eV
 eigs = Ew.T                                                # (5, Nc)
@@ -51,13 +51,13 @@ for ik in range(Nc):
         Gd[n, ik] = -2.0 * T[0, n, ik, n, ik].imag
 Gd *= Nc
 
-# local (intensive V_loc from M_raw), full R_cut, same coarse internal grid
-V_loc, res = lt.extract_V_loc(Mwr, Rn, Rn)                 # all R -> exact
-Gl = lt.scattering_rate(Hwr, Rw, nd, V_loc, Rn, k, eta, k_int=k)
+# cluster (intensive M_cluster from M_raw), full R_cut, same coarse internal grid
+M_cluster, res = ct.cluster_potential(Mwr, Rn, Rn)                 # all R -> exact
+Gl = ct.scattering_rate(Hwr, Rw, nd, M_cluster, Rn, k, eta, k_int=k)
 
 rel = np.max(np.abs(Gl - Gd)) / max(1e-30, np.max(np.abs(Gd)))
 i0 = int(np.argmin(np.abs(Rn).sum(1))); on = Mwr[:, i0, :, i0]
-print(f"[{N}] R_d={Rd.tolist()}  on-site ||V_loc(0,0)||={np.linalg.norm(on):.4f} eV  herm_res={res:.1e}")
+print(f"[{N}] R_d={Rd.tolist()}  on-site ||M_cluster(0,0)||={np.linalg.norm(on):.4f} eV  herm_res={res:.1e}")
 print(f"[{N}] Gamma range dense*Nc: {Gd.min():.3e}..{Gd.max():.3e}  local: {Gl.min():.3e}..{Gl.max():.3e}")
 print(f"[{N}] REAL GOLDEN: max|local - dense*N_cells| rel = {rel:.2e} (seuil 1e-8) : {'PASS' if rel < 1e-8 else 'FAIL'}")
 print(f"[{N}] positivity min Gamma(local) = {Gl.min():.3e}")

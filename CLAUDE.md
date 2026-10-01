@@ -58,10 +58,10 @@ Work is conducted in French; code and docstrings are in English.
 # Editable install (already done in .venv; redo it if the repo folder is renamed or moved: the .pth stores the absolute path)
 .venv/bin/python -m pip install -e . --no-deps --no-build-isolation
 
-# ONE test launcher: pytest (config in pyproject.toml, testpaths = tests). 208 tests: EM series, matrix_io, R8/R9/R10 functions
+# ONE test launcher: pytest (config in pyproject.toml, testpaths = tests). 231 tests: EM series, matrix_io, R8/R9/R10 functions, chain T snapshot
 # (synthetic) + the chain M / chain T validation scripts of scripts/validation/, wrapped by tests/test_scripts_{M,tmatrix}.py
 # (each script keeps its PASS/FAIL and exit code; the test asserts on it). Markers: slow (> ~10 s: the two real-data kubo
-# tests, local_green_batch, ks_reconstruction, zero-pad non-regression), needs_data (local data/graphene, skipped when absent),
+# tests, cluster_green_batch, ks_reconstruction, zero-pad non-regression), needs_data (local data/graphene, skipped when absent),
 # cluster (M matrices / scratch .save, skipped elsewhere).
 .venv/bin/python -m pytest tests                       # .venv/bin/pytest has a dead shebang: always use `python -m pytest`
 .venv/bin/python -m pytest tests -m "not slow"         # ~1 min
@@ -69,13 +69,13 @@ Work is conducted in French; code and docstrings are in English.
 .venv/bin/python scripts/validation/test_ks_reconstruction.py     # core M = M^L + M^NL pipeline (local 5x5 data)
 .venv/bin/python scripts/validation/test_wannier.py               # Wannier interpolation pipeline
 .venv/bin/python scripts/validation/test_zero_pad_dense.py        # zero-pad densification of M^L (exact)
-.venv/bin/python scripts/validation/test_local_tmatrix.py         # synthetic golden test of the local t-matrix
-.venv/bin/python scripts/validation/test_local_rcut.py            # R_cut, extract_V_loc, mwr_locality (synthetic)
-.venv/bin/python scripts/validation/test_local_green_batch.py     # local_green_batch / scattering_rate_fast (results/wannier/27x27)
+.venv/bin/python scripts/validation/test_cluster_tmatrix.py       # synthetic golden test of the cluster t-matrix
+.venv/bin/python scripts/validation/test_cluster_rcut.py          # R_cut, cluster_potential, mwr_locality (synthetic)
+.venv/bin/python scripts/validation/test_cluster_green_batch.py   # cluster_green_batch / scattering_rate_fast (results/wannier/27x27)
 .venv/bin/python scripts/validation/validate_wannier_bands.py     # Wannier vs DFT bands (coarse grid) + figures
 .venv/bin/python scripts/validation/compare_bands_qe.py           # Wannier vs DFT along a k-path (needs bands.dat)
 .venv/bin/python scripts/validation/compare_bands_w90_qe.py       # Wannier90 .dat vs QE bands.dat (argparse)
-#    Cluster only (scratch paths, M matrices): test_local_tmatrix_real.py (real golden test), test_pad_vs_full_supercell.py.
+#    Cluster only (scratch paths, M matrices): test_cluster_tmatrix_real.py (real golden test), test_pad_vs_full_supercell.py.
 
 # Repo root: never hard-code the folder path (renamed ab-initio-defects -> graphene-raman on 2026-09-24).
 #   Python: derive it from __file__ (config.ROOT); shell: PROJ=${GRAPHENE_RAMAN:-$(git -C "${SLURM_SUBMIT_DIR:-$PWD}" rev-parse --show-toplevel)}
@@ -159,20 +159,24 @@ paths such as `results/wannier/27x27` or `results/…` through `config`). The fo
   k'-index, Allreduce); helpers `build_K_vectors`, `compute_phase`, `compute_angular_part`. The
   pseudopotential path argument is `pseudo_path`; the reader is `pseudo_reader` (default `read_upf`).
 - **wannier/wannier_hamiltonian.py** — `Hwr_to_Hwk(Hwr, Rw, k, ndegen=None)` → (Hwk, eigenvalues,
-  eigenvectors); the eigenvectors are the per-k unitary to the smooth Bloch gauge.
+  eigenvectors); the eigenvectors are the per-k unitary to the smooth Bloch gauge. `dirac_point(E, bands=(3, 4))` → (E_D, gap):
+  midpoint of the smallest π/π* gap, the single definition of E_D used by the chain T scripts.
 - **wannier/wannier_interpolation.py** — the interpolation chain: `Mbk_to_Mwk` (V†MV, V=U_dis·U) →
-  `Mwk_to_Mwr` (double FT) → `Mwr_to_Mwk` (inverse FT to fine grid) → `Mwk_to_Mbk` (back-rotate via
-  H(k)). Top-level `wannier_interpolate(M, k_coarse, k_fine, wannier_tb, u_path, u_dis_path)` →
+  `Mwk_to_Mwr` (double FT) → `Mwr_to_Mwk` (inverse FT to fine grid; square case of `Mwr_to_Mwk_pairs`) → `Mwk_to_Mbk`
+  (back-rotate via H(k)); both rotations go through `_rotate` (X(k')† M X(k), batched `@`). Top-level `wannier_interpolate(M, k_coarse, k_fine, wannier_tb, u_path, u_dis_path)` →
   `(M_bk_fine, E_fine)` (used by `test_wannier.py` only). Helpers `_match_kpoint_order`, `_infer_mp_grid`; `Mwr_to_Mwk_pairs`
   (R9), `ws_images`, `ws_phase` (R10).
 - **wannier/supercell_fold.py** — supercell Hamiltonian folded at Γ, LDOS from eigenpairs (R4–R9 campaigns).
-- **defects/many_body/local_tmatrix.py** — **core of chain T** (M → M_W(R,R') → V_loc → g₀ → t → Γ): `defect_mwr` (gauge rotation,
-  double FT, subtraction of C_N, recentering), `recenter_mwr`, `mwr_locality`, `extract_V_loc`, `mp_grid`, `local_green_batch`,
-  `local_t`, `scattering_rate` (exact), `scattering_rate_fast` (production), `cluster_ldos`. R_cut is a norm on the **reduced R
-  labels**, not a Cartesian distance.
+- **defects/many_body/cluster_tmatrix.py** (ex `local_tmatrix`, renamed 2026-09-30 to avoid the clash with the local part of the
+  pseudopotential) — **core of chain T** (M → M_W(R,R') → M_cluster → g₀ → t → Γ): `defect_mwr` (gauge rotation, double FT,
+  Kumagai–Oba alignment −C_N, recentering), `recenter_mwr`, `mwr_locality`, `cluster_cells` (R_cut truncation), `cluster_potential`
+  (block M_cluster on the cluster, flat index L·nw + w), `mp_grid`, `cluster_green` (reference), `cluster_green_batch`,
+  `cluster_t`, `scattering_rate` (exact), `scattering_rate_fast` (production), `cluster_ldos`. R_cut is a norm on the **reduced R
+  labels**, not a Cartesian distance. Thesis notation: set 𝒞 of retained cells, M_𝒞, 𝒢⁽⁰⁾_𝒞, T_𝒞. The frozen R8/R10 drivers
+  still use the old names (run them at commit 1d67419, see `campagnes/README.md`).
 - **defects/many_body/disorder_average.py** — disorder-averaged DOS and A_k (Kaasbjerg PRB 101, 045433): `tbar_reduce`, `tbar_k`,
   `dos_average`, `spectral_path`, `sigma_eff`, `dirac_*`; only user: `campagnes/R/R8_kaasbjerg/r8_driver.py`.
-- **defects/many_body/pole_criterion.py** — resonance criterion (det, λ_min), `local_t_cache`. **tb_models.py** — synthetic
+- **defects/many_body/pole_criterion.py** — resonance criterion (det, λ_min), `cluster_t_cache`. **tb_models.py** — synthetic
   5-WF graphene bench (tests, R4).
 - **electron_phonon/{phself,selfen}.py** — post-processing of EPW outputs (Γ^ep = 2 Im Σ), chapter 5.
 - **wavefunctions/wfk.py** — `compute_psi_nk` (real-space ψ from C_nk on the FFT grid).
@@ -184,8 +188,8 @@ paths such as `results/wannier/27x27` or `results/…` through `config`). The fo
   never from the cwd), `save(fig, stem, outdir)` (PDF + PNG with fixed metadata, byte-reproducible), colours `NAVY`, `ORANGE`, …,
   `CMAP_SEQ`, `CMAP_DIV`. Every figure script and campaign driver imports it (no `sys.path` to `scripts/`).
 - **defects/many_body/single_defect.py** — historical dense Bloch T-matrix (`compute_T`, `compute_G0`, `compute_G`, M in
-  supercell norm). Not used in production, but it is the **reference of the golden tests** (`test_local_tmatrix*.py`,
-  `test_local_rcut.py`): do not delete.
+  supercell norm). Not used in production, but it is the **reference of the golden tests** (`test_cluster_tmatrix*.py`,
+  `test_cluster_rcut.py`): do not delete.
 - **electron_photon/** — electron-photon coupling (EM series, in progress), conventions in its
   `__init__.py`: `tb_model` (`WannierTB`, graphene toy model, `make_wannier_tb(path)` from a real `_tb.dat`, `centres_only(tb)` for the tight-binding
   approximation of r, `pz_block(tb, pz)` for the p_z-only model, `extract_block` (not exported)), `kgrid` (reciprocal lattice, k grids),
@@ -233,11 +237,12 @@ paths are not inspectable from this checkout — confirm names before launching.
 - **scripts/validation/compare_bands_qe.py** — Wannier vs DFT along a continuous k-path from a `bands.x`
   `bands.dat`. Median agreement ~21 meV. Aligns each band structure on its own Dirac point.
 
-- **scripts/validation/test_local_tmatrix.py**, **test_local_rcut.py** (synthetic), **test_local_green_batch.py** (H of `results/wannier/27x27`),
-  **test_local_tmatrix_real.py** (real golden test: local t = dense `compute_T` × N_cells; cluster only) — chain T.
-- **tests/** (pytest, 208 tests) — EM series, `matrix_io`, the R8/R9/R10 functions of chain T on synthetic data, and the
+- **scripts/validation/test_cluster_tmatrix.py**, **test_cluster_rcut.py** (synthetic), **test_cluster_green_batch.py** (H of `results/wannier/27x27`),
+  **test_cluster_tmatrix_real.py** (real golden test: cluster t = dense `compute_T` × N_cells; cluster only) — chain T.
+- **tests/** (pytest, 231 tests) — EM series, `matrix_io`, the R8/R9/R10 functions of chain T on synthetic data, the chain T
+  non-regression snapshot (`test_tmatrix_snapshot.py`, references in `tests/snapshots/`; `--write` only on purpose), and the
   standalone scripts above through `tests/test_scripts_M.py` (zero padding, KS reconstruction, Wannier pipeline, pad vs full
-  supercell) and `tests/test_scripts_tmatrix.py` (golden tests, `local_green_batch`, real golden test). Known local hiccup:
+  supercell) and `tests/test_scripts_tmatrix.py` (golden tests, `cluster_green_batch`, real golden test). Known local hiccup:
   `test_zero_pad_non_regression` (dense M^L on the 5x5 pair, > 10 min) once died with an MPICH/libfabric error
   (`OFI poll failed`, network interface) on the laptop — an environment issue, not a physics failure.
 
@@ -291,7 +296,7 @@ The standalone scripts take their data paths from `scripts/validation/_paths.py`
    `matrices_dir`.
 5. **Validate**: `test_ks_reconstruction.py` (sanity on the unit cell / null defect). For bands,
    `validate_wannier_bands.py` and, if a `bands.x` `bands.dat` is available, `compare_bands_qe.py`.
-6. **Chain T** (the production use of M): `local_tmatrix.defect_mwr` → `extract_V_loc` → `local_green_batch` → `local_t` →
+6. **Chain T** (the production use of M): `cluster_tmatrix.defect_mwr` → `cluster_cells` → `cluster_potential` → `cluster_green_batch` → `cluster_t` →
    `scattering_rate_fast`, driven by `compute_spectral_wannier.py`, `rcut_resigma.py`, `resonance_metrics.py`,
    `resonance_criteria.py`; parameters and controls in `notes/NOTES_TGAMMA.md`. (`wannier_interpolate` onto a fine grid of
    band-basis M exists but is only exercised by `test_wannier.py`.)
@@ -319,7 +324,7 @@ The standalone scripts take their data paths from `scripts/validation/_paths.py`
   `scripts/fig/make_figures*.py`), par `palette.save` : PDF et PNG **reproductibles au bit** (métadonnées fixées), ce qui est le
   test de recette de la copie vers le dépôt du mémoire (régénérer, comparer les md5). Les 20 figures incluses : 16 par
   `make_figures{,_memoire,_epw}.py` + `fig_em_coupling` (`make_figures_em.py`) + `fig_kb_pseudo_C` (`make_figures_electron.py`,
-  redessinée le 2026-09-30) + `fig_electron_convergence`, `fig_ebands_edos` (même script, ex `qe_pp`, données `results/electron/*.dat`)
+  redessinée le 2026-09-30, pseudo lu dans `results/electron/C.upf`) + `fig_electron_convergence`, `fig_ebands_edos` (même script, ex `qe_pp`, données `results/electron/*.dat`)
   + `fig_phfreq_phdos` (`make_figures_phonons.py`, données `results/phonon/`, même contenu que `fig_epw_phonons` de `make_figures_epw.py`). Les 9 figures de
   contrôle du ch. 4 retenues (R7 : `fig_size_3m`, `fig_localized_3m` ; R9 : `fig_resonance_vs_nkint{,_plateau}`, `fig_rcut_aligned`,
   `fig_folded_vs_R7` ; R10 : `fig_offset_profiles_13`, `fig_levels_vs_invN`, `fig_kaasbjerg_plateau_ws`) sont produites par
@@ -333,9 +338,20 @@ The standalone scripts take their data paths from `scripts/validation/_paths.py`
   les scripts de figures sont versionnés, les npz/CSV de production aussi (pas les logs).
 - Unités : M est stocké en Hartree et converti en eV UNE fois via
   `matrix_io.load_M_checked(..., units=matrix_io.EV)` ; Γ en meV, énergies relatives à $E_D$.
-- Alignement du potentiel de défaut : bloc `alignment` de `config/production.json` (C_N = ΔV_PA^(N), alignement de Kumagai–Oba,
-  13 tailles), appliqué en base de Wannier par `local_tmatrix.defect_mwr` ; nomenclature (non aligné / site unique / Kumagai–Oba /
-  final) et table v1 → final des chiffres du ch. 4 : `campagnes/M/ch4/` (`table_v1_final.md`) et `notes/NOTES_TGAMMA.md` §1 et §8.
+- Alignement du potentiel de défaut : bloc `alignment` de `config/production.json` (C_N, 13 tailles), appliqué en base de Wannier
+  par `cluster_tmatrix.defect_mwr` (M_W(R,R) − C_N sur la boîte N×N). Toutes les variantes sont en normalisation v2 (correction du
+  facteur N_cells de M^L, pas un choix). Nomenclature du mémoire et de l'article (2026-09-30) ; les archives (rapports R4–R10,
+  chemins, clés npz/JSON) gardent leurs étiquettes :
+
+  | Archives | Mémoire et article | Définition |
+  |---|---|---|
+  | tel quel | non aligné | ΔV brut, `results/M2` |
+  | Lu | alignement à site unique (Lu et al. 2019) | potentiel au site le plus éloigné de la lacune |
+  | plateau, plateau (i) | alignement de Kumagai–Oba (PRB 89, 195205, 2014) | moyenne des potentiels de site (sphères de 1 Å) sur les atomes à ≥ 0,75 r_max de la lacune, rms comme incertitude ; production, `results/M2_plateau` |
+
+  Symbole du mémoire : ΔV_PA^(N) = C_N. « final » (= v2 + Kumagai–Oba) n'est qu'une étiquette d'archive : table v1 → final des
+  chiffres du ch. 4 dans `campagnes/M/ch4/table_v1_final.md`, et `notes/NOTES_TGAMMA.md` §1 et §8. Le « plateau » de convergence
+  (R_cut, grille, η) de `compute_spectral_wannier.py` est une autre notion.
 
 ## Échantillonnage Γ des super-cellules : N mod 3 (fait physique à retenir)
 

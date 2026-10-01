@@ -14,7 +14,7 @@
     "results/M2"
   ],
   "alignment": {
-    "version": "plateau (i), R10, 2026-09-29",
+    "version": "alignement de Kumagai-Oba (PRB 89, 195205, 2014), approximation (i), R10, 2026-09-29 ; etiquette d archive : plateau (i)",
     "method": "C_N = moyenne des decalages de sphere de 1,0 A (alignment.atom_sphere_shifts) sur les atomes a distance vraie >= 0,75 r_max de la lacune ; M_W(R,R) - C_N*I_5 sur les mailles R mod D dans [0,N)^2 (etiquettes brutes de Mwk_to_Mwr, defect_mwr), approximation (i), rien d'autre ; matrices M2 brutes (matrices_dir)",
     "C_N_eV": {
       "5x5": -0.0575626062015234,

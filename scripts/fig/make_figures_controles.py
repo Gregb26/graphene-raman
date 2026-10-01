@@ -38,8 +38,8 @@ FAM3 = {6, 9, 12, 15, 18, 21, 24, 27}                 # famille N = 3m (K repli�
 ALL13 = ["5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11", "12x12", "15x15", "18x18", "21x21", "24x24", "27x27"]
 PLATEAU_FRAC = 0.75                                    # décision R9 : atomes à d >= 0,75 r_max
 K_RED = np.array([2 / 3, 1 / 3, 0.0])
-FIG_LABEL = {"aligne": r"aligné", "exact": r"aligné exact", "aligne_lu": r"aligné, $C_N$ Lu", "exact_lu": r"exact, $C_N$ Lu",
-             "aligne_plateau": r"aligné, $C_N$ plateau", "exact_plateau": r"exact, $C_N$ plateau"}
+FIG_LABEL = {"aligne": "site unique", "exact": "site unique, exact", "aligne_lu": "site unique", "exact_lu": "site unique, exact",
+             "aligne_plateau": "Kumagai–Oba", "exact_plateau": "Kumagai–Oba, exact"}
 
 
 def jload(p):
@@ -131,10 +131,10 @@ def fig_rcut_aligned(outdir):
     fig, axes = plt.subplots(1, 2, figsize=(6.5, 3.0), sharey=True)
     for ax, S, lab in zip(axes, ("9x9", "12x12"), "ab"):
         r9 = A9[f"rcut_{S}"]["rows"]; rp = AP[f"rcut_{S}"]["rows"]
-        series = [(r9["brut"], pal.NAVY, "-", "o", "M2 tel quel"), (r9["aligne"], pal.ORANGE, "--", "s", r"aligné, $C_N$ Lu"),
-                  (rp["aligne_plateau"], pal.GREEN, "-.", "D", r"aligné, $C_N$ plateau")]
+        series = [(r9["brut"], pal.NAVY, "-", "o", "non aligné"), (r9["aligne"], pal.ORANGE, "--", "s", "site unique"),
+                  (rp["aligne_plateau"], pal.GREEN, "-.", "D", "Kumagai–Oba")]
         if "exact" in r9 and "exact_plateau" in rp:
-            series += [(r9["exact"], pal.ORANGE, ":", "^", r"exact, $C_N$ Lu"), (rp["exact_plateau"], pal.GREEN, ":", "v", r"exact, $C_N$ plateau")]
+            series += [(r9["exact"], pal.ORANGE, ":", "^", "site unique, exact"), (rp["exact_plateau"], pal.GREEN, ":", "v", "Kumagai–Oba, exact")]
         for rows, c, ls, mk, lb in series:
             ax.semilogy([r["R_cut"] for r in rows], [r["max_dM_over_maxM"] for r in rows], ls, marker=mk, ms=3, color=c, label=lb, mfc="none")
         ax.set_xlabel(r"Rayon de coupure $R_\mathrm{cut}$ (mailles)"); ax.set_title(f"({lab}) {times(S)}", fontsize=9)
@@ -150,13 +150,13 @@ def fig_folded_vs_R7(outdir):
     qe = [(N, out["C1"][str(N)]["QE"]["pi_quasi_bound"]["x"]) for N in N1 if out["C1"][str(N)]["QE"]]
     ax[0].plot([1 / N for N, _ in qe], [x for _, x in qe], "o", ms=3, color=pal.REF, label="QE (R7)")
     for var, c, mk in (("brut", pal.NAVY, "s"), ("aligne", pal.ORANGE, "^")):
-        lab = "modèle replié" + (" (aligné)" if var == "aligne" else "")
+        lab = "modèle replié" + (" (site unique)" if var == "aligne" else "")
         ax[0].plot([1 / N for N in N1] + [1 / N for N in N2 if N > 27], [out["C1"][str(N)][var]["odd"]["quasi_bound"]["x"] for N in N1]
                    + [out["C2"][str(N)][var]["odd"]["quasi_bound"]["x"] for N in N2 if N > 27], mk, ms=3, mfc="none", color=c, label=lab)
         ax[1].plot([1 / N for N in N1] + [1 / N for N in N2 if N > 27], [out["C1"][str(N)][var]["ldos_max"]["at_eV"] for N in N1]
                    + [out["C2"][str(N)][var]["ldos_max"]["at_eV"] for N in N2 if N > 27], mk, ms=3, mfc="none", color=c, label=lab)
         if "C3" in out and "600" in out["C3"]:
-            ax[1].axhline(out["C3"]["600"][var]["at_eV"], color=c, lw=0.8, ls="--", label=r"matrice $T$" + (" (aligné)" if var == "aligne" else ""))
+            ax[1].axhline(out["C3"]["600"][var]["at_eV"], color=c, lw=0.8, ls="--", label=r"matrice $T$" + (" (site unique)" if var == "aligne" else ""))
     Ns = N1 + [N for N in N2 if N > 27]
     for a_ in ax:
         a_.set_ylim(-1.12, 0.05)                                                # N = 6 : maximum de LDOS au bord de [−1, 0] (état π à −1,04 eV)
@@ -179,8 +179,8 @@ def fig_offset_profiles_13(outdir):
         d, s = Z["dist"], Z["shift10"] * 1e3; C = r["C_N_eV"] * 1e3; far = Z["far"]
         ax.axvspan(PLATEAU_FRAC * r["r_max_A"], r["r_max_A"] * 1.03, color=pal.LIGHT, alpha=0.35, lw=0)
         ax.plot(d, s, "o", ms=1.6, color=pal.NAVY, label=r"sphères de 1,0 Å")
-        ax.axhline(C, color=pal.NAVY, lw=0.8, label=r"$C_N$ (moyenne du plateau)")
-        ax.axhline(r["Lu"]["published_meV"], color=pal.REF, lw=0.8, ls="--", label="Lu publié (un atome, axe par axe)")
+        ax.axhline(C, color=pal.NAVY, lw=0.8, label=r"$\Delta V_\mathrm{PA}^{(N)}$ (Kumagai–Oba)")
+        ax.axhline(r["Lu"]["published_meV"], color=pal.REF, lw=0.8, ls="--", label="site unique (un atome, distances axe par axe)")
         ax.plot(d[far], s[far], "D", ms=3.2, mfc="none", mec=pal.ORANGE, mew=0.9, label="atomes vraiment les plus loin")
         keep = d >= 2.0                                                         # cadre sans les premiers voisins (1,42 Å)
         lo = min(s[keep].min(), C, r["Lu"]["published_meV"]); hi = max(s[keep].max(), C, r["Lu"]["published_meV"]); pad = 0.08 * (hi - lo)
@@ -216,8 +216,8 @@ def fig_levels_vs_invN(outdir):
                 else:
                     yl.append(np.mean([q["x_Lu"] for q in p["sigma"]])); yp.append(np.mean([q["x_plateau"] for q in p["sigma"]]))
                 xs.append(1.0 / n)
-            ax.plot(xs, yl, mk, ms=4.5, mfc="none", mec=pal.ORANGE, mew=0.9, ls="none", label=f"Lu publié, {fam}")
-            ax.plot(xs, yp, mk, ms=3.5, color=pal.NAVY, ls="none", label=f"plateau $C_N$, {fam}")
+            ax.plot(xs, yl, mk, ms=4.5, mfc="none", mec=pal.ORANGE, mew=0.9, ls="none", label=f"site unique, {fam}")
+            ax.plot(xs, yp, mk, ms=3.5, color=pal.NAVY, ls="none", label=f"Kumagai–Oba, {fam}")
         ax.set_title(ttl, loc="left", fontsize=9); ax.set_xlabel(r"$1/N$"); ax.axhline(0, color=pal.MUTED, lw=0.6)
     axes[0].set_ylabel(r"$\varepsilon - E_D$ (eV)")
     h, l_ = axes[0].get_legend_handles_labels(); fig.legend(h, l_, loc="lower center", ncol=4, fontsize=6, frameon=False)
@@ -235,7 +235,7 @@ def fig_kaasbjerg_plateau_ws(outdir):
     corners = corners[np.argsort(np.arctan2(corners[:, 1], corners[:, 0]))]; Kc = Bc @ K_RED
     labs = list(maps); fig, axes = plt.subplots(len(labs), 2, figsize=(6.5, 3.0 * len(labs)), squeeze=False)
     vmax = max(np.nanmax(maps[v][b]) for v in labs for b in ("valence", "conduction")); vmin = min(np.nanmin(maps[v][b]) for v in labs for b in ("valence", "conduction"))
-    tl = {"tel quel": "M2 tel quel, Wigner-Seitz", "plateau": "plateau (i), Wigner-Seitz"}
+    tl = {"tel quel": "non aligné, Wigner-Seitz", "plateau": "Kumagai–Oba, Wigner-Seitz"}
     for i, lab in enumerate(labs):
         for j, (band, bl) in enumerate((("valence", r"valence ($\pi$)"), ("conduction", r"conduction ($\pi^*$)"))):
             ax = axes[i][j]; z = maps[lab][band]; m = np.isfinite(z)

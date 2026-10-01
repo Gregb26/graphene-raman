@@ -17,7 +17,7 @@ from scipy.ndimage import map_coordinates
 from graphene_raman.io import qe_io, matrix_io
 from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
 from graphene_raman.wannier.wannier_interpolation import Mbk_to_Mwk, Mwr_to_Mwk, Mwr_to_Mwk_pairs, Mwk_to_Mbk, _infer_mp_grid, _match_kpoint_order
-from graphene_raman.defects.many_body.local_tmatrix import defect_mwr
+from graphene_raman.defects.many_body.cluster_tmatrix import defect_mwr
 from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau)
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule)

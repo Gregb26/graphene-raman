@@ -3,7 +3,7 @@ disorder_average.py
     Disorder-averaged Green's function of a crystal with a dilute concentration of identical point defects, in the T-matrix
     approximation of Kaasbjerg, PRB 101, 045433 (2020), Eqs. (22)-(24), (28), (34) (R8, 2026-09-28).
 
-    The single-defect local t-matrix t(eps) on the cluster R_local (local_tmatrix.local_t / pole_criterion.local_t_cache) is
+    The single-defect t-matrix t(eps) on the cluster R_cluster (cluster_tmatrix.cluster_t / pole_criterion.cluster_t_cache) is
     brought to k space, where the average over random defect positions restores translation symmetry:
 
         Tbar_k(eps)[w, w'] = sum_{L, L'} exp(-2 pi i k.R_L) t_{(L,w),(L',w')}(eps) exp(+2 pi i k.R_L')         (Wannier gauge)
@@ -17,16 +17,15 @@ disorder_average.py
     as the unit-cell M (bloch_norm = 'unit_cell') and as scattering_rate: <nk|t|nk> = U^dagger Tbar_k U. H_k is the Wannier-gauge
     Hamiltonian (Hwr_to_Hwk) with the same "R only" phase convention, so Tr G_k is gauge invariant.
 
-    Nothing here recomputes g0, t or the cluster Green's function: those come from local_tmatrix (local_green_batch, local_t,
-    cluster_ldos) and pole_criterion (local_t_cache).
+    Nothing here recomputes g0, t or the cluster Green's function: those come from cluster_tmatrix (cluster_green_batch, cluster_t,
+    cluster_ldos) and pole_criterion (cluster_t_cache).
 """
 import numpy as np
 from scipy.signal import find_peaks
 
-from graphene_raman.defects.many_body.local_tmatrix import _diff_table
+from graphene_raman.defects.many_body.cluster_tmatrix import _diff_table
 
-
-def tbar_reduce(t, R_local, nw, wfs=None):
+def tbar_reduce(t, R_cluster, nw, wfs=None):
     """
     Q1. Reduce the cluster t-matrix to the distinct cell differences D = R_L - R_L':
 
@@ -36,25 +35,25 @@ def tbar_reduce(t, R_local, nw, wfs=None):
     Exact rearrangement of the double sum over the cluster (no approximation).
 
     Inputs:
-        t: (nE, nL*nw, nL*nw) or (nL*nw, nL*nw) complex, t-matrix on the cluster, flat index L*nw + w (local_t / local_t_cache).
-        R_local: (nL, 3) ints, cluster cells (reduced coordinates), same order as the flat index of t.
+        t: (nE, nL*nw, nL*nw) or (nL*nw, nL*nw) complex, t-matrix on the cluster, flat index L*nw + w (cluster_t / cluster_t_cache).
+        R_cluster: (nL, 3) ints, cluster cells (reduced coordinates), same order as the flat index of t.
         nw: int, number of Wannier functions per cell in the layout of t.
         wfs: sequence of Wannier-function indices to keep (e.g. (3, 4) for the pi block of the 5-WF layout); None keeps all nw.
     Returns:
-        Du: (nD, 3) ints, distinct differences D (local_tmatrix._diff_table order).
+        Du: (nD, 3) ints, distinct differences D (cluster_tmatrix._diff_table order).
         tau: (nE, nD, nb, nb) complex (nb = len(wfs)); (nD, nb, nb) if t was a single matrix.
     """
     t = np.asarray(t)
     single = t.ndim == 2
     if single:
         t = t[None]
-    R_local = np.asarray(R_local, int)
-    nL = len(R_local)
+    R_cluster = np.asarray(R_cluster, int)
+    nL = len(R_cluster)
     nE = t.shape[0]
     assert t.shape[1:] == (nL * nw, nL * nw), f"t {t.shape[1:]} vs nL*nw = {nL * nw}"
     wfs = np.arange(nw) if wfs is None else np.asarray(wfs, int)
     nb = len(wfs)
-    Du, inv = _diff_table(R_local)                                     # inv[L, L'] = index of R_L - R_L' in Du
+    Du, inv = _diff_table(R_cluster)                                     # inv[L, L'] = index of R_L - R_L' in Du
     nD = len(Du)
     # t[e, L, a, L', b] on the kept orbitals -> (L, L') pairs as rows
     t5 = t.reshape(nE, nL, nw, nL, nw)[:, :, wfs][:, :, :, :, wfs]      # (nE, nL, nb, nL, nb)
@@ -132,7 +131,7 @@ def dos_average(Hk, tau, Du, k, c_cell, egrid, eta, linear=False, e_chunk=16, k_
         rho(eps)  = -(1/(pi N_k)) sum_k Im Tr G_k(eps),     rho0 = same with Sigma = 0,
     and, if linear, the first-order term in c_cell:
         drho_lin(eps) = -(1/(pi N_k)) sum_k Im Tr[g0_k Tbar_k g0_k],   g0_k = G_k(Sigma = 0),
-    which equals (1/pi) Im Tr[t d g0/d eps] (Lloyd, local_green_batch(deriv=True)) when k is the internal grid of g0 and eta is
+    which equals (1/pi) Im Tr[t d g0/d eps] (Lloyd, cluster_green_batch(deriv=True)) when k is the internal grid of g0 and eta is
     the same. Units: states / eV / unit cell / spin, for the nb orbitals kept in tau.
 
     Inputs:

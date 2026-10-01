@@ -8,9 +8,9 @@ supercell_fold.py
         kblocks_to_rbasis         -- H_r = F^dagger H_k F, F_{k r} = e^{-2 pi i k.r}/N   (block-diagonal H_k)
         fold_hwr_to_supercell     -- H_SC[(r,w),(r',w')] = sum_{R = r'-r mod N} H(R)[w,w']/ndegen(R)
         fold_mwr_to_supercell     -- M_SC[(r,w),(r',w')] = sum_{R = r, R' = r' mod N} Mwr[w,R,w',R']
-                                     (optionally restricted to R, R' in R_local before folding)
+                                     (optionally restricted to R, R' in R_cluster before folding)
     Index layout of the r-basis: c*nw + w with c = r1*N + r2 (r = (r1, r2, 0), 0 <= ri < N), the same
-    "cell-major" layout as local_tmatrix (L*nw + w). Real-space weights of eigenvectors:
+    "cell-major" layout as cluster_tmatrix (L*nw + w). Real-space weights of eigenvectors:
         sc_planewave_index        -- supercell FFT index of each unit-cell plane wave k + G
         folded_density_2d         -- |Psi(r)|^2 summed over z for Psi = sum_nk d_nk psi_nk (unit-cell Bloch states)
     Local DOS of a finite (folded) Hamiltonian from its eigenpairs (R9, 2026-09-28):
@@ -89,16 +89,16 @@ def fold_hwr_to_supercell(Hwr, Rw, ndegen, N):
     return H.reshape(N * N * nw, N * N * nw)
 
 
-def fold_mwr_to_supercell(Mwr, R_mwr, N, R_local=None):
+def fold_mwr_to_supercell(Mwr, R_mwr, N, R_cluster=None):
     """
     Mwr (nw, nr, nw, nr) on the periodic R box R_mwr (nr, 3) -> M_SC (N*N*nw, N*N*nw), layout c*nw + w.
-    R_local: if given, only R, R' in R_local are kept (V_loc = P Mwr P) before folding.
+    R_cluster: if given, only R, R' in R_cluster are kept (M_cluster = P Mwr P) before folding.
     """
     nw, nr = Mwr.shape[0], Mwr.shape[1]
     keep = np.ones(nr, bool)
-    if R_local is not None:
+    if R_cluster is not None:
         keep[:] = False
-        for R in np.asarray(R_local, int):
+        for R in np.asarray(R_cluster, int):
             keep |= (np.asarray(R_mwr, int) == R).all(axis=1)
     P = np.zeros((nr, N * N))
     P[np.arange(nr)[keep], cell_of(np.asarray(R_mwr)[keep], N)] = 1.0
@@ -108,7 +108,7 @@ def fold_mwr_to_supercell(Mwr, R_mwr, N, R_local=None):
 
 def wannier_gate(Hwr, Rw, ndegen, N, atol=1e-8):
     """Gate 1 of D4: eigenvalues of fold_hwr_to_supercell == union of the Wannier eigenvalues on the N x N grid."""
-    from graphene_raman.defects.many_body.local_tmatrix import mp_grid
+    from graphene_raman.defects.many_body.cluster_tmatrix import mp_grid
     k = mp_grid(N, N, 1)
     _, E, _ = Hwr_to_Hwk(Hwr, Rw, k, ndegen=ndegen)
     HS = fold_hwr_to_supercell(Hwr, Rw, ndegen, N)

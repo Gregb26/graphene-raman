@@ -5,7 +5,7 @@ import numpy as np
 from graphene_raman.io import qe_io, matrix_io
 from graphene_raman.io.wannier_io import read_w90_mat
 from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order, ws_images
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.config import load_production, dense_paths, HA2EV, results_dir, matrices_dir, alignment_C, wannier_dir
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau)
 MAT = matrices_dir(load_production(verbose=False))         # R10 : matrices M2 brutes (results/M2, lecture seule)
@@ -16,8 +16,8 @@ def run(uc, mfile, wdir, tag, S):
     k = qe_io.get_k_red(uc); MP = _infer_mp_grid(k)
     U, kU = read_w90_mat(f"{wdir}/wannier_u.mat"); U = U[_match_kpoint_order(kU, k)]
     Ud, kUd = read_w90_mat(f"{wdir}/wannier_u_dis.mat"); Ud = Ud[_match_kpoint_order(kUd, k)]
-    C_N = alignment_C(cfg, S); d = lt.defect_mwr(M, U, Ud, k, MP, n_box=int(S.split("x")[0]), C_N=C_N); Mwr, Rn = d["Mwr"], d["Rn"]   # R10 : approximation (i)
-    dist, wt = lt.mwr_locality(Mwr, Rn); i0 = int(np.argmin(np.abs(Rn).sum(1))); on = Mwr[:, i0, :, i0]
+    C_N = alignment_C(cfg, S); d = ct.defect_mwr(M, U, Ud, k, MP, n_box=int(S.split("x")[0]), C_N=C_N); Mwr, Rn = d["Mwr"], d["Rn"]   # R10 : approximation (i)
+    dist, wt = ct.mwr_locality(Mwr, Rn); i0 = int(np.argmin(np.abs(Rn).sum(1))); on = Mwr[:, i0, :, i0]
     # cartesian distance in units of a (hexagonal lattice: |R| = a sqrt(i^2 + j^2 - i j) for a 60-deg cell? use metric from the cell)
     A = np.array([[4.0354919061, -2.3298923383], [4.0354919061, 2.3298923383]]) / 4.6597846766   # rows a1,a2 in units of a
     A_cols = np.eye(3); A_cols[:2, :2] = A.T                                                          # columns a1, a2 (units of a), a3 unused (R_z = 0)

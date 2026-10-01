@@ -18,6 +18,6 @@ export PYTHONPATH="$PROJ/src:$PYTHONPATH"          # pas d'installation éditabl
 export OMP_NUM_THREADS=16 OPENBLAS_NUM_THREADS=16 FLEXIBLAS_NUM_THREADS=16
 SIZE=${1:-5x5}
 echo "[$(date)] golden dense $SIZE"
-.venv/bin/python -u scripts/validation/test_local_tmatrix_real.py "$SIZE" --dense; rc=$?
+.venv/bin/python -u scripts/validation/test_cluster_tmatrix_real.py "$SIZE" --dense; rc=$?
 echo "[$(date)] golden exit code $rc"
 exit $rc

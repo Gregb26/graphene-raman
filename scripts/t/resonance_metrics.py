@@ -4,8 +4,9 @@ resonance_metrics.py -- reference size (frozen config), +-e_window around E_D, e
   (a) Gamma_T(eps)/rho0(eps) on-shell (∝ |T|^2)          (b) delta_rho(eps) = (1/pi) Im Tr[t(eps) dg0/deps], rho_dis at c
   (c) Tbar_nn(K,K;eps) for the pi pair (Re/Im, pole crossing)
   Born vs T: Gamma_Born(eps) = -2 Im <V g0 V> (2nd-order term; the 1st-order <V> is real, contributes 0) vs Gamma_T(eps)
-  R10 : V_loc from M_W(R,R) - C_N on the N x N box (approximation (i), C_N from the config block "alignment"); C14 (--shift-L-meV) = V_loc + C·1
-  around the ALIGNED V_loc (D10: C = ±rms of the plateau, e.g. ±9.05 meV for 9x9); the former variant M - mean_diag(M^L)·1 (V_sub) is removed (D10)
+  R10 : M_cluster from M_W(R,R) - C_N on the N x N box (Kumagai-Oba alignment, approximation (i), C_N from the config block "alignment");
+  C14 (--shift-L-meV) = M_cluster + C·1 around the aligned M_cluster (D10: C = ±rms of the Kumagai-Oba average, e.g. ±9.05 meV for 9x9);
+  the former variant M - mean_diag(M^L)·1 (V_sub) is removed (D10)
 All energies eV. Output npz: <results_dir>/resonance_<size>.npz. Hard gauge gate + frozen config.
 Usage: python scripts/t/resonance_metrics.py [--size 9x9] [--rho0-grid 900]
 """
@@ -13,14 +14,15 @@ import argparse, numpy as np
 from graphene_raman.io import qe_io, matrix_io, wannier_provenance
 from graphene_raman.io.wannier_io import read_w90_mat, read_w90_tb
 from graphene_raman.wannier.wannier_interpolation import _infer_mp_grid, _match_kpoint_order
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.wannier.wannier_hamiltonian import dirac_point
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.config import load_production, dense_paths, results_dir, alignment_C
 RES = results_dir(load_production(verbose=False))          # R10 : produits (results/M2_plateau) ; matrices par matrices_dir
 
 ap = argparse.ArgumentParser(); ap.add_argument("--size", default=None); ap.add_argument("--rho0-grid", type=int, default=900)
 ap.add_argument("--out", default=None)
-ap.add_argument("--shift-L-meV", default="", help="C14 : constante(s) C en meV ajoutée(s) au V_loc aligné, soit V_loc + C·1 en base de Wannier ; R10 (D10) : "
-                "C = ±rms du plateau (i) de la taille (9x9 : 9.05,-9.05) ; variantes Gamma_T_shift<C>, E_res_shift<C>"); a = ap.parse_args()
+ap.add_argument("--shift-L-meV", default="", help="C14 : constante(s) C en meV ajoutée(s) au M_cluster aligné, soit M_cluster + C·1 en base de Wannier ; R10 (D10) : "
+                "C = ±rms de la moyenne de Kumagai–Oba de la taille (9x9 : 9.05,-9.05) ; variantes Gamma_T_shift<C>, E_res_shift<C>"); a = ap.parse_args()
 SHIFTS = [float(x) for x in a.shift_L_meV.split(",") if x.strip()]
 cfg = load_production(); S = a.size or cfg["reference_size"]; dp = dense_paths(cfg, S)
 paths = wannier_provenance.load_wannier_checked(dp["manifest"]); print(f"[gauge] provenance OK: {dp['manifest']}", flush=True)
@@ -34,30 +36,30 @@ Ud, kUd = read_w90_mat(paths["u_dis"]); Ud = Ud[_match_kpoint_order(kUd, k_coars
 Hwr, Rw, nd, _, _ = read_w90_tb(paths["tb"])
 
 def vloc_from(Mb):
-    d = lt.defect_mwr(Mb, U, Ud, k_coarse, MP, n_box=int(S.split("x")[0]), C_N=C_N); Mwr, Rn = d["Mwr"], d["Rn"]   # R10 : approximation (i)
-    lt.mwr_locality(Mwr, Rn)
-    Rloc = Rn[np.linalg.norm(Rn, axis=1) <= rc + 1e-9]
-    V, res = lt.extract_V_loc(Mwr, Rn, Rloc); return V, Rloc
-V, Rloc = vloc_from(M); del M
-nL, nw = len(Rloc), Hwr.shape[1]; print(f"[cluster] R_cut={rc}: nL={nL} sites, dim={nL*nw}", flush=True)
+    d = ct.defect_mwr(Mb, U, Ud, k_coarse, MP, n_box=int(S.split("x")[0]), C_N=C_N); Mwr, Rn = d["Mwr"], d["Rn"]   # R10 : approximation (i)
+    ct.mwr_locality(Mwr, Rn)
+    R_cluster = ct.cluster_cells(Rn, rc)
+    V, res = ct.cluster_potential(Mwr, Rn, R_cluster); return V, R_cluster
+V, R_cluster = vloc_from(M); del M
+nL, nw = len(R_cluster), Hwr.shape[1]; print(f"[cluster] R_cut={rc}: nL={nL} sites, dim={nL*nw}", flush=True)
 
 # bands, Dirac point, output states
-k_int = lt.mp_grid(nk_int, nk_int, 1); Hwk_int, _, _ = lt.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)
-_, E_ref, _ = lt.Hwr_to_Hwk(Hwr, Rw, lt.mp_grid(90, 90, 1), ndegen=nd)
-gap = E_ref[:, 4] - E_ref[:, 3]; iD = int(np.argmin(gap)); E_D = float(0.5 * (E_ref[iD, 3] + E_ref[iD, 4]))
-k_out = lt.mp_grid(N, N, 1); _, E_out, U_out = lt.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=nd)
-ph_out = lt._phase(k_out, Rloc); phi = np.einsum("kL,kwn->knLw", ph_out, U_out, optimize=True).reshape(len(k_out), nw, nL * nw)
+k_int = ct.mp_grid(nk_int, nk_int, 1); Hwk_int, _, _ = ct.Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)
+_, E_ref, _ = ct.Hwr_to_Hwk(Hwr, Rw, ct.mp_grid(90, 90, 1), ndegen=nd)
+E_D, _ = dirac_point(E_ref)
+k_out = ct.mp_grid(N, N, 1); _, E_out, U_out = ct.Hwr_to_Hwk(Hwr, Rw, k_out, ndegen=nd)
+ph_out = ct._phase(k_out, R_cluster); phi = np.einsum("kL,kwn->knLw", ph_out, U_out, optimize=True).reshape(len(k_out), nw, nL * nw)
 sel = np.abs(E_out - E_D) <= ew
 print(f"[dirac] E_D = {E_D:.4f} eV; {int(sel.sum())} on-shell states in +-{ew} eV on {N}x{N}", flush=True)
 
 # energy grid, g0 and dg0/de (exact, batched)
 de = eta / npe; egrid = np.arange(E_D - ew - eta, E_D + ew + eta + de, de); nE = len(egrid)
-g0 = lt.local_green_batch(Hwk_int, k_int, Rloc, egrid, eta); g0p = lt.local_green_batch(Hwk_int, k_int, Rloc, egrid, eta, deriv=True)
+g0 = ct.cluster_green_batch(Hwk_int, k_int, R_cluster, egrid, eta); g0p = ct.cluster_green_batch(Hwk_int, k_int, R_cluster, egrid, eta, deriv=True)
 print(f"[g0] {nE} energies, spacing {de*1e3:.2f} meV", flush=True)
 I = np.eye(nL * nw)
 t_T = np.array([V @ np.linalg.solve(I - g0[j] @ V, I) for j in range(nE)])
 t_B = np.array([V + V @ g0[j] @ V for j in range(nE)])                          # Born, first two terms
-t_C = {c: np.array([(V + 1e-3 * c * I) @ np.linalg.solve(I - g0[j] @ (V + 1e-3 * c * I), I) for j in range(nE)]) for c in SHIFTS}   # C14 : V_loc (aligné) + C·1
+t_C = {c: np.array([(V + 1e-3 * c * I) @ np.linalg.solve(I - g0[j] @ (V + 1e-3 * c * I), I) for j in range(nE)]) for c in SHIFTS}   # C14 : M_cluster (aligné) + C·1
 drho = np.array([(1.0 / np.pi) * np.trace(t_T[j] @ g0p[j]).imag for j in range(nE)])   # per defect, per spin, states/eV
 print(f"[drho] integral over the window = {np.trapz(drho, egrid):+.4f} states (Friedel: -> 0 over the full band)", flush=True)
 
@@ -82,7 +84,7 @@ def eres(g):
 GT_e, GB_e = eres(G_T), eres(G_B)
 GC_e = {c: eres(G_C[c]) for c in SHIFTS}
 rho0_240 = np.array([lor(e - E_out).sum() / len(k_out) for e in eg])
-kf = lt.mp_grid(a.rho0_grid, a.rho0_grid, 1); _, E_f, _ = lt.Hwr_to_Hwk(Hwr, Rw, kf, ndegen=nd)
+kf = ct.mp_grid(a.rho0_grid, a.rho0_grid, 1); _, E_f, _ = ct.Hwr_to_Hwk(Hwr, Rw, kf, ndegen=nd)
 rho0 = np.array([lor(e - E_f).sum() / len(kf) for e in eg])                       # per unit cell, per spin
 drho_e = np.interp(eg, egrid, drho); rho_dis = rho0 + conc * drho_e
 ratio = GT_e / rho0
@@ -111,7 +113,7 @@ for c in SHIFTS:
     tag = f"{c:+g}".replace("+", "p").replace("-", "m").replace(".", "_")
     shift_out.update({f"Gamma_T_shift{tag}": GC_e[c], f"G_T_shift{tag}": G_C[c], f"peak_GT_shift{tag}": peak(eg, GC_e[c]) - E_D, f"E_res_states_shift{tag}": eres_states(G_C[c]),
                       f"median_GT_states_shift{tag}_meV": float(np.nanmedian(np.abs(G_C[c][sel])) * 1e3)})
-    print(f"=== C14 (R10, D10) : V_loc aligné + ({c:+g} meV)·1 : médiane |Gamma_T|·N_cells (états) {shift_out[f'median_GT_states_shift{tag}_meV']:.2f} meV (sans décalage {shift_out['median_GT_states_meV']:.2f}) ; "
+    print(f"=== C14 (R10, D10) : M_cluster aligné + ({c:+g} meV)·1 : médiane |Gamma_T|·N_cells (états) {shift_out[f'median_GT_states_shift{tag}_meV']:.2f} meV (sans décalage {shift_out['median_GT_states_meV']:.2f}) ; "
           f"E_res (états, ±1,5 eV) {shift_out[f'E_res_states_shift{tag}']:+.3f} eV (sans {shift_out['E_res_states']:+.3f}) ; pic de la courbe Gamma_T {shift_out[f'peak_GT_shift{tag}']:+.3f} eV (sans {peak(eg, GT_e) - E_D:+.3f}) ; "
           f"max rel |diff| Gamma_T {np.nanmax(np.abs(GC_e[c][m]-GT_e[m])/GT_e[m]):.3e}, médian {np.nanmedian(np.abs(GC_e[c][m]-GT_e[m])/GT_e[m]):.3e}", flush=True)
 out = a.out or f"{RES}/resonance_{S}.npz"

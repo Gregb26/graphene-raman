@@ -3,7 +3,7 @@ Run: PYTHONPATH=src pytest tests/test_r9_functions.py"""
 import numpy as np
 from graphene_raman.defects import alignment as al
 from graphene_raman.wannier.wannier_interpolation import Mwr_to_Mwk, Mwr_to_Mwk_pairs
-from graphene_raman.defects.many_body.local_tmatrix import cluster_ldos
+from graphene_raman.defects.many_body.cluster_tmatrix import cluster_ldos
 from graphene_raman.wannier.supercell_fold import ldos_from_eigenpairs
 
 
@@ -40,7 +40,13 @@ def test_Mwr_to_Mwk_pairs_matches_square_version():
     Mwr = rng.standard_normal((nw, len(R), nw, len(R))) + 1j * rng.standard_normal((nw, len(R), nw, len(R)))
     k = rng.random((4, 3)); k[:, 2] = 0.0
     sq = Mwr_to_Mwk(Mwr, R, k)
-    assert np.allclose(Mwr_to_Mwk_pairs(Mwr, R, k, k), sq, rtol=0, atol=1e-12)
+    ref = np.zeros_like(sq)                                              # explicit double sum, independent of the module
+    for a, kp in enumerate(k):
+        for b, kk in enumerate(k):
+            for i, Ri in enumerate(R):
+                for j, Rj in enumerate(R):
+                    ref[:, a, :, b] += np.exp(-2j * np.pi * kp @ Ri) * Mwr[:, i, :, j] * np.exp(2j * np.pi * kk @ Rj)
+    assert np.allclose(sq, ref, rtol=0, atol=1e-12)
     rect = Mwr_to_Mwk_pairs(Mwr, R, k[:3], k[3:])                        # (nw, 3, nw, 1) = sub-block of the square array
     assert rect.shape == (nw, 3, nw, 1) and np.allclose(rect, sq[:, :3, :, 3:], rtol=0, atol=1e-12)
 

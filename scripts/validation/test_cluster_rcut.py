@@ -1,14 +1,14 @@
 """
-Synthetic validation of the R_cut machinery: (i) with R_local covering the defect support the local
-rate is EXACT (matches dense compute_T); (ii) truncating R_local changes it (so R_cut is a real
-convergence parameter); (iii) extract_V_loc / mwr_locality guardrails behave.
+Synthetic validation of the R_cut machinery: (i) with R_cluster covering the defect support the cluster
+rate is EXACT (matches dense compute_T); (ii) truncating R_cluster changes it (so R_cut is a real
+convergence parameter); (iii) cluster_potential / mwr_locality guardrails behave.
 """
 import numpy as np
 
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.defects.many_body.single_defect import compute_T
-from graphene_raman.defects.many_body import local_tmatrix as lt
-from test_local_tmatrix import random_H   # reuse the synthetic Hamiltonian
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
+from test_cluster_tmatrix import random_H   # reuse the synthetic Hamiltonian
 
 
 def main():
@@ -30,16 +30,16 @@ def main():
     Vb = V_full.reshape(nL, nw, nL, nw)              # [L,w,L',w']
     Mwr[:, :, :, :] = np.transpose(Vb, (1, 0, 3, 2))  # (w,L,w',L')
     # guardrail helpers
-    dist, wt = lt.mwr_locality(Mwr, R_mwr)
+    dist, wt = ct.mwr_locality(Mwr, R_mwr)
     print("[locality] ||Mwr(R,R0)|| vs |R-R0|:", dict(zip(np.round(dist, 3), np.round(wt, 3))))
-    V_ex, res = lt.extract_V_loc(Mwr, R_mwr, R_full)
-    print(f"[extract] V_loc matches V_full ? {np.allclose(V_ex, V_full, atol=1e-12)}  herm_res={res:.1e}")
+    V_ex, res = ct.cluster_potential(Mwr, R_mwr, R_full)
+    print(f"[extract] M_cluster matches V_full ? {np.allclose(V_ex, V_full, atol=1e-12)}  herm_res={res:.1e}")
 
     # dense reference from V_full (multi-R projection)
-    kc = lt.mp_grid(Nc, Nc, 1)
+    kc = ct.mp_grid(Nc, Nc, 1)
     _, Ec, Uc = Hwr_to_Hwk(Hwr, Rw, kc, ndegen=ndeg)
     Nk = len(kc)
-    ph = lt._phase(kc, R_full)                       # (Nk, nL)
+    ph = ct._phase(kc, R_full)                       # (Nk, nL)
     phi = np.einsum("kL,kwn->knLw", ph, Uc, optimize=True).reshape(Nk, nw, nL * nw)
     M_bk = np.einsum("kna,ab,KMb->nkMK", np.conj(phi), V_full, phi, optimize=True) / Nk
     eigs = Ec.T
@@ -51,9 +51,9 @@ def main():
     Gd_perdef = Gd * Nk
 
     # local: full R_cut (exact) vs truncated to {0}
-    Gl_full = lt.scattering_rate(Hwr, Rw, ndeg, V_full, R_full, kc, eta, k_int=kc)
-    V0, _ = lt.extract_V_loc(Mwr, R_mwr, np.array([[0, 0, 0]]))
-    Gl_trunc = lt.scattering_rate(Hwr, Rw, ndeg, V0, np.array([[0, 0, 0]]), kc, eta, k_int=kc)
+    Gl_full = ct.scattering_rate(Hwr, Rw, ndeg, V_full, R_full, kc, eta, k_int=kc)
+    V0, _ = ct.cluster_potential(Mwr, R_mwr, np.array([[0, 0, 0]]))
+    Gl_trunc = ct.scattering_rate(Hwr, Rw, ndeg, V0, np.array([[0, 0, 0]]), kc, eta, k_int=kc)
 
     rel_full = np.max(np.abs(Gl_full - Gd_perdef)) / max(1e-30, np.max(np.abs(Gd_perdef)))
     rel_trunc = np.max(np.abs(Gl_trunc - Gd_perdef)) / max(1e-30, np.max(np.abs(Gd_perdef)))

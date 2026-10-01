@@ -128,7 +128,7 @@ cb = fig.colorbar(pc, ax=[axa, axb], shrink=1.0, pad=0.02, aspect=16); cb.ax.tic
 for S in SIZES:
     if f"{S}_rad_masked" in V:
         axc.plot(V[f"{S}_rc_masked"], V[f"{S}_rad_masked"], color=COL[S], label=famlab(S))
-        axc.axhline(alignment_C(cfg, S), color=COL[S], ls=":", lw=0.9)                                 # R10 : C_N (plateau (i), config) de la taille
+        axc.axhline(alignment_C(cfg, S), color=COL[S], ls=":", lw=0.9)                                 # R10 : C_N (Kumagai–Oba, config) de la taille
 axc.axhline(0, color=MUTED, lw=0.8); axc.set_yscale("symlog", linthresh=LIN, linscale=0.4)
 axc.set_xlabel(r"Distance au site $r$ (Å)"); axc.set_ylabel(r"$\bar V_\mathrm{ed}^{L}$ (eV)"); axc.legend(title="Super-cellule", ncol=6, fontsize=7, title_fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), frameon=False)
 axc.set_title("Moyenne du potentiel local dans le plan du graphène", loc="left", fontsize=9); panel(axc, "c")

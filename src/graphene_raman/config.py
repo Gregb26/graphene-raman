@@ -62,8 +62,8 @@ def campaigns_dir(cfg, *parts, root=ROOT):
 
 
 def alignment_C(cfg, size):
-    """Far-field potential offset C_N (eV) of a supercell size (block "alignment", plateau (i), R10), subtracted as M_W(R,R) - C_N on the
-    N x N box (defect_mwr). Raises KeyError if the size has no C_N (no silent default)."""
+    """Kumagai-Oba alignment constant C_N = Delta V_PA^(N) (eV) of a supercell size (config block "alignment", R10), subtracted as
+    M_W(R,R) - C_N on the N x N box (defect_mwr). Raises KeyError if the size has no C_N (no silent default)."""
     C = cfg["alignment"]["C_N_eV"]
     if size not in C:
         raise KeyError(f"production config: no alignment C_N for size '{size}' (sizes: {', '.join(C)})")

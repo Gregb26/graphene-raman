@@ -2,11 +2,11 @@
 alignment.py
     Potential alignment between a defective and a pristine supercell (R4, 2026-09-25).
 
-    far_atom_alignment -- Lu et al. (2019)-type alignment: average of the local KS potential (pp.x plot_num=1)
+    far_atom_alignment -- single-site alignment (Lu et al. 2019): average of the local KS potential (pp.x plot_num=1)
                           in a sphere around the atom farthest from the vacancy, in the defective and in the
                           pristine supercell; the difference is the rigid shift of the defective energy reference.
     rigid_shift_fit    -- rigid shift between two spectra, fitted on the states below an energy (outside the window).
-    atom_sphere_shifts -- (R9, 2026-09-28) the same sphere-averaged shift around EVERY atom of the defective cell, with its true
+    atom_sphere_shifts -- (R9, 2026-09-28; source of the Kumagai-Oba C_N) the same sphere-averaged shift around EVERY atom of the defective cell, with its true
                           minimum-image distance to the vacancy: profile Delta_a(d) of V_d - V_p away from the defect.
     Units: potentials and energies as given (the caller converts), positions reduced, radii in the unit of A.
 
@@ -144,6 +144,7 @@ def _sphere_points(center_red, A_cols, shape, radius):
 def atom_sphere_shifts(V_d, V_p, x_red_d, x_red_p, A_cols, radius):
     """
     Sphere-averaged potential shift around every atom of the defective cell (R9, A.1 (i); generalises far_atom_alignment).
+    Its mean over the atoms at true distance >= 0.75 r_max is the Kumagai-Oba constant C_N (config block "alignment").
 
         Delta_a = <V_d>_{S(tau_a, rho)} - <V_p>_{S(tau'_p(a), rho)},
         S(tau, rho) = { grid points r : |r - tau|_(per-axis minimum image) < rho }   (3D sphere, all z planes),

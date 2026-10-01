@@ -8,9 +8,9 @@ Run: PYTHONPATH=src pytest tests/test_r8_functions.py"""
 import numpy as np
 import pytest
 
-from graphene_raman.defects.many_body import local_tmatrix as lt
+from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.defects.many_body import disorder_average as da
-from graphene_raman.defects.many_body.pole_criterion import local_t_cache
+from graphene_raman.defects.many_body.pole_criterion import cluster_t_cache
 from graphene_raman.defects.many_body.tb_models import graphene_pz_tb
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.utils.lattice import build_k_path
@@ -61,10 +61,10 @@ def setup():
     for e in EGRID:
         G0 = np.linalg.inv((e + 1j * ETA) * np.eye(n) - Hfull)
         Tfull.append(Vfull @ np.linalg.inv(np.eye(n) - G0 @ Vfull))
-    k_int = lt.mp_grid(N, N, 1)
+    k_int = ct.mp_grid(N, N, 1)
     Hk = Hwr_to_Hwk(Hpi, Rw, k_int, ndegen=nd)[0]
-    g0 = lt.local_green_batch(Hk, k_int, R_LOC, EGRID, ETA)
-    t = local_t_cache(V, g0)
+    g0 = ct.cluster_green_batch(Hk, k_int, R_LOC, EGRID, ETA)
+    t = cluster_t_cache(V, g0)
     return dict(Hpi=Hpi, Rw=Rw, nd=nd, V=V, idx=idx, Tfull=np.array(Tfull), k_int=k_int, Hk=Hk, g0=g0, t=t, nw=nw)
 
 
@@ -103,7 +103,7 @@ def test_tbar_reduce_keeps_selected_wfs(setup):
     ip = np.array([L * 5 + w for L in range(nL) for w in (3, 4)])
     V5[np.ix_(ip, ip)] = S["V"]
     Hk5 = Hwr_to_Hwk(Hwr, Rw, S["k_int"], ndegen=nd)[0]
-    t5 = local_t_cache(V5, lt.local_green_batch(Hk5, S["k_int"], R_LOC, EGRID, ETA))
+    t5 = cluster_t_cache(V5, ct.cluster_green_batch(Hk5, S["k_int"], R_LOC, EGRID, ETA))
     Du, tau5 = da.tbar_reduce(t5, R_LOC, 5, wfs=(3, 4))
     Du2, tau2 = da.tbar_reduce(S["t"], R_LOC, 2)
     assert np.array_equal(Du, Du2) and np.abs(tau5 - tau2).max() < 1e-12 * np.abs(tau2).max()
@@ -132,7 +132,7 @@ def test_linear_term_equals_lloyd(setup):
     S = setup
     Du, tau = da.tbar_reduce(S["t"], R_LOC, S["nw"])
     lin = da.dos_average(S["Hk"], tau, Du, S["k_int"], 0.0, EGRID, ETA, linear=True)["drho_lin"]
-    g0p = lt.local_green_batch(S["Hk"], S["k_int"], R_LOC, EGRID, ETA, deriv=True)
+    g0p = ct.cluster_green_batch(S["Hk"], S["k_int"], R_LOC, EGRID, ETA, deriv=True)
     lloyd = np.array([np.trace(S["t"][j] @ g0p[j]).imag / np.pi for j in range(len(EGRID))])
     assert np.abs(lin - lloyd).max() < 1e-12 * np.abs(lloyd).max()
 

@@ -4,8 +4,9 @@ from pathlib import Path
 import h5py
 import numpy as np
 from graphene_raman.config import ROOT, HA2EV, wannier_dir, load_production, twied_dir
-from graphene_raman.io import qe_io, pseudo_io, wannier_io
+from graphene_raman.io import qe_io, pseudo_io, wannier_io, matrix_io
 from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order
+from graphene_raman.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
 import json
 
 # paths
@@ -123,7 +124,7 @@ def write_unit_cell(f, uc_save):
     ds.attrs["note"] = "zero-padded beyond nG[k]"
     _put(g, "nG", nG, "count", "k")
     ds = _put(g, "G_red", G_red, "reduced", "k, G, component")
-    ds.attrs["not"] = "zero-padded beyond ng[k]"
+    ds.attrs["note"] = "zero-padded beyond nG[k]"
     _put(g, "k_red", k_red, "reduced", "k, component")
     _put(g, "eps", eps, "hartree", "band, k")
     _put(g, "A_cols", A_cols, "bohr", "cartesian, i")
@@ -204,13 +205,41 @@ def main():
 
     k_qe = qe_io.get_k_red(INPUTS["unit_cell"])
 
-    with h5py.File(path, "w") as f:
-        write_provenance(f, prov, "inputs")
-        write_unit_cell(f, INPUTS['unit_cell'])
-        write_supercell(f, 'p', INPUTS["p"], POT_PATH["p"])
-        write_supercell(f, 'd', INPUTS["d"], POT_PATH["d"])
-        write_pseudo(f, PSEUDO_PATH)
-        write_wannier(f, INPUTS["wannier"], k_qe=k_qe)
+    with h5py.File(path, "w") as fi, h5py.File(path, "w") as fc:
+        write_provenance(fc, prov, "chain")
+        write_provenance(fi, prov, "inputs")
+
+        # storing inputs
+        write_unit_cell(fi, INPUTS['unit_cell'])
+        write_supercell(fi, 'p', INPUTS["p"], POT_PATH["p"])
+        write_supercell(fi, 'd', INPUTS["d"], POT_PATH["d"])
+        write_pseudo(fi, PSEUDO_PATH)
+        write_wannier(fi, INPUTS["wannier"], k_qe=k_qe)
+
+        # compute local part of matrix
+        prep = prep_realspace_inputs(INPUTS["unit_cell"], INPUTS["p"], POT_PATH["p"], POT_PATH["d"], subtract_mean=False, io=qe_io)
+        g = fi.create_group("M_coarse/prep")
+        _put(g, "Ved", prep["Ved"], "hartree", "ix, iy, iz")
+        _put(g, "ngfft", prep["ngfft"], "dimensionless")
+        _put(g, "Ndiag", prep["Ndiag"], "dimensionless", "3, 3")
+        _put(g, "Omega_sc", prep["Omega_sc", "bohr^3"])
+
+        Vp = qe_io.read_filplot(POT_PATH["p"])["V"]; Vd = qe_io.read_filplot(POT_PATH["d"])["V"]
+        assert np.allclose(prep["Ved"], Vd-Vp), "Defect potential not equal to difference of defective and pristine potentials"
+
+        M_L = compute_ML_R_mpi(prep)
+        nb, nk, _, _ = M_L.shape
+        Mf = M_L.reshape(nb*nk, -1)
+        assert np.allclose(Mf, Mf.conj().T), "Local part of matrix is not hermitian"
+
+        g = fc.create_group("M_coarse/M_L")
+        ds = _put(g, "M_L", M_L, "hartree", "bra_band, k', ket_band, k")
+
+        bloch_norm = matrix_io.UNIT_CELL
+        M_normalization = matrix_io.M_NORM_V2
+        ds.attrs["bloch_norm"] = bloch_norm
+        ds.attrs["M_normalization"] = M_normalization
+    
 
 if __name__ == "__main__":
     main()

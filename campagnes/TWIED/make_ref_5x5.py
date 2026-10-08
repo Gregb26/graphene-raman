@@ -17,8 +17,8 @@ INPUTS = {
     "wannier":     wannier_dir(load_production(verbose=False), 5),
 }
 POT_PATH = {
-    "p":          f"{INPUTS["supercell_p"]}/Vks_5x5_p",
-    "d":          f"{INPUTS["supercell_d"]}/Vks_5x5_d"
+    "p":          f"{INPUTS["p"]}/Vks_5x5_p",
+    "d":          f"{INPUTS["d"]}/Vks_5x5_d"
 }
 PSEUDO_PATH = f"{INPUTS["unit_cell"]}/C.upf"
 

@@ -3,11 +3,12 @@ from datetime import datetime
 from pathlib import Path
 import h5py
 import numpy as np
-from graphene_raman.config import ROOT, HA2EV, wannier_dir, load_production, twied_dir
+from graphene_raman.config import ROOT, HA2EV, wannier_dir, load_production, twied_dir, alignment_C
 from graphene_raman.io import qe_io, pseudo_io, wannier_io, matrix_io
-from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order
+from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order, Mbk_to_Mwk, Mwk_to_Mbk, Mwk_to_Mwr, _infer_mp_grid
 from graphene_raman.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
 from graphene_raman.defects.non_local import compute_M_NL
+from graphene_raman.defects.many_body.cluster_tmatrix import recenter_mwr, defect_mwr
 import json
 
 # paths
@@ -269,6 +270,57 @@ def main():
         ds.attrs["M_normalization"] = M_normalization
         ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().T).max())
         ds.attrs["N_cells"] = 25
+
+        # prepare inputs for rotation to Wannier basis
+        M_eV = M * HA2EV
+        k_coarse = qe_io.get_k_red(INPUTS["unit_cell"])
+        U, k_U = wannier_io.read_w90_mat(f"{INPUTS["wannier"]}/wannier_u.mat")
+        U_dis, k_U_dis = wannier_io.read_w90_mat(f"{INPUTS['wannier']}/wannier_u_dis.mat")
+        U = U[_match_kpoint_order(k_U, k_coarse)]; U_dis = U_dis[_match_kpoint_order(k_U_dis, k_coarse)]
+        MP = _infer_mp_grid(k_coarse)
+        C_N = alignment_C(cfg, "5x5")
+
+        g = fc.require_group("M_W/")
+        _put(g, "U", U, "dimensionless", "k, wannier, wannier")
+        _put(g, "U_dis", U_dis, "dimensionless", "k, band, wannier")
+        _put(g, "k_coarse", k_coarse, "reduced", "k, component")
+        _put(g, "C_N", C_N, "eV")
+        g.attrs["MP"] = MP
+
+        # rotation to Wannier gauge
+        Mwk = Mbk_to_Mwk(M_eV, U, U_dis)
+        _put(g, "Mwk", Mwk, 'eV', "wannier, k', wannier, k")
+
+        # transformation to real space
+        Mwr, R = Mwk_to_Mwr(Mwk, k_coarse, MP)
+        _put(g, "Mwr", Mwr, 'eV', "wannier, R, wannier, R'")
+        _put(g, "R", R, "reduced", "R, component")
+
+        # alignment
+        c = R.copy()
+        c[:, :2] %= MP[:2] # (nR, 3)
+        n_box = 5; nW = Mwr.shape[0]
+        in_box = np.all(c[:,:2] < n_box, axis=1)
+        Mwr_aligned = Mwr.copy()
+        for w in range(nW):
+            Mwr_aligned[w, in_box, w, in_box] -= C_N
+
+        _put(g, "Mwr_aligned", Mwr_aligned, "eV", "wannier, R, wannier, R'")
+        _put(g, "in_box", in_box, "dimensionless", "R")
+        g.attrs["n_box"] = n_box
+
+        Rn, R_d = recenter_mwr(Mwr_aligned, R, MP)
+        _put(g, "Rn", Rn, "reduced", "R, component")
+        _put(g, "R_d", R_d, "reduced")
+
+        defect = defect_mwr(M_eV, U, U_dis, k_coarse, MP, n_box, C_N)
+
+        assert np.allclose(Mwr_aligned, defect["Mwr"])
+        assert np.allclose(R, defect["R"])
+        assert np.allclose(Rn, defect["Rn"])
+        assert np.allclose(R_d, defect["R_d"])
+        assert np.allclose(in_box, defect["in_box"])
+    
 
 if __name__ == "__main__":
     main()

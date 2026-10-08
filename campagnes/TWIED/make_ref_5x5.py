@@ -196,6 +196,36 @@ def write_wannier(f, wdir, k_qe):
         man = json.load(fh)
         g.attrs["manifest"] = json.dumps(man)
 
+def run_variant(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R):
+
+        g = fc.create(f"variants/{name}")
+        c = R.copy()
+        c[:, :2] %= MP[:2] # (nR, 3)
+        nW = Mwr_raw.shape[0]
+        in_box = np.all(c[:,:2] < n_box, axis=1)
+        Mwr_aligned = Mwr_raw.copy()
+        for w in range(nW):
+            Mwr_aligned[w, in_box, w, in_box] -= C_N
+
+        _put(g, "Mwr_aligned", Mwr_aligned, "eV", "wannier, R, wannier, R'")
+        _put(g, "in_box", in_box, "dimensionless", "R")
+        g.attrs["n_box"] = n_box
+
+        Rn, R_d = recenter_mwr(Mwr_aligned, R, MP)
+        _put(g, "Rn", Rn, "reduced", "R, component")
+        _put(g, "R_d", R_d, "reduced")
+
+        defect = defect_mwr(M_eV, U, U_dis, k_coarse, MP, n_box, C_N)
+
+        assert np.allclose(Mwr_aligned, defect["Mwr"])
+        assert np.allclose(R, defect["R"])
+        assert np.allclose(Rn, defect["Rn"])
+        assert np.allclose(R_d, defect["R_d"])
+        assert np.allclose(in_box, defect["in_box"])
+
+        return Rn
+
+
 def main():
 
     prov = collect_provenance(list(INPUTS.values()))
@@ -292,35 +322,16 @@ def main():
         _put(g, "Mwk", Mwk, 'eV', "wannier, k', wannier, k")
 
         # transformation to real space
-        Mwr, R = Mwk_to_Mwr(Mwk, k_coarse, MP)
-        _put(g, "Mwr", Mwr, 'eV', "wannier, R, wannier, R'")
+        Mwr_raw, R = Mwk_to_Mwr(Mwk, k_coarse, MP)
+        _put(g, "Mwr", Mwr_raw, 'eV', "wannier, R, wannier, R'")
         _put(g, "R", R, "reduced", "R, component")
 
-        # alignment
-        c = R.copy()
-        c[:, :2] %= MP[:2] # (nR, 3)
-        n_box = 5; nW = Mwr.shape[0]
-        in_box = np.all(c[:,:2] < n_box, axis=1)
-        Mwr_aligned = Mwr.copy()
-        for w in range(nW):
-            Mwr_aligned[w, in_box, w, in_box] -= C_N
-
-        _put(g, "Mwr_aligned", Mwr_aligned, "eV", "wannier, R, wannier, R'")
-        _put(g, "in_box", in_box, "dimensionless", "R")
+        n_box = 5
         g.attrs["n_box"] = n_box
-
-        Rn, R_d = recenter_mwr(Mwr_aligned, R, MP)
-        _put(g, "Rn", Rn, "reduced", "R, component")
-        _put(g, "R_d", R_d, "reduced")
-
-        defect = defect_mwr(M_eV, U, U_dis, k_coarse, MP, n_box, C_N)
-
-        assert np.allclose(Mwr_aligned, defect["Mwr"])
-        assert np.allclose(R, defect["R"])
-        assert np.allclose(Rn, defect["Rn"])
-        assert np.allclose(R_d, defect["R_d"])
-        assert np.allclose(in_box, defect["in_box"])
-    
+        variants = {"unaligned": 0.0, "kumagai_oba": alignment_C(cfg, "5x5")}
+        Rn_all = {}
+        for name, C_N in variants.items():
+            Rn_all[name] = run_variant(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R)    
 
 if __name__ == "__main__":
     main()

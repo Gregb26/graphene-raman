@@ -207,8 +207,8 @@ def main():
     with h5py.File(path, "w") as f:
         write_provenance(f, prov, "inputs")
         write_unit_cell(f, INPUTS['unit_cell'])
-        write_supercell(f, INPUTS["p"], POT_PATH["p"])
-        write_supercell(f, INPUTS["d"], POT_PATH["d"])
+        write_supercell(f, 'p', INPUTS["p"], POT_PATH["p"])
+        write_supercell(f, 'd', INPUTS["d"], POT_PATH["d"])
         write_pseudo(f, PSEUDO_PATH)
         write_wannier(f, INPUTS["wannier"], k_qe=k_qe)
 

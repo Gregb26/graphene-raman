@@ -223,7 +223,7 @@ def main():
         _put(g, "Ved", prep["Ved"], "hartree", "ix, iy, iz")
         _put(g, "ngfft", prep["ngfft"], "dimensionless")
         _put(g, "Ndiag", prep["Ndiag"], "dimensionless", "3, 3")
-        _put(g, "Omega_sc", prep["Omega_sc", "bohr^3"])
+        _put(g, "Omega_sc", prep["Omega_sc"], "bohr^3")
 
         Vp = qe_io.read_filplot(POT_PATH["p"])["V"]; Vd = qe_io.read_filplot(POT_PATH["d"])["V"]
         assert np.allclose(prep["Ved"], Vd-Vp), "Defect potential not equal to difference of defective and pristine potentials"

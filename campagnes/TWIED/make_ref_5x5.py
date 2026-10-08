@@ -201,11 +201,12 @@ def main():
     cfg = load_production(verbose=False)
     out_dir = twied_dir(cfg)
     os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, "ref_5x5_inputs.h5")
+    path_inputs = os.path.join(out_dir, "ref_5x5_inputs.h5")
+    path_chain  = os.path.join(out_dir, "ref_5x5_chain.h5")
 
     k_qe = qe_io.get_k_red(INPUTS["unit_cell"])
 
-    with h5py.File(path, "w") as fi, h5py.File(path, "w") as fc:
+    with h5py.File(path_inputs, "w") as fi, h5py.File(path_chain, "w") as fc:
         write_provenance(fc, prov, "chain")
         write_provenance(fi, prov, "inputs")
 
@@ -239,7 +240,7 @@ def main():
         M_normalization = matrix_io.M_NORM_V2
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
-    
+
 
 if __name__ == "__main__":
     main()

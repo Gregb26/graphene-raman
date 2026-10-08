@@ -198,7 +198,7 @@ def write_wannier(f, wdir, k_qe):
 
 def run_variant(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R):
 
-        g = fc.create(f"variants/{name}")
+        g = fc.create_group(f"variants/{name}")
         c = R.copy()
         c[:, :2] %= MP[:2] # (nR, 3)
         nW = Mwr_raw.shape[0]

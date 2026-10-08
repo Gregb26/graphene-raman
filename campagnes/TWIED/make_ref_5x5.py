@@ -234,15 +234,15 @@ def main():
         Mf = M_L.reshape(nb*nk, -1)
         assert np.allclose(Mf, Mf.conj().T), "Local part of matrix is not hermitian"
 
-        g = fc.require_group("M_coarse/M_L")
+        g = fc.require_group("M_coarse")
         ds = _put(g, "M_L", M_L, "hartree", "bra_band, k', ket_band, k")
 
         bloch_norm = matrix_io.UNIT_CELL
         M_normalization = matrix_io.M_NORM_V2
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
-        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().t).max())
-        ds.attrs["kernel"] = compute_ML_R_mpi
+        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().T).max())
+        ds.attrs["kernel"] = "compute_ML_R_mpi"
         ds.attrs["subtract_mean"] = False
         ds.attrs["grid_block"] = 200000
 
@@ -251,23 +251,23 @@ def main():
         Mf = M_NL.reshape(nb*nk, -1)
         assert np.allclose(Mf, Mf.conj().T), "Non local part of matrix non hermitian"
 
-        g = fc.require_group("M_coarse/M_NL")
+        g = fc.require_group("M_coarse/")
         ds = _put(g, "M_NL", M_NL, "hartree", "bra_band, k', ket_band, k")
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
-        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().t).max())
-        ds.attrs["kernel"] = compute_M_NL
+        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().T).max())
+        ds.attrs["kernel"] = "compute_M_NL"
 
         # compute full matrix
         M = M_L + M_NL
         Mf = M.reshape(nb*nk, -1)
         assert np.allclose(Mf, Mf.conj().T), "Full matrix not hermitian"
 
-        g = fc.require_group("M_coarse/M")
-        ds = _put(g, "M_NL", M_NL, "hartree", "bra_band, k', ket_band, k")
+        g = fc.require_group("M_coarse/")
+        ds = _put(g, "M", M, "hartree", "bra_band, k', ket_band, k")
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
-        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().t).max())
+        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().T).max())
         ds.attrs["N_cells"] = 25
 
 if __name__ == "__main__":

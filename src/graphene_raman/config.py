@@ -36,6 +36,9 @@ def epw_dir(cfg, root=ROOT):
     """Directory of the EPW post-processing products (chapter 5): results/epw."""
     return os.path.join(root, cfg.get("epw_results_dir", "results/epw"))
 
+def twied_dir(cfg, root=ROOT):
+    """Directory of twied tests"""
+    return os.path.join(root, cfg.get("twied_dir", "results/twied"))
 
 def electron_dir(cfg, root=ROOT):
     """Directory of the chapter 2 electronic-structure data (QE convergence .dat, bands, DOS): results/electron."""

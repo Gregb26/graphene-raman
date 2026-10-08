@@ -5,6 +5,7 @@
   "results_dir": "results/M2_plateau",
   "matrices_dir": "results/M2",
   "epw_results_dir": "results/epw",
+  "twied_dir": "results/twied",
   "electron_results_dir": "results/electron",
   "phonon_results_dir": "results/phonon",
   "wannier_dir": "results/wannier",

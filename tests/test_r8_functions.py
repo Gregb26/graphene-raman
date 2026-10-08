@@ -1,7 +1,7 @@
 """Minimal tests of the R8 functions (2026-09-28): disorder_average.tbar_reduce (Q1), tbar_k (Q2), green_k (Q3), dos_average (Q4),
 spectral_path / spectral_maxima (Q5) and utils.lattice.build_k_path (Q6).
 
-Reference = direct resolvent of a finite periodic lattice: nearest-neighbour p_z graphene (tb_models.graphene_pz_tb) on 6 x 6 cells,
+Reference = direct resolvent of a finite periodic lattice: nearest-neighbour p_z graphene (electron_photon.make_graphene_tb) on 6 x 6 cells,
 a random Hermitian defect potential on a 5-cell cluster, T = V [1 - G0 V]^-1 by inversion of the 72 x 72 real-space matrices. On the
 6 x 6 grid, local_green_batch gives the exact cluster block of G0 of that finite lattice, so every identity holds to round-off.
 Run: PYTHONPATH=src pytest tests/test_r8_functions.py"""
@@ -11,7 +11,7 @@ import pytest
 from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.defects.many_body import disorder_average as da
 from graphene_raman.defects.many_body.pole_criterion import cluster_t_cache
-from graphene_raman.defects.many_body.tb_models import graphene_pz_tb
+from graphene_raman.electron_photon import make_graphene_tb
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.utils.lattice import build_k_path
 
@@ -22,8 +22,8 @@ R_LOC = np.array([[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0]])
 
 
 def _pz_model():
-    Hwr, Rw, nd = graphene_pz_tb(t=2.7)
-    return Hwr[:, 3:5, 3:5].copy(), Rw, nd                   # pi block: p_z(A), p_z(B)
+    tb = make_graphene_tb(t=2.7)
+    return tb.H_R, tb.R_int, tb.ndegen                       # p_z(A), p_z(B)
 
 
 def _cell(R):
@@ -95,9 +95,12 @@ def test_tbar_matches_direct_resolvent(setup):
 
 
 def test_tbar_reduce_keeps_selected_wfs(setup):
-    """5-WF layout of graphene_pz_tb (sigma decoupled at -100 eV), V on the p_z only: wfs=(3, 4) gives the pi-only result."""
+    """5-WF layout of the production (sigma 0-2 decoupled at -100 eV, p_z = 3, 4), V on the p_z only: wfs=(3, 4) gives the pi-only result."""
     S = setup
-    Hwr, Rw, nd = graphene_pz_tb(t=2.7)
+    Hwr = np.zeros((len(S["Rw"]), 5, 5), complex)
+    Hwr[:, 3:5, 3:5] = S["Hpi"]
+    Hwr[int(np.flatnonzero((S["Rw"] == 0).all(axis=1))[0]), [0, 1, 2], [0, 1, 2]] = -100.0
+    Rw, nd = S["Rw"], S["nd"]
     nL = len(R_LOC)
     V5 = np.zeros((nL * 5, nL * 5), complex)
     ip = np.array([L * 5 + w for L in range(nL) for w in (3, 4)])

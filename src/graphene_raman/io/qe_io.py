@@ -433,6 +433,55 @@ def get_pot(filepath, subtract_mean=True, to_hartree=True):
 
     return V, (nr1, nr2, nr3)
 
+def read_filplot(filepath, to_hartree=True):
+    """
+    Read a pp.x plot_file (filplot, iflag=3) WITH its header: the potential and the geometry it was computed on (cell,
+    atomic positions), so that no `.save` directory is needed (R11, 2026-10-08). get_pot skips this header.
+
+    Header layout (PP/src/write_io_header): title ; nr1x nr2x nr3x nr1 nr2 nr3 nat ntyp ; ibrav celldm(1:6) ;
+    [ibrav = 0 only: three lines, the cell vectors in units of alat = celldm(1)] ; gcutm dual ecut plot_num ;
+    ntyp lines "it atm zv" ; nat lines "ia tau_x tau_y tau_z it" (Cartesian, units of alat) ; then the data (x fastest).
+
+    Returns dict:
+        V (nr1, nr2, nr3)   potential [ix, iy, iz], Hartree (to_hartree, default) or Rydberg as written; the mean is kept
+                            (equals get_pot(subtract_mean=False)[0].transpose(2, 1, 0)).
+        ngfft (nr1, nr2, nr3) ; alat (Bohr) ; plot_num (1 = V_KS, 11 = V_bare + V_H, ...).
+        A_cols (3, 3)       cell vectors as columns A_cols[:, i] = a_i, Bohr (the convention of get_A_volume).
+        x_red (nat, 3)      reduced atomic positions (as get_x_red) ; species (ntyp,) symbols ; ityp (nat,) 1-based types.
+    Only ibrav = 0 (explicit cell) is supported: the supercells of this project.
+    """
+    with open(filepath, "r") as f:
+        lines = f.readlines()
+    hdr = lines[1].split()
+    nr1, nr2, nr3 = int(hdr[3]), int(hdr[4]), int(hdr[5])
+    nat, ntyp = int(hdr[6]), int(hdr[7])
+    cd = lines[2].split()
+    ibrav, alat = int(cd[0]), float(cd[1])
+    if ibrav != 0:
+        raise ValueError(f"read_filplot: ibrav = {ibrav}; only ibrav = 0 (explicit cell vectors) is supported")
+    at = np.array([[float(x) for x in lines[3 + i].split()[:3]] for i in range(3)]) * alat   # row i = a_i, Bohr
+    cur = 6
+    plot_num = int(lines[cur].split()[3])
+    cur += 1
+    species = [lines[cur + i].split()[1] for i in range(ntyp)]
+    cur += ntyp
+    rows = [lines[cur + i].split() for i in range(nat)]
+    cur += nat
+    tau = np.array([[float(x) for x in r[1:4]] for r in rows]) * alat                          # Cartesian, Bohr
+    ityp = np.array([int(r[4]) for r in rows])
+    A_cols = at.T
+    x_red = tau @ np.linalg.inv(A_cols).T                                                      # x_red = A^-1 tau, row-wise
+
+    data = np.fromstring(" ".join(lines[cur:]), sep=" ", dtype=np.float64)
+    expected = nr1 * nr2 * nr3
+    if data.size != expected:
+        raise ValueError(f"plot_file data size {data.size} != nr1*nr2*nr3 = {expected}")
+    V = np.ascontiguousarray(data.reshape(nr3, nr2, nr1).transpose(2, 1, 0))                  # x-fastest flat -> [ix, iy, iz]
+    if to_hartree:
+        V = 0.5 * V                                                                            # Rydberg -> Hartree
+    return dict(V=V, ngfft=(nr1, nr2, nr3), alat=alat, plot_num=plot_num, A_cols=A_cols, x_red=x_red,
+                species=species, ityp=ityp)
+
 def get_C_nk(save_dir):
     """
     Plane-wave coefficients C_nk(G).

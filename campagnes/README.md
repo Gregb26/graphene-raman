@@ -29,4 +29,5 @@ son répertoire de travail puis resynchroniser la copie (`cp -p`).
 | `EM/B_sigma_complex` | σ(ω) complexe (perspective B) | archive (PRODUCTION, local) | hors mémoire (1 figure gardée) | `b_prod.py`, `b_figure.py` |
 | `M/ch4` | chiffres du ch. 4 : table v1 → final, régions d'alignement, nombres de `défauts.tex` | **vivante** (PRODUCTION, local) | mémoire ch. 4 | `ch4_chiffres.py` |
 
-Plan de la série EM : `EM/EM.md`. Le plan du futur article (perspective C) est à part, dans `article/C_optique_lacunes/`.
+Plan de la série EM : `EM/EM.md`. Les plans des trois articles (A méthode + SCTMA + MoS₂, B spin, C σ(ω)) sont dans le dépôt `../articles/` (`ROADMAP.md`) ;
+leurs campagnes viendront ici sous `SCTMA/`, `MOS2/`, `SPIN/`, `OPT/`.

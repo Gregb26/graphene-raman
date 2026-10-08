@@ -1,9 +1,10 @@
 """
-Tableau d'EM3 (chiffres du §2.5) à partir des sorties de m4_prod.py, sans recopie à la main :
-  em_table.csv : format long, une ligne par (laser, variante) : σ_xx, σ_yy (σ/σ₀), ⟨|e_x,y·ħv_cv|²⟩ sur l'anneau
-                 (unités (ħv_F)²/2), nœuds δ_x, δ_y (degrés), rapport min–max de |ħv_cv| au mode complet ;
-  em_table.tex : `tabular` (booktabs) prêt à envelopper dans un `table` du mémoire, point décimal.
-Relancer : .venv/bin/python campagnes/EM/M4_sigma/make_table.py
+Tableau contenant les chiffres de la section 2.5 du mémoire, à partir des sorties de m4_prod.py.
+
+    Inputs:  em_table.csv, une ligne par (laser, variante) : σ_xx, σ_yy (σ/σ₀), ⟨|e_x,y·ħv_cv|²⟩ sur l'anneau (unités (ħv_F)²/2), nœuds δ_x, δ_y (degrés), rapport min–max de |ħv_cv| au mode complet.
+    Returns: em_table.tex : `tabular` (booktabs) prêt à envelopper dans un `table` du mémoire.
+
+Usage : .venv/bin/python campagnes/EM/M4_sigma/make_table.py
 """
 
 import csv

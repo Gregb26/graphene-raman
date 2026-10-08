@@ -70,10 +70,13 @@ in `scripts/`.
     figures/                           thesis figures (generated)
     campagnes/{R,EM,M}/                computation campaigns: inputs, drivers,
                                        reports, tables (mostly in French)
-    article/                           plan of the follow-up article
     notes/                             working notes (T-matrix chain, EPW)
     admin/                             housekeeping logs
     data/                              raw QE data, not tracked (see below)
+
+Plans, manuscripts and bibliography of the follow-up articles are kept in a
+separate repository (`../articles`); their computation campaigns live here under
+`campagnes/`.
 
 Install with `pip install -e ".[mpi,test]"` (`mpi4py` needs an MPI library and is
 imported by the $M$ kernels), then

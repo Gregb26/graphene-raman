@@ -1,5 +1,5 @@
 """Non-regression snapshot of chain T before the 2026-09-30 cleanup (cluster_tmatrix, ex local_tmatrix; Mbk_to_Mwk / Mwk_to_Mwr through
-defect_mwr, pole_criterion.cluster_t_cache). Synthetic case: graphene_pz_tb + a localized Hermitian defect potential put on a
+defect_mwr, pole_criterion.cluster_t_cache). Synthetic case: make_graphene_tb in the 5-WF layout + a localized Hermitian defect potential put on a
 6x6 grid away from the origin, scrambled into a Bloch M with random U and U_dis. The input is built with plain numpy (no
 function under test). Reference = regression, code of commit c0fb4d2, stored in tests/snapshots/tmatrix_chain.npz.
 Mwr is kept as its on-site blocks and its column towards R0 (what the alignment and mwr_locality touch). Quantities
@@ -16,7 +16,7 @@ from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk
 from graphene_raman.wannier import wannier_interpolation as wi
 from graphene_raman.defects.many_body import cluster_tmatrix as ct
 from graphene_raman.defects.many_body import pole_criterion as pc
-from graphene_raman.defects.many_body.tb_models import graphene_pz_tb
+from graphene_raman.electron_photon import make_graphene_tb
 
 SNAP = Path(__file__).parent / "snapshots" / "tmatrix_chain.npz"
 SNAP_FT = Path(__file__).parent / "snapshots" / "wannier_ft.npz"
@@ -24,6 +24,16 @@ D, NW, NB = 6, 5, 7                  # MP grid D x D, Wannier functions, Bloch b
 N_BOX, C_N = 3, -0.025               # supercell box and alignment constant (eV)
 R_D = np.array([1, 2, 0])            # defect cell in the raw labels: inside the N_BOX box, off the origin (real recentering)
 ETA, R_CUT = 0.1, 1
+
+
+def _five_wf(e_sigma):
+    """make_graphene_tb in the 5-WF layout of the production: sigma 0-2 decoupled at e_sigma, p_z(A), p_z(B) = 3, 4. Also returns the row of R = 0."""
+    tb = make_graphene_tb()
+    i0 = tb.index[(0, 0, 0)]
+    Hwr = np.zeros((len(tb.R_int), NW, NW), complex)
+    Hwr[:, 3:5, 3:5] = tb.H_R
+    Hwr[i0, [0, 1, 2], [0, 1, 2]] = e_sigma
+    return Hwr, tb.R_int, tb.ndegen, i0
 
 
 def _synthetic_Mbk(rng):
@@ -60,7 +70,7 @@ def _chain():
     R_cluster = ct.cluster_cells(Rn, R_CUT)
     M_cluster, herm = ct.cluster_potential(Mwr, Rn, R_cluster)
 
-    Hwr, Rw, nd = graphene_pz_tb(e_sigma=-4.0)
+    Hwr, Rw, nd, _ = _five_wf(e_sigma=-4.0)
     k_int = ct.mp_grid(24)
     Hk_int = Hwr_to_Hwk(Hwr, Rw, k_int, ndegen=nd)[0]
     egrid = np.linspace(-3.0, 3.0, 5)
@@ -92,8 +102,8 @@ def _wannier_ft():
     a = 2.4659
     A_cols = np.array([[a * np.sqrt(3) / 2, a * np.sqrt(3) / 2, 0.0], [-a / 2, a / 2, 0.0], [0.0, 0.0, 8.0]])
     ws = wi.ws_images(R, R_D, (D, D, 1), A_cols)
-    Hwr, Rw, nd = graphene_pz_tb(e_sigma=-4.0)
-    Hwr[0, 0, 0] -= 1.0; Hwr[0, 1, 1] -= 2.0                         # lift the sigma degeneracy (eigenvectors fixed up to LAPACK's phase)
+    Hwr, Rw, nd, i0 = _five_wf(e_sigma=-4.0)
+    Hwr[i0, 0, 0] -= 1.0; Hwr[i0, 1, 1] -= 2.0                       # lift the sigma degeneracy (eigenvectors fixed up to LAPACK's phase)
     Mwk = rng.normal(size=(NW, len(k), NW, len(k))) + 1j * rng.normal(size=(NW, len(k), NW, len(k)))
     return dict(Mwk=wi.Mwr_to_Mwk(Mwr, R, k), Mwk_ws=wi.Mwr_to_Mwk(Mwr, R, k, ws=ws),
                 Mwk_pairs=wi.Mwr_to_Mwk_pairs(Mwr, R, k_bra, k), Mwk_pairs_ws=wi.Mwr_to_Mwk_pairs(Mwr, R, k_bra, k, ws=ws),

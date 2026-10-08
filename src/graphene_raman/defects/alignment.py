@@ -188,3 +188,116 @@ def atom_sphere_shifts(V_d, V_p, x_red_d, x_red_p, A_cols, radius):
         out["npts_d"][a], out["npts_p"][a], out["i_p"][a] = len(pd), len(pp), ip
     out["shift"] = out["mean_d"] - out["mean_p"]
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------- R11 (2026-10-08)
+PLATEAU_FRAC = 0.75     # Kumagai-Oba constant: atoms at true distance >= PLATEAU_FRAC * r_max from the vacancy (R9 decision, R10 p1_size)
+
+
+def plateau_stats(values, mask):
+    """Mean, rms, max |deviation| and count of values[mask] (the plateau statistics of r9/r10_driver)."""
+    v = np.asarray(values, float)[mask]
+    mu = float(v.mean())
+    return dict(mean=mu, rms=float(np.sqrt(((v - mu) ** 2).mean())), max_abs_dev=float(np.abs(v - mu).max()), n=int(mask.sum()))
+
+
+def kumagai_oba_constant(V_d, V_p, x_red_d, x_red_p, A_cols, radius=1.0, frac=PLATEAU_FRAC):
+    """
+    C_N of config "alignment" (R10 p1_size, approximation (i)): mean of the sphere shifts of atom_sphere_shifts (radius, Angstrom)
+    over the atoms of the defective cell at true minimum-image distance >= frac * r_max from the vacancy; rms over those atoms =
+    the uncertainty of tab:alignement (column A). Units of V (production: eV).
+    Returns dict(C_N, rms, max_abs_dev, n, r_max, d_min = frac * r_max, mask (n_d,), shifts = the atom_sphere_shifts dict).
+    """
+    r = atom_sphere_shifts(V_d, V_p, x_red_d, x_red_p, A_cols, radius)
+    r_max = float(r["dist"].max())
+    mask = r["dist"] >= frac * r_max
+    st = plateau_stats(r["shift"], mask)
+    return dict(C_N=st["mean"], rms=st["rms"], max_abs_dev=st["max_abs_dev"], n=st["n"], r_max=r_max, d_min=frac * r_max,
+                mask=mask, shifts=r)
+
+
+def plane_radial_profile(dV, x_red_d, s_vac, A_cols, r_core=0.5, dr=0.05, r_max=None):
+    """
+    Core-masked azimuthal average of dV in the graphene plane (fig:Ved (c), formerly inline in scripts/t/analyze_Ved.py).
+    On the grid plane iz = round(s_vac[2] * n3), the points at in-plane distance >= r_core (Angstrom) from every atom of the
+    defective cell are binned by their true minimum-image distance r to the vacancy (bins of width dr up to r_max, default
+    |a1| / 2, the half-width of the supercell) and averaged bin by bin. The vacancy site itself is not masked.
+    dV (n1, n2, n3) [ix, iy, iz] ; x_red_d (n_d, 3) ; s_vac (3,) reduced (vacancy_site) ; A_cols (3, 3) Angstrom.
+    Returns dict(rc (nbin,) bin centres, rad (nbin,) mean of dV per bin (nan when empty), cnt (nbin,), r_max, iz, masked_fraction).
+    """
+    A = np.asarray(A_cols, float)
+    s = np.asarray(s_vac, float)
+    n1, n2, n3 = dV.shape
+    iz = int(np.round(s[2] * n3)) % n3
+    plane = dV[:, :, iz]
+    I1, I2 = np.meshgrid(np.arange(n1) / n1, np.arange(n2) / n2, indexing="ij")
+    R = true_min_image_dist(np.stack([I1.ravel(), I2.ravel(), np.full(I1.size, s[2])], axis=1), s, A).reshape(I1.shape)
+    mask = np.ones(plane.shape, bool)
+    for s_at in np.asarray(x_red_d, float):
+        d1 = (I1 - s_at[0] + 0.5) % 1.0 - 0.5
+        d2 = (I2 - s_at[1] + 0.5) % 1.0 - 0.5
+        ra = np.sqrt((d1 * A[0, 0] + d2 * A[0, 1]) ** 2 + (d1 * A[1, 0] + d2 * A[1, 1]) ** 2)
+        mask &= ra >= r_core
+    if r_max is None:
+        r_max = 0.5 * float(np.linalg.norm(A[:, 0]))
+    edges = np.arange(0, r_max + dr, dr)
+    m = (R < r_max) & mask
+    cnt, _ = np.histogram(R[m], edges)
+    sm, _ = np.histogram(R[m], edges, weights=plane[m])
+    rad = np.where(cnt > 0, sm / np.maximum(cnt, 1), np.nan)
+    return dict(rc=0.5 * (edges[1:] + edges[:-1]), rad=rad, cnt=cnt, r_max=float(r_max), iz=iz, masked_fraction=float(1 - mask.mean()))
+
+
+def z_profile(dV, A_cols, x_red_d, z_vac=5.0):
+    """
+    Plane-averaged profile <dV>_xy(z) and the vacuum offset (R10 c6 ; tab:alignement column E). z is measured from the sheet
+    (median reduced z of the atoms) and a3 must be along z (c = A_cols[2, 2]); the vacuum offset is the mean and std of the
+    profile over the planes with |z| > z_vac (Angstrom), i.e. between z_vac and c / 2.
+    dV (n1, n2, n3) [ix, iy, iz] ; A_cols (3, 3) Angstrom ; x_red_d (n_d, 3).
+    Returns dict(z (n3,) Angstrom, profile (n3,), vacuum_mean, vacuum_std, vacuum_min, vacuum_max, n_vacuum, mean3d,
+                 sheet_plane (value on the plane nearest to the sheet), c).
+    """
+    A = np.asarray(A_cols, float)
+    if abs(A[0, 2]) > 1e-8 or abs(A[1, 2]) > 1e-8:
+        raise ValueError(f"z_profile: a3 must be along z, got {A[:, 2]}")
+    n3 = dV.shape[2]
+    c = float(A[2, 2])
+    prof = dV.mean(axis=(0, 1))
+    z_sheet = float(np.mod(np.median(np.asarray(x_red_d, float)[:, 2]), 1.0))
+    z = ((np.arange(n3) / n3 - z_sheet + 0.5) % 1.0 - 0.5) * c
+    vac = np.abs(z) > z_vac
+    if not vac.any():
+        raise ValueError(f"z_profile: no plane with |z| > {z_vac} A (c / 2 = {c / 2:.2f} A)")
+    return dict(z=z, profile=prof, vacuum_mean=float(prof[vac].mean()), vacuum_std=float(prof[vac].std()),
+                vacuum_min=float(prof[vac].min()), vacuum_max=float(prof[vac].max()), n_vacuum=int(vac.sum()),
+                mean3d=float(prof.mean()), sheet_plane=float(prof[int(np.argmin(np.abs(z)))]), c=c)
+
+
+def potential_background(V_d, V_p, x_red_d, x_red_p, A_cols, radius=1.0, frac=PLATEAU_FRAC, r_core=0.5, dr=0.05, z_vac=5.0,
+                         r_eval=(2.0, 3.0)):
+    """
+    The three measures of the background of the defect potential dV = V_d - V_p on one supercell pair (R11):
+      (1) C_N, the Kumagai-Oba constant (kumagai_oba_constant: spheres of `radius`, atoms at >= frac * r_max) ;
+      (2) the in-plane background: core-masked azimuthal profile of dV in the graphene plane (plane_radial_profile, r_core, dr),
+          reduced to `plane` = mean of the bins at r >= frac * (|a1| / 2) (the plateau of fig:Ved (c) near the boundary, rms over
+          those bins) and to its values interpolated at r_eval (the columns of sampling_table.csv) ;
+      (3) the vacuum offset: plane-averaged profile along z (z_profile), mean and std over |z| > z_vac.
+    V_d, V_p (n1, n2, n3) [ix, iy, iz] on the same grid, same unit (production: eV) ; x_red_*: reduced positions of each cell ;
+    A_cols (3, 3) cell vectors as columns, Angstrom.
+    Returns dict: C_N, C_N_rms, C_N_n, r_max ; plane, plane_rms, plane_n, plane_at {r: value} ; vacuum, vacuum_std, mean3d ;
+    s_vac ; and the three full results kumagai_oba, radial, z.
+    """
+    if V_d.shape != V_p.shape:
+        raise ValueError(f"potential_background: grids differ {V_d.shape} vs {V_p.shape}")
+    ko = kumagai_oba_constant(V_d, V_p, x_red_d, x_red_p, A_cols, radius, frac)
+    dV = V_d - V_p
+    rp = plane_radial_profile(dV, x_red_d, ko["shifts"]["s_vac"], A_cols, r_core, dr)
+    far = (rp["rc"] >= frac * rp["r_max"]) & np.isfinite(rp["rad"])
+    pl = plateau_stats(rp["rad"], far)
+    ok = np.isfinite(rp["rad"])
+    at = {float(r0): float(np.interp(r0, rp["rc"][ok], rp["rad"][ok])) for r0 in r_eval}
+    zp = z_profile(dV, A_cols, x_red_d, z_vac)
+    return dict(C_N=ko["C_N"], C_N_rms=ko["rms"], C_N_n=ko["n"], r_max=ko["r_max"],
+                plane=pl["mean"], plane_rms=pl["rms"], plane_n=pl["n"], plane_at=at,
+                vacuum=zp["vacuum_mean"], vacuum_std=zp["vacuum_std"], mean3d=zp["mean3d"],
+                s_vac=ko["shifts"]["s_vac"], kumagai_oba=ko, radial=rp, z=zp)

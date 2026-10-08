@@ -32,7 +32,9 @@ Work is conducted in French; code and docstrings are in English.
   read by the figure scripts (F0bis, 2026-09-30). `figures/` — thesis figures.
 - `campagnes/<série>/<campagne>/` — versioned copies of every computation campaign, whatever its destination (thesis or article):
   series `R/` (R1…R10, chain M/T and DFT of the vacancy), `EM/` (electron–photon), `M/` (`ch4/`, numbers of chapter 4); index in
-  `campagnes/README.md` (status live/archive, destination). `article/C_optique_lacunes/` — plan and bibliography of the future article.
+  `campagnes/README.md` (status live/archive, destination). The three follow-up articles (A: method + SCTMA, graphene and MoS₂; B: spin-resolved T matrix of the relaxed vacancy; C: σ(ω) with
+  vacancies) live in a **separate repo**, `../articles` (`ROADMAP.md`, one folder per article, shared `biblio/`; override with `$ARTICLES`);
+  their computation campaigns stay here under `campagnes/{SCTMA,MOS2,SPIN,OPT}/`.
 - `notes/` — `NOTES_TGAMMA.md` (t/Γ chain, ch. 4), `NOTES_EPW.md`, `NOTES_EPW_REPERES.md` (ch. 5). `admin/` — closed housekeeping
   logs (`CLEANUP.md`, `REECRITURE_HISTORIQUE_2026-09-29.md`: table of rewritten commit hashes).
 - `INVENTAIRE_2026-09-16.md` (root) — full map of the repo written on 2026-09-30 (role and status of every script, the t-matrix chain
@@ -136,7 +138,8 @@ paths such as `results/wannier/27x27` or `results/…` through `config`). The fo
 - **io/qe_gamma_io.py** — Γ-only supercell wavefunctions (gate A.2, R10). The projwfc.x reader (`projwfc_io`, R4 only) was removed on 2026-09-30.
 - **io/qe_io.py** — the QE I/O backend. All compute functions take an `io=` module; pass `qe_io`.
   Functions take a `prefix.save/` dir: `get_C_nk`, `get_G_red`, `get_k_red`, `get_A_volume`,
-  `get_B_volume`, `get_ecut`, `get_x_red`, `get_eigenvalues`, `get_ngfft`, `get_pot`.
+  `get_B_volume`, `get_ecut`, `get_x_red`, `get_eigenvalues`, `get_ngfft`, `get_pot`. `read_filplot(path)` (R11) reads a pp.x filplot
+  WITH its header: V [ix,iy,iz] (Ha), `A_cols` (Bohr), `x_red`, `ngfft`, `plot_num`; `get_pot` skips that header.
 - **io/pseudo_io.py** — `read_upf` (QE UPF, the default `pseudo_reader`), `fq_from_fr` (Hankel
   transform of the radial projectors). The ABINIT `.psp8` reader was removed on 2026-09-30.
 - **io/wannier_io.py** — Wannier90 readers: `read_w90_mat` (U / U_dis `.mat`, asserts
@@ -152,7 +155,10 @@ paths such as `results/wannier/27x27` or `results/…` through `config`). The fo
 - **defects/local_G.py** — M^L in **reciprocal space** (`compute_ML_G*`, `zero_pad_potential`). **Historical**: replaced in
   production by `compute_ML_R_mpi_shared`; kept as the reference of `test_zero_pad_dense.py` / `test_pad_vs_full_supercell.py`.
 - **defects/alignment.py** — potential alignment: `vacancy_site`, `far_atom_alignment`, `true_min_image_dist`,
-  `atom_sphere_shifts` (source of the C_N; the values are frozen in `config/production.json`).
+  `atom_sphere_shifts` (source of the C_N; the values are frozen in `config/production.json`). R11 (2026-10-08): `kumagai_oba_constant`
+  (C_N = plateau rule d ≥ 0.75 r_max, ex `p1_size` of R10), `plane_radial_profile` (core-masked in-plane profile of fig:Ved (c), ex inline
+  `analyze_Ved.py`), `z_profile` (vacuum offset |z| > 5 Å, ex `cmd_c6`), `potential_background` (the three on one pair); driver
+  `scripts/m/potential_background.py <Vks_d> <Vks_p> [--gate 9x9]` reads the geometry from the filplot headers (no `.save`, no `scf.in`).
 - **defects/deltav_pw.py**, **wavefunctions/sc_projection.py** — gate A.2 (ΔV applied to pure Bloch states vs M/N_cells),
   used by `scripts/m/gate_M_normalization.py`.
 - **defects/non_local.py** — M^NL: `compute_M_NL` (serial), `compute_M_NL_mpi` (distributes the bra
@@ -176,8 +182,9 @@ paths such as `results/wannier/27x27` or `results/…` through `config`). The fo
   still use the old names (run them at commit 1d67419, see `campagnes/README.md`).
 - **defects/many_body/disorder_average.py** — disorder-averaged DOS and A_k (Kaasbjerg PRB 101, 045433): `tbar_reduce`, `tbar_k`,
   `dos_average`, `spectral_path`, `sigma_eff`, `dirac_*`; only user: `campagnes/R/R8_kaasbjerg/r8_driver.py`.
-- **defects/many_body/pole_criterion.py** — resonance criterion (det, λ_min), `cluster_t_cache`. **tb_models.py** — synthetic
-  5-WF graphene bench (tests, R4).
+- **defects/many_body/pole_criterion.py** — resonance criterion (det, λ_min), `cluster_t_cache`. **tb_models.py** — defect
+  potentials of the synthetic bench (`onsite_M_cluster`, `removed_site_M_cluster`); the model is `electron_photon.make_graphene_tb`
+  (the 5-WF `graphene_pz_tb` was removed on 2026-10-08, the tests embed the 2-WF model in the 5-WF layout themselves).
 - **electron_phonon/{phself,selfen}.py** — post-processing of EPW outputs (Γ^ep = 2 Im Σ), chapter 5.
 - **wavefunctions/wfk.py** — `compute_psi_nk` (real-space ψ from C_nk on the FFT grid).
 - **wavefunctions/fold_wfk_to_sc.py** — `compute_psi_nk_fold_sc` (unfold unit-cell ψ onto the
@@ -447,4 +454,4 @@ ce qui régénère les figures du mémoire :
 | R8 DOS et A_k moyennés sur le désordre (Kaasbjerg Fig. 13/14) | `campagnes/R/R8_kaasbjerg/` (`r8_driver.py`, `out/`, `fig/`) | TEST ; **cinq figures vont au ch. 4** (`dos_c`, `spectral_GKM`, `sigma_K`, `sensibilites`, `superposition`) | aucun `.save` |
 | R9 contrôles : C_N, E_res vs N_k^int, chaîne repliée, Kaasbjerg | `campagnes/R/R9_controles/` | TEST consigné, clos le 2026-09-29 (R9_rapport.md) | — |
 | R10 base unique du ch. 4 : alignement de Kumagai–Oba (13 tailles), rejeu de la production | `graphene/qe/defects/R10_plateau/` (copie `campagnes/R/R10_plateau/`) | TEST dont les sorties C sont la **production du ch. 4** (`results/M2_plateau/`), clos le 2026-09-30 | aucun `.save` ; `results/M2_plateau/MD5SUMS_2026-09-30.txt` |
-| C σ(ω) du graphène avec lacunes (perspective, article) | `article/C_optique_lacunes/` (`PLAN.md`, `biblio/`) | plan (2026-09-29), après le mémoire | — |
+| Articles A (méthode + SCTMA, graphène et MoS₂), B (spin, lacune relaxée), C (σ(ω) avec lacunes) | plans, manuscrits et biblio dans `../articles/` (`ROADMAP.md`, un dossier par article) ; campagnes à venir ici dans `campagnes/{SCTMA,MOS2,SPIN,OPT}/` | plans (C : 2026-09-29 ; A, B : 2026-10-08) | — |

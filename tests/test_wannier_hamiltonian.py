@@ -3,7 +3,7 @@ import numpy as np
 
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk, dirac_point
 from graphene_raman.defects.many_body import cluster_tmatrix as ct
-from graphene_raman.defects.many_body.tb_models import graphene_pz_tb
+from graphene_raman.electron_photon import make_graphene_tb
 
 
 def test_dirac_point_matches_inline_expression():
@@ -15,9 +15,10 @@ def test_dirac_point_matches_inline_expression():
 
 def test_dirac_point_graphene_model():
     """Nearest-neighbour model with e_pz = 0.3 eV: E_D = e_pz exactly, gap 0 at K (on the 90 x 90 grid since 90 = 3 x 30)."""
-    Hwr, Rw, nd = graphene_pz_tb(e_pz=0.3)
-    E = Hwr_to_Hwk(Hwr, Rw, ct.mp_grid(90), ndegen=nd)[1]
-    E_D, gap = dirac_point(E)
+    tb = make_graphene_tb()
+    tb.H_R[tb.index[(0, 0, 0)]] += 0.3 * np.eye(2)
+    E = Hwr_to_Hwk(tb.H_R, tb.R_int, ct.mp_grid(90), ndegen=tb.ndegen)[1]
+    E_D, gap = dirac_point(E, bands=(0, 1))
     assert abs(E_D - 0.3) < 1e-12 and abs(gap) < 1e-12
 
 

@@ -7,6 +7,7 @@ from graphene_raman.config import ROOT, HA2EV, wannier_dir, load_production, twi
 from graphene_raman.io import qe_io, pseudo_io, wannier_io, matrix_io
 from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order
 from graphene_raman.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
+from graphene_raman.defects.non_local import compute_M_NL
 import json
 
 # paths
@@ -221,9 +222,9 @@ def main():
         prep = prep_realspace_inputs(INPUTS["unit_cell"], INPUTS["p"], POT_PATH["p"], POT_PATH["d"], subtract_mean=False, io=qe_io)
         g = fi.create_group("M_coarse/prep")
         _put(g, "Ved", prep["Ved"], "hartree", "ix, iy, iz")
-        _put(g, "ngfft", prep["ngfft"], "dimensionless")
-        _put(g, "Ndiag", prep["Ndiag"], "dimensionless", "3, 3")
         _put(g, "Omega_sc", prep["Omega_sc"], "bohr^3")
+        g.attrs["ngfft"] = prep["ngfft"]
+        g.attrs["Ndiag"] = prep["Ndiag"]
 
         Vp = qe_io.read_filplot(POT_PATH["p"])["V"]; Vd = qe_io.read_filplot(POT_PATH["d"])["V"]
         assert np.allclose(prep["Ved"], Vd-Vp), "Defect potential not equal to difference of defective and pristine potentials"
@@ -233,14 +234,41 @@ def main():
         Mf = M_L.reshape(nb*nk, -1)
         assert np.allclose(Mf, Mf.conj().T), "Local part of matrix is not hermitian"
 
-        g = fc.create_group("M_coarse/M_L")
+        g = fc.require_group("M_coarse/M_L")
         ds = _put(g, "M_L", M_L, "hartree", "bra_band, k', ket_band, k")
 
         bloch_norm = matrix_io.UNIT_CELL
         M_normalization = matrix_io.M_NORM_V2
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
+        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().t).max())
+        ds.attrs["kernel"] = compute_ML_R_mpi
+        ds.attrs["subtract_mean"] = False
+        ds.attrs["grid_block"] = 200000
 
+        # compute non local part of matrix
+        M_NL = compute_M_NL(INPUTS["unit_cell"], INPUTS["p"], INPUTS["d"], PSEUDO_PATH, io=qe_io, pseudo_reader=pseudo_io.read_upf)
+        Mf = M_NL.reshape(nb*nk, -1)
+        assert np.allclose(Mf, Mf.conj().T), "Non local part of matrix non hermitian"
+
+        g = fc.require_group("M_coarse/M_NL")
+        ds = _put(g, "M_NL", M_NL, "hartree", "bra_band, k', ket_band, k")
+        ds.attrs["bloch_norm"] = bloch_norm
+        ds.attrs["M_normalization"] = M_normalization
+        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().t).max())
+        ds.attrs["kernel"] = compute_M_NL
+
+        # compute full matrix
+        M = M_L + M_NL
+        Mf = M.reshape(nb*nk, -1)
+        assert np.allclose(Mf, Mf.conj().T), "Full matrix not hermitian"
+
+        g = fc.require_group("M_coarse/M")
+        ds = _put(g, "M_NL", M_NL, "hartree", "bra_band, k', ket_band, k")
+        ds.attrs["bloch_norm"] = bloch_norm
+        ds.attrs["M_normalization"] = M_normalization
+        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().t).max())
+        ds.attrs["N_cells"] = 25
 
 if __name__ == "__main__":
     main()

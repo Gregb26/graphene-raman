@@ -205,8 +205,8 @@ def write_cluster(g, Mwr, Rn, R_cut):
 
     ds = _put(g, "R_cluster", R_cluster, "reduced", "L, component")
     ds.attrs["R_cut"] = R_cut
-    ds = _put(g, "M_cluster", M_cluster, "eV", "L*wannier +w (bra), L*wannier +w (ket)")
-    ds.attrs["herm_residual"] = herm
+    _put(g, "M_cluster", M_cluster, "eV", "L*wannier +w (bra), L*wannier +w (ket)")
+    _put(g, "herm_residual", herm, "eV")
     
     return R_cluster, M_cluster
 
@@ -309,7 +309,8 @@ def main():
         M_normalization = matrix_io.M_NORM_V2
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
-        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().T).max())
+        herm = float(np.abs(Mf-Mf.conj().T).max())
+        _put(g, "herm_residual", herm, "eV")
         ds.attrs["kernel"] = "compute_ML_R_mpi"
         ds.attrs["subtract_mean"] = False
         ds.attrs["grid_block"] = 200000
@@ -323,7 +324,8 @@ def main():
         ds = _put(g, "M_NL", M_NL, "hartree", "bra_band, k', ket_band, k")
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
-        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().T).max())
+        herm = float(np.abs(Mf-Mf.conj().T).max())
+        _put(g, "herm_residual", herm, "eV")
         ds.attrs["kernel"] = "compute_M_NL"
 
         # compute full matrix
@@ -335,8 +337,9 @@ def main():
         ds = _put(g, "M", M, "hartree", "bra_band, k', ket_band, k")
         ds.attrs["bloch_norm"] = bloch_norm
         ds.attrs["M_normalization"] = M_normalization
-        ds.attrs["herm_residual"] = float(np.abs(Mf-Mf.conj().T).max())
+        herm = float(np.abs(Mf-Mf.conj().T).max())
         ds.attrs["N_cells"] = 25
+        _put(g, "herm_residual", herm, "eV")
 
         # prepare inputs for rotation to Wannier basis
         M_eV = M * HA2EV
@@ -390,9 +393,10 @@ def main():
         Hk = Hwr_to_Hwk(H_R, R_w, k_int, ndegen=ndegen)[0]
         egrid = E_D + np.linspace(-1.5, 1.5, 21)
         _put(g, "egrid", egrid, "eV", "energy")
+        _put(g, "Hk_int", Hk, "eV", "k_int, wannier, wannier")
 
         eta = cfg["eta_eV"]
-        g.attrs["eta"] = eta
+        _put(g, "eta", eta, "eV")
         g0 = cluster_green_batch(Hk, k_int, R_cluster_all["unaligned"], egrid, eta)
         _put(g, "g0", g0, "1/eV", "energy, L*nw + w (bra), L*nw + w (ket)")
 
@@ -403,10 +407,12 @@ def main():
         ne_per_eta = cfg["ne_per_eta"]
 
         _put(g, "e_window", e_window, "eV")
-        g.attrs["N"] = N; g.attrs["ne_per_eta"] = ne_per_eta; g.attrs["half_width"] = half_width
+        _put(g, "half_width", half_width, "eV")
+        g.attrs["N"] = N; g.attrs["ne_per_eta"] = ne_per_eta
         k_out = mp_grid(N)
         E_out = Hwr_to_Hwk(H_R, R_w, k_out, ndegen=ndegen)[1]
         _put(g, "E_out", E_out, "eV", "k_out, band")
+        _put(g, "k_out", k_out, "reduced", "k_out, component")
 
 
         for name in variants:

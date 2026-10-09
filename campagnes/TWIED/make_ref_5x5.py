@@ -258,12 +258,9 @@ def variant_tmatrix(fc, name, M_cluster, g0, H_R, R_w, ndegen, R_cluster, k_int,
     assert LS_res < 1e-8
     g.attrs["LS_res"] = LS_res
 
-    Gamma = scattering_rate_fast(H_R, R_w, M_cluster, R_cluster, k_out, eta, k_int, e_window, ne_per_eta)
+    Gamma = scattering_rate_fast(H_R, R_w, ndegen, M_cluster, R_cluster, k_out, eta, k_int, e_window, ne_per_eta)
     ds = _put(g, "Gamma", Gamma, "eV", "band, k_out")
     ds.attrs["note"] = "NaN outside energy window"
-
-
-
 
 
 def main():

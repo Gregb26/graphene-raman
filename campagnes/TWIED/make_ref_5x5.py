@@ -8,7 +8,7 @@ from graphene_raman.io import qe_io, pseudo_io, wannier_io, matrix_io
 from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order, Mbk_to_Mwk, Mwk_to_Mbk, Mwk_to_Mwr, _infer_mp_grid
 from graphene_raman.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
 from graphene_raman.defects.non_local import compute_M_NL
-from graphene_raman.defects.many_body.cluster_tmatrix import recenter_mwr, defect_mwr
+from graphene_raman.defects.many_body.cluster_tmatrix import recenter_mwr, defect_mwr, mwr_locality, cluster_cells, cluster_potential
 import json
 
 # paths
@@ -196,34 +196,55 @@ def write_wannier(f, wdir, k_qe):
         man = json.load(fh)
         g.attrs["manifest"] = json.dumps(man)
 
-def run_variant(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R):
+def write_cluster(g, Mwr, Rn, R_cut):
+    """Cluster cells and M_cluster for one R_cut, written in group g"""
+
+    R_cluster = cluster_cells(Rn, R_cut)
+    M_cluster, herm = cluster_potential(Mwr, Rn, R_cluster)
+
+    ds = _put(g, "R_cluster", R_cluster, "reduced", "L, component")
+    ds.attrs["R_cut"] = R_cut
+    ds = _put(g, "M_cluster", M_cluster, "L*wannier +w (bra), L*wannier +w (ket)")
+    ds.attrs["herm_residual"] = herm
+    
+    return M_cluster, R_cluster
+
+def variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R, R_cut):
 
         g = fc.create_group(f"variants/{name}")
         c = R.copy()
         c[:, :2] %= MP[:2] # (nR, 3)
         nW = Mwr_raw.shape[0]
         in_box = np.all(c[:,:2] < n_box, axis=1)
-        Mwr_aligned = Mwr_raw.copy()
+        Mwr = Mwr_raw.copy()
         for w in range(nW):
-            Mwr_aligned[w, in_box, w, in_box] -= C_N
+            Mwr[w, in_box, w, in_box] -= C_N
 
-        _put(g, "Mwr_aligned", Mwr_aligned, "eV", "wannier, R, wannier, R'")
+        _put(g, "Mwr_aligned", Mwr, "eV", "wannier, R, wannier, R'")
         _put(g, "in_box", in_box, "dimensionless", "R")
+        _put(g, "C_N", C_N, "eV")
         g.attrs["n_box"] = n_box
 
-        Rn, R_d = recenter_mwr(Mwr_aligned, R, MP)
+        Rn, R_d = recenter_mwr(Mwr, R, MP)
         _put(g, "Rn", Rn, "reduced", "R, component")
         _put(g, "R_d", R_d, "reduced")
 
         defect = defect_mwr(M_eV, U, U_dis, k_coarse, MP, n_box, C_N)
 
-        assert np.allclose(Mwr_aligned, defect["Mwr"])
+        assert np.allclose(Mwr, defect["Mwr"])
         assert np.allclose(R, defect["R"])
         assert np.allclose(Rn, defect["Rn"])
         assert np.allclose(R_d, defect["R_d"])
         assert np.allclose(in_box, defect["in_box"])
 
-        return Rn
+        dist, wt = mwr_locality(Mwr, Rn)
+        _put(g, "dist", dist, "reduced")
+        _put(g, "wt", wt, "eV")
+
+        R_cluster, M_cluster = write_cluster(g, Mwr, Rn, R_cut)
+        write_cluster(g.create_group("R_cut_1", Mwr, Rn, 1))
+
+        return Rn, R_cluster, M_cluster
 
 
 def main():
@@ -314,7 +335,6 @@ def main():
         _put(g, "U", U, "dimensionless", "k, wannier, wannier")
         _put(g, "U_dis", U_dis, "dimensionless", "k, band, wannier")
         _put(g, "k_coarse", k_coarse, "reduced", "k, component")
-        _put(g, "C_N", C_N, "eV")
         g.attrs["MP"] = MP
 
         # rotation to Wannier gauge
@@ -323,15 +343,15 @@ def main():
 
         # transformation to real space
         Mwr_raw, R = Mwk_to_Mwr(Mwk, k_coarse, MP)
-        _put(g, "Mwr", Mwr_raw, 'eV', "wannier, R, wannier, R'")
+        _put(g, "Mwr_raw", Mwr_raw, 'eV', "wannier, R, wannier, R'")
         _put(g, "R", R, "reduced", "R, component")
-
+        
         n_box = 5
         g.attrs["n_box"] = n_box
-        variants = {"unaligned": 0.0, "kumagai_oba": alignment_C(cfg, "5x5")}
-        Rn_all = {}
+        variants = {"unaligned": 0.0, "kumagai_oba": alignment_C(cfg, "5x5")}; R_cut = cfg["R_cut"]
+        Rn_all = {}; R_cluster_all = {}; M_cluster_all = {}
         for name, C_N in variants.items():
-            Rn_all[name] = run_variant(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R)    
+            Rn_all[name], R_cluster_all[name], M_cluster_all[name] = variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R, R_cut)    
 
 if __name__ == "__main__":
     main()

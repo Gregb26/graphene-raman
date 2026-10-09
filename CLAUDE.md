@@ -126,7 +126,8 @@ paths such as `results/wannier/27x27` or `results/…` through `config`). The fo
 ## Module structure (`src/graphene_raman/`)
 
 - **config.py** — single loader of `config/production.json`: `load_production`, `results_dir` (products), `matrices_dir`
-  (M files), `epw_dir` (`results/epw`, chapter 5 products), `electron_dir`, `phonon_dir` (`results/{electron,phonon}`, chapter 2 data), `wannier_dir(cfg, D=None)` (`results/wannier[/<D>x<D>]`, the tracked
+  (M files), `epw_dir` (`results/epw`, chapter 5 products), `twied_dir` (`results/twied`, the twied reference files of
+  `campagnes/TWIED`), `electron_dir`, `phonon_dir` (`results/{electron,phonon}`, chapter 2 data), `wannier_dir(cfg, D=None)` (`results/wannier[/<D>x<D>]`, the tracked
   Wannier90 outputs; the only way to that path), `campaigns_dir(cfg, *parts)` (`results/campagnes/…`, campaign json/npz read by the figure
   scripts), `alignment_C(cfg, size)` (C_N in eV), `dense_paths(cfg, size)` (dense
   `.save`, M file, Wannier dir; the scratch path is rorqual's), `ROOT`, `HA2EV` (the only definition of the Ha→eV factor). **Every
@@ -454,4 +455,5 @@ ce qui régénère les figures du mémoire :
 | R8 DOS et A_k moyennés sur le désordre (Kaasbjerg Fig. 13/14) | `campagnes/R/R8_kaasbjerg/` (`r8_driver.py`, `out/`, `fig/`) | TEST ; **cinq figures vont au ch. 4** (`dos_c`, `spectral_GKM`, `sigma_K`, `sensibilites`, `superposition`) | aucun `.save` |
 | R9 contrôles : C_N, E_res vs N_k^int, chaîne repliée, Kaasbjerg | `campagnes/R/R9_controles/` | TEST consigné, clos le 2026-09-29 (R9_rapport.md) | — |
 | R10 base unique du ch. 4 : alignement de Kumagai–Oba (13 tailles), rejeu de la production | `graphene/qe/defects/R10_plateau/` (copie `campagnes/R/R10_plateau/`) | TEST dont les sorties C sont la **production du ch. 4** (`results/M2_plateau/`), clos le 2026-09-30 | aucun `.save` ; `results/M2_plateau/MD5SUMS_2026-09-30.txt` |
+| TWIED référence 5×5 de la chaîne complète (M → M_W → amas → g₀ → t → Γ, deux alignements) pour les tests de `../twied` | `campagnes/TWIED/` (seul emplacement : calcul local de quelques minutes ; entrées `data/export_chaine_5x5/`, sorties `results/twied/`) | PRODUCTION (2026-10-09) | aucun `.save` ; tout se relance avec `make_ref_5x5.py`, vérifié par `check_ref_5x5.py` |
 | Articles A (méthode + SCTMA, graphène et MoS₂), B (spin, lacune relaxée), C (σ(ω) avec lacunes) | plans, manuscrits et biblio dans `../articles/` (`ROADMAP.md`, un dossier par article) ; campagnes à venir ici dans `campagnes/{SCTMA,MOS2,SPIN,OPT}/` | plans (C : 2026-09-29 ; A, B : 2026-10-08) | — |

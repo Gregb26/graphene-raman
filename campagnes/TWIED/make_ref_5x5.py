@@ -6,9 +6,10 @@ import numpy as np
 from graphene_raman.config import ROOT, HA2EV, wannier_dir, load_production, twied_dir, alignment_C
 from graphene_raman.io import qe_io, pseudo_io, wannier_io, matrix_io
 from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order, Mbk_to_Mwk, Mwk_to_Mbk, Mwk_to_Mwr, _infer_mp_grid
+from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk, dirac_point
 from graphene_raman.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
 from graphene_raman.defects.non_local import compute_M_NL
-from graphene_raman.defects.many_body.cluster_tmatrix import recenter_mwr, defect_mwr, mwr_locality, cluster_cells, cluster_potential
+from graphene_raman.defects.many_body.cluster_tmatrix import recenter_mwr, defect_mwr, mwr_locality, cluster_cells, cluster_potential, mp_grid, cluster_green_batch, cluster_t
 import json
 
 # paths
@@ -204,10 +205,10 @@ def write_cluster(g, Mwr, Rn, R_cut):
 
     ds = _put(g, "R_cluster", R_cluster, "reduced", "L, component")
     ds.attrs["R_cut"] = R_cut
-    ds = _put(g, "M_cluster", M_cluster, "L*wannier +w (bra), L*wannier +w (ket)")
+    ds = _put(g, "M_cluster", M_cluster, "eV", "L*wannier +w (bra), L*wannier +w (ket)")
     ds.attrs["herm_residual"] = herm
     
-    return M_cluster, R_cluster
+    return R_cluster, M_cluster
 
 def variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R, R_cut):
 
@@ -220,7 +221,7 @@ def variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw,
         for w in range(nW):
             Mwr[w, in_box, w, in_box] -= C_N
 
-        _put(g, "Mwr_aligned", Mwr, "eV", "wannier, R, wannier, R'")
+        _put(g, "Mwr", Mwr, "eV", "wannier, R, wannier, R'")
         _put(g, "in_box", in_box, "dimensionless", "R")
         _put(g, "C_N", C_N, "eV")
         g.attrs["n_box"] = n_box
@@ -245,6 +246,18 @@ def variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw,
         write_cluster(g.create_group("R_cut_1"), Mwr, Rn, 1)
 
         return Rn, R_cluster, M_cluster
+
+def variant_tmatrix(fc, name, M_cluster, g0):
+    g = fc[f"variants/{name}"]
+
+    t = np.array([cluster_t(M_cluster, g_e) for g_e in g0])
+    _put(g, "t", t, "eV", "energy, L*nw + w (bra), L*nw + w (ket)")
+
+    # Lippmann-Schwinger test
+    LS_res = np.abs(t[10] - (M_cluster + M_cluster @ g0[10] @ t[10])).max()
+    assert LS_res < 1e-8
+    g.attrs["LS_res"] = LS_res
+
 
 
 def main():
@@ -351,7 +364,38 @@ def main():
         variants = {"unaligned": 0.0, "kumagai_oba": alignment_C(cfg, "5x5")}; R_cut = cfg["R_cut"]
         Rn_all = {}; R_cluster_all = {}; M_cluster_all = {}
         for name, C_N in variants.items():
-            Rn_all[name], R_cluster_all[name], M_cluster_all[name] = variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R, R_cut)    
+            Rn_all[name], R_cluster_all[name], M_cluster_all[name] = variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw, R, R_cut)   
+
+        # compute g0 once
+        g = fc.require_group("G0")
+        H_R, R_w, ndegen, _, _ = wannier_io.read_w90_tb(f"{INPUTS["wannier"]}/wannier_tb.dat")
+        _put(g, "H_R", H_R, "eV", "R_w, wannier, wannier")
+        _put(g, "R_w", R_w, "reduced", "R_w, component")
+        _put(g, "ndegen", ndegen, "count", "R_w")
+
+        E = Hwr_to_Hwk(H_R, R_w, mp_grid(90, 90, 1), ndegen=ndegen)[1]
+        E_D, gap = dirac_point(E)
+        _put(g, "E_D", E_D, "eV")
+        _put(g, "gap", gap, "eV")
+
+        if not np.array_equal(R_cluster_all["unaligned"], R_cluster_all["kumagai_oba"]):
+            raise RuntimeError("the two variants have different cluster : g0 cannot be shared")
+        _put(g, "R_cluster", R_cluster_all["unaligned"], "reduced", "L, component")
+
+        k_int = mp_grid(cfg["nk_int"])
+        g.attrs["k_int"] = cfg["nk_int"]
+        Hk = Hwr_to_Hwk(H_R, R_w, k_int, ndegen=ndegen)[0]
+        egrid = E_D + np.linspace(-1.5, 1.5, 21)
+        _put(g, "egrid", egrid, "eV", "energy")
+
+        eta = cfg["eta_eV"]
+        g.attrs["eta"] = eta
+        g0 = cluster_green_batch(Hk, k_int, R_cluster_all["unaligned"], egrid, eta)
+        _put(g, "g0", g0, "1/eV", "energy, L*nw + w (bra), L*nw + w (ket)")
+
+        for name in variants:
+            variant_tmatrix(fc, name, M_cluster_all[name], g0)
+
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,7 @@ from graphene_raman.wannier.wannier_interpolation import _match_kpoint_order, Mb
 from graphene_raman.wannier.wannier_hamiltonian import Hwr_to_Hwk, dirac_point
 from graphene_raman.defects.local_R import prep_realspace_inputs, compute_ML_R_mpi
 from graphene_raman.defects.non_local import compute_M_NL
-from graphene_raman.defects.many_body.cluster_tmatrix import recenter_mwr, defect_mwr, mwr_locality, cluster_cells, cluster_potential, mp_grid, cluster_green_batch, cluster_t
+from graphene_raman.defects.many_body.cluster_tmatrix import recenter_mwr, defect_mwr, mwr_locality, cluster_cells, cluster_potential, mp_grid, cluster_green_batch, cluster_t, scattering_rate_fast
 import json
 
 # paths
@@ -247,7 +247,7 @@ def variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw,
 
         return Rn, R_cluster, M_cluster
 
-def variant_tmatrix(fc, name, M_cluster, g0):
+def variant_tmatrix(fc, name, M_cluster, g0, H_R, R_w, ndegen, R_cluster, k_int, eta, k_out, e_window, ne_per_eta):
     g = fc[f"variants/{name}"]
 
     t = np.array([cluster_t(M_cluster, g_e) for g_e in g0])
@@ -257,6 +257,12 @@ def variant_tmatrix(fc, name, M_cluster, g0):
     LS_res = np.abs(t[10] - (M_cluster + M_cluster @ g0[10] @ t[10])).max()
     assert LS_res < 1e-8
     g.attrs["LS_res"] = LS_res
+
+    Gamma = scattering_rate_fast(H_R, R_w, M_cluster, R_cluster, k_out, eta, k_int, e_window, ne_per_eta)
+    ds = _put(g, "Gamma", Gamma, "eV", "band, k_out")
+    ds.attrs["note"] = "NaN outside energy window"
+
+
 
 
 
@@ -393,8 +399,21 @@ def main():
         g0 = cluster_green_batch(Hk, k_int, R_cluster_all["unaligned"], egrid, eta)
         _put(g, "g0", g0, "1/eV", "energy, L*nw + w (bra), L*nw + w (ket)")
 
+        g = fc.require_group("Gamma_grid")
+        N = 60
+        half_width = 1.0
+        e_window = (E_D - half_width, E_D + half_width)
+        ne_per_eta = cfg["ne_per_eta"]
+
+        _put(g, "e_window", e_window, "eV")
+        g.attrs["N"] = N; g.attrs["ne_per_eta"] = ne_per_eta; g.attrs["half_width"] = half_width
+        k_out = mp_grid(N)
+        E_out = Hwr_to_Hwk(H_R, R_w, k_out, ndegen=ndegen)[1]
+        _put(g, "E_out", E_out, "eV", "k_out, band")
+
+
         for name in variants:
-            variant_tmatrix(fc, name, M_cluster_all[name], g0)
+            variant_tmatrix(fc, name=name, M_cluster=M_cluster_all[name], g0=g0, H_R=H_R, R_w=R_w, ndegen=ndegen, R_cluster=R_cluster_all[name], k_int=k_int, eta=eta, k_out=k_out, e_window=e_window, ne_per_eta=ne_per_eta)
 
 
 if __name__ == "__main__":

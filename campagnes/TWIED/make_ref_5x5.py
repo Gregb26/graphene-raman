@@ -242,7 +242,7 @@ def variant_cluster(fc, name, C_N, M_eV, U, U_dis, k_coarse, MP, n_box, Mwr_raw,
         _put(g, "wt", wt, "eV")
 
         R_cluster, M_cluster = write_cluster(g, Mwr, Rn, R_cut)
-        write_cluster(g.create_group("R_cut_1", Mwr, Rn, 1))
+        write_cluster(g.create_group("R_cut_1"), Mwr, Rn, 1)
 
         return Rn, R_cluster, M_cluster
 
